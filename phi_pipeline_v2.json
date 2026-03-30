@@ -460,7 +460,13 @@
             "index": 0
           }
         ],
-        []
+        [
+          {
+            "node": "Loop Sync & Close",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Calcular e Persistir PHI Score": {
