@@ -882,7 +882,8 @@
         1680
       ],
       "id": "806e2b3c-87e0-446b-bd8f-226d66439206",
-      "name": "Get many database Campanhas"
+      "name": "Get many database Campanhas",
+      "alwaysOutputData": true
     },
     {
       "parameters": {
@@ -1095,7 +1096,8 @@
         1248
       ],
       "id": "4edb52da-f130-43b2-a35f-da39cc99ffae",
-      "name": "Update Escalar Tarefa"
+      "name": "Update Escalar Tarefa",
+      "alwaysOutputData": true
     },
     {
       "parameters": {
@@ -1205,7 +1207,8 @@
         1488
       ],
       "id": "ca650a79-1087-4642-8fe8-17950418721b",
-      "name": "Update a database page"
+      "name": "Update a database page",
+      "alwaysOutputData": true
     },
     {
       "parameters": {
@@ -1316,7 +1319,8 @@
         1680
       ],
       "id": "4ffdf543-6245-452c-8e93-3065bd588b84",
-      "name": "Create a database page"
+      "name": "Create a database page",
+      "alwaysOutputData": true
     },
     {
       "parameters": {
@@ -1345,7 +1349,8 @@
         1680
       ],
       "id": "41de4b5b-ec96-4e9c-8cf0-5e96c853b785",
-      "name": "Update otimização ativa"
+      "name": "Update otimização ativa",
+      "alwaysOutputData": true
     },
     {
       "parameters": {
@@ -1426,7 +1431,8 @@
         1744
       ],
       "id": "6b75aa6c-85c9-413b-a6be-a3260d47514c",
-      "name": "Create a database page chklist"
+      "name": "Create a database page chklist",
+      "alwaysOutputData": true
     },
     {
       "parameters": {
@@ -1485,7 +1491,8 @@
       "position": [
         2368,
         1472
-      ]
+      ],
+      "alwaysOutputData": true
     },
     {
       "parameters": {
@@ -1511,7 +1518,8 @@
       "position": [
         2992,
         1120
-      ]
+      ],
+      "alwaysOutputData": true
     },
     {
       "parameters": {
@@ -1553,7 +1561,8 @@
       "position": [
         3440,
         1120
-      ]
+      ],
+      "alwaysOutputData": true
     },
     {
       "parameters": {
@@ -1606,7 +1615,8 @@
       "position": [
         3888,
         1120
-      ]
+      ],
+      "alwaysOutputData": true
     },
     {
       "parameters": {
