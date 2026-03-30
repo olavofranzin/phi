@@ -1,0 +1,492 @@
+{
+  "id": "b1pbn8qmzCNTufTp",
+  "name": "PHI - Subworkflow Campanhas",
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true,
+    "binaryMode": "separate"
+  },
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        3584,
+        144
+      ],
+      "id": "80bc38fb-866f-40f7-82ee-0f087e5d587f",
+      "name": "Meta Ads — em breve"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        3840,
+        192
+      ],
+      "id": "5f57fcf2-c3d4-4cf4-a461-a4fd44a8ccb4",
+      "name": "Fim subworkflow"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst output = [];\n\n// execution_id e client_id vindos do workflow principal\nconst execution_id = $('Start').first().json.execution_id;\nconst client_id_filter = $('Start').first().json.client_id;\n\nif (!execution_id) {\n  throw new Error('execution_id não recebido do workflow principal');\n}\n\nfor (const item of items) {\n  const props = item.json.properties;\n\n  // Status — apenas Em execução\n  const status = props['Status']?.status?.name?.trim() || null;\n  if (status !== 'Em execução') continue;\n\n  // client_id\n  const client_id = props['client_id']?.rich_text?.[0]?.plain_text?.trim() || null;\n  if (!client_id) continue;\n\n  // fonte e campaign_id — nomes corretos das propriedades do Notion\n  const fonte = props['Fonte']?.multi_select?.[0]?.name?.trim() || null;\n  const google_id_campaign  = props['id_google_camp']?.number ?? null;\n  const campaign_id_google  = google_id_campaign ? `GADS-${google_id_campaign}` : null;\n  const campaign_id_meta    = props['id_meta_camp']?.number\n    ? `META-${props['id_meta_camp'].number}` : null;\n  const campaign_id = fonte === 'Google Ads' ? campaign_id_google\n    : fonte === 'Meta Ads' ? campaign_id_meta\n    : null;\n\n  if (!campaign_id) continue;\n\n  // demais campos — nomes corretos das propriedades do Notion\n  const campaign_name       = props['Nome da campanha']?.title?.[0]?.plain_text?.trim() || null;\n  const customer_id_google  = props['id_google_account']?.number\n    ? String(props['id_google_account'].number) : null;\n  const pixel_id_meta       = props['id_meta_pixel']?.number\n    ? String(props['id_meta_pixel'].number) : null;\n  const primary_metric_type = props['Métrica-Mãe']?.multi_select?.[0]?.name?.trim() || 'ROAS';\n  const primary_metric_goal = props['Meta da Métrica-mãe']?.number ?? null;\n\n  output.push({\n    json: {\n      execution_id,\n      client_id,\n      campaign_name,\n      campaign_id,\n      fonte,\n      customer_id_google,\n      pixel_id_meta,\n      primary_metric_type,\n      primary_metric_goal,\n      google_id_campaign,\n    }\n  });\n}\n\nreturn output;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1808,
+        96
+      ],
+      "id": "2b2f2701-77d3-42c7-aaba-9008ff23918d",
+      "name": "Code in JavaScript",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        2032,
+        96
+      ],
+      "id": "6caf3fca-337c-4ade-8b23-b2628ea2a9c0",
+      "name": "Loop Over Items1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "1de8a7bb-ed6e-4631-adee-9f847322696f",
+              "leftValue": "={{ $json.fonte }}",
+              "rightValue": "Google Ads",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2928,
+        16
+      ],
+      "id": "6e274086-7718-4cac-bead-00c936722132",
+      "name": "If fonte trafego"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "fa3c6e13-9e78-4c29-b57a-55c8962fca5b",
+              "name": "primary_metric_goal",
+              "value": "={{ $json[\"goal_value\"] ?? $json[\"primary_metric_goal\"] }}",
+              "type": "number"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2704,
+        16
+      ],
+      "id": "3526ac32-945e-4c86-be7c-fefc901e9004",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "a6138d74-021f-4592-b6ed-31ac9ac23ce7",
+              "leftValue": "={{ $json.primary_metric_goal }}",
+              "rightValue": null,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2208,
+        -48
+      ],
+      "id": "e5f9cfd3-135f-4b6f-bb04-aca774b07940",
+      "name": "If primary_metric_goal"
+    },
+    {
+      "parameters": {
+        "projectId": {
+          "__rl": true,
+          "value": "project-0e7c58d4-656f-49e8-807",
+          "mode": "list",
+          "cachedResultName": "phi-production",
+          "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=project-0e7c58d4-656f-49e8-807"
+        },
+        "sqlQuery": "SELECT goal_value\nFROM `project-0e7c58d4-656f-49e8-807.phi_prod.client_goal_history`\nWHERE client_id = '{{ $json[\"client_id\"] }}'\n  AND valid_from <= CURRENT_DATE()\n  AND (valid_until IS NULL OR valid_until >= CURRENT_DATE())\nORDER BY valid_from DESC\nLIMIT 1;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2.1,
+      "position": [
+        2496,
+        -144
+      ],
+      "id": "1aaafe71-26ce-4510-bb80-d9fcebda6d0f",
+      "name": "Execute a SQL query"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://googleads.googleapis.com/v22/customers/{{ $json.customer_id_google }}/googleAds:search",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleAdsOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "developer-token",
+              "value": "o0hGRr2vcX3jGF6aI3a_0w"
+            },
+            {
+              "name": "login-customer-id",
+              "value": "7595536100"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"query\": \"SELECT campaign.id, campaign.name, campaign.status, campaign.serving_status, campaign.bidding_strategy_system_status, campaign_budget.amount_micros, campaign.optimization_score, metrics.cost_micros, metrics.conversions, metrics.conversions_value, metrics.clicks, metrics.impressions FROM campaign WHERE campaign.id = '{{ $json.google_id_campaign }}' AND segments.date DURING YESTERDAY\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        3152,
+        -80
+      ],
+      "id": "6d8d79e6-4b98-46d2-8557-7c6b5f964e5c",
+      "name": "HTTP Request Google"
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nconst result = item.results?.[0];\n\nif (!result) {\n  throw new Error('Google Ads API não retornou resultados');\n}\n\nconst metrics = result.metrics;\n\n// Recuperar dados da campanha do node anterior\nconst campaignData = $('Edit Fields').first().json;\n\nreturn [{\n  json: {\n    execution_id:         campaignData.execution_id,\n    client_id:            campaignData.client_id,\n    campaign_id:          campaignData.campaign_id,\n    campaign_name:        campaignData.campaign_name,\n    primary_metric_type:  campaignData.primary_metric_type,\n    primary_metric_goal:  campaignData.primary_metric_goal,\n    fonte:                campaignData.fonte,\n    impressions:          parseInt(metrics.impressions || 0),\n    clicks:               parseInt(metrics.clicks || 0),\n    cost:                 parseFloat((parseInt(metrics.costMicros || 0) / 1000000).toFixed(2)),\n    conversions:          parseInt(metrics.conversions || 0),\n    revenue:              parseFloat(metrics.conversionsValue || 0),\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3376,
+        -80
+      ],
+      "id": "c2de21de-68b5-456c-b2b8-36f0fed1e177",
+      "name": "Code transformar retorno Google Ads"
+    },
+    {
+      "parameters": {
+        "projectId": {
+          "__rl": true,
+          "value": "project-0e7c58d4-656f-49e8-807",
+          "mode": "list",
+          "cachedResultName": "phi-production",
+          "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=project-0e7c58d4-656f-49e8-807"
+        },
+        "sqlQuery": "MERGE `phi_prod.raw_campaign_data` AS target\nUSING (\n  SELECT\n    '{{ $json[\"client_id\"] }}'   AS client_id,\n    '{{ $json[\"campaign_id\"] }}' AS campaign_id,\n    DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY) AS date\n) AS source\nON target.client_id    = source.client_id\nAND target.campaign_id = source.campaign_id\nAND target.date        = source.date\nWHEN MATCHED THEN\n  UPDATE SET\n    execution_id         = '{{ $json[\"execution_id\"] }}',\n    impressions          = {{ $json[\"impressions\"] }},\n    clicks               = {{ $json[\"clicks\"] }},\n    cost                 = {{ $json[\"cost\"] }},\n    conversions          = {{ $json[\"conversions\"] }},\n    revenue              = {{ $json[\"revenue\"] }},\n    primary_metric_goal  = {{ $json[\"primary_metric_goal\"] }},\n    ingestion_status     = 'SUCCESS',\n    ingestion_step       = 'GADS_INSERT',\n    ingested_at          = CURRENT_TIMESTAMP()\nWHEN NOT MATCHED THEN\n  INSERT (\n    execution_id, client_id, campaign_id, date,\n    impressions, clicks, cost, conversions, revenue,\n    primary_metric_goal, ingestion_status, ingestion_step, ingested_at\n  )\n  VALUES (\n    '{{ $json[\"execution_id\"] }}',\n    '{{ $json[\"client_id\"] }}',\n    '{{ $json[\"campaign_id\"] }}',\n    DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY),\n    {{ $json[\"impressions\"] }},\n    {{ $json[\"clicks\"] }},\n    {{ $json[\"cost\"] }},\n    {{ $json[\"conversions\"] }},\n    {{ $json[\"revenue\"] }},\n    {{ $json[\"primary_metric_goal\"] }},\n    'SUCCESS',\n    'GADS_INSERT',\n    CURRENT_TIMESTAMP()\n  );",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2.1,
+      "position": [
+        3600,
+        -80
+      ],
+      "id": "cfc0ee70-8f6a-4b5a-a227-aaac98d8209d",
+      "name": "Execute SQL  INSERT raw_campaign_data",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "execution_id",
+              "type": "any"
+            },
+            {
+              "name": "client_id",
+              "type": "any"
+            }
+          ]
+        }
+      },
+      "id": "c33aa9d9-aefa-48f6-b97d-b94a888eedd8",
+      "typeVersion": 1.1,
+      "name": "Start",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        1376,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "value": "19fb65e5-c72b-8043-a82d-f47ede397928",
+          "mode": "list",
+          "cachedResultName": "Campanhas",
+          "cachedResultUrl": "https://www.notion.so/19fb65e5c72b8043a82df47ede397928"
+        },
+        "returnAll": true,
+        "simple": false,
+        "filterType": "manual",
+        "filters": {
+          "conditions": [
+            {
+              "key": "Status|status",
+              "condition": "equals",
+              "statusValue": "Em execução"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1584,
+        96
+      ],
+      "id": "ac57b843-e2fa-4cb4-b8ea-b4692b97ada9",
+      "name": "Get database Campanhas",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "projectId": {
+          "__rl": true,
+          "value": "project-0e7c58d4-656f-49e8-807",
+          "mode": "list",
+          "cachedResultName": "phi-production",
+          "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=project-0e7c58d4-656f-49e8-807"
+        },
+        "sqlQuery": "UPDATE `phi_prod.client_config`\nSET\n  primary_metric_type = '{{ $('Code transformar retorno Google Ads').item.json.primary_metric_type }}',\n  updated_at          = CURRENT_TIMESTAMP()\nWHERE client_id = '{{ $('Code transformar retorno Google Ads').item.json.client_id }}';",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2.1,
+      "position": [
+        3808,
+        -80
+      ],
+      "id": "94b5d3e4-770b-4749-ae3a-9f38b68f0e37",
+      "name": "Execute SQL client_config sincronizado",
+      "alwaysOutputData": true
+    }
+  ],
+  "connections": {
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If fonte trafego": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request Google",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Meta Ads — em breve",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "If fonte trafego",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If primary_metric_goal": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request Google": {
+      "main": [
+        [
+          {
+            "node": "Code transformar retorno Google Ads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code transformar retorno Google Ads": {
+      "main": [
+        [
+          {
+            "node": "Execute SQL  INSERT raw_campaign_data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute SQL  INSERT raw_campaign_data": {
+      "main": [
+        [
+          {
+            "node": "Execute SQL client_config sincronizado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Meta Ads — em breve": {
+      "main": [
+        [
+          {
+            "node": "Fim subworkflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fim subworkflow": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items1": {
+      "main": [
+        [],
+        [
+          {
+            "node": "If primary_metric_goal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Get database Campanhas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get database Campanhas": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute SQL client_config sincronizado": {
+      "main": [
+        [
+          {
+            "node": "Fim subworkflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
