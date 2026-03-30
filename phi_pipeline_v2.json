@@ -109,7 +109,7 @@
       "main": [
         [
           {
-            "node": "Log CALCULATION RUNNING",
+            "node": "If Ingestão OK?",
             "type": "main",
             "index": 0
           }
@@ -467,7 +467,66 @@
       "main": [
         [
           {
+            "node": "If Cálculo OK?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Ingestão OK?": {
+      "main": [
+        [
+          {
+            "node": "Log CALCULATION RUNNING",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log INGESTION FAILED",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Cálculo OK?": {
+      "main": [
+        [
+          {
             "node": "Log CALCULATION SUCCESS",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log CALCULATION FAILED",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log OPERATIONAL SUCCESS": {
+      "main": [
+        [
+          {
+            "node": "If Operacional OK?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Operacional OK?": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Log OPERATIONAL FAILED",
             "type": "main",
             "index": 0
           }
@@ -671,7 +730,8 @@
         752,
         2016
       ],
-      "alwaysOutputData": true
+      "alwaysOutputData": true,
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -1388,7 +1448,8 @@
         3584,
         1744
       ],
-      "alwaysOutputData": true
+      "alwaysOutputData": true,
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -1587,7 +1648,110 @@
         1200,
         2016
       ],
-      "alwaysOutputData": true
+      "alwaysOutputData": true,
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "6af1d886-3076-4cd9-9afa-163e80cf93ec",
+              "leftValue": "={{ $json.error }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "7daf637c-2d7c-4bc1-a748-f84bf1d299f7",
+      "name": "If Ingestão OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        976,
+        2016
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "940ed7d0-a045-489a-83bd-fa89e663f074",
+              "leftValue": "={{ $json.error }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "5db7ee04-3100-48d0-b9d5-9da1f2306a66",
+      "name": "If Cálculo OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1424,
+        2016
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "55fa81b8-da1b-402a-a7f0-b83d36bf6685",
+              "leftValue": "={{ $json.error }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "f98eb5fc-ce39-4dc9-853b-9bfad813b423",
+      "name": "If Operacional OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        3808,
+        1744
+      ]
     }
   ],
   "activeVersion": null,
