@@ -244,7 +244,7 @@
       "main": [
         [
           {
-            "node": "Update Escalar Tarefa",
+            "node": "Tarefa Escalada Existe?",
             "type": "main",
             "index": 0
           }
@@ -533,6 +533,24 @@
         [
           {
             "node": "Log OPERATIONAL FAILED",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tarefa Escalada Existe?": {
+      "main": [
+        [
+          {
+            "node": "Update Escalar Tarefa",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If otimização ativa",
             "type": "main",
             "index": 0
           }
@@ -1098,8 +1116,8 @@
       "type": "n8n-nodes-base.notion",
       "typeVersion": 2.2,
       "position": [
-        4336,
-        1248
+        4560,
+        1184
       ],
       "id": "4edb52da-f130-43b2-a35f-da39cc99ffae",
       "name": "Update Escalar Tarefa",
@@ -1132,8 +1150,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        4560,
-        1312
+        4784,
+        1248
       ],
       "id": "c9fb7f22-2d84-432a-87d1-140c50864b21",
       "name": "If otimização ativa"
@@ -1780,6 +1798,39 @@
         3808,
         1744
       ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "874a1fad-f3b9-4d80-8366-d4673723fc33",
+              "leftValue": "={{ $json.id }}",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        4336,
+        1248
+      ],
+      "id": "e17c4f70-5e81-447d-8d7f-bc9530fea585",
+      "name": "Tarefa Escalada Existe?"
     }
   ],
   "activeVersion": null,
