@@ -1244,7 +1244,7 @@
           "cachedResultName": "Tasks",
           "cachedResultUrl": "https://www.notion.so/19fb65e5c72b812da734de9a4d5b980f"
         },
-        "title": "=[{{ $('Code Clean Campanhas F3').item.json.clean_client_slug }}] PHI ALERT - {{ new Date().toLocaleDateString('pt-BR', {timeZone: 'America/Sao_Paulo'}) }}",
+        "title": "=[{{ $('Code Enriquecer Campanha').item.json.client_slug }}] PHI ALERT - {{ new Date().toLocaleDateString('pt-BR', {timeZone: 'America/Sao_Paulo'}) }}",
         "simple": false,
         "propertiesUi": {
           "propertyValues": [
@@ -1264,7 +1264,7 @@
             },
             {
               "key": "execution_id|rich_text",
-              "textContent": "={{ $('Loop Campanhas').item.json.execution_id }}"
+              "textContent": "={{ $('Code Enriquecer Campanha').item.json.execution_id }}"
             },
             {
               "key": "Métrica Afetada|select",
@@ -1313,7 +1313,7 @@
             {
               "key": "Campanha|relation",
               "relationValue": [
-                "={{ $('Code Clean Campanhas F3').item.json.clean_notion_id_camp }}"
+                "={{ $('Code Enriquecer Campanha').item.json.notion_id_camp }}"
               ]
             },
             {
@@ -1329,8 +1329,8 @@
               "textContent": "={{ $('Code Criar Checklist').first().json.hipotese }}"
             },
             {
-              "key": "priority_score|number",
-              "numberValue": "={{ $('Code Enriquecer Campanha').item.json.priority_score }}"
+              "key": "priority_score",
+              "numberValue": "={{ parseFloat($('Code Enriquecer Campanha').item.json.priority_score) }}"
             }
           ]
         },
