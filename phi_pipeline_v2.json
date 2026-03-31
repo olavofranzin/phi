@@ -1536,18 +1536,18 @@
           "propertyValues": [
             {
               "key": "phi_score",
-              "numberValue": "={{ $json.phi_value }}"
+              "numberValue": "={{ parseFloat($json.phi_value) }}"
             },
             {
               "key": "phi_classificacao",
               "selectValue": "={{ $json.phi_classification }}"
             },
             {
-              "key": "Score Diário (0-100)|number",
-              "numberValue": "={{ $json.phi_value }}"
+              "key": "Score Diário (0-100)",
+              "numberValue": "={{ parseFloat($json.phi_value) }}"
             },
             {
-              "key": "Status Geral da Campanha|select",
+              "key": "Status Geral da Campanha",
               "selectValue": "={{ $json.phi_classification }}"
             },
             {
