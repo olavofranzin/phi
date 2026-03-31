@@ -1573,21 +1573,33 @@
     {
       "parameters": {
         "conditions": {
-          "combinator": "and",
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
           "conditions": [
             {
+              "id": "58f17d04-f9d6-4de9-bd59-2d41c926de2d",
               "leftValue": "={{ $json.phi_classification }}",
-              "operator": "equals",
               "rightValue": "GOOD",
-              "type": "string"
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
             },
             {
+              "id": "716a8a5e-a2d7-4d0d-bc79-7705065eee51",
               "leftValue": "={{ $json.otimizacao_ativa }}",
-              "operator": "equals",
               "rightValue": true,
-              "type": "boolean"
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
             }
-          ]
+          ],
+          "combinator": "and"
         },
         "options": {}
       },
