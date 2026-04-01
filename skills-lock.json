@@ -16,6 +16,11 @@
       "sourceType": "github",
       "computedHash": "ddec844d01d102687f89749e1d3a9f7a9019010dce1039a7d442189f39726ad4"
     },
+    "pdf": {
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "computedHash": "cfbc539377088ca7e44a813b30c306327385bbd973cd7a721e1743f60837dd62"
+    },
     "social-content": {
       "source": "coreyhaines31/marketingskills",
       "sourceType": "github",
