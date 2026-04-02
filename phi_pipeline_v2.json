@@ -426,7 +426,7 @@
       "main": [
         [
           {
-            "node": "Auto-Close Task (Notion)",
+            "node": "Get Task para Fechar",
             "type": "main",
             "index": 0
           }
@@ -444,7 +444,7 @@
       "main": [
         [
           {
-            "node": "Loop Sync & Close",
+            "node": "Auto-Close: Desativar Otimização",
             "type": "main",
             "index": 0
           }
@@ -569,6 +569,46 @@
         [
           {
             "node": "Log OPERATIONAL SUCCESS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Task para Fechar": {
+      "main": [
+        [
+          {
+            "node": "Tarefa para Fechar Existe?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tarefa para Fechar Existe?": {
+      "main": [
+        [
+          {
+            "node": "Auto-Close Task (Notion)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Auto-Close: Desativar Otimização",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auto-Close: Desativar Otimização": {
+      "main": [
+        [
+          {
+            "node": "Loop Sync & Close",
             "type": "main",
             "index": 0
           }
@@ -1651,11 +1691,17 @@
       "parameters": {
         "resource": "databasePage",
         "operation": "update",
-        "pageId": "={{ $json.notion_page_id }}",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('Get Task para Fechar').first().json.id }}",
+          "mode": "id"
+        },
+        "simple": false,
         "propertiesUi": {
           "propertyValues": [
             {
-              "key": "Otimização Ativa?"
+              "key": "Status|status",
+              "statusValue": "Concluído"
             }
           ]
         },
@@ -1666,30 +1712,43 @@
       "type": "n8n-nodes-base.notion",
       "typeVersion": 2.2,
       "position": [
-        3888,
-        1120
+        4112,
+        960
       ],
       "alwaysOutputData": true
     },
     {
       "parameters": {
         "conditions": {
-          "boolean": [
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
             {
-              "value1": "={{ !!$json.notion_page_id }}",
-              "value2": true
+              "id": "83795b48-16df-4461-b074-90e57fbd2cfc",
+              "leftValue": "={{ $json.notion_page_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
             }
-          ]
+          ],
+          "combinator": "and"
         }
       },
       "id": "if_notion_guard_v13",
       "name": "Existe no Notion?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 1,
+      "typeVersion": 2.2,
       "position": [
         3216,
         1120
-      ]
+      ],
+      "type": "n8n-nodes-base.if"
     },
     {
       "parameters": {
@@ -1880,6 +1939,114 @@
       "position": [
         3232,
         1584
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "value": "19fb65e5-c72b-812d-a734-de9a4d5b980f",
+          "mode": "list",
+          "cachedResultName": "Tasks",
+          "cachedResultUrl": "https://www.notion.so/19fb65e5c72b812da734de9a4d5b980f"
+        },
+        "returnAll": true,
+        "simple": false,
+        "filterType": "manual",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "key": "campaign_id|rich_text",
+              "condition": "equals",
+              "richTextValue": "={{ $json.campaign_id }}"
+            },
+            {
+              "key": "Status|status",
+              "condition": "does_not_equal",
+              "statusValue": "Concluído"
+            },
+            {
+              "key": "Criado por Automação|checkbox",
+              "condition": "equals",
+              "checkboxValue": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "12b8f3a4-f546-4ff6-8192-e0195b7fdfd5",
+      "name": "Get Task para Fechar",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        3888,
+        1120
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "4faae21d-0a9c-45d6-9e5f-1fedd610bcd8",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "c371a413-0cd2-468f-971e-8c996b5ac915",
+      "name": "Tarefa para Fechar Existe?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        4112,
+        1120
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('Enrich for Sync').item.json.notion_page_id }}",
+          "mode": "id"
+        },
+        "simple": false,
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Otimização Ativa?",
+              "checkboxValue": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c1ad010a-309a-4876-bf74-50a4402ee51e",
+      "name": "Auto-Close: Desativar Otimização",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        4560,
+        1120
       ]
     }
   ],
