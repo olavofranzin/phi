@@ -106,7 +106,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"query\": \"SELECT campaign.id, campaign.name, campaign.bidding_strategy_type, campaign.advertising_channel_type, campaign.target_cpa.target_cpa_micros, campaign.target_roas.target_roas, metrics.impressions, metrics.clicks, metrics.ctr, metrics.average_cpc, metrics.cost_micros, metrics.phone_calls, metrics.conversions_from_interactions_rate, metrics.cost_per_conversion, metrics.conversions, metrics.active_view_impressions, metrics.active_view_measurable_impressions, metrics.average_cpm FROM campaign WHERE campaign.id = '{ $('Code Preparar Contexto').item.json.campaign_id }' AND segments.date BETWEEN '{ $('Code Preparar Contexto').item.json.periodo_7d.start }' AND '{ $('Code Preparar Contexto').item.json.periodo_7d.end }'\"\n}",
+        "jsonBody": "={\n  \"query\": \"SELECT campaign.id, campaign.name, campaign.bidding_strategy_type, campaign.advertising_channel_type, campaign.target_cpa.target_cpa_micros, campaign.target_roas.target_roas, metrics.impressions, metrics.clicks, metrics.ctr, metrics.average_cpc, metrics.cost_micros, metrics.phone_calls, metrics.conversions_from_interactions_rate, metrics.cost_per_conversion, metrics.conversions, metrics.active_view_impressions, metrics.active_view_measurable_impressions, metrics.average_cpm FROM campaign WHERE campaign.id = '{{ $('Code Preparar Contexto').item.json.campaign_id }}' AND segments.date BETWEEN '{{ $('Code Preparar Contexto').item.json.periodo_7d.start }}' AND '{{ $('Code Preparar Contexto').item.json.periodo_7d.end }}'\"\n}",
         "options": {}
       },
       "id": "db7a54e9-ab57-432e-97f3-bc7b325e2482",
@@ -140,7 +140,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"query\": \"SELECT campaign.id, campaign.name, campaign.bidding_strategy_type, campaign.advertising_channel_type, campaign.target_cpa.target_cpa_micros, campaign.target_roas.target_roas, metrics.impressions, metrics.clicks, metrics.ctr, metrics.average_cpc, metrics.cost_micros, metrics.phone_calls, metrics.conversions_from_interactions_rate, metrics.cost_per_conversion, metrics.conversions, metrics.active_view_impressions, metrics.active_view_measurable_impressions, metrics.average_cpm FROM campaign WHERE campaign.id = '{ $('Code Preparar Contexto').item.json.campaign_id }' AND segments.date BETWEEN '{ $('Code Preparar Contexto').item.json.periodo_30d.start }' AND '{ $('Code Preparar Contexto').item.json.periodo_30d.end }'\"\n}",
+        "jsonBody": "={\n  \"query\": \"SELECT campaign.id, campaign.name, campaign.bidding_strategy_type, campaign.advertising_channel_type, campaign.target_cpa.target_cpa_micros, campaign.target_roas.target_roas, metrics.impressions, metrics.clicks, metrics.ctr, metrics.average_cpc, metrics.cost_micros, metrics.phone_calls, metrics.conversions_from_interactions_rate, metrics.cost_per_conversion, metrics.conversions, metrics.active_view_impressions, metrics.active_view_measurable_impressions, metrics.average_cpm FROM campaign WHERE campaign.id = '{{ $('Code Preparar Contexto').item.json.campaign_id }}' AND segments.date BETWEEN '{{ $('Code Preparar Contexto').item.json.periodo_30d.start }}' AND '{{ $('Code Preparar Contexto').item.json.periodo_30d.end }}'\"\n}",
         "options": {}
       },
       "id": "dd7638e0-2f07-49f7-bba3-28300e510fc3",
@@ -174,7 +174,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"query\": \"SELECT ad_group.id, ad_group.name, campaign.name, campaign.bidding_strategy_type, campaign.target_cpa.target_cpa_micros, campaign.target_roas.target_roas, metrics.impressions, metrics.clicks, metrics.ctr, metrics.average_cpc, metrics.cost_micros, metrics.phone_calls, metrics.conversions_from_interactions_rate, metrics.cost_per_conversion, metrics.conversions, metrics.active_view_impressions, metrics.active_view_measurable_impressions, metrics.average_cpm FROM ad_group WHERE campaign.id = '{ $('Code Preparar Contexto').item.json.campaign_id }' AND segments.date BETWEEN '{ $('Code Preparar Contexto').item.json.periodo_7d.start }' AND '{ $('Code Preparar Contexto').item.json.periodo_7d.end }' AND ad_group.status != 'REMOVED' ORDER BY metrics.cost_micros DESC\"\n}",
+        "jsonBody": "={\n  \"query\": \"SELECT ad_group.id, ad_group.name, campaign.name, campaign.bidding_strategy_type, campaign.target_cpa.target_cpa_micros, campaign.target_roas.target_roas, metrics.impressions, metrics.clicks, metrics.ctr, metrics.average_cpc, metrics.cost_micros, metrics.phone_calls, metrics.conversions_from_interactions_rate, metrics.cost_per_conversion, metrics.conversions, metrics.active_view_impressions, metrics.active_view_measurable_impressions, metrics.average_cpm FROM ad_group WHERE campaign.id = '{{ $('Code Preparar Contexto').item.json.campaign_id }}' AND segments.date BETWEEN '{{ $('Code Preparar Contexto').item.json.periodo_7d.start }}' AND '{{ $('Code Preparar Contexto').item.json.periodo_7d.end }}' AND ad_group.status != 'REMOVED' ORDER BY metrics.cost_micros DESC\"\n}",
         "options": {}
       },
       "id": "df9fee60-9451-4e6b-b601-19b2bdab3c9d",
@@ -208,7 +208,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"query\": \"SELECT ad_group.id, ad_group.name, campaign.name, campaign.bidding_strategy_type, campaign.target_cpa.target_cpa_micros, campaign.target_roas.target_roas, metrics.impressions, metrics.clicks, metrics.ctr, metrics.average_cpc, metrics.cost_micros, metrics.phone_calls, metrics.conversions_from_interactions_rate, metrics.cost_per_conversion, metrics.conversions, metrics.active_view_impressions, metrics.active_view_measurable_impressions, metrics.average_cpm FROM ad_group WHERE campaign.id = '{ $('Code Preparar Contexto').item.json.campaign_id }' AND segments.date BETWEEN '{ $('Code Preparar Contexto').item.json.periodo_30d.start }' AND '{ $('Code Preparar Contexto').item.json.periodo_30d.end }' AND ad_group.status != 'REMOVED' ORDER BY metrics.cost_micros DESC\"\n}",
+        "jsonBody": "={\n  \"query\": \"SELECT ad_group.id, ad_group.name, campaign.name, campaign.bidding_strategy_type, campaign.target_cpa.target_cpa_micros, campaign.target_roas.target_roas, metrics.impressions, metrics.clicks, metrics.ctr, metrics.average_cpc, metrics.cost_micros, metrics.phone_calls, metrics.conversions_from_interactions_rate, metrics.cost_per_conversion, metrics.conversions, metrics.active_view_impressions, metrics.active_view_measurable_impressions, metrics.average_cpm FROM ad_group WHERE campaign.id = '{{ $('Code Preparar Contexto').item.json.campaign_id }}' AND segments.date BETWEEN '{{ $('Code Preparar Contexto').item.json.periodo_30d.start }}' AND '{{ $('Code Preparar Contexto').item.json.periodo_30d.end }}' AND ad_group.status != 'REMOVED' ORDER BY metrics.cost_micros DESC\"\n}",
         "options": {}
       },
       "id": "65fd3ecb-ffeb-4717-92c2-a4b7a9d8c588",
@@ -242,7 +242,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"query\": \"SELECT search_term_view.search_term, search_term_view.status, metrics.impressions, metrics.clicks, metrics.ctr, metrics.average_cpc, metrics.cost_micros, metrics.conversions, metrics.conversions_from_interactions_rate, metrics.cost_per_conversion FROM search_term_view WHERE campaign.id = '{ $('Code Preparar Contexto').item.json.campaign_id }' AND segments.date BETWEEN '{ $('Code Preparar Contexto').item.json.periodo_7d.start }' AND '{ $('Code Preparar Contexto').item.json.periodo_7d.end }' ORDER BY metrics.cost_micros DESC LIMIT 50\"\n}",
+        "jsonBody": "={\n  \"query\": \"SELECT search_term_view.search_term, search_term_view.status, metrics.impressions, metrics.clicks, metrics.ctr, metrics.average_cpc, metrics.cost_micros, metrics.conversions, metrics.conversions_from_interactions_rate, metrics.cost_per_conversion FROM search_term_view WHERE campaign.id = '{{ $('Code Preparar Contexto').item.json.campaign_id }}' AND segments.date BETWEEN '{{ $('Code Preparar Contexto').item.json.periodo_7d.start }}' AND '{{ $('Code Preparar Contexto').item.json.periodo_7d.end }}' ORDER BY metrics.cost_micros DESC LIMIT 50\"\n}",
         "options": {}
       },
       "id": "bd6030d7-5b59-430a-b173-e6532310d142",
@@ -276,7 +276,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"query\": \"SELECT segments.day_of_week, segments.hour, metrics.impressions, metrics.clicks, metrics.ctr, metrics.average_cpc, metrics.cost_micros, metrics.conversions, metrics.conversions_from_interactions_rate, metrics.cost_per_conversion FROM campaign WHERE campaign.id = '{ $('Code Preparar Contexto').item.json.campaign_id }' AND segments.date BETWEEN '{ $('Code Preparar Contexto').item.json.periodo_7d.start }' AND '{ $('Code Preparar Contexto').item.json.periodo_7d.end }' AND metrics.impressions > 0 ORDER BY metrics.conversions DESC LIMIT 500\"\n}",
+        "jsonBody": "={\n  \"query\": \"SELECT segments.day_of_week, segments.hour, metrics.impressions, metrics.clicks, metrics.ctr, metrics.average_cpc, metrics.cost_micros, metrics.conversions, metrics.conversions_from_interactions_rate, metrics.cost_per_conversion FROM campaign WHERE campaign.id = '{{ $('Code Preparar Contexto').item.json.campaign_id }}' AND segments.date BETWEEN '{{ $('Code Preparar Contexto').item.json.periodo_7d.start }}' AND '{{ $('Code Preparar Contexto').item.json.periodo_7d.end }}' AND metrics.impressions > 0 ORDER BY metrics.conversions DESC LIMIT 500\"\n}",
         "options": {}
       },
       "id": "772334ff-5d8d-4a4b-be51-1e4b73e6639d",
@@ -310,7 +310,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"query\": \"SELECT segments.day_of_week, segments.hour, metrics.impressions, metrics.clicks, metrics.ctr, metrics.average_cpc, metrics.cost_micros, metrics.conversions, metrics.conversions_from_interactions_rate, metrics.cost_per_conversion FROM campaign WHERE campaign.id = '{ $('Code Preparar Contexto').item.json.campaign_id }' AND segments.date BETWEEN '{ $('Code Preparar Contexto').item.json.periodo_30d.start }' AND '{ $('Code Preparar Contexto').item.json.periodo_30d.end }' AND metrics.impressions > 0 ORDER BY metrics.conversions DESC LIMIT 500\"\n}",
+        "jsonBody": "={\n  \"query\": \"SELECT segments.day_of_week, segments.hour, metrics.impressions, metrics.clicks, metrics.ctr, metrics.average_cpc, metrics.cost_micros, metrics.conversions, metrics.conversions_from_interactions_rate, metrics.cost_per_conversion FROM campaign WHERE campaign.id = '{{ $('Code Preparar Contexto').item.json.campaign_id }}' AND segments.date BETWEEN '{{ $('Code Preparar Contexto').item.json.periodo_30d.start }}' AND '{{ $('Code Preparar Contexto').item.json.periodo_30d.end }}' AND metrics.impressions > 0 ORDER BY metrics.conversions DESC LIMIT 500\"\n}",
         "options": {}
       },
       "id": "30c665fd-b002-4983-90bf-1e86447f26ad",
@@ -344,7 +344,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"query\": \"SELECT campaign_audience_view.resource_name, metrics.impressions, metrics.clicks, metrics.ctr, metrics.cost_micros, metrics.conversions, metrics.cost_per_conversion, metrics.average_cpm, metrics.active_view_impressions, metrics.active_view_measurable_impressions FROM campaign_audience_view WHERE campaign.id = '{ $('Code Preparar Contexto').item.json.campaign_id }' AND segments.date BETWEEN '{ $('Code Preparar Contexto').item.json.periodo_30d.start }' AND '{ $('Code Preparar Contexto').item.json.periodo_30d.end }' ORDER BY metrics.cost_micros DESC\"\n}",
+        "jsonBody": "={\n  \"query\": \"SELECT campaign_audience_view.resource_name, metrics.impressions, metrics.clicks, metrics.ctr, metrics.cost_micros, metrics.conversions, metrics.cost_per_conversion, metrics.average_cpm, metrics.active_view_impressions, metrics.active_view_measurable_impressions FROM campaign_audience_view WHERE campaign.id = '{{ $('Code Preparar Contexto').item.json.campaign_id }}' AND segments.date BETWEEN '{{ $('Code Preparar Contexto').item.json.periodo_30d.start }}' AND '{{ $('Code Preparar Contexto').item.json.periodo_30d.end }}' ORDER BY metrics.cost_micros DESC\"\n}",
         "options": {}
       },
       "id": "92347e7d-37ef-40a6-bb84-bcdf125d7def",
@@ -378,7 +378,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"query\": \"SELECT campaign.id, campaign_budget.amount_micros, campaign_budget.period, metrics.cost_micros FROM campaign WHERE campaign.id = '{ $('Code Preparar Contexto').item.json.campaign_id }' AND segments.date BETWEEN '{ $('Code Preparar Contexto').item.json.periodo_mes.start }' AND '{ $('Code Preparar Contexto').item.json.periodo_mes.end }'\"\n}",
+        "jsonBody": "={\n  \"query\": \"SELECT campaign.id, campaign_budget.amount_micros, campaign_budget.period, metrics.cost_micros FROM campaign WHERE campaign.id = '{{ $('Code Preparar Contexto').item.json.campaign_id }}' AND segments.date BETWEEN '{{ $('Code Preparar Contexto').item.json.periodo_mes.start }}' AND '{{ $('Code Preparar Contexto').item.json.periodo_mes.end }}'\"\n}",
         "options": {}
       },
       "id": "45f810e8-69ff-474c-8c86-617735e500a9",
@@ -412,7 +412,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"query\": \"SELECT campaign.advertising_channel_type, segments.conversion_action_name, segments.conversion_action_category, metrics.conversions, metrics.conversions_value, metrics.cost_per_conversion FROM campaign WHERE campaign.id = '{ $('Code Preparar Contexto').item.json.campaign_id }' AND segments.date BETWEEN '{ $('Code Preparar Contexto').item.json.periodo_30d.start }' AND '{ $('Code Preparar Contexto').item.json.periodo_30d.end }' AND metrics.conversions > 0 ORDER BY metrics.conversions DESC\"\n}",
+        "jsonBody": "={\n  \"query\": \"SELECT campaign.advertising_channel_type, segments.conversion_action_name, segments.conversion_action_category, metrics.conversions, metrics.conversions_value, metrics.cost_per_conversion FROM campaign WHERE campaign.id = '{{ $('Code Preparar Contexto').item.json.campaign_id }}' AND segments.date BETWEEN '{{ $('Code Preparar Contexto').item.json.periodo_30d.start }}' AND '{{ $('Code Preparar Contexto').item.json.periodo_30d.end }}' AND metrics.conversions > 0 ORDER BY metrics.conversions DESC\"\n}",
         "options": {}
       },
       "id": "74c37743-b4ed-460b-bb33-4d1b4f3d7a2a",
