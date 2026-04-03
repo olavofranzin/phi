@@ -1,0 +1,650 @@
+{
+  "name": "Google Ads v2",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 5
+            }
+          ]
+        }
+      },
+      "id": "98526f9f-f947-489d-b552-b37ffc79ffa9",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "value": "19fb65e5-c72b-8043-a82d-f47ede397928",
+          "mode": "list",
+          "cachedResultName": "Campanhas",
+          "cachedResultUrl": "https://www.notion.so/19fb65e5c72b8043a82df47ede397928"
+        },
+        "returnAll": true,
+        "simple": false,
+        "filterType": "manual",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "key": "Status|status",
+              "condition": "equals",
+              "statusValue": "Em execução"
+            },
+            {
+              "key": "Fonte|multi_select",
+              "condition": "is_not_empty"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "5fbfe8c8-514b-4e6e-a048-e1ee453c7dc8",
+      "name": "Notion: Get Campanhas Ativas",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        220,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const props = $input.item.json.properties;\nconst customerId = String(parseInt(props.id_google_account?.number || 0));\nconst campaignId = String(parseInt(props.id_google_camp?.number || 0));\nconst campaignName = props['Nome Campanha']?.formula?.string\n  || props['Name']?.title?.[0]?.plain_text\n  || 'Campanha';\n\nconst today = new Date();\nconst fmt = (d) => d.toISOString().split('T')[0];\nconst yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);\nconst start7  = new Date(today); start7.setDate(today.getDate() - 7);\nconst start30 = new Date(today); start30.setDate(today.getDate() - 30);\nconst startMes = new Date(today.getFullYear(), today.getMonth(), 1);\n\nreturn [{ json: {\n  customer_id:   customerId,\n  campaign_id:   campaignId,\n  campaign_name: campaignName,\n  periodo_7d:  { start: fmt(start7),   end: fmt(yesterday) },\n  periodo_30d: { start: fmt(start30),  end: fmt(yesterday) },\n  periodo_mes: { start: fmt(startMes), end: fmt(yesterday) },\n  hoje: fmt(today)\n}}];"
+      },
+      "id": "ddd24b64-91eb-4801-a6ce-1acb4071fc52",
+      "name": "Code Preparar Contexto",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "bf38d807-8daa-48c3-8fcb-537836c974ac",
+      "name": "Loop Campanhas",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        660,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://googleads.googleapis.com/v22/customers/{{ $('Code Preparar Contexto').item.json.customer_id }}/googleAds:search",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleAdsOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "developer-token",
+              "value": "o0hGRr2vcX3jGF6aI3a_0w"
+            },
+            {
+              "name": "login-customer-id",
+              "value": "7595536100"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"query\": \"SELECT campaign.id, campaign.name, campaign.bidding_strategy_type, campaign.advertising_channel_type, campaign.target_cpa.target_cpa_micros, campaign.target_roas.target_roas, metrics.impressions, metrics.clicks, metrics.ctr, metrics.average_cpc, metrics.cost_micros, metrics.phone_calls, metrics.conversions_from_interactions_rate, metrics.cost_per_conversion, metrics.conversions, metrics.active_view_impressions, metrics.active_view_measurable_impressions, metrics.average_cpm FROM campaign WHERE campaign.id = '{ $('Code Preparar Contexto').item.json.campaign_id }' AND segments.date BETWEEN '{ $('Code Preparar Contexto').item.json.periodo_7d.start }' AND '{ $('Code Preparar Contexto').item.json.periodo_7d.end }'\"\n}",
+        "options": {}
+      },
+      "id": "db7a54e9-ab57-432e-97f3-bc7b325e2482",
+      "name": "HTTP Core 7d",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        880,
+        200
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://googleads.googleapis.com/v22/customers/{{ $('Code Preparar Contexto').item.json.customer_id }}/googleAds:search",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleAdsOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "developer-token",
+              "value": "o0hGRr2vcX3jGF6aI3a_0w"
+            },
+            {
+              "name": "login-customer-id",
+              "value": "7595536100"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"query\": \"SELECT campaign.id, campaign.name, campaign.bidding_strategy_type, campaign.advertising_channel_type, campaign.target_cpa.target_cpa_micros, campaign.target_roas.target_roas, metrics.impressions, metrics.clicks, metrics.ctr, metrics.average_cpc, metrics.cost_micros, metrics.phone_calls, metrics.conversions_from_interactions_rate, metrics.cost_per_conversion, metrics.conversions, metrics.active_view_impressions, metrics.active_view_measurable_impressions, metrics.average_cpm FROM campaign WHERE campaign.id = '{ $('Code Preparar Contexto').item.json.campaign_id }' AND segments.date BETWEEN '{ $('Code Preparar Contexto').item.json.periodo_30d.start }' AND '{ $('Code Preparar Contexto').item.json.periodo_30d.end }'\"\n}",
+        "options": {}
+      },
+      "id": "dd7638e0-2f07-49f7-bba3-28300e510fc3",
+      "name": "HTTP Core 30d",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1100,
+        200
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://googleads.googleapis.com/v22/customers/{{ $('Code Preparar Contexto').item.json.customer_id }}/googleAds:search",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleAdsOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "developer-token",
+              "value": "o0hGRr2vcX3jGF6aI3a_0w"
+            },
+            {
+              "name": "login-customer-id",
+              "value": "7595536100"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"query\": \"SELECT ad_group.id, ad_group.name, campaign.name, campaign.bidding_strategy_type, campaign.target_cpa.target_cpa_micros, campaign.target_roas.target_roas, metrics.impressions, metrics.clicks, metrics.ctr, metrics.average_cpc, metrics.cost_micros, metrics.phone_calls, metrics.conversions_from_interactions_rate, metrics.cost_per_conversion, metrics.conversions, metrics.active_view_impressions, metrics.active_view_measurable_impressions, metrics.average_cpm FROM ad_group WHERE campaign.id = '{ $('Code Preparar Contexto').item.json.campaign_id }' AND segments.date BETWEEN '{ $('Code Preparar Contexto').item.json.periodo_7d.start }' AND '{ $('Code Preparar Contexto').item.json.periodo_7d.end }' AND ad_group.status != 'REMOVED' ORDER BY metrics.cost_micros DESC\"\n}",
+        "options": {}
+      },
+      "id": "df9fee60-9451-4e6b-b601-19b2bdab3c9d",
+      "name": "HTTP Grupo Recursos 7d",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1320,
+        200
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://googleads.googleapis.com/v22/customers/{{ $('Code Preparar Contexto').item.json.customer_id }}/googleAds:search",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleAdsOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "developer-token",
+              "value": "o0hGRr2vcX3jGF6aI3a_0w"
+            },
+            {
+              "name": "login-customer-id",
+              "value": "7595536100"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"query\": \"SELECT ad_group.id, ad_group.name, campaign.name, campaign.bidding_strategy_type, campaign.target_cpa.target_cpa_micros, campaign.target_roas.target_roas, metrics.impressions, metrics.clicks, metrics.ctr, metrics.average_cpc, metrics.cost_micros, metrics.phone_calls, metrics.conversions_from_interactions_rate, metrics.cost_per_conversion, metrics.conversions, metrics.active_view_impressions, metrics.active_view_measurable_impressions, metrics.average_cpm FROM ad_group WHERE campaign.id = '{ $('Code Preparar Contexto').item.json.campaign_id }' AND segments.date BETWEEN '{ $('Code Preparar Contexto').item.json.periodo_30d.start }' AND '{ $('Code Preparar Contexto').item.json.periodo_30d.end }' AND ad_group.status != 'REMOVED' ORDER BY metrics.cost_micros DESC\"\n}",
+        "options": {}
+      },
+      "id": "65fd3ecb-ffeb-4717-92c2-a4b7a9d8c588",
+      "name": "HTTP Grupo Recursos 30d",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1540,
+        200
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://googleads.googleapis.com/v22/customers/{{ $('Code Preparar Contexto').item.json.customer_id }}/googleAds:search",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleAdsOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "developer-token",
+              "value": "o0hGRr2vcX3jGF6aI3a_0w"
+            },
+            {
+              "name": "login-customer-id",
+              "value": "7595536100"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"query\": \"SELECT search_term_view.search_term, search_term_view.status, metrics.impressions, metrics.clicks, metrics.ctr, metrics.average_cpc, metrics.cost_micros, metrics.conversions, metrics.conversions_from_interactions_rate, metrics.cost_per_conversion FROM search_term_view WHERE campaign.id = '{ $('Code Preparar Contexto').item.json.campaign_id }' AND segments.date BETWEEN '{ $('Code Preparar Contexto').item.json.periodo_7d.start }' AND '{ $('Code Preparar Contexto').item.json.periodo_7d.end }' ORDER BY metrics.cost_micros DESC LIMIT 50\"\n}",
+        "options": {}
+      },
+      "id": "bd6030d7-5b59-430a-b173-e6532310d142",
+      "name": "HTTP Termos 7d",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1760,
+        200
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://googleads.googleapis.com/v22/customers/{{ $('Code Preparar Contexto').item.json.customer_id }}/googleAds:search",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleAdsOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "developer-token",
+              "value": "o0hGRr2vcX3jGF6aI3a_0w"
+            },
+            {
+              "name": "login-customer-id",
+              "value": "7595536100"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"query\": \"SELECT segments.day_of_week, segments.hour, metrics.impressions, metrics.clicks, metrics.ctr, metrics.average_cpc, metrics.cost_micros, metrics.conversions, metrics.conversions_from_interactions_rate, metrics.cost_per_conversion FROM campaign WHERE campaign.id = '{ $('Code Preparar Contexto').item.json.campaign_id }' AND segments.date BETWEEN '{ $('Code Preparar Contexto').item.json.periodo_7d.start }' AND '{ $('Code Preparar Contexto').item.json.periodo_7d.end }' AND metrics.impressions > 0 ORDER BY metrics.conversions DESC LIMIT 500\"\n}",
+        "options": {}
+      },
+      "id": "772334ff-5d8d-4a4b-be51-1e4b73e6639d",
+      "name": "HTTP Schedule 7d",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1980,
+        200
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://googleads.googleapis.com/v22/customers/{{ $('Code Preparar Contexto').item.json.customer_id }}/googleAds:search",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleAdsOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "developer-token",
+              "value": "o0hGRr2vcX3jGF6aI3a_0w"
+            },
+            {
+              "name": "login-customer-id",
+              "value": "7595536100"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"query\": \"SELECT segments.day_of_week, segments.hour, metrics.impressions, metrics.clicks, metrics.ctr, metrics.average_cpc, metrics.cost_micros, metrics.conversions, metrics.conversions_from_interactions_rate, metrics.cost_per_conversion FROM campaign WHERE campaign.id = '{ $('Code Preparar Contexto').item.json.campaign_id }' AND segments.date BETWEEN '{ $('Code Preparar Contexto').item.json.periodo_30d.start }' AND '{ $('Code Preparar Contexto').item.json.periodo_30d.end }' AND metrics.impressions > 0 ORDER BY metrics.conversions DESC LIMIT 500\"\n}",
+        "options": {}
+      },
+      "id": "30c665fd-b002-4983-90bf-1e86447f26ad",
+      "name": "HTTP Schedule 30d",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2200,
+        200
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://googleads.googleapis.com/v22/customers/{{ $('Code Preparar Contexto').item.json.customer_id }}/googleAds:search",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleAdsOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "developer-token",
+              "value": "o0hGRr2vcX3jGF6aI3a_0w"
+            },
+            {
+              "name": "login-customer-id",
+              "value": "7595536100"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"query\": \"SELECT campaign_audience_view.resource_name, metrics.impressions, metrics.clicks, metrics.ctr, metrics.cost_micros, metrics.conversions, metrics.cost_per_conversion, metrics.average_cpm, metrics.active_view_impressions, metrics.active_view_measurable_impressions FROM campaign_audience_view WHERE campaign.id = '{ $('Code Preparar Contexto').item.json.campaign_id }' AND segments.date BETWEEN '{ $('Code Preparar Contexto').item.json.periodo_30d.start }' AND '{ $('Code Preparar Contexto').item.json.periodo_30d.end }' ORDER BY metrics.cost_micros DESC\"\n}",
+        "options": {}
+      },
+      "id": "92347e7d-37ef-40a6-bb84-bcdf125d7def",
+      "name": "HTTP Audiência",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2420,
+        200
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://googleads.googleapis.com/v22/customers/{{ $('Code Preparar Contexto').item.json.customer_id }}/googleAds:search",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleAdsOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "developer-token",
+              "value": "o0hGRr2vcX3jGF6aI3a_0w"
+            },
+            {
+              "name": "login-customer-id",
+              "value": "7595536100"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"query\": \"SELECT campaign.id, campaign_budget.amount_micros, campaign_budget.period, metrics.cost_micros FROM campaign WHERE campaign.id = '{ $('Code Preparar Contexto').item.json.campaign_id }' AND segments.date BETWEEN '{ $('Code Preparar Contexto').item.json.periodo_mes.start }' AND '{ $('Code Preparar Contexto').item.json.periodo_mes.end }'\"\n}",
+        "options": {}
+      },
+      "id": "45f810e8-69ff-474c-8c86-617735e500a9",
+      "name": "HTTP Pacing",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2640,
+        200
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://googleads.googleapis.com/v22/customers/{{ $('Code Preparar Contexto').item.json.customer_id }}/googleAds:search",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleAdsOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "developer-token",
+              "value": "o0hGRr2vcX3jGF6aI3a_0w"
+            },
+            {
+              "name": "login-customer-id",
+              "value": "7595536100"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"query\": \"SELECT campaign.advertising_channel_type, segments.conversion_action_name, segments.conversion_action_category, metrics.conversions, metrics.conversions_value, metrics.cost_per_conversion FROM campaign WHERE campaign.id = '{ $('Code Preparar Contexto').item.json.campaign_id }' AND segments.date BETWEEN '{ $('Code Preparar Contexto').item.json.periodo_30d.start }' AND '{ $('Code Preparar Contexto').item.json.periodo_30d.end }' AND metrics.conversions > 0 ORDER BY metrics.conversions DESC\"\n}",
+        "options": {}
+      },
+      "id": "74c37743-b4ed-460b-bb33-4d1b4f3d7a2a",
+      "name": "HTTP Canais",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2860,
+        200
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// PHI — Google Ads Merger Unificado v2\n// Lê todas as branches e consolida dados da campanha\n\nconst ctx  = $('Code Preparar Contexto').item.json;\nconst toBRL  = (micros) => parseFloat(micros || 0) / 1e6;\nconst fmtBRL = (v)    => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });\nconst fmtPct = (v)    => (parseFloat(v || 0) * 100).toFixed(2) + '%';\nconst fmtN   = (v)    => parseInt(v || 0).toLocaleString('pt-BR');\n\nconst getResults = (nodeName) => {\n  try {\n    const r = $(nodeName).first().json;\n    return Array.isArray(r.results) ? r.results : [];\n  } catch(e) { return []; }\n};\n\n// ── CORE CAMPANHA ─────────────────────────────────────────────────────────\nconst core7  = getResults('HTTP Core 7d');\nconst core30 = getResults('HTTP Core 30d');\n\nconst somarCore = (rows) => rows.reduce((acc, r) => {\n  const m = r.metrics || {};\n  acc.impressions  += parseInt(m.impressions  || 0);\n  acc.clicks       += parseInt(m.clicks       || 0);\n  acc.costMicros   += parseInt(m.costMicros   || 0);\n  acc.conversions  += parseFloat(m.conversions || 0);\n  acc.phoneCalls   += parseInt(m.phoneCalls   || 0);\n  acc.avImpr       += parseInt(m.activeViewImpressions           || 0);\n  acc.avMeasurable += parseInt(m.activeViewMeasurableImpressions || 0);\n  return acc;\n}, { impressions:0, clicks:0, costMicros:0, conversions:0,\n     phoneCalls:0, avImpr:0, avMeasurable:0 });\n\nconst c7  = somarCore(core7);\nconst c30 = somarCore(core30);\n\nconst meta = core7[0] || {};\nconst camp = meta.campaign || {};\n\n// Métricas derivadas 7d\nconst imprNV7  = Math.max(0, c7.avMeasurable - c7.avImpr);\nconst ctr7     = c7.impressions > 0 ? (c7.clicks / c7.impressions * 100).toFixed(2) + '%' : '0%';\nconst cpc7     = c7.clicks > 0 ? fmtBRL(toBRL(c7.costMicros) / c7.clicks) : 'R$ 0,00';\nconst cpa7     = c7.conversions > 0 ? fmtBRL(toBRL(c7.costMicros) / c7.conversions) : '—';\nconst txConv7  = c7.clicks > 0 ? (c7.conversions / c7.clicks * 100).toFixed(2) + '%' : '0%';\nconst cpm7     = c7.impressions > 0 ? fmtBRL(toBRL(c7.costMicros) / (c7.impressions / 1000)) : 'R$ 0,00';\n\n// Delta 7d vs média-semanal dos 30d\nconst avgDay30 = (metric) => c30[metric] / 30;\nconst delta = (v7, base30, casoBom) => {\n  const base = base30 * 7;\n  if (base === 0) return 'N/A';\n  const d = ((v7 - base) / base * 100).toFixed(1);\n  const up = parseFloat(d) > 0;\n  return (up === casoBom ? '▲ +' : '▼ ') + d + '%';\n};\n\n// ── GRUPO DE RECURSOS ─────────────────────────────────────────────────────\nconst grupo7  = getResults('HTTP Grupo Recursos 7d');\nconst grupo30 = getResults('HTTP Grupo Recursos 30d');\n\nconst formatGrupo = (rows) => {\n  const byGroup = {};\n  for (const r of rows) {\n    const name = r.adGroup?.name || r.assetGroup?.name || '(sem nome)';\n    if (!byGroup[name]) byGroup[name] = {\n      name, impressions:0, clicks:0, costMicros:0, conversions:0,\n      phoneCalls:0, avImpr:0, avMeasurable:0\n    };\n    const g = byGroup[name]; const m = r.metrics || {};\n    g.impressions  += parseInt(m.impressions  || 0);\n    g.clicks       += parseInt(m.clicks       || 0);\n    g.costMicros   += parseInt(m.costMicros   || 0);\n    g.conversions  += parseFloat(m.conversions || 0);\n    g.phoneCalls   += parseInt(m.phoneCalls   || 0);\n    g.avImpr       += parseInt(m.activeViewImpressions || 0);\n    g.avMeasurable += parseInt(m.activeViewMeasurableImpressions || 0);\n    // Campos não-agregáveis (pegar do primeiro resultado para este grupo)\n    if (!g.estrategia) {\n      const c = r.campaign || {};\n      g.estrategia = c.biddingStrategyType || '—';\n      g.cpaAlvo    = c.targetCpa?.targetCpaMicros ? fmtBRL(toBRL(c.targetCpa.targetCpaMicros)) : '—';\n      g.roasAlvo   = c.targetRoas?.targetRoas ? (parseFloat(c.targetRoas.targetRoas)*100).toFixed(0)+'%' : '—';\n    }\n  }\n  return Object.values(byGroup).map(g => ({\n    nome: g.name,\n    impressoes: fmtN(g.impressions),\n    impressoes_visiveis: fmtN(g.avImpr),\n    impressoes_nao_visiveis: fmtN(Math.max(0, g.avMeasurable - g.avImpr)),\n    cliques: fmtN(g.clicks),\n    custo: fmtBRL(toBRL(g.costMicros)),\n    ctr: g.impressions > 0 ? (g.clicks/g.impressions*100).toFixed(2)+'%' : '0%',\n    cpc: g.clicks > 0 ? fmtBRL(toBRL(g.costMicros)/g.clicks) : '—',\n    cpa: g.conversions > 0 ? fmtBRL(toBRL(g.costMicros)/g.conversions) : '—',\n    conversoes: g.conversions.toFixed(2),\n    tx_conv: g.clicks > 0 ? (g.conversions/g.clicks*100).toFixed(2)+'%' : '0%',\n    ligacoes: fmtN(g.phoneCalls),\n    cpm: g.impressions > 0 ? fmtBRL(toBRL(g.costMicros)/(g.impressions/1000)) : '—',\n    estrategia: g.estrategia,\n    cpa_alvo: g.cpaAlvo,\n    roas_alvo: g.roasAlvo\n  })).sort((a,b) => parseInt(b.custo.replace(/\\D/g,'')) - parseInt(a.custo.replace(/\\D/g,'')));\n};\n\n// ── TERMOS DE PESQUISA ────────────────────────────────────────────────────\nconst statusMap = { ADDED:'✅ Palavra-chave', EXCLUDED:'🚫 Negativada',\n                    ADDED_EXCLUDED:'⚡ Adicionada e Negativada', NONE:'— Não definido' };\nconst termosFormatados = getResults('HTTP Termos 7d').map(r => ({\n  termo:       r.searchTermView?.searchTerm || '',\n  status:      statusMap[r.searchTermView?.status] || r.searchTermView?.status || '—',\n  impressoes:  fmtN(r.metrics?.impressions),\n  cliques:     fmtN(r.metrics?.clicks),\n  ctr:         fmtPct(r.metrics?.ctr),\n  cpc:         fmtBRL(toBRL(r.metrics?.averageCpc)),\n  custo:       fmtBRL(toBRL(r.metrics?.costMicros)),\n  conversoes:  parseFloat(r.metrics?.conversions || 0).toFixed(2),\n  tx_conv:     fmtPct(r.metrics?.conversionsFromInteractionsRate),\n  cpa:         parseFloat(r.metrics?.conversions || 0) > 0\n                 ? fmtBRL(toBRL(r.metrics?.costMicros)/parseFloat(r.metrics.conversions)) : '—'\n}));\n\n// ── SCHEDULE (Programação por Dia/Hora) ───────────────────────────────────\nconst diasPT = { MONDAY:'Seg', TUESDAY:'Ter', WEDNESDAY:'Qua',\n  THURSDAY:'Qui', FRIDAY:'Sex', SATURDAY:'Sáb', SUNDAY:'Dom' };\n\nconst formatSchedule = (rows) => rows.map(r => ({\n  dia:       diasPT[r.segments?.dayOfWeek] || r.segments?.dayOfWeek || '',\n  faixa:     `${r.segments?.hour||0}:00–${(parseInt(r.segments?.hour||0)+1)}:00`,\n  impressoes: fmtN(r.metrics?.impressions),\n  cliques:    fmtN(r.metrics?.clicks),\n  ctr:        fmtPct(r.metrics?.ctr),\n  cpc:        fmtBRL(toBRL(r.metrics?.averageCpc)),\n  custo:      fmtBRL(toBRL(r.metrics?.costMicros)),\n  conversoes: parseFloat(r.metrics?.conversions||0).toFixed(2),\n  tx_conv:    fmtPct(r.metrics?.conversionsFromInteractionsRate),\n  cpa:        parseFloat(r.metrics?.conversions||0) > 0\n                ? fmtBRL(toBRL(r.metrics?.costMicros)/parseFloat(r.metrics.conversions)) : '—'\n})).filter(r => parseInt(r.impressoes.replace(/\\D/g,'')) > 0);\n\n// ── AUDIÊNCIA ─────────────────────────────────────────────────────────────\nconst audienciaFormatada = getResults('HTTP Audiência').map(r => ({\n  recurso:    (r.campaignAudienceView?.resourceName || '').split('/').pop(),\n  impressoes: fmtN(r.metrics?.impressions),\n  cliques:    fmtN(r.metrics?.clicks),\n  ctr:        fmtPct(r.metrics?.ctr),\n  custo:      fmtBRL(toBRL(r.metrics?.costMicros)),\n  conversoes: parseFloat(r.metrics?.conversions||0).toFixed(2),\n  cpa:        parseFloat(r.metrics?.conversions||0) > 0\n                ? fmtBRL(toBRL(r.metrics?.costMicros)/parseFloat(r.metrics.conversions)) : '—',\n  impr_visiveis:    fmtN(r.metrics?.activeViewImpressions),\n  impr_nao_visiveis: fmtN(Math.max(0,\n    parseInt(r.metrics?.activeViewMeasurableImpressions||0) -\n    parseInt(r.metrics?.activeViewImpressions||0))),\n  cpm:        fmtBRL(toBRL(r.metrics?.averageCpm))\n})).filter(r => parseInt(r.impressoes.replace(/\\D/g,'')) > 0).slice(0, 20);\n\n// ── PACING ────────────────────────────────────────────────────────────────\nconst pacingRows   = getResults('HTTP Pacing');\nconst budgetMicros = parseInt(pacingRows[0]?.campaignBudget?.amountMicros || 0);\nconst gastoMes     = pacingRows.reduce((s,r)=>s+parseInt(r.metrics?.costMicros||0), 0);\nconst hoje         = new Date();\nconst diasNoMes    = new Date(hoje.getFullYear(), hoje.getMonth()+1, 0).getDate();\nconst diasDecorr   = Math.max(1, hoje.getDate() - 1);\nconst previsto     = (budgetMicros / diasNoMes) * diasDecorr;\nconst pacingRatio  = previsto > 0 ? gastoMes / previsto : 1;\nconst pacingStatus = pacingRatio > 1.10 ? '🔴 Acima do ritmo'\n                   : pacingRatio < 0.90 ? '🟡 Abaixo do ritmo'\n                   : '🟢 No ritmo esperado';\n\n// ── CANAIS / ORIGEM DE CONVERSÕES ─────────────────────────────────────────\nconst canais = getResults('HTTP Canais').map(r => ({\n  canal:      r.campaign?.advertisingChannelType || '—',\n  acao:       r.segments?.conversionActionName   || '—',\n  categoria:  r.segments?.conversionActionCategory || '—',\n  conversoes: parseFloat(r.metrics?.conversions  || 0).toFixed(2),\n  valor:      fmtBRL(toBRL(r.metrics?.conversionsValue)),\n  cpa:        parseFloat(r.metrics?.conversions  || 0) > 0\n                ? fmtBRL(toBRL(r.metrics?.costPerConversion)) : '—'\n})).filter(r => parseFloat(r.conversoes) > 0);\n\n// ── OUTPUT ────────────────────────────────────────────────────────────────\nreturn [{\n  json: {\n    campaign_name: ctx.campaign_name,\n    campaign_id:   ctx.campaign_id,\n    periodo_7d:    `${ctx.periodo_7d.start} a ${ctx.periodo_7d.end}`,\n    periodo_30d:   `${ctx.periodo_30d.start} a ${ctx.periodo_30d.end}`,\n\n    campanha_7d: {\n      impressoes:           fmtN(c7.impressions),\n      impressoes_visiveis:  fmtN(c7.avImpr),\n      impressoes_nao_visiveis: fmtN(imprNV7),\n      cliques:      fmtN(c7.clicks),\n      custo:        fmtBRL(toBRL(c7.costMicros)),\n      ctr:          ctr7, cpc: cpc7, cpa: cpa7, cpm: cpm7,\n      conversoes:   c7.conversions.toFixed(2),\n      tx_conversao: txConv7,\n      ligacoes:     fmtN(c7.phoneCalls),\n      estrategia:   camp.biddingStrategyType || '—',\n      tipo_canal:   camp.advertisingChannelType || '—',\n      cpa_alvo:     camp.targetCpa?.targetCpaMicros ? fmtBRL(toBRL(camp.targetCpa.targetCpaMicros)) : '—',\n      roas_alvo:    camp.targetRoas?.targetRoas ? (parseFloat(camp.targetRoas.targetRoas)*100).toFixed(0)+'%' : '—'\n    },\n\n    campanha_30d: {\n      impressoes:  fmtN(c30.impressions),\n      cliques:     fmtN(c30.clicks),\n      custo:       fmtBRL(toBRL(c30.costMicros)),\n      conversoes:  c30.conversions.toFixed(2),\n      ligacoes:    fmtN(c30.phoneCalls)\n    },\n\n    historico_deltas: {\n      impressoes: delta(c7.impressions, avgDay30('impressions'), true),\n      cliques:    delta(c7.clicks,      avgDay30('clicks'),      true),\n      custo:      delta(c7.costMicros,  avgDay30('costMicros'),  false),\n      conversoes: delta(c7.conversions, avgDay30('conversions'), true)\n    },\n\n    grupo_recursos_7d:  formatGrupo(grupo7),\n    grupo_recursos_30d: formatGrupo(grupo30),\n\n    termos_pesquisa: termosFormatados,\n\n    schedule_7d:  formatSchedule(getResults('HTTP Schedule 7d')),\n    schedule_30d: formatSchedule(getResults('HTTP Schedule 30d')),\n\n    audiencia: audienciaFormatada,\n\n    pacing: {\n      orcamento_diario:  fmtBRL(toBRL(budgetMicros)),\n      orcamento_mensal:  fmtBRL(toBRL(budgetMicros * diasNoMes)),\n      gasto_mes_atual:   fmtBRL(toBRL(gastoMes)),\n      previsto_ate_hoje: fmtBRL(toBRL(previsto)),\n      pacing_ratio:      (pacingRatio * 100).toFixed(1) + '%',\n      status:            pacingStatus,\n      dias_decorridos:   diasDecorr,\n      dias_no_mes:       diasNoMes\n    },\n\n    canais_conversao: canais\n  }\n}];"
+      },
+      "id": "e5b847a5-fc5a-44e9-a504-da04659a9eb1",
+      "name": "Code Merger Unificado",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3080,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $json;\n\nconst tabela = (headers, rows, cols) => {\n  if (!rows || rows.length === 0) return '<p style=\"color:#999;font-size:12px\">Sem dados no período.</p>';\n  const ths = headers.map(h => `<th>${h}</th>`).join('');\n  const trs = rows.map(r => '<tr>' + cols.map(c => `<td>${r[c] ?? '—'}</td>`).join('') + '</tr>').join('');\n  return `<table><thead><tr>${ths}</tr></thead><tbody>${trs}</tbody></table>`;\n};\n\nconst kpi = (label, value, sub='') =>\n  `<div class=\"kpi-card\"><h3>${label}</h3><div class=\"value\">${value}</div>${sub ? `<div class=\"sub\">${sub}</div>` : ''}</div>`;\n\nconst delta = (val, label) => {\n  const good = val && !val.startsWith('▼');\n  return val ? `<span class=\"delta ${good?'up':'dn'}\">${val}</span> vs semana equiv. (30d)` : '';\n};\n\nreturn [{\n  json: {\n    html: `<!DOCTYPE html><html lang=\"pt-br\"><head><meta charset=\"UTF-8\"><style>\nbody{font-family:'Segoe UI',sans-serif;margin:0;padding:20px;color:#333;font-size:13px;line-height:1.5}\n.header{background:linear-gradient(90deg,#1a73e8,#0d47a1);color:#fff;padding:28px 32px;border-radius:10px;margin-bottom:28px}\n.header h1{margin:0;font-size:22px}.header p{margin:6px 0 0;opacity:.85;font-size:13px}\n.section{border-left:5px solid #1a73e8;padding-left:12px;margin:28px 0 14px;color:#1a73e8;font-size:16px;font-weight:700;text-transform:uppercase}\n.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}\n.kpi-card{background:#f8f9fa;border:1px solid #e0e0e0;padding:14px;border-radius:8px;text-align:center}\n.kpi-card h3{margin:0;font-size:10px;color:#666;text-transform:uppercase;letter-spacing:.5px}\n.kpi-card .value{font-size:18px;font-weight:700;margin:8px 0;color:#1a73e8}\n.kpi-card .sub{font-size:11px;color:#888}\n.delta.up{color:#1e8e3e;font-weight:600}.delta.dn{color:#d93025;font-weight:600}\ntable{width:100%;border-collapse:collapse;margin-top:8px;font-size:12px}\nth{background:#f1f3f4;color:#5f6368;font-weight:700;padding:10px 8px;border:1px solid #dee2e6;text-align:left}\ntd{padding:8px;border:1px solid #dee2e6;vertical-align:top}\ntr:nth-child(even){background:#fafafa}\n.pacing-box{background:#f8f9fa;border:1px solid #e0e0e0;border-radius:8px;padding:16px;margin-top:10px}\n.pacing-status{font-size:16px;font-weight:700;margin-bottom:8px}\n.footer{margin-top:40px;text-align:center;font-size:10px;color:#aaa;border-top:1px solid #eee;padding-top:16px}\nh4{margin:18px 0 8px;color:#444;font-size:13px}\n</style></head><body>\n\n<div class=\"header\">\n  <h1>📊 Relatório de Performance Google Ads</h1>\n  <p><strong>Campanha:</strong> ${d.campaign_name} &nbsp;|&nbsp;\n     <strong>7 dias:</strong> ${d.periodo_7d} &nbsp;|&nbsp;\n     <strong>30 dias:</strong> ${d.periodo_30d}</p>\n</div>\n\n<!-- CAMPANHA: KPIs 7d -->\n<div class=\"section\">Performance da Campanha — 7 dias</div>\n<div class=\"kpi-grid\">\n  ${kpi('Impressões', d.campanha_7d.impressoes, delta(d.historico_deltas.impressoes))}\n  ${kpi('Cliques', d.campanha_7d.cliques, delta(d.historico_deltas.cliques))}\n  ${kpi('Custo Total', d.campanha_7d.custo, delta(d.historico_deltas.custo))}\n  ${kpi('Conversões', d.campanha_7d.conversoes, delta(d.historico_deltas.conversoes))}\n  ${kpi('CTR', d.campanha_7d.ctr)}\n  ${kpi('CPC Médio', d.campanha_7d.cpc)}\n  ${kpi('CPA', d.campanha_7d.cpa)}\n  ${kpi('CPM Médio', d.campanha_7d.cpm)}\n  ${kpi('Taxa de Conversão', d.campanha_7d.tx_conversao)}\n  ${kpi('Ligações', d.campanha_7d.ligacoes)}\n  ${kpi('Impr. Visíveis', d.campanha_7d.impressoes_visiveis)}\n  ${kpi('Impr. Não Visíveis', d.campanha_7d.impressoes_nao_visiveis)}\n</div>\n<p style=\"font-size:12px;color:#666\">\n  <strong>Estratégia de Lances:</strong> ${d.campanha_7d.estrategia} &nbsp;|&nbsp;\n  <strong>Canal:</strong> ${d.campanha_7d.tipo_canal} &nbsp;|&nbsp;\n  <strong>CPA Alvo:</strong> ${d.campanha_7d.cpa_alvo} &nbsp;|&nbsp;\n  <strong>ROAS Alvo:</strong> ${d.campanha_7d.roas_alvo}\n</p>\n\n<!-- HISTÓRICO: 30d -->\n<div class=\"section\">Histórico — 30 dias</div>\n${tabela(\n  ['Período','Impressões','Cliques','Custo','Conversões','Ligações'],\n  [\n    { p:'Últimos 7 dias', i:d.campanha_7d.impressoes, c:d.campanha_7d.cliques, cu:d.campanha_7d.custo, cv:d.campanha_7d.conversoes, l:d.campanha_7d.ligacoes },\n    { p:'Últimos 30 dias', i:d.campanha_30d.impressoes, c:d.campanha_30d.cliques, cu:d.campanha_30d.custo, cv:d.campanha_30d.conversoes, l:d.campanha_30d.ligacoes }\n  ], ['p','i','c','cu','cv','l']\n)}\n\n<!-- GRUPO DE RECURSOS -->\n<div class=\"section\">Grupos de Recursos / Anúncios — 7 dias</div>\n${tabela(\n  ['Grupo','Impressões','Cliques','CTR','CPC','Custo','Conv.','Taxa Conv.','CPA','Ligações','CPM','Estratégia','CPA Alvo','ROAS Alvo'],\n  d.grupo_recursos_7d,\n  ['nome','impressoes','cliques','ctr','cpc','custo','conversoes','tx_conv','cpa','ligacoes','cpm','estrategia','cpa_alvo','roas_alvo']\n)}\n\n<!-- TERMOS DE PESQUISA -->\n<div class=\"section\">Insights de Termos de Pesquisa — 7 dias (Top 30)</div>\n${tabela(\n  ['Termo','Status','Impressões','Cliques','CTR','CPC','Custo','Conv.','Taxa Conv.','CPA'],\n  d.termos_pesquisa,\n  ['termo','status','impressoes','cliques','ctr','cpc','custo','conversoes','tx_conv','cpa']\n)}\n\n<!-- AUDIÊNCIA -->\n<div class=\"section\">Audiência — 30 dias</div>\n${tabela(\n  ['Segmento','Impressões','Impr. Visíveis','Impr. Não Visíveis','Cliques','CTR','Custo','Conv.','CPA','CPM'],\n  d.audiencia,\n  ['recurso','impressoes','impr_visiveis','impr_nao_visiveis','cliques','ctr','custo','conversoes','cpa','cpm']\n)}\n\n<!-- CANAIS DE CONVERSÃO -->\n<div class=\"section\">Origem das Conversões por Canal — 30 dias</div>\n${tabela(\n  ['Canal','Ação de Conversão','Categoria','Conversões','Valor','CPA'],\n  d.canais_conversao,\n  ['canal','acao','categoria','conversoes','valor','cpa']\n)}\n\n<!-- RITMO DE INVESTIMENTO -->\n<div class=\"section\">Ritmo de Investimento (Pacing)</div>\n<div class=\"pacing-box\">\n  <div class=\"pacing-status\">${d.pacing.status}</div>\n  <div style=\"display:grid;grid-template-columns:repeat(4,1fr);gap:12px;font-size:12px\">\n    <div><strong>Orçamento Diário</strong><br>${d.pacing.orcamento_diario}</div>\n    <div><strong>Orçamento Mensal</strong><br>${d.pacing.orcamento_mensal}</div>\n    <div><strong>Previsto até hoje</strong><br>${d.pacing.previsto_ate_hoje}</div>\n    <div><strong>Gasto no mês</strong><br>${d.pacing.gasto_mes_atual}</div>\n  </div>\n  <p style=\"font-size:11px;color:#666;margin-top:8px\">\n    Pacing: ${d.pacing.pacing_ratio} &nbsp;|&nbsp;\n    Dias decorridos: ${d.pacing.dias_decorridos} de ${d.pacing.dias_no_mes}\n  </p>\n</div>\n\n<!-- PROGRAMAÇÃO: 7 dias -->\n<div class=\"section\">Programação de Anúncios — 7 dias (horários com impressão)</div>\n${tabela(\n  ['Dia','Faixa','Impressões','Cliques','CTR','CPC','Custo','Conv.','Taxa Conv.','CPA'],\n  d.schedule_7d,\n  ['dia','faixa','impressoes','cliques','ctr','cpc','custo','conversoes','tx_conv','cpa']\n)}\n\n<!-- PROGRAMAÇÃO: 30 dias -->\n<div class=\"section\">Programação de Anúncios — 30 dias</div>\n${tabela(\n  ['Dia','Faixa','Impressões','Cliques','CTR','CPC','Custo','Conv.','Taxa Conv.','CPA'],\n  d.schedule_30d,\n  ['dia','faixa','impressoes','cliques','ctr','cpc','custo','conversoes','tx_conv','cpa']\n)}\n\n<!-- GRUPOS 30d -->\n<div class=\"section\">Grupos de Recursos / Anúncios — 30 dias</div>\n${tabela(\n  ['Grupo','Impressões','Cliques','CTR','Custo','Conv.','CPA'],\n  d.grupo_recursos_30d,\n  ['nome','impressoes','cliques','ctr','custo','conversoes','cpa']\n)}\n\n<div class=\"footer\">Gerado automaticamente · PHI™ Google Ads Report · ${new Date().toLocaleDateString('pt-BR')}</div>\n</body></html>`\n  }\n}];"
+      },
+      "id": "e5db87ec-653d-46a0-aca5-4be7d094131e",
+      "name": "Code Montar HTML",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        -200
+      ]
+    },
+    {
+      "parameters": {
+        "output_format": "file"
+      },
+      "id": "c46d8d20-6844-4b98-9035-cc3f6ec5c984",
+      "name": "Convert HTML to PDF",
+      "type": "n8n-nodes-htmlcsstopdf.htmlcsstopdf",
+      "typeVersion": 1,
+      "position": [
+        1100,
+        -200
+      ]
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Notion: Get Campanhas Ativas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notion: Get Campanhas Ativas": {
+      "main": [
+        [
+          {
+            "node": "Code Preparar Contexto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Preparar Contexto": {
+      "main": [
+        [
+          {
+            "node": "Loop Campanhas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Campanhas": {
+      "main": [
+        [
+          {
+            "node": "Code Montar HTML",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Core 7d",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Core 7d": {
+      "main": [
+        [
+          {
+            "node": "HTTP Core 30d",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Core 30d": {
+      "main": [
+        [
+          {
+            "node": "HTTP Grupo Recursos 7d",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Grupo Recursos 7d": {
+      "main": [
+        [
+          {
+            "node": "HTTP Grupo Recursos 30d",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Grupo Recursos 30d": {
+      "main": [
+        [
+          {
+            "node": "HTTP Termos 7d",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Termos 7d": {
+      "main": [
+        [
+          {
+            "node": "HTTP Schedule 7d",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Schedule 7d": {
+      "main": [
+        [
+          {
+            "node": "HTTP Schedule 30d",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Schedule 30d": {
+      "main": [
+        [
+          {
+            "node": "HTTP Audiência",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Audiência": {
+      "main": [
+        [
+          {
+            "node": "HTTP Pacing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Pacing": {
+      "main": [
+        [
+          {
+            "node": "HTTP Canais",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Canais": {
+      "main": [
+        [
+          {
+            "node": "Code Merger Unificado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Montar HTML": {
+      "main": [
+        [
+          {
+            "node": "Convert HTML to PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}
