@@ -1,6 +1,11 @@
 {
   "version": 1,
   "skills": {
+    "campaign-brief-generator": {
+      "source": "archive-dot-com/creator-marketing-skills",
+      "sourceType": "github",
+      "computedHash": "e7af87136af009940a41e70f5e8c4cb91b49125c7d49217aa95bf735a33a6acf"
+    },
     "copywriting": {
       "source": "coreyhaines31/marketingskills",
       "sourceType": "github",
