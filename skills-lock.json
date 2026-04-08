@@ -16,6 +16,11 @@
       "sourceType": "github",
       "computedHash": "a0561360b02969d2ed1646a195e27f6b69365a28f0d3a28c0a7528e06b4be333"
     },
+    "executing-marketing-campaigns": {
+      "source": "davila7/claude-code-templates",
+      "sourceType": "github",
+      "computedHash": "b9a66b2add4e6dd23724df93f335ea3c83e3cd6c84151408f230494374631b67"
+    },
     "find-skills": {
       "source": "vercel-labs/skills",
       "sourceType": "github",
