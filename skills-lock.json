@@ -41,6 +41,11 @@
       "sourceType": "github",
       "computedHash": "9f0019d3a827e1ac3e2d0c469a9e71bbf5d1a3b70c12ba2168e76764c1884d81"
     },
+    "n8n-node-configuration": {
+      "source": "czlonkowski/n8n-skills",
+      "sourceType": "github",
+      "computedHash": "9f2b1f1e20ea2b8f68311df650ded7780912ff8806b5a12f036ec3ff159032a3"
+    },
     "pdf": {
       "source": "anthropics/skills",
       "sourceType": "github",
