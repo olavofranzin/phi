@@ -23,6 +23,35 @@
     },
     {
       "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cfg-001",
+              "name": "developer_token",
+              "type": "string",
+              "value": "o0hGRr2vcX3jGF6aI3a_0w"
+            },
+            {
+              "id": "cfg-002",
+              "name": "login_customer_id",
+              "type": "string",
+              "value": "7595536100"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "name": "Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        110,
+        0
+      ]
+    },
+    {
+      "parameters": {
         "resource": "databasePage",
         "operation": "getAll",
         "databaseId": {
@@ -97,11 +126,11 @@
           "parameters": [
             {
               "name": "developer-token",
-              "value": "={{ $vars.GOOGLE_ADS_DEVELOPER_TOKEN }}"
+              "value": "={{ $('Config').first().json.developer_token }}"
             },
             {
               "name": "login-customer-id",
-              "value": "7595536100"
+              "value": "={{ $('Config').first().json.login_customer_id }}"
             }
           ]
         },
@@ -131,11 +160,11 @@
           "parameters": [
             {
               "name": "developer-token",
-              "value": "={{ $vars.GOOGLE_ADS_DEVELOPER_TOKEN }}"
+              "value": "={{ $('Config').first().json.developer_token }}"
             },
             {
               "name": "login-customer-id",
-              "value": "7595536100"
+              "value": "={{ $('Config').first().json.login_customer_id }}"
             }
           ]
         },
@@ -165,11 +194,11 @@
           "parameters": [
             {
               "name": "developer-token",
-              "value": "={{ $vars.GOOGLE_ADS_DEVELOPER_TOKEN }}"
+              "value": "={{ $('Config').first().json.developer_token }}"
             },
             {
               "name": "login-customer-id",
-              "value": "7595536100"
+              "value": "={{ $('Config').first().json.login_customer_id }}"
             }
           ]
         },
@@ -199,11 +228,11 @@
           "parameters": [
             {
               "name": "developer-token",
-              "value": "={{ $vars.GOOGLE_ADS_DEVELOPER_TOKEN }}"
+              "value": "={{ $('Config').first().json.developer_token }}"
             },
             {
               "name": "login-customer-id",
-              "value": "7595536100"
+              "value": "={{ $('Config').first().json.login_customer_id }}"
             }
           ]
         },
@@ -233,11 +262,11 @@
           "parameters": [
             {
               "name": "developer-token",
-              "value": "={{ $vars.GOOGLE_ADS_DEVELOPER_TOKEN }}"
+              "value": "={{ $('Config').first().json.developer_token }}"
             },
             {
               "name": "login-customer-id",
-              "value": "7595536100"
+              "value": "={{ $('Config').first().json.login_customer_id }}"
             }
           ]
         },
@@ -267,11 +296,11 @@
           "parameters": [
             {
               "name": "developer-token",
-              "value": "={{ $vars.GOOGLE_ADS_DEVELOPER_TOKEN }}"
+              "value": "={{ $('Config').first().json.developer_token }}"
             },
             {
               "name": "login-customer-id",
-              "value": "7595536100"
+              "value": "={{ $('Config').first().json.login_customer_id }}"
             }
           ]
         },
@@ -301,11 +330,11 @@
           "parameters": [
             {
               "name": "developer-token",
-              "value": "={{ $vars.GOOGLE_ADS_DEVELOPER_TOKEN }}"
+              "value": "={{ $('Config').first().json.developer_token }}"
             },
             {
               "name": "login-customer-id",
-              "value": "7595536100"
+              "value": "={{ $('Config').first().json.login_customer_id }}"
             }
           ]
         },
@@ -335,11 +364,11 @@
           "parameters": [
             {
               "name": "developer-token",
-              "value": "={{ $vars.GOOGLE_ADS_DEVELOPER_TOKEN }}"
+              "value": "={{ $('Config').first().json.developer_token }}"
             },
             {
               "name": "login-customer-id",
-              "value": "7595536100"
+              "value": "={{ $('Config').first().json.login_customer_id }}"
             }
           ]
         },
@@ -369,11 +398,11 @@
           "parameters": [
             {
               "name": "developer-token",
-              "value": "={{ $vars.GOOGLE_ADS_DEVELOPER_TOKEN }}"
+              "value": "={{ $('Config').first().json.developer_token }}"
             },
             {
               "name": "login-customer-id",
-              "value": "7595536100"
+              "value": "={{ $('Config').first().json.login_customer_id }}"
             }
           ]
         },
@@ -403,11 +432,11 @@
           "parameters": [
             {
               "name": "developer-token",
-              "value": "={{ $vars.GOOGLE_ADS_DEVELOPER_TOKEN }}"
+              "value": "={{ $('Config').first().json.developer_token }}"
             },
             {
               "name": "login-customer-id",
-              "value": "7595536100"
+              "value": "={{ $('Config').first().json.login_customer_id }}"
             }
           ]
         },
@@ -468,6 +497,17 @@
   ],
   "connections": {
     "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config": {
       "main": [
         [
           {
