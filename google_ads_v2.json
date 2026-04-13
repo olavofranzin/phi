@@ -26,12 +26,6 @@
         "assignments": {
           "assignments": [
             {
-              "id": "cfg-001",
-              "name": "developer_token",
-              "type": "string",
-              "value": "o0hGRr2vcX3jGF6aI3a_0w"
-            },
-            {
               "id": "cfg-002",
               "name": "login_customer_id",
               "type": "string",
@@ -125,10 +119,6 @@
         "headerParameters": {
           "parameters": [
             {
-              "name": "developer-token",
-              "value": "={{ $('Config').first().json.developer_token }}"
-            },
-            {
               "name": "login-customer-id",
               "value": "={{ $('Config').first().json.login_customer_id }}"
             }
@@ -158,10 +148,6 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            {
-              "name": "developer-token",
-              "value": "={{ $('Config').first().json.developer_token }}"
-            },
             {
               "name": "login-customer-id",
               "value": "={{ $('Config').first().json.login_customer_id }}"
@@ -193,10 +179,6 @@
         "headerParameters": {
           "parameters": [
             {
-              "name": "developer-token",
-              "value": "={{ $('Config').first().json.developer_token }}"
-            },
-            {
               "name": "login-customer-id",
               "value": "={{ $('Config').first().json.login_customer_id }}"
             }
@@ -226,10 +208,6 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            {
-              "name": "developer-token",
-              "value": "={{ $('Config').first().json.developer_token }}"
-            },
             {
               "name": "login-customer-id",
               "value": "={{ $('Config').first().json.login_customer_id }}"
@@ -261,10 +239,6 @@
         "headerParameters": {
           "parameters": [
             {
-              "name": "developer-token",
-              "value": "={{ $('Config').first().json.developer_token }}"
-            },
-            {
               "name": "login-customer-id",
               "value": "={{ $('Config').first().json.login_customer_id }}"
             }
@@ -294,10 +268,6 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            {
-              "name": "developer-token",
-              "value": "={{ $('Config').first().json.developer_token }}"
-            },
             {
               "name": "login-customer-id",
               "value": "={{ $('Config').first().json.login_customer_id }}"
@@ -329,10 +299,6 @@
         "headerParameters": {
           "parameters": [
             {
-              "name": "developer-token",
-              "value": "={{ $('Config').first().json.developer_token }}"
-            },
-            {
               "name": "login-customer-id",
               "value": "={{ $('Config').first().json.login_customer_id }}"
             }
@@ -362,10 +328,6 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            {
-              "name": "developer-token",
-              "value": "={{ $('Config').first().json.developer_token }}"
-            },
             {
               "name": "login-customer-id",
               "value": "={{ $('Config').first().json.login_customer_id }}"
@@ -397,10 +359,6 @@
         "headerParameters": {
           "parameters": [
             {
-              "name": "developer-token",
-              "value": "={{ $('Config').first().json.developer_token }}"
-            },
-            {
               "name": "login-customer-id",
               "value": "={{ $('Config').first().json.login_customer_id }}"
             }
@@ -430,10 +388,6 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            {
-              "name": "developer-token",
-              "value": "={{ $('Config').first().json.developer_token }}"
-            },
             {
               "name": "login-customer-id",
               "value": "={{ $('Config').first().json.login_customer_id }}"
