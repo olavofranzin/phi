@@ -34,6 +34,7 @@ Sistema automatizado de monitoramento e gestão de campanhas de tráfego pago (G
 | **PHI - Subworkflow Campanhas** | `b1pbn8qmzCNTufTp` | ✅ Ativo | — |
 | **PHI - Fechar Otimização** | `83vfKD8XMYmjZjFQ` | ✅ Ativo | — |
 | **Google Ads v2** | `aueMKOExsN28nREq` | ⏸️ Reestruturação | — |
+| **Google Ads Insights Semanal** | `AG3g0LcpbxbCZoPZ` | 🆕 Criado (inativo) | Segunda 02:00 |
 
 ---
 
@@ -73,9 +74,9 @@ Sistema automatizado de monitoramento e gestão de campanhas de tráfego pago (G
 - Auto-Close, Escalada, Sync de scores — todos implementados
 
 ### Pendente / Em andamento
-- [ ] Google Ads v2: reestruturar para frequência semanal + saída BigQuery + Insights Notion
-- [ ] Google Ads Insights: nova tabela `phi_prod.google_ads_insights`
-- [ ] Arquitetura de IA: mapa de dados + time de analistas (em especificação)
+- [ ] Google Ads v2: corrigir credentials (importar google_ads_v2.json manualmente via n8n UI)
+- [ ] Google Ads Insights Semanal (`AG3g0LcpbxbCZoPZ`): configurar credentials + criar tabela BQ + criar DB Notion Insights + ativar
+- [ ] Arquitetura de IA: implementar (spec em `342b65e5-c72b-81f8-a05e-dfe05e564105`)
 - [ ] Auto-Close para EXCELLENT (atual só cobre GOOD)
 - [ ] Tabelas de auditoria: `task_control_log`, `task_notion_sync_log`, `threshold_override_log`
 
@@ -125,7 +126,8 @@ Sistema automatizado de monitoramento e gestão de campanhas de tráfego pago (G
 | Documento | ID Notion |
 |-----------|-----------|
 | Documentação Técnica v1.4 | `328b65e5-c72b-8103-9ad0-d2fb81dd8055` |
-| Arquitetura de IA & Análise de Dados | `[ver página criada na sessão 14/04/2026]` |
+| Arquitetura de IA & Análise de Dados | `342b65e5-c72b-81f8-a05e-dfe05e564105` |
+| Google Ads Insights Semanal — Spec Técnica | `342b65e5-c72b-8177-9982-c5f012c8f006` |
 | Sessão Handoff 08/04/2026 | `33db65e5-c72b-81e0-87c2-f63523db3906` |
 | Sessão Handoff 06/04/2026 | `33ab65e5-c72b-8117-b67e-d29f4ca88fb6` |
 | SQL de Validação v1.4 | `335b65e5-c72b-814f-95e2-d57a18d96458` |
@@ -133,4 +135,13 @@ Sistema automatizado de monitoramento e gestão de campanhas de tráfego pago (G
 
 ---
 
-*PHI™ v1.4.2 — Atualizado em 14/04/2026*
+## Arquivos SDK no Repositório
+
+| Arquivo | Workflow |
+|---------|---------|
+| `google_ads_v2.json` | Google Ads v2 (`aueMKOExsN28nREq`) — importar manualmente via n8n UI |
+| `google_ads_insights_semanal.js` | Google Ads Insights Semanal (`AG3g0LcpbxbCZoPZ`) |
+
+---
+
+*PHI™ v1.4.3 — Atualizado em 14/04/2026*
