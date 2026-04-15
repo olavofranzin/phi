@@ -10,52 +10,162 @@
   },
   "connections": {
     "When clicking 'Execute workflow'": {
-      "main": [[{ "node": "Consultar quantidade de leads", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Consultar quantidade de leads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Consultar quantidade de leads": {
-      "main": [[{ "node": "If", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "If": {
       "main": [
-        [{ "node": "Search for businesses on google maps", "type": "main", "index": 0 }],
-        [{ "node": "Run an Actor and get dataset", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Search for businesses on google maps",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Run an Actor and get dataset",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Search for businesses on google maps": {
-      "main": [[{ "node": "Append row in sheet", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Run an Actor and get dataset": {
-      "main": [[{ "node": "Append row in sheet", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Append row in sheet": {
-      "main": [[{ "node": "Loop Leads", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Loop Leads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Loop Leads": {
       "main": [
         [],
-        [{ "node": "Checa se j\u00e1 existe", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Checa se já existe",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
-    "Checa se j\u00e1 existe": {
-      "main": [[{ "node": "If lead existe hubspot", "type": "main", "index": 0 }]]
+    "Checa se já existe": {
+      "main": [
+        [
+          {
+            "node": "If lead existe hubspot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "If lead existe hubspot": {
       "main": [
-        [{ "node": "Loop Leads", "type": "main", "index": 0 }],
-        [{ "node": "Enriquecer lead", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Loop Leads",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Enriquecer lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Enriquecer lead": {
-      "main": [[{ "node": "Create a deal", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Create a deal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Create a deal": {
-      "main": [[{ "node": "Loop Leads", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Loop Leads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "AI Agent Tool": {
-      "ai_tool": [[{ "node": "Enriquecer lead", "type": "ai_tool", "index": 0 }]]
+      "ai_tool": [
+        [
+          {
+            "node": "Enriquecer lead",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Google Gemini Chat Model": {
-      "ai_languageModel": [[{ "node": "AI Agent Tool", "type": "ai_languageModel", "index": 0 }]]
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent Tool",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "nodes": [
@@ -63,7 +173,10 @@
       "parameters": {},
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
-      "position": [0, 0],
+      "position": [
+        0,
+        0
+      ],
       "id": "5bf44ecb-836f-4672-a9c9-8e43423b65c0",
       "name": "When clicking 'Execute workflow'"
     },
@@ -73,7 +186,7 @@
           "__rl": true,
           "value": "1MuetJ4N7xiazkw55YOSHtq_nIaHPRKOE-g6GwfaNJKM",
           "mode": "list",
-          "cachedResultName": "Quantidade de Leads por M\u00eas",
+          "cachedResultName": "Quantidade de Leads por Mês",
           "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MuetJ4N7xiazkw55YOSHtq_nIaHPRKOE-g6GwfaNJKM/edit?usp=drivesdk"
         },
         "sheetName": {
@@ -87,7 +200,10 @@
       },
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
-      "position": [224, 0],
+      "position": [
+        224,
+        0
+      ],
       "id": "5436159d-6003-4b28-80e8-05a1fb4825cc",
       "name": "Consultar quantidade de leads"
     },
@@ -103,9 +219,12 @@
           "conditions": [
             {
               "id": "512c11c0-56e7-46de-91d2-02d7f3cd4f7d",
-              "leftValue": "={{ $json['Quantidade de Leads por M\u00eas'] }}",
+              "leftValue": "={{ $json['Quantidade de Leads por Mês'] }}",
               "rightValue": 500,
-              "operator": { "type": "number", "operation": "lt" }
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
             }
           ],
           "combinator": "and"
@@ -114,7 +233,10 @@
       },
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
-      "position": [448, 0],
+      "position": [
+        448,
+        0
+      ],
       "id": "98018c2d-4473-4348-81f2-191ae6b30b22",
       "name": "If"
     },
@@ -125,18 +247,28 @@
       },
       "type": "n8n-nodes-outscraper.outscraper",
       "typeVersion": 1,
-      "position": [672, -96],
+      "position": [
+        672,
+        -96
+      ],
       "id": "be5a9811-985b-42de-b094-0f016b6a0158",
       "name": "Search for businesses on google maps"
     },
     {
       "parameters": {
         "operation": "Run actor and get dataset",
-        "actorId": { "__rl": true, "mode": "list", "value": "" }
+        "actorId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        }
       },
       "type": "@apify/n8n-nodes-apify.apify",
       "typeVersion": 1,
-      "position": [672, 96],
+      "position": [
+        672,
+        96
+      ],
       "id": "99099c49-8879-4f03-a163-b04b999a3770",
       "name": "Run an Actor and get dataset"
     },
@@ -147,7 +279,7 @@
           "__rl": true,
           "value": "1MuetJ4N7xiazkw55YOSHtq_nIaHPRKOE-g6GwfaNJKM",
           "mode": "list",
-          "cachedResultName": "Quantidade de Leads por M\u00eas",
+          "cachedResultName": "Quantidade de Leads por Mês",
           "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MuetJ4N7xiazkw55YOSHtq_nIaHPRKOE-g6GwfaNJKM/edit?usp=drivesdk"
         },
         "sheetName": {
@@ -159,13 +291,50 @@
         },
         "columns": {
           "mappingMode": "defineBelow",
-          "value": { "nome": "=" },
-          "matchingColumns": ["id"],
+          "value": {
+            "nome": "="
+          },
+          "matchingColumns": [
+            "id"
+          ],
           "schema": [
-            { "id": "id", "displayName": "id", "required": false, "defaultMatch": true, "display": true, "type": "string", "canBeUsedToMatch": true, "removed": false },
-            { "id": "nome", "displayName": "nome", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
-            { "id": "setor", "displayName": "setor", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
-            { "id": "data extra\u00e7\u00e3o", "displayName": "data extra\u00e7\u00e3o", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true }
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "nome",
+              "displayName": "nome",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "setor",
+              "displayName": "setor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "data extração",
+              "displayName": "data extração",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
           ],
           "attemptToConvertTypes": false,
           "convertFieldsToString": false
@@ -174,15 +343,23 @@
       },
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
-      "position": [896, 0],
+      "position": [
+        896,
+        0
+      ],
       "id": "ba1425d2-b768-4a0f-b826-75e37c8af288",
       "name": "Append row in sheet"
     },
     {
-      "parameters": { "options": {} },
+      "parameters": {
+        "options": {}
+      },
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
-      "position": [1120, 0],
+      "position": [
+        1120,
+        0
+      ],
       "id": "f1a2b3c4-d5e6-7890-abcd-loop0001leads",
       "name": "Loop Leads"
     },
@@ -195,9 +372,12 @@
       },
       "type": "n8n-nodes-base.hubspot",
       "typeVersion": 2.2,
-      "position": [1344, 0],
+      "position": [
+        1344,
+        0
+      ],
       "id": "13d40724-911b-43b4-90bd-0692224dfed6",
-      "name": "Checa se j\u00e1 existe"
+      "name": "Checa se já existe"
     },
     {
       "parameters": {
@@ -213,7 +393,10 @@
               "id": "30b2915b-a316-4581-a842-5cd88fe47f0e",
               "leftValue": "={{ $json.total }}",
               "rightValue": 0,
-              "operator": { "type": "number", "operation": "gt" }
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
             }
           ],
           "combinator": "and"
@@ -222,36 +405,60 @@
       },
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
-      "position": [1568, 0],
+      "position": [
+        1568,
+        0
+      ],
       "id": "0996741d-65b8-4598-801f-226129fed103",
       "name": "If lead existe hubspot"
     },
     {
       "parameters": {
-        "modelId": { "__rl": true, "mode": "list", "value": "" },
-        "messages": { "values": [{}] },
+        "modelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "messages": {
+          "values": [
+            {}
+          ]
+        },
         "builtInTools": {},
         "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.googleGemini",
       "typeVersion": 1.1,
-      "position": [1792, -16],
+      "position": [
+        1792,
+        -16
+      ],
       "id": "39cba63e-bc8c-4262-8e31-6b0ab44cd191",
       "name": "Enriquecer lead"
     },
     {
-      "parameters": { "options": {} },
+      "parameters": {
+        "options": {}
+      },
       "type": "@n8n/n8n-nodes-langchain.agentTool",
       "typeVersion": 3,
-      "position": [1792, 224],
+      "position": [
+        1792,
+        224
+      ],
       "id": "67e710bc-ee61-419f-b70f-5ad908d0aeb8",
       "name": "AI Agent Tool"
     },
     {
-      "parameters": { "options": {} },
+      "parameters": {
+        "options": {}
+      },
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1,
-      "position": [1792, 400],
+      "position": [
+        1792,
+        400
+      ],
       "id": "873fc260-d2ae-48cd-b92e-1da9baa46a21",
       "name": "Google Gemini Chat Model"
     },
@@ -259,7 +466,10 @@
       "parameters": {},
       "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
       "typeVersion": 1.3,
-      "position": [1952, 480],
+      "position": [
+        1952,
+        480
+      ],
       "id": "0052af5e-1db7-4986-b592-80c1a7606c21",
       "name": "Postgres Chat Memory"
     },
@@ -270,7 +480,10 @@
       },
       "type": "n8n-nodes-base.hubspot",
       "typeVersion": 2.2,
-      "position": [2016, -16],
+      "position": [
+        2016,
+        -16
+      ],
       "id": "5fe7389c-ef13-4b6c-b6b3-6c56cfb6325d",
       "name": "Create a deal"
     }
