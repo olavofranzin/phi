@@ -1,0 +1,380 @@
+{
+  "name": "WPP Intake - Part 2 - Extracao e Enriquecimento",
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Dados Evolution').item.json.EVOLUTION_API_URL + '/message/sendText/' + encodeURIComponent($('Dados Evolution').item.json.EVOLUTION_INSTANCE) }}",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "apikey", "value": "={{ $('Dados Evolution').item.json.EVOLUTION_API_KEY }}" }] },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "number", "value": "={{ $('Preparar parametros extracao').item.json.telefone }}" },
+            { "name": "text", "value": "={{ \"Perfeito! Resumo:\\n\\nSegmento: *\" + $json.segmento + \"*\\nTipo: *\" + $json.tipo_localizacao + \"*\\nLocal: *\" + $json.localizacao + \"*\\nSite: *\" + $json.tem_site + \"*\\nAvaliacao: *\" + $json.avaliacao_minima + \"*\\n\\nBuscando os leads agora. Voce sera notificado em breve!\" }}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c29fcfe8-e743-448a-8868-213f85708a5b",
+      "name": "Confirmar extracao iniciada",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [1840, 304]
+    },
+    {
+      "parameters": {
+        "documentId": { "__rl": true, "value": "1MuetJ4N7xiazkw55YOSHtq_nIaHPRKOE-g6GwfaNJKM", "mode": "list", "cachedResultName": "Quantidade de Leads por Mês" },
+        "sheetName": { "__rl": true, "value": 624786381, "mode": "list", "cachedResultName": "qtd leads mes" },
+        "options": { "dataLocationOnSheet": { "values": { "rangeDefinition": "specifyRange", "firstDataRow": 7 } } }
+      },
+      "id": "ada29cd1-0f79-4d29-9f66-ed6fe3ad59ad",
+      "name": "Ler contagem de leads",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [1824, 544]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "vagas", "name": "vagas", "value": "={{ Math.max(0, 50 - ($json['Quantidade de Leads por Mês'] || 0)) }}", "type": "number" },
+            { "id": "segmento", "name": "segmento", "value": "={{ $('Preparar parametros extracao').item.json.segmento }}", "type": "string" },
+            { "id": "tipo_localizacao", "name": "tipo_localizacao", "value": "={{ $('Preparar parametros extracao').item.json.tipo_localizacao }}", "type": "string" },
+            { "id": "localizacao", "name": "localizacao", "value": "={{ $('Preparar parametros extracao').item.json.localizacao }}", "type": "string" },
+            { "id": "tem_site", "name": "tem_site", "value": "={{ $('Preparar parametros extracao').item.json.tem_site }}", "type": "string" },
+            { "id": "avaliacao_minima", "name": "avaliacao_minima", "value": "={{ $('Preparar parametros extracao').item.json.avaliacao_minima }}", "type": "number" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "46b6ab68-d61e-42e9-b562-61b143d1cc2f",
+      "name": "Calcular vagas disponiveis",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1824, 784]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [{ "value1": "={{ $json.vagas }}", "operation": "smallerEqual", "value2": 50 }]
+        }
+      },
+      "id": "f3540614-0866-4001-bd8c-6d958a3dd05f",
+      "name": "If",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [2080, 784]
+    },
+    {
+      "parameters": {
+        "actorId": { "__rl": true, "mode": "list", "value": "nwua9Gu5YrADL7ZDj", "cachedResultName": "Google Maps Scraper" },
+        "customBody": "={\n  \"includeWebResults\": false,\n  \"language\": \"pt-BR\",\n  \"locationQuery\": \"{{ $json.localizacao }}\",\n  \"maxCrawledPlacesPerSearch\": {{ $json.vagas }},\n  \"maximumLeadsEnrichmentRecords\": 0,\n  \"placeMinimumStars\": \"{{ $json.avaliacao_minima >= 5 ? 'five' : $json.avaliacao_minima >= 4 ? 'four' : $json.avaliacao_minima >= 3 ? 'three' : $json.avaliacao_minima >= 2 ? 'two' : $json.avaliacao_minima >= 1 ? 'one' : '' }}\",\n  \"scrapeContacts\": false,\n  \"scrapeDirectories\": false,\n  \"scrapeImageAuthors\": false,\n  \"scrapePlaceDetailPage\": false,\n  \"scrapeReviewsPersonalData\": true,\n  \"scrapeSocialMediaProfiles\": {\n    \"facebooks\": false,\n    \"instagrams\": false,\n    \"tiktoks\": false,\n    \"twitters\": false,\n    \"youtubes\": false\n  },\n  \"scrapeTableReservationProvider\": false,\n  \"searchStringsArray\": [\"{{ $json.segmento + ' ' + $json.localizacao }}\"],\n  \"skipClosedPlaces\": true,\n  \"website\": \"{{ $json.tem_site === 'all' || $json.tem_site == null ? 'allPlaces' : $json.tem_site ? 'withWebsite' : 'withoutWebsite' }}\"\n}",
+        "timeout": {}
+      },
+      "id": "63c9be14-171a-4496-9147-f1f6b8521910",
+      "name": "Run Google Maps Scraper",
+      "type": "@apify/n8n-nodes-apify.apify",
+      "typeVersion": 1,
+      "position": [2064, 528]
+    },
+    {
+      "parameters": {
+        "resource": "Datasets",
+        "datasetId": "={{ $json.defaultDatasetId }}",
+        "offset": {},
+        "limit": {},
+        "options": {}
+      },
+      "id": "6996cd41-5e13-40b4-9b19-ee640146c472",
+      "name": "Get dataset items",
+      "type": "@apify/n8n-nodes-apify.apify",
+      "typeVersion": 1,
+      "position": [2064, 320]
+    },
+    {
+      "parameters": {
+        "compare": "selectedFields",
+        "fieldsToCompare": "title",
+        "options": {}
+      },
+      "id": "321e1539-52df-4a61-ac40-c7a745de5b40",
+      "name": "Remove Duplicates",
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [2336, 320]
+    },
+    {
+      "parameters": {},
+      "id": "d37f98b4-b5ed-4d29-9ff7-3053335206ed",
+      "name": "Loop Over Items",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [2592, 320]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "place_id", "name": "place_id", "value": "={{ $json.placeId }}", "type": "string" },
+            { "id": "nome", "name": "nome", "value": "={{ $json.title }}", "type": "string" },
+            { "id": "telefone", "name": "telefone", "value": "={{ $json.phone }}", "type": "string" },
+            { "id": "site", "name": "site", "value": "={{ $json.website }}", "type": "string" },
+            { "id": "rating", "name": "rating", "value": "={{ $json.totalScore }}", "type": "number" },
+            { "id": "endereco", "name": "endereco", "value": "={{ $json.address }}", "type": "string" },
+            { "id": "categoria", "name": "categoria", "value": "={{ $json.categoryName }}", "type": "string" },
+            { "id": "status_novo", "name": "status", "value": "novo", "type": "string" },
+            { "id": "data_extracao", "name": "data_extracao", "value": "={{ $now.toFormat('dd/MM/yyyy') }}", "type": "string" },
+            { "id": "bairro", "name": "bairro", "value": "={{ $json.neighborhood }}", "type": "string" },
+            { "id": "rua_avenida", "name": "rua_avenida", "value": "={{ $json.street }}", "type": "string" },
+            { "id": "cidade", "name": "cidade", "value": "={{ $json.city }}", "type": "string" },
+            { "id": "cep", "name": "cep", "value": "={{ $json.postalCode }}", "type": "string" },
+            { "id": "estado", "name": "estado", "value": "={{ $json.state }}", "type": "string" },
+            { "id": "categoria_1", "name": "categoria_1", "value": "={{ $json.categories[1] }}", "type": "string" },
+            { "id": "categoria_2", "name": "categoria_2", "value": "={{ $json.categories[2] }}", "type": "string" },
+            { "id": "total_reviews", "name": "total_reviews", "value": "={{ $json.reviewsCount }}", "type": "number" },
+            { "id": "rank", "name": "rank", "value": "={{ $json.rank }}", "type": "number" },
+            { "id": "patrocinado", "name": "patrocinado", "value": "={{ $json.isAdvertisement }}", "type": "boolean" },
+            { "id": "search_string", "name": "search_string", "value": "={{ $json.searchString }}", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d3969e95-8f3f-4a05-820e-ccf36d68e9b2",
+      "name": "Normalizar campos do lead",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [2848, 336]
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": { "__rl": true, "value": "1MuetJ4N7xiazkw55YOSHtq_nIaHPRKOE-g6GwfaNJKM", "mode": "list", "cachedResultName": "Quantidade de Leads por Mês" },
+        "sheetName": { "__rl": true, "value": "gid=0", "mode": "list", "cachedResultName": "leads" },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $json.place_id }}",
+            "nome": "={{ $json.nome }}",
+            "site": "={{ $json.site }}",
+            "contato": "='{{ $json.telefone }}",
+            "setor": "={{ $json.categoria }}",
+            "Categoria 1": "={{ $json.categoria_1 }}",
+            "Categoria 2": "={{ $json.categoria_2 }}",
+            "Patrocinado": "={{ $json.patrocinado }}",
+            "Searchstring": "={{ $json.search_string }}",
+            "Posição Pesquisa": "={{ $json.rank }}",
+            "Quantidade reviews": "={{ $json.total_reviews }}",
+            "Cidade": "={{ $json.cidade }}",
+            "Estado": "={{ $json.estado }}",
+            "Bairro": "={{ $json.bairro }}",
+            "CEP": "={{ $json.cep }}",
+            "Endereço": "={{ $json.rua_avenida }}",
+            "data extração": "={{ $json.data_extracao }}"
+          },
+          "matchingColumns": ["id"],
+          "schema": [
+            { "id": "id", "displayName": "id", "required": false, "defaultMatch": true, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "nome", "displayName": "nome", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "setor", "displayName": "setor", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "e-mail", "displayName": "e-mail", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "contato", "displayName": "contato", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "site", "displayName": "site", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "enriquecimento", "displayName": "enriquecimento", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "Categoria 1", "displayName": "Categoria 1", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "Categoria 2", "displayName": "Categoria 2", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "data extração", "displayName": "data extração", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "633e5380-49c6-4fad-bd64-d4b394c88211",
+      "name": "Salvar lead bruto na planilha",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [3040, 336]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Checkpoint 1: salva dados brutos do lead na tabela nativa do n8n (SQLite)\n// Permite retomar o enriquecimento caso o agente falhe\nconst staticData = $getWorkflowStaticData(\"global\");\nconst checkpoints = staticData.leads_checkpoint || {};\nconst placeId = $json.place_id;\ncheckpoints[placeId] = {\n  place_id: placeId,\n  nome: $json.nome,\n  telefone: $json.telefone,\n  site: $json.site,\n  rating: $json.rating,\n  endereco: $json.endereco,\n  categoria: $json.categoria,\n  status: 'aguardando_enriquecimento',\n  salvo_em: new Date().toISOString()\n};\nstaticData.leads_checkpoint = checkpoints;\nreturn [{ json: $json }];"
+      },
+      "id": "checkpoint-pre-enr-0001",
+      "name": "Checkpoint pre-enriquecimento",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3152, 336]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ 'Pesquise e analise o seguinte lead para prospecção B2B:\\n\\n' +\n'DADOS DO LEAD:\\n' +\n'- Nome: ' + $(\"Normalizar campos do lead\").item.json.nome + '\\n' +\n'- Telefone: ' + $(\"Normalizar campos do lead\").item.json.telefone + '\\n' +\n'- Site: ' + $(\"Normalizar campos do lead\").item.json.site + '\\n' +\n'- Endereço: ' + $(\"Normalizar campos do lead\").item.json.endereco + '\\n' +\n'- Categoria: ' + $(\"Normalizar campos do lead\").item.json.categoria + '\\n' +\n'- Avaliação Google: ' + $(\"Normalizar campos do lead\").item.json.rating + '\\n\\n' +\n'PESQUISAS OBRIGATÓRIAS:\\n\\n' +\n'1. CAPACIDADE FINANCEIRA\\n' +\n'Pesquise em fontes reconhecidas (Econodata, Serasa, LinkedIn, Receita Federal, notícias de negócios) ' +\n'informações sobre porte da empresa, número de funcionários, faturamento estimado, ' +\n'investimentos recentes, crescimento e presença em contratos ou licitações públicas.\\n\\n' +\n'2. ANÁLISE DO SITE (' + $(\"Normalizar campos do lead\").item.json.site + ')\\n' +\n'Acesse e analise o site buscando: tempo de funcionamento e histórico da empresa, ' +\n'serviços e produtos oferecidos, possíveis clientes ou segmentos atendidos, ' +\n'como a empresa se posiciona no mercado, qualidade do conteúdo digital ' +\n'(SEO, blog, cases, depoimentos, CTAs) e lacunas de conteúdo que nossos serviços de ' +\n'comunicação e marketing podem sanar.\\n\\n' +\n'3. PRESENÇA EM REDES SOCIAIS\\n' +\n'Busque no Google Business Profile, site da empresa e internet em geral se a empresa possui:\\n' +\n'- Instagram (URL e número aproximado de seguidores)\\n' +\n'- Facebook (URL e engajamento)\\n' +\n'- LinkedIn (URL da página corporativa)\\n' +\n'- YouTube (se tem canal)\\n' +\n'- TikTok (se relevante para o segmento)\\n' +\n'Avalie: Frequência de postagens, qualidade do conteúdo, engajamento, se está ativo ou abandonado.\\n\\n' +\n'4. MATURIDADE DO MERCADO\\n' +\n'Pesquise o setor (' + $(\"Normalizar campos do lead\").item.json.categoria + ') no Brasil: ' +\n'nível de digitalização, tendências atuais, pressões competitivas e como a maturidade ' +\n'do segmento impacta o comportamento de compra e investimento em marketing.\\n\\n' +\n'ESTRUTURE O RELATÓRIO COM AS SEÇÕES:\\n' +\n'A) Perfil Financeiro — capacidade de investimento (alta/média/baixa) com justificativa e fontes\\n' +\n'B) Análise da Presença Digital — pontos fortes e lacunas identificadas no site\\n' +\n'C) Redes Sociais — quais redes possui, URLs, atividade (ativo/inativo), engajamento e lacunas\\n' +\n'D) Maturidade do Setor — nível (inicial/em desenvolvimento/maduro) e impacto no negócio\\n' +\n'E) Potencial de Prospecção — (alto/médio/baixo) com motivo\\n' +\n'F) Abordagem Recomendada — tom, argumento principal e abertura sugerida para o primeiro contato' }}",
+        "options": {}
+      },
+      "id": "fc180530-a071-4b42-8776-ae7e4239f9aa",
+      "name": "Agente de Enriquecimento",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [3264, 336]
+    },
+    {
+      "parameters": { "options": {} },
+      "id": "6a79dca2-1f29-4990-94ee-1921bb8ab965",
+      "name": "Google Gemini Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [3344, 560]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Checkpoint 2: marca lead como enriquecido na tabela nativa do n8n\n// Confirma que o agente concluiu com sucesso\nconst staticData = $getWorkflowStaticData(\"global\");\nconst checkpoints = staticData.leads_checkpoint || {};\nconst placeId = $('Normalizar campos do lead').item.json.place_id;\nif (checkpoints[placeId]) {\n  checkpoints[placeId].status = 'enriquecido';\n  checkpoints[placeId].enriquecido_em = new Date().toISOString();\n  staticData.leads_checkpoint = checkpoints;\n}\nreturn [{ json: $json }];"
+      },
+      "id": "marcar-lead-enriq-0001",
+      "name": "Marcar lead enriquecido",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3480, 336]
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": { "__rl": true, "value": "1MuetJ4N7xiazkw55YOSHtq_nIaHPRKOE-g6GwfaNJKM", "mode": "list", "cachedResultName": "Quantidade de Leads por Mês" },
+        "sheetName": { "__rl": true, "value": "gid=0", "mode": "list", "cachedResultName": "leads" },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $('Salvar lead bruto na planilha').item.json.id }}",
+            "enriquecimento": "={{ $json.output }}"
+          },
+          "matchingColumns": ["id"],
+          "schema": [
+            { "id": "id", "displayName": "id", "required": false, "defaultMatch": true, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "enriquecimento", "displayName": "enriquecimento", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "f9feb550-5385-4be1-8e41-54c63dbd8474",
+      "name": "Atualizar lead enriquecido na planilha",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [3616, 336]
+    },
+    {
+      "parameters": {
+        "authentication": "appToken",
+        "resource": "deal",
+        "stage": "70807682-148b-4914-acd0-97aad8c2a000",
+        "additionalFields": {
+          "description": "={{ $(\"Agente de Enriquecimento\").item.json.output }}",
+          "dealName": "={{ $('Salvar lead bruto na planilha').item.json.nome }}"
+        }
+      },
+      "id": "72c0c9db-a7a5-4578-b6d1-5e1f3acec62b",
+      "name": "Criar deal no HubSpot",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2.2,
+      "position": [3840, 336]
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": { "__rl": true, "value": "1MuetJ4N7xiazkw55YOSHtq_nIaHPRKOE-g6GwfaNJKM", "mode": "list", "cachedResultName": "Quantidade de Leads por Mês" },
+        "sheetName": { "__rl": true, "value": "gid=0", "mode": "list", "cachedResultName": "leads" },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $('Atualizar lead enriquecido na planilha').item.json.id }}",
+            "status hubspot": "Prospectado"
+          },
+          "matchingColumns": ["id"],
+          "schema": [
+            { "id": "id", "displayName": "id", "required": false, "defaultMatch": true, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "status hubspot", "displayName": "status hubspot", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "f5186f51-1e9a-4bf0-ae97-a7e0dc642f54",
+      "name": "Atualizar status prospectado na planilha",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [3872, 576]
+    },
+    {
+      "parameters": { "amount": 1, "unit": "minutes" },
+      "id": "253c82c9-b832-4062-9769-7b6c73aed283",
+      "name": "Wait",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [3888, 816],
+      "webhookId": "e4b27c02-c3bd-45d6-bbcb-517362597cb5"
+    }
+  ],
+  "connections": {
+    "Confirmar extracao iniciada": {
+      "main": [[{ "node": "Ler contagem de leads", "type": "main", "index": 0 }]]
+    },
+    "Ler contagem de leads": {
+      "main": [[{ "node": "Calcular vagas disponiveis", "type": "main", "index": 0 }]]
+    },
+    "Calcular vagas disponiveis": {
+      "main": [[{ "node": "If", "type": "main", "index": 0 }]]
+    },
+    "If": {
+      "main": [[{ "node": "Run Google Maps Scraper", "type": "main", "index": 0 }]]
+    },
+    "Run Google Maps Scraper": {
+      "main": [[{ "node": "Get dataset items", "type": "main", "index": 0 }]]
+    },
+    "Get dataset items": {
+      "main": [[{ "node": "Remove Duplicates", "type": "main", "index": 0 }]]
+    },
+    "Remove Duplicates": {
+      "main": [[{ "node": "Loop Over Items", "type": "main", "index": 0 }]]
+    },
+    "Loop Over Items": {
+      "main": [
+        [{ "node": "Get recently created/updated deals", "type": "main", "index": 0 }],
+        [{ "node": "Normalizar campos do lead", "type": "main", "index": 0 }]
+      ]
+    },
+    "Normalizar campos do lead": {
+      "main": [[{ "node": "Salvar lead bruto na planilha", "type": "main", "index": 0 }]]
+    },
+    "Salvar lead bruto na planilha": {
+      "main": [[{ "node": "Checkpoint pre-enriquecimento", "type": "main", "index": 0 }]]
+    },
+    "Checkpoint pre-enriquecimento": {
+      "main": [[{ "node": "Agente de Enriquecimento", "type": "main", "index": 0 }]]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [[{ "node": "Agente de Enriquecimento", "type": "ai_languageModel", "index": 0 }]]
+    },
+    "Agente de Enriquecimento": {
+      "main": [[{ "node": "Marcar lead enriquecido", "type": "main", "index": 0 }]]
+    },
+    "Marcar lead enriquecido": {
+      "main": [[{ "node": "Atualizar lead enriquecido na planilha", "type": "main", "index": 0 }]]
+    },
+    "Atualizar lead enriquecido na planilha": {
+      "main": [[{ "node": "Criar deal no HubSpot", "type": "main", "index": 0 }]]
+    },
+    "Criar deal no HubSpot": {
+      "main": [[{ "node": "Atualizar status prospectado na planilha", "type": "main", "index": 0 }]]
+    },
+    "Atualizar status prospectado na planilha": {
+      "main": [[{ "node": "Wait", "type": "main", "index": 0 }]]
+    },
+    "Wait": {
+      "main": [[{ "node": "Loop Over Items", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" }
+}
