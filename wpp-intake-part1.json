@@ -1,0 +1,307 @@
+{
+  "name": "WPP Intake - Evolution API",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "evolution-intake",
+        "options": {}
+      },
+      "id": "a651d26f-5f50-4a9b-ade0-fb3025dffb84",
+      "name": "Webhook Evolution API",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "webhookId": "11d5a790-ec06-4874-b033-a8787bf27617"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.body.event }}",
+              "rightValue": "messages.upsert",
+              "operator": { "type": "string", "operation": "equals" },
+              "id": "cc924f5f-0fe6-4dac-a909-16b96f1c9c1a"
+            },
+            {
+              "leftValue": "={{ $json.body.data.key.fromMe }}",
+              "rightValue": false,
+              "operator": { "type": "boolean", "operation": "equals" },
+              "id": "eb6b90fa-bfa3-46a8-aa03-6e8b05f58bfb"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "de4bb4e9-5eaa-4787-8167-097ac90c5917",
+      "name": "Filtrar mensagem recebida",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [240, 0]
+    },
+    {
+      "parameters": {},
+      "id": "f12c7ff3-b4ea-416d-b258-2ad53426c3e5",
+      "name": "Descartar mensagem",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [480, 208]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "telefone",
+              "value": "={{ $json.body.data.key.remoteJid.replace('@s.whatsapp.net', '') }}",
+              "type": "string"
+            },
+            {
+              "id": "a2",
+              "name": "mensagem",
+              "value": "={{ $json.body.data.message.conversation ?? $json.body.data.message.extendedTextMessage?.text ?? \"\" }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "bbd91e97-037a-41e4-8916-a5c35c440ba0",
+      "name": "Extrair dados da mensagem",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [480, -208]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "e1", "name": "EVOLUTION_API_URL", "value": "https://n8n-evolution.1unqx7.easypanel.host", "type": "string" },
+            { "id": "e2", "name": "EVOLUTION_INSTANCE", "value": "Whats Business", "type": "string" },
+            { "id": "e3", "name": "EVOLUTION_API_KEY", "value": "AFCFCAFE4FBB7BE2239672A679747", "type": "string" },
+            { "id": "e4", "name": "telefone", "value": "={{ $('Extrair dados da mensagem').item.json.telefone }}", "type": "string" },
+            { "id": "e5", "name": "mensagem", "value": "={{ $('Extrair dados da mensagem').item.json.mensagem }}", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c111a97b-7142-4c49-8c3b-cdd94e814ded",
+      "name": "Dados Evolution",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [720, -208]
+    },
+    {
+      "parameters": {
+        "jsCode": "const staticData = $getWorkflowStaticData(\"global\");\nconst conversas = staticData.conversas || {};\nconst telefone = $json.telefone;\nconst mensagem = ($json.mensagem || \"\").trim();\n\nfunction normalizar(str) {\n  return str.toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').trim();\n}\n\nconst ehKeyword = normalizar(mensagem) === 'iniciar prospeccao';\n\nif (ehKeyword) {\n  conversas[telefone] = { etapa: \"1\" };\n  staticData.conversas = conversas;\n  return [{ json: { telefone, mensagem, etapa: \"1\", segmento: null, tipo_localizacao: null, localizacao: null, tem_site: null, avaliacao_minima: null } }];\n}\n\nif (!conversas[telefone]) {\n  return [];\n}\n\nconst conversa = conversas[telefone];\n\nif (conversa.etapa === \"completo\") {\n  return [];\n}\n\nif (conversa.etapa === \"1\") {\n  conversa.segmento = mensagem;\n  conversa.etapa = \"2\";\n} else if (conversa.etapa === \"2\") {\n  conversa.tipo_localizacao = mensagem;\n  conversa.etapa = \"3\";\n} else if (conversa.etapa === \"3\") {\n  conversa.localizacao = mensagem;\n  conversa.etapa = \"4\";\n} else if (conversa.etapa === \"4\") {\n  conversa.tem_site = mensagem;\n  conversa.etapa = \"5\";\n} else if (conversa.etapa === \"5\") {\n  conversa.avaliacao_minima = mensagem;\n  conversa.etapa = \"completo\";\n}\n\nstaticData.conversas = conversas;\nreturn [{ json: {\n  telefone,\n  mensagem,\n  etapa: conversa.etapa,\n  segmento: conversa.segmento || null,\n  tipo_localizacao: conversa.tipo_localizacao || null,\n  localizacao: conversa.localizacao || null,\n  tem_site: conversa.tem_site || null,\n  avaliacao_minima: conversa.avaliacao_minima || null\n} }];"
+      },
+      "id": "d0ff77ee-6b8b-4d3d-a03e-8c2faec3e995",
+      "name": "Gerenciar estado da conversa",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [960, -208]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            { "conditions": { "options": { "caseSensitive": true, "typeValidation": "strict" }, "conditions": [{ "leftValue": "={{ $json.etapa }}", "rightValue": "1", "operator": { "type": "string", "operation": "equals" } }], "combinator": "and" } },
+            { "conditions": { "options": { "caseSensitive": true, "typeValidation": "strict" }, "conditions": [{ "leftValue": "={{ $json.etapa }}", "rightValue": "2", "operator": { "type": "string", "operation": "equals" } }], "combinator": "and" } },
+            { "conditions": { "options": { "caseSensitive": true, "typeValidation": "strict" }, "conditions": [{ "leftValue": "={{ $json.etapa }}", "rightValue": "3", "operator": { "type": "string", "operation": "equals" } }], "combinator": "and" } },
+            { "conditions": { "options": { "caseSensitive": true, "typeValidation": "strict" }, "conditions": [{ "leftValue": "={{ $json.etapa }}", "rightValue": "4", "operator": { "type": "string", "operation": "equals" } }], "combinator": "and" } },
+            { "conditions": { "options": { "caseSensitive": true, "typeValidation": "strict" }, "conditions": [{ "leftValue": "={{ $json.etapa }}", "rightValue": "5", "operator": { "type": "string", "operation": "equals" } }], "combinator": "and" } },
+            { "conditions": { "options": { "caseSensitive": true, "typeValidation": "strict" }, "conditions": [{ "leftValue": "={{ $json.etapa }}", "rightValue": "completo", "operator": { "type": "string", "operation": "equals" } }], "combinator": "and" } }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b281c2d5-84a0-45a3-b799-3b32a2597dbc",
+      "name": "Switch etapa",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [1200, -208]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Dados Evolution').item.json.EVOLUTION_API_URL + '/message/sendText/' + encodeURIComponent($('Dados Evolution').item.json.EVOLUTION_INSTANCE) }}",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "apikey", "value": "={{ $('Dados Evolution').item.json.EVOLUTION_API_KEY }}" }] },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "number", "value": "={{ $json.telefone }}" },
+            { "name": "text", "value": "Ola! Vou iniciar a prospeccao de leads para voce.\n\n*Pergunta 1 de 5*\n\n*Qual e o segmento/nicho de negocio que deseja prospectar?*\n\nEx: restaurantes, academias, clinicas odontologicas..." }
+          ]
+        },
+        "options": {}
+      },
+      "id": "852e263e-1112-4cfc-abcb-95ca6f121a43",
+      "name": "Perguntar segmento",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [1440, -704]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Dados Evolution').item.json.EVOLUTION_API_URL + '/message/sendText/' + encodeURIComponent($('Dados Evolution').item.json.EVOLUTION_INSTANCE) }}",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "apikey", "value": "={{ $('Dados Evolution').item.json.EVOLUTION_API_KEY }}" }] },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "number", "value": "={{ $json.telefone }}" },
+            { "name": "text", "value": "={{ \"Segmento: *\" + $json.segmento + \"*\\n\\n*Pergunta 2 de 5*\\n\\n*Como deseja filtrar a localizacao?*\\n\\nResponda:\\n- *cidade*\\n- *bairro*\\n- *estado*\" }}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a8540904-6c6e-4253-9375-66cc317ed541",
+      "name": "Perguntar tipo de localizacao",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [1440, -496]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Dados Evolution').item.json.EVOLUTION_API_URL + '/message/sendText/' + encodeURIComponent($('Dados Evolution').item.json.EVOLUTION_INSTANCE) }}",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "apikey", "value": "={{ $('Dados Evolution').item.json.EVOLUTION_API_KEY }}" }] },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "number", "value": "={{ $json.telefone }}" },
+            { "name": "text", "value": "={{ \"Tipo: *\" + $json.tipo_localizacao + \"*\\n\\n*Pergunta 3 de 5*\\n\\n*Qual e o nome da localizacao?*\\n\\nEx: Sao Paulo, Moema, Rio de Janeiro...\" }}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "19e2a3ec-8960-4d88-ac20-f94dd89149c3",
+      "name": "Perguntar localizacao",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [1440, -304]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Dados Evolution').item.json.EVOLUTION_API_URL + '/message/sendText/' + encodeURIComponent($('Dados Evolution').item.json.EVOLUTION_INSTANCE) }}",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "apikey", "value": "={{ $('Dados Evolution').item.json.EVOLUTION_API_KEY }}" }] },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "number", "value": "={{ $json.telefone }}" },
+            { "name": "text", "value": "={{ \"Localizacao: *\" + $json.localizacao + \"*\\n\\n*Pergunta 4 de 5*\\n\\n*Filtrar apenas empresas com site?*\\n\\nResponda *sim* ou *nao*\" }}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b384b6e9-99ee-4be8-b8a8-276132ecdbd0",
+      "name": "Perguntar sobre site",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [1440, -96]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Dados Evolution').item.json.EVOLUTION_API_URL + '/message/sendText/' + encodeURIComponent($('Dados Evolution').item.json.EVOLUTION_INSTANCE) }}",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "apikey", "value": "={{ $('Dados Evolution').item.json.EVOLUTION_API_KEY }}" }] },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "number", "value": "={{ $json.telefone }}" },
+            { "name": "text", "value": "={{ \"Site: *\" + $json.tem_site + \"*\\n\\n*Pergunta 5 de 5*\\n\\n*Avaliacao minima no Google Maps?*\\n\\nDigite um numero de 1 a 5 (ou 0 para sem filtro)\" }}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d687f387-c5b7-4c6f-90c7-aa01f3ca4a55",
+      "name": "Perguntar avaliacao minima",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [1440, 112]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "p1", "name": "segmento", "value": "={{ $json.segmento }}", "type": "string" },
+            { "id": "p2", "name": "tipo_localizacao", "value": "={{ $json.tipo_localizacao }}", "type": "string" },
+            { "id": "p3", "name": "localizacao", "value": "={{ $json.localizacao }}", "type": "string" },
+            { "id": "p4", "name": "tem_site", "value": "={{ $json.tem_site.toLowerCase() === 'sim' }}", "type": "boolean" },
+            { "id": "p5", "name": "avaliacao_minima", "value": "={{ Number($json.avaliacao_minima) }}", "type": "number" },
+            { "id": "p6", "name": "telefone", "value": "={{ $json.telefone }}", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "1b6e220a-367e-42e3-9428-cad517375e79",
+      "name": "Preparar parametros extracao",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1440, 304]
+    },
+    {
+      "parameters": {
+        "jsCode": "const staticData = $getWorkflowStaticData(\"global\");\nconst prospeccao = staticData.prospeccao_params || {};\nconst telefone = $json.telefone;\nprospeccao[telefone] = {\n  segmento: $json.segmento,\n  tipo_localizacao: $json.tipo_localizacao,\n  localizacao: $json.localizacao,\n  tem_site: $json.tem_site,\n  avaliacao_minima: $json.avaliacao_minima,\n  status: 'iniciado',\n  inicio: new Date().toISOString()\n};\nstaticData.prospeccao_params = prospeccao;\nreturn [{ json: $json }];"
+      },
+      "id": "persist-params-extr-0001",
+      "name": "Persistir params de extracao",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1640, 304]
+    }
+  ],
+  "connections": {
+    "Webhook Evolution API": {
+      "main": [[{ "node": "Filtrar mensagem recebida", "type": "main", "index": 0 }]]
+    },
+    "Filtrar mensagem recebida": {
+      "main": [
+        [{ "node": "Extrair dados da mensagem", "type": "main", "index": 0 }],
+        [{ "node": "Descartar mensagem", "type": "main", "index": 0 }]
+      ]
+    },
+    "Extrair dados da mensagem": {
+      "main": [[{ "node": "Dados Evolution", "type": "main", "index": 0 }]]
+    },
+    "Dados Evolution": {
+      "main": [[{ "node": "Gerenciar estado da conversa", "type": "main", "index": 0 }]]
+    },
+    "Gerenciar estado da conversa": {
+      "main": [[{ "node": "Switch etapa", "type": "main", "index": 0 }]]
+    },
+    "Switch etapa": {
+      "main": [
+        [{ "node": "Perguntar segmento", "type": "main", "index": 0 }],
+        [{ "node": "Perguntar tipo de localizacao", "type": "main", "index": 0 }],
+        [{ "node": "Perguntar localizacao", "type": "main", "index": 0 }],
+        [{ "node": "Perguntar sobre site", "type": "main", "index": 0 }],
+        [{ "node": "Perguntar avaliacao minima", "type": "main", "index": 0 }],
+        [{ "node": "Preparar parametros extracao", "type": "main", "index": 0 }]
+      ]
+    },
+    "Preparar parametros extracao": {
+      "main": [[{ "node": "Persistir params de extracao", "type": "main", "index": 0 }]]
+    },
+    "Persistir params de extracao": {
+      "main": [[]]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" }
+}
