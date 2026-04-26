@@ -1,0 +1,211 @@
+{
+  "_instrucoes": "Cole cada payload abaixo no campo 'Body' do webhook test no n8n. Teste na ordem: etapa_0 → etapa_1 → ... → etapa_5. O telefone deve ser sempre o mesmo para manter o estado da conversa.",
+
+  "etapa_0_iniciar_prospeccao": {
+    "_descricao": "Mensagem que inicia o fluxo. Dispara a pergunta do segmento.",
+    "body": {
+      "event": "messages.upsert",
+      "instance": "Whats Business",
+      "data": {
+        "key": {
+          "remoteJid": "5511999990001@s.whatsapp.net",
+          "fromMe": false,
+          "id": "MSG_TEST_001"
+        },
+        "message": {
+          "conversation": "iniciar prospeccao"
+        },
+        "messageType": "conversation",
+        "messageTimestamp": 1714000000,
+        "source": "web"
+      },
+      "destination": "5511888880001",
+      "date_time": "2026-04-26T12:00:00.000Z",
+      "sender": "5511999990001@s.whatsapp.net",
+      "server_url": "https://n8n-evolution.1unqx7.easypanel.host",
+      "apikey": "AFCFCAFE4FBB7BE2239672A679747"
+    }
+  },
+
+  "etapa_1_segmento": {
+    "_descricao": "Resposta à pergunta 1: qual segmento prospectar.",
+    "body": {
+      "event": "messages.upsert",
+      "instance": "Whats Business",
+      "data": {
+        "key": {
+          "remoteJid": "5511999990001@s.whatsapp.net",
+          "fromMe": false,
+          "id": "MSG_TEST_002"
+        },
+        "message": {
+          "conversation": "clinicas odontologicas"
+        },
+        "messageType": "conversation",
+        "messageTimestamp": 1714000060,
+        "source": "web"
+      },
+      "destination": "5511888880001",
+      "date_time": "2026-04-26T12:01:00.000Z",
+      "sender": "5511999990001@s.whatsapp.net",
+      "server_url": "https://n8n-evolution.1unqx7.easypanel.host",
+      "apikey": "AFCFCAFE4FBB7BE2239672A679747"
+    }
+  },
+
+  "etapa_2_tipo_localizacao": {
+    "_descricao": "Resposta à pergunta 2: tipo de localização (cidade/bairro/estado).",
+    "body": {
+      "event": "messages.upsert",
+      "instance": "Whats Business",
+      "data": {
+        "key": {
+          "remoteJid": "5511999990001@s.whatsapp.net",
+          "fromMe": false,
+          "id": "MSG_TEST_003"
+        },
+        "message": {
+          "conversation": "cidade"
+        },
+        "messageType": "conversation",
+        "messageTimestamp": 1714000120,
+        "source": "web"
+      },
+      "destination": "5511888880001",
+      "date_time": "2026-04-26T12:02:00.000Z",
+      "sender": "5511999990001@s.whatsapp.net",
+      "server_url": "https://n8n-evolution.1unqx7.easypanel.host",
+      "apikey": "AFCFCAFE4FBB7BE2239672A679747"
+    }
+  },
+
+  "etapa_3_localizacao": {
+    "_descricao": "Resposta à pergunta 3: nome da localização.",
+    "body": {
+      "event": "messages.upsert",
+      "instance": "Whats Business",
+      "data": {
+        "key": {
+          "remoteJid": "5511999990001@s.whatsapp.net",
+          "fromMe": false,
+          "id": "MSG_TEST_004"
+        },
+        "message": {
+          "conversation": "Curitiba"
+        },
+        "messageType": "conversation",
+        "messageTimestamp": 1714000180,
+        "source": "web"
+      },
+      "destination": "5511888880001",
+      "date_time": "2026-04-26T12:03:00.000Z",
+      "sender": "5511999990001@s.whatsapp.net",
+      "server_url": "https://n8n-evolution.1unqx7.easypanel.host",
+      "apikey": "AFCFCAFE4FBB7BE2239672A679747"
+    }
+  },
+
+  "etapa_4_tem_site": {
+    "_descricao": "Resposta à pergunta 4: filtrar por site (sim/nao).",
+    "body": {
+      "event": "messages.upsert",
+      "instance": "Whats Business",
+      "data": {
+        "key": {
+          "remoteJid": "5511999990001@s.whatsapp.net",
+          "fromMe": false,
+          "id": "MSG_TEST_005"
+        },
+        "message": {
+          "conversation": "sim"
+        },
+        "messageType": "conversation",
+        "messageTimestamp": 1714000240,
+        "source": "web"
+      },
+      "destination": "5511888880001",
+      "date_time": "2026-04-26T12:04:00.000Z",
+      "sender": "5511999990001@s.whatsapp.net",
+      "server_url": "https://n8n-evolution.1unqx7.easypanel.host",
+      "apikey": "AFCFCAFE4FBB7BE2239672A679747"
+    }
+  },
+
+  "etapa_5_avaliacao_minima": {
+    "_descricao": "Resposta à pergunta 5: avaliação mínima (0-5). Esta etapa marca 'completo' e dispara a extração.",
+    "body": {
+      "event": "messages.upsert",
+      "instance": "Whats Business",
+      "data": {
+        "key": {
+          "remoteJid": "5511999990001@s.whatsapp.net",
+          "fromMe": false,
+          "id": "MSG_TEST_006"
+        },
+        "message": {
+          "conversation": "4"
+        },
+        "messageType": "conversation",
+        "messageTimestamp": 1714000300,
+        "source": "web"
+      },
+      "destination": "5511888880001",
+      "date_time": "2026-04-26T12:05:00.000Z",
+      "sender": "5511999990001@s.whatsapp.net",
+      "server_url": "https://n8n-evolution.1unqx7.easypanel.host",
+      "apikey": "AFCFCAFE4FBB7BE2239672A679747"
+    }
+  },
+
+  "teste_mensagem_descartada": {
+    "_descricao": "Mensagem que deve ser descartada (fromMe: true — enviada pelo próprio número).",
+    "body": {
+      "event": "messages.upsert",
+      "instance": "Whats Business",
+      "data": {
+        "key": {
+          "remoteJid": "5511999990001@s.whatsapp.net",
+          "fromMe": true,
+          "id": "MSG_TEST_IGNORE"
+        },
+        "message": {
+          "conversation": "esta mensagem deve ser ignorada"
+        },
+        "messageType": "conversation",
+        "messageTimestamp": 1714000350,
+        "source": "web"
+      },
+      "destination": "5511888880001",
+      "date_time": "2026-04-26T12:05:50.000Z",
+      "sender": "5511888880001@s.whatsapp.net",
+      "server_url": "https://n8n-evolution.1unqx7.easypanel.host",
+      "apikey": "AFCFCAFE4FBB7BE2239672A679747"
+    }
+  },
+
+  "teste_evento_diferente": {
+    "_descricao": "Evento que não é messages.upsert — deve ser descartado pelo filtro.",
+    "body": {
+      "event": "connection.update",
+      "instance": "Whats Business",
+      "data": {
+        "key": {
+          "remoteJid": "5511999990001@s.whatsapp.net",
+          "fromMe": false,
+          "id": "MSG_TEST_CONN"
+        },
+        "message": {
+          "conversation": "nao deve passar pelo filtro"
+        },
+        "messageType": "conversation",
+        "messageTimestamp": 1714000400,
+        "source": "web"
+      },
+      "destination": "5511888880001",
+      "date_time": "2026-04-26T12:06:40.000Z",
+      "sender": "5511999990001@s.whatsapp.net",
+      "server_url": "https://n8n-evolution.1unqx7.easypanel.host",
+      "apikey": "AFCFCAFE4FBB7BE2239672A679747"
+    }
+  }
+}

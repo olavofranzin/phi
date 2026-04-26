@@ -1,0 +1,196 @@
+{
+  "name": "WPP Intake - Part 3 - Acompanhamento HubSpot",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": { "interval": [{ "field": "hours" }] }
+      },
+      "id": "36ddcdb2-6c98-4950-951c-f877783921e2",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [2512, -240]
+    },
+    {
+      "parameters": {
+        "authentication": "appToken",
+        "resource": "deal",
+        "operation": "getRecentlyCreatedUpdated",
+        "filters": {}
+      },
+      "id": "9cc91441-e55b-4ecc-bc50-a72c8a36adac",
+      "name": "Get recently created/updated deals",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2.2,
+      "position": [2768, -80]
+    },
+    {
+      "parameters": {
+        "authentication": "appToken",
+        "resource": "deal",
+        "operation": "search",
+        "filterGroupsUi": {
+          "filterGroupsValues": [{
+            "filtersUi": {
+              "filterValues": [{
+                "propertyName": "dealstage",
+                "operator": "NEQ",
+                "value": "70807682-148b-4914-acd0-97aad8c2a000"
+              }]
+            }
+          }]
+        },
+        "additionalFields": {}
+      },
+      "id": "7b7845cd-f607-42fa-82a7-e915031e963b",
+      "name": "Deals que mudaram de status",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2.2,
+      "position": [2976, -80]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "deal_id", "name": "deal_id", "value": "={{ $json.properties.hs_object_id }}", "type": "string" },
+            { "id": "novo_estagio", "name": "novo_estagio", "value": "={{ $json.properties.dealstage }}", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3b6930e3-755c-431b-b7f9-8e96451f15d5",
+      "name": "Extrair dados do deal",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [3200, -80]
+    },
+    {
+      "parameters": {
+        "jsCode": "const stageMap = {\n  '70807682-148b-4914-acd0-97aad8c2a000': 'Prospectado',\n  'qualifiedtobuy': 'Interação Instagram',\n  '17222650': 'Contato Realizado',\n  'presentationscheduled': 'Reunião Agendada',\n  'decisionmakerboughtin': 'Tomada de Decisão',\n  'contractsent': 'Contrato Enviado',\n  'closedwon': 'Vencido',\n  'closedlost': 'Perdido',\n};\n\nconst dealId = $input.item.json.deal_id;\nconst novoEstagio = $input.item.json.novo_estagio;\nconst statusMapeado = stageMap[novoEstagio] || novoEstagio;\n\nreturn [{\n  json: {\n    deal_id: dealId,\n    novo_estagio: novoEstagio,\n    status_mapeado: statusMapeado\n  }\n}];"
+      },
+      "id": "66255cc9-33ff-4e9c-9cea-0f22c405fbb5",
+      "name": "Mapear estagio para status",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3424, -80]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 3 },
+          "conditions": [
+            { "id": "0b98ee68-8b6a-4db4-9c15-4dea8d2322bb", "leftValue": "={{ $json.status_mapeado }}", "rightValue": "Vencido", "operator": { "type": "string", "operation": "notEquals" } },
+            { "id": "bd66e13d-e90d-49bd-b084-4b132878de27", "leftValue": "={{ $json.status_mapeado }}", "rightValue": "Perdido", "operator": { "type": "string", "operation": "notEquals" } }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "id": "0252548d-5a45-4d75-b784-cb6506e53855",
+      "name": "If1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [3616, -80]
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": { "__rl": true, "value": "1MuetJ4N7xiazkw55YOSHtq_nIaHPRKOE-g6GwfaNJKM", "mode": "list", "cachedResultName": "Quantidade de Leads por Mês" },
+        "sheetName": { "__rl": true, "value": "gid=0", "mode": "list", "cachedResultName": "leads" },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $json.deal_id }}",
+            "status hubspot": "={{ $json.status_mapeado }}"
+          },
+          "matchingColumns": ["id"],
+          "schema": [
+            { "id": "id", "displayName": "id", "required": false, "defaultMatch": true, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "nome", "displayName": "nome", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "setor", "displayName": "setor", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "e-mail", "displayName": "e-mail", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "contato", "displayName": "contato", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "site", "displayName": "site", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "enriquecimento", "displayName": "enriquecimento", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "data extração", "displayName": "data extração", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "status hubspot", "displayName": "status hubspot", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "mês extração", "displayName": "mês extração", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "validacao_manual", "displayName": "validacao_manual", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "classificacao_manual", "displayName": "classificacao_manual", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "potencial_ticket", "displayName": "potencial_ticket", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "motivo_rejeicao", "displayName": "motivo_rejeicao", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "notas_validacao", "displayName": "notas_validacao", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "data_validacao", "displayName": "data_validacao", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "71e88355-b3f0-4a64-a571-d6008c1163fa",
+      "name": "Atualizar status do lead na planilha",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [3824, -240]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "segmento", "name": "segmento", "value": "PREENCHER: segmento padrao para re-extracao", "type": "string" },
+            { "id": "tipo_localizacao", "name": "tipo_localizacao", "value": "cidade", "type": "string" },
+            { "id": "localizacao", "name": "localizacao", "value": "PREENCHER: cidade padrao", "type": "string" },
+            { "id": "tem_site", "name": "tem_site", "value": "nao", "type": "string" },
+            { "id": "avaliacao_minima", "name": "avaliacao_minima", "value": 0, "type": "number" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e4970a87-5a2e-49db-aa19-9f7741b3fa22",
+      "name": "Preparar parametros de re-extracao",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [4048, -240]
+    },
+    {
+      "parameters": {
+        "workflowId": { "__rl": true, "value": "5L3SyzDkZqf1N6vW", "mode": "list", "cachedResultName": "Google Maps - Extracao e Enriquecimento" },
+        "workflowInputs": { "mappingMode": "defineBelow", "value": {}, "matchingColumns": [], "schema": [], "attemptToConvertTypes": false, "convertFieldsToString": true },
+        "options": { "waitForSubWorkflow": false }
+      },
+      "id": "990403b9-3759-4bae-afa6-8cf47e8ea702",
+      "name": "Disparar nova extracao de leads",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [4256, -240]
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [[{ "node": "Get recently created/updated deals", "type": "main", "index": 0 }]]
+    },
+    "Get recently created/updated deals": {
+      "main": [[{ "node": "Deals que mudaram de status", "type": "main", "index": 0 }]]
+    },
+    "Deals que mudaram de status": {
+      "main": [[{ "node": "Extrair dados do deal", "type": "main", "index": 0 }]]
+    },
+    "Extrair dados do deal": {
+      "main": [[{ "node": "Mapear estagio para status", "type": "main", "index": 0 }]]
+    },
+    "Mapear estagio para status": {
+      "main": [[{ "node": "If1", "type": "main", "index": 0 }]]
+    },
+    "If1": {
+      "main": [[{ "node": "Atualizar status do lead na planilha", "type": "main", "index": 0 }]]
+    },
+    "Atualizar status do lead na planilha": {
+      "main": [[{ "node": "Preparar parametros de re-extracao", "type": "main", "index": 0 }]]
+    },
+    "Preparar parametros de re-extracao": {
+      "main": [[{ "node": "Disparar nova extracao de leads", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" }
+}
