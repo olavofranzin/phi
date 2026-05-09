@@ -37,12 +37,23 @@ ADRs em planejamento: 006 (Log de Otimizações), 007 (Onboarding), 008 (CPA-onl
 
 ## Aprendizados
 
-12 aprendizados registrados (#1–#12). Lista viva e atualizada: https://www.notion.so/2e49a766781841fda4a2681d358bc98f
+14 aprendizados registrados (#1–#14). Lista viva e atualizada: https://www.notion.so/2e49a766781841fda4a2681d358bc98f
 
 Destaques recentes:
 
 - **#7** — `cost_3d`/`cost_7d` zerado em `phi_prod.raw_campaign_data` (insumo de A.0 e ADR-005).
 - **#12** — Auditoria de workflow n8n: priorizar versão de produção via MCP sobre arquivo do repo (https://www.notion.so/35ab65e5c72b81008fc8f40a31d31c86).
+- **#13** — MCP de produção é canal de escrita: SOP-03 precisa explicitar quando isso é autorizado (https://www.notion.so/35ab65e5c72b81e3a5afe1754c6278c8).
+- **#14** — Bugs upstream mascaram bugs downstream: critério de aceite deve testar ponta-a-ponta (https://www.notion.so/35ab65e5c72b81bbb2a4e70b2996b3d7).
+
+---
+
+## Entregas em curso
+
+| ID | Título | Status | Agente | Link |
+|---|---|---|---|---|
+| A.0 | Correção upstream de cost_3d/cost_7d (Google-only) | Aguardando aceite | Codex (executou) → Antigravity (validação retroativa) | https://www.notion.so/359b65e5c72b81459cafd7705d38866f |
+| A.5 | Sub-auditoria do execution_id em FALLBACK no PHI-Pipeline_v2 | Backlog | Codex | https://www.notion.so/35ab65e5c72b81f6b64ef59c8a5935a8 |
 
 ---
 
