@@ -54,14 +54,14 @@ Destaques recentes:
 
 | ID | Título | Status | Agente | Link |
 |---|---|---|---|---|
-| A.0 | Correção upstream de cost_3d/cost_7d (Google-only) | Aguardando aceite (diff estático parcial recebido 2026-05-09; falta BQ snapshot + smoke) | Codex (executou) → Antigravity (validação retroativa) | https://www.notion.so/359b65e5c72b81459cafd7705d38866f |
+| A.0 | Correção upstream de cost_3d/cost_7d (Google-only) | Aprovado (Olavo, 2026-05-09) | Codex (executou) → Antigravity (validação) | https://www.notion.so/359b65e5c72b81459cafd7705d38866f |
 | A.5 | Sub-auditoria do execution_id em FALLBACK no PHI-Pipeline_v2 | Aprovado (Olavo, 2026-05-09) | Codex | https://www.notion.so/35ab65e5c72b81f6b64ef59c8a5935a8 |
 | A.7 | Refactor going-forward das tabelas PHI para receber source_execution_id | Backlog | Codex → Antigravity | https://www.notion.so/35bb65e5c72b8186bd28e2132a80c7f0 |
 | A.6 | Fix cirúrgico do seletor de execution_id no PHI-Pipeline_v2 (reescopado para Opção 2) | Backlog (bloqueada por A.7) | Codex → Antigravity | https://www.notion.so/35bb65e5c72b81dbbbc7f29a5e38c3d0 |
 
 **ADR-009 aceito 2026-05-09 — Opção 2 (run_id próprio + source_execution_id).** Faseamento decidido (Olavo): **A.7 primeiro** (DDL going-forward em `phi_score_history`/`phi_score_current`/`workflow_execution_log` + mapeamento de consumidores), **A.6 depois** (nó passa a gerar `EXEC-PHI-*` e popular `source_execution_id`). Logs históricos em FALLBACK ficam intocados (going-forward, NULL retroativo).
 
-**A.0 — re-briefing 2026-05-09:** Antigravity entregou análise estática parcial do `Code Montar SQL` (Daily Entry) confirmando que a regra ADR-005 (cost_3d/cost_7d=0 para Meta) está implementada no código. Mas as outras 2 frentes da A.0 (BQ snapshot pré/pós + smoke retroativo com canária `GADS-21149189736`) **não foram executadas**. Re-pedido formal feito; oferta de Antigravity de auditar próximo nó (`Code classificar status`) **recusada por ora** — foco em fechar A.0. Achados colaterais do diff capturados como Aprendizado #15 (anti-pattern de fallback silencioso).
+**A.0 aprovada 2026-05-09.** Antigravity validou as 3 frentes (diff estático + BQ snapshot pré/pós + smoke retroativo da canária `GADS-21149189736`). Dados pré-2026-05-07 mantêm `cost_3d=cost_7d=0` (going-forward, sem backfill — consistente com a política do ADR-009 e Aprendizado #15).
 
 Blocker reports publicados:
 - [docs/2026-05-09-A5-auditoria-execution-id.md](../2026-05-09-A5-auditoria-execution-id.md) — Codex, sub-auditoria H1 confirmada (11/11 execuções históricas em FALLBACK).
