@@ -30,7 +30,7 @@ Artefatos operacionais entre agentes (Cérebro ↔ Codex ↔ Antigravity) ficam 
 | 003 | Autoridade única do PHI Score | Aceito | https://www.notion.so/359b65e5c72b81068959ce8615009166 |
 | 004 v2 | Fórmula do PHI Score (FIS, MAS, TSS, MIV) | Aceito | https://www.notion.so/359b65e5c72b819c981cfc1eaf79555f |
 | 005 | Heterogeneidade temporária Google x Meta no upstream | Aceito | https://www.notion.so/35ab65e5c72b81d38157c81a9636d51e |
-| 009 | Semântica do execution_id no PHI: espelho vs run_id próprio | Proposto | https://www.notion.so/35bb65e5c72b81f3a4e0e05ad9a82f04 |
+| 009 | Semântica do execution_id no PHI: espelho vs run_id próprio | Aceito (2026-05-09 — Opção 2) | https://www.notion.so/35bb65e5c72b81f3a4e0e05ad9a82f04 |
 
 ADRs em planejamento: 006 (Log de Otimizações), 007 (Onboarding), 008 (CPA-only vs polimórfico).
 
@@ -57,7 +57,7 @@ Destaques recentes:
 | A.5 | Sub-auditoria do execution_id em FALLBACK no PHI-Pipeline_v2 | Aprovado (Olavo, 2026-05-09) | Codex | https://www.notion.so/35ab65e5c72b81f6b64ef59c8a5935a8 |
 | A.6 | Fix cirúrgico do seletor de execution_id no PHI-Pipeline_v2 | Backlog | Codex → Antigravity | https://www.notion.so/35bb65e5c72b81dbbbc7f29a5e38c3d0 |
 
-**Em paralelo a A.6:** ADR-009 em discussão (Proposto). A.6 implementa Opção 1 (espelho) por padrão; se ADR-009 escolher Opção 2 (run_id próprio + source_execution_id), abre-se entrega A.7 para complementar — A.6 não precisa ser revertida.
+**ADR-009 aceito 2026-05-09 — Opção 2 (run_id próprio + source_execution_id).** O briefing atual da A.6 assumia Opção 1 (espelho) e será reescopado. Implementar Opção 2 implica refactor das tabelas downstream (`phi_score_history`, `phi_score_current`, `workflow_execution_log`) para introduzir coluna `source_execution_id`. Faseamento (A.6 sozinha, A.7 sozinha primeiro, ou entrega ampliada) em discussão Cérebro/Olavo.
 
 Blocker reports publicados:
 - [docs/2026-05-09-A5-auditoria-execution-id.md](../2026-05-09-A5-auditoria-execution-id.md) — Codex, sub-auditoria H1 confirmada (11/11 execuções históricas em FALLBACK).
