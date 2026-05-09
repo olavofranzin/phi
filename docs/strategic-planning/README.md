@@ -38,7 +38,7 @@ ADRs em planejamento: 006 (Log de Otimizações), 007 (Onboarding), 008 (CPA-onl
 
 ## Aprendizados
 
-14 aprendizados registrados (#1–#14). Lista viva e atualizada: https://www.notion.so/2e49a766781841fda4a2681d358bc98f
+15 aprendizados registrados (#1–#15). Lista viva e atualizada: https://www.notion.so/2e49a766781841fda4a2681d358bc98f
 
 Destaques recentes:
 
@@ -46,6 +46,7 @@ Destaques recentes:
 - **#12** — Auditoria de workflow n8n: priorizar versão de produção via MCP sobre arquivo do repo (https://www.notion.so/35ab65e5c72b81008fc8f40a31d31c86).
 - **#13** — MCP de produção é canal de escrita: SOP-03 precisa explicitar quando isso é autorizado (https://www.notion.so/35ab65e5c72b81e3a5afe1754c6278c8).
 - **#14** — Bugs upstream mascaram bugs downstream: critério de aceite deve testar ponta-a-ponta (https://www.notion.so/35ab65e5c72b81bbb2a4e70b2996b3d7).
+- **#15** — Anti-pattern de fallback silencioso pervasivo no PHI: `prop() ?? 0`, classificador `GADS`/`META` e `FALLBACK-*` são instâncias do mesmo estilo de codificação. Causa raiz arquitetural de #14. (https://www.notion.so/35bb65e5c72b81e4994cf2e54b1976bf)
 
 ---
 
@@ -53,12 +54,14 @@ Destaques recentes:
 
 | ID | Título | Status | Agente | Link |
 |---|---|---|---|---|
-| A.0 | Correção upstream de cost_3d/cost_7d (Google-only) | Aguardando aceite | Codex (executou) → Antigravity (validação retroativa) | https://www.notion.so/359b65e5c72b81459cafd7705d38866f |
+| A.0 | Correção upstream de cost_3d/cost_7d (Google-only) | Aguardando aceite (diff estático parcial recebido 2026-05-09; falta BQ snapshot + smoke) | Codex (executou) → Antigravity (validação retroativa) | https://www.notion.so/359b65e5c72b81459cafd7705d38866f |
 | A.5 | Sub-auditoria do execution_id em FALLBACK no PHI-Pipeline_v2 | Aprovado (Olavo, 2026-05-09) | Codex | https://www.notion.so/35ab65e5c72b81f6b64ef59c8a5935a8 |
 | A.7 | Refactor going-forward das tabelas PHI para receber source_execution_id | Backlog | Codex → Antigravity | https://www.notion.so/35bb65e5c72b8186bd28e2132a80c7f0 |
 | A.6 | Fix cirúrgico do seletor de execution_id no PHI-Pipeline_v2 (reescopado para Opção 2) | Backlog (bloqueada por A.7) | Codex → Antigravity | https://www.notion.so/35bb65e5c72b81dbbbc7f29a5e38c3d0 |
 
 **ADR-009 aceito 2026-05-09 — Opção 2 (run_id próprio + source_execution_id).** Faseamento decidido (Olavo): **A.7 primeiro** (DDL going-forward em `phi_score_history`/`phi_score_current`/`workflow_execution_log` + mapeamento de consumidores), **A.6 depois** (nó passa a gerar `EXEC-PHI-*` e popular `source_execution_id`). Logs históricos em FALLBACK ficam intocados (going-forward, NULL retroativo).
+
+**A.0 — re-briefing 2026-05-09:** Antigravity entregou análise estática parcial do `Code Montar SQL` (Daily Entry) confirmando que a regra ADR-005 (cost_3d/cost_7d=0 para Meta) está implementada no código. Mas as outras 2 frentes da A.0 (BQ snapshot pré/pós + smoke retroativo com canária `GADS-21149189736`) **não foram executadas**. Re-pedido formal feito; oferta de Antigravity de auditar próximo nó (`Code classificar status`) **recusada por ora** — foco em fechar A.0. Achados colaterais do diff capturados como Aprendizado #15 (anti-pattern de fallback silencioso).
 
 Blocker reports publicados:
 - [docs/2026-05-09-A5-auditoria-execution-id.md](../2026-05-09-A5-auditoria-execution-id.md) — Codex, sub-auditoria H1 confirmada (11/11 execuções históricas em FALLBACK).
