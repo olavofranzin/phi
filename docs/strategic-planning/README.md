@@ -56,15 +56,20 @@ Destaques recentes:
 |---|---|---|---|---|
 | A.0 | Correção upstream de cost_3d/cost_7d (Google-only) | Aprovado (Olavo, 2026-05-09) | Codex (executou) → Antigravity (validação) | https://www.notion.so/359b65e5c72b81459cafd7705d38866f |
 | A.5 | Sub-auditoria do execution_id em FALLBACK no PHI-Pipeline_v2 | Aprovado (Olavo, 2026-05-09) | Codex | https://www.notion.so/35ab65e5c72b81f6b64ef59c8a5935a8 |
-| A.7 | Refactor going-forward das tabelas PHI para receber source_execution_id | Backlog | Codex → Antigravity | https://www.notion.so/35bb65e5c72b8186bd28e2132a80c7f0 |
-| A.6 | Fix cirúrgico do seletor de execution_id no PHI-Pipeline_v2 (reescopado para Opção 2) | Backlog (bloqueada por A.7) | Codex → Antigravity | https://www.notion.so/35bb65e5c72b81dbbbc7f29a5e38c3d0 |
+| A.7 | Refactor going-forward das tabelas PHI (descoberta) | Aprovado (Olavo, 2026-05-09) | Codex | https://www.notion.so/35bb65e5c72b8186bd28e2132a80c7f0 |
+| A.7b | DDL nas 2 BASE TABLES + reescrita da VIEW phi_score_current | Backlog | Codex → Antigravity | https://www.notion.so/35bb65e5c72b8193ad08e247d7235a1d |
+| A.6 | Fix cirúrgico do seletor de execution_id no PHI-Pipeline_v2 (reescopado para Opção 2) | Backlog (bloqueada por A.7b) | Codex → Antigravity | https://www.notion.so/35bb65e5c72b81dbbbc7f29a5e38c3d0 |
 
 **ADR-009 aceito 2026-05-09 — Opção 2 (run_id próprio + source_execution_id).** Faseamento decidido (Olavo): **A.7 primeiro** (DDL going-forward em `phi_score_history`/`phi_score_current`/`workflow_execution_log` + mapeamento de consumidores), **A.6 depois** (nó passa a gerar `EXEC-PHI-*` e popular `source_execution_id`). Logs históricos em FALLBACK ficam intocados (going-forward, NULL retroativo).
 
 **A.0 aprovada 2026-05-09.** Antigravity validou as 3 frentes (diff estático + BQ snapshot pré/pós + smoke retroativo da canária `GADS-21149189736`). Dados pré-2026-05-07 mantêm `cost_3d=cost_7d=0` (going-forward, sem backfill — consistente com a política do ADR-009 e Aprendizado #15).
 
+**A.7 aprovada 2026-05-09 como entrega de descoberta.** Codex acionou corretamente o critério de parada do briefing original ao verificar via `INFORMATION_SCHEMA.TABLES` que `phi_score_current` é `VIEW`, não `BASE TABLE`. Auditoria isolada em workflows temporários `TMP - A7 BigQuery *` (arquivados ao final). Trabalho de DDL migrado para A.7b com escopo correto: 2 ALTERs em `phi_score_history`/`workflow_execution_log` + `CREATE OR REPLACE VIEW` para `phi_score_current` projetando `source_execution_id`.
+
 Blocker reports publicados:
 - [docs/2026-05-09-A5-auditoria-execution-id.md](../2026-05-09-A5-auditoria-execution-id.md) — Codex, sub-auditoria H1 confirmada (11/11 execuções históricas em FALLBACK).
+- [docs/2026-05-09-A7-refactor-source-execution-id.md](../2026-05-09-A7-refactor-source-execution-id.md) — Codex, descoberta de `phi_score_current` como `VIEW` (motivou A.7b).
+- [docs/handoff/2026-05-09-A0-validacao-bq-smoke.md](../handoff/2026-05-09-A0-validacao-bq-smoke.md) — Antigravity, validação completa de A.0.
 
 ---
 
