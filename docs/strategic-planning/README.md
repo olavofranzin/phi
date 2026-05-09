@@ -66,10 +66,10 @@ Destaques recentes:
 
 **A.7 aprovada 2026-05-09 como entrega de descoberta.** Codex acionou corretamente o critério de parada do briefing original ao verificar via `INFORMATION_SCHEMA.TABLES` que `phi_score_current` é `VIEW`, não `BASE TABLE`. Auditoria isolada em workflows temporários `TMP - A7 BigQuery *` (arquivados ao final). Trabalho de DDL migrado para A.7b com escopo correto: 2 ALTERs em `phi_score_history`/`workflow_execution_log` + `CREATE OR REPLACE VIEW` para `phi_score_current` projetando `source_execution_id`.
 
-Blocker reports publicados:
-- [docs/2026-05-09-A5-auditoria-execution-id.md](../2026-05-09-A5-auditoria-execution-id.md) — Codex, sub-auditoria H1 confirmada (11/11 execuções históricas em FALLBACK).
-- [docs/2026-05-09-A7-refactor-source-execution-id.md](../2026-05-09-A7-refactor-source-execution-id.md) — Codex, descoberta de `phi_score_current` como `VIEW` (motivou A.7b).
-- [docs/handoff/2026-05-09-A0-validacao-bq-smoke.md](../handoff/2026-05-09-A0-validacao-bq-smoke.md) — Antigravity, validação completa de A.0.
+Blocker reports publicados (todos em `docs/handoff/`):
+- [2026-05-09-A5-auditoria-execution-id.md](../handoff/2026-05-09-A5-auditoria-execution-id.md) — Codex, sub-auditoria H1 confirmada (11/11 execuções históricas em FALLBACK).
+- [2026-05-09-A7-refactor-source-execution-id.md](../handoff/2026-05-09-A7-refactor-source-execution-id.md) — Codex, descoberta de `phi_score_current` como `VIEW` (motivou A.7b).
+- [2026-05-09-A0-validacao-bq-smoke.md](../handoff/2026-05-09-A0-validacao-bq-smoke.md) — Antigravity, validação completa de A.0.
 
 ---
 
