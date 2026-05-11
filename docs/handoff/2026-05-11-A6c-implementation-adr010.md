@@ -2,6 +2,10 @@
 
 Status desta execucao: **JSONs reconciliados no repo, commitados nesta sessao, publicacao remota ainda bloqueada por erro 500 no endpoint de update do n8n**.
 
+Commit de reconciliacao dos JSONs:
+
+- `bc5ee0d` - `A6c commit ADR-010 workflow JSON patches`
+
 ## 1. Audit do filtro `ingestion_step`
 
 Resultado do passo 1: **bifurcacao (a)**. Nao foi encontrado filtro downstream por `ingestion_step = 'DAILY_ENTRY'` no escopo auditado.
@@ -222,7 +226,7 @@ Isso bloqueia:
 
 ## 8. Estado final desta sessao
 
-- os JSONs versionados foram corrigidos e commitados nesta sessao
+- os JSONs versionados foram corrigidos e commitados nesta sessao no commit `bc5ee0d`
 - o deploy automatico no n8n segue pendente
 - o card deve permanecer `Em andamento`
 - **nao mover para `Aguardando aceite`**
