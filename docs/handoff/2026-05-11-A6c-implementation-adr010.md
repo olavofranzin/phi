@@ -5,7 +5,7 @@ Status desta execucao: **JSONs reconciliados no repo, commitados nesta sessao, p
 Commit de reconciliacao dos JSONs:
 
 - `bc5ee0d` - `A6c commit ADR-010 workflow JSON patches`
-- branch remota atualizada ate `88cab10` em `claude/agentic-agency-planning-KwJEw`
+- branch remota atualizada ate `efc43d4` em `claude/agentic-agency-planning-KwJEw`
 
 ## 1. Audit do filtro `ingestion_step`
 
