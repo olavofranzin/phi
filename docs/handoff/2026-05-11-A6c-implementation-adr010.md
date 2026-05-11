@@ -5,6 +5,7 @@ Status desta execucao: **JSONs reconciliados no repo, commitados nesta sessao, p
 Commit de reconciliacao dos JSONs:
 
 - `bc5ee0d` - `A6c commit ADR-010 workflow JSON patches`
+- branch remota atualizada ate `86f6126` em `claude/agentic-agency-planning-KwJEw`
 
 ## 1. Audit do filtro `ingestion_step`
 
@@ -227,6 +228,7 @@ Isso bloqueia:
 ## 8. Estado final desta sessao
 
 - os JSONs versionados foram corrigidos e commitados nesta sessao no commit `bc5ee0d`
+- os commits desta sessao ja foram enviados ao remote; head remoto atual: `86f6126`
 - o deploy automatico no n8n segue pendente
 - o card deve permanecer `Em andamento`
 - **nao mover para `Aguardando aceite`**
