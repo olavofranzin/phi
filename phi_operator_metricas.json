@@ -1,0 +1,831 @@
+﻿{
+    "name":  "operador unico metricas",
+    "nodes":  [
+                  {
+                      "parameters":  {
+
+                                     },
+                      "id":  "682d2e1e-3eb9-42c2-b0a4-8944e5ca386d",
+                      "name":  "Manual Trigger",
+                      "type":  "n8n-nodes-base.manualTrigger",
+                      "typeVersion":  1,
+                      "position":  [
+                                       260,
+                                       220
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "rule":  {
+                                                      "interval":  [
+                                                                       {
+                                                                           "expression":  "0 4 * * *",
+                                                                           "field":  "cronExpression"
+                                                                       }
+                                                                   ]
+                                                  }
+                                     },
+                      "id":  "70768d0d-611f-4854-af57-967ceeae626a",
+                      "name":  "Schedule Trigger",
+                      "type":  "n8n-nodes-base.scheduleTrigger",
+                      "typeVersion":  1.2,
+                      "position":  [
+                                       260,
+                                       420
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const now = $now.setZone(\"America/Sao_Paulo\");\nconst execution_id = `EXEC-${now.toFormat(\"yyyyLLdd-HHmmss\")}`;\n\nreturn [{\n  json: {\n    execution_id,\n    source_execution_id: execution_id,\n    client_id: null\n  }\n}];"
+                                     },
+                      "id":  "8edfd0ca-1661-4e68-a7e5-0ece225c2fc8",
+                      "name":  "Code Contexto Execucao",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       520,
+                                       320
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "options":  {
+
+                                                     },
+                                         "assignments":  {
+                                                             "assignments":  [
+                                                                                 {
+                                                                                     "type":  "string",
+                                                                                     "name":  "EVOLUTION_API_URL",
+                                                                                     "id":  "e1",
+                                                                                     "value":  "https://n8n-evolution.1unqx7.easypanel.host"
+                                                                                 },
+                                                                                 {
+                                                                                     "type":  "string",
+                                                                                     "name":  "EVOLUTION_INSTANCE",
+                                                                                     "id":  "e2",
+                                                                                     "value":  "Whats Business"
+                                                                                 },
+                                                                                 {
+                                                                                     "type":  "string",
+                                                                                     "name":  "EVOLUTION_API_KEY",
+                                                                                     "id":  "e3",
+                                                                                     "value":  "AFCFCAFE4FBB7BE2239672A679747"
+                                                                                 },
+                                                                                 {
+                                                                                     "type":  "string",
+                                                                                     "name":  "ALERT_PHONE",
+                                                                                     "id":  "e4",
+                                                                                     "value":  "REPLACE_ALERT_PHONE"
+                                                                                 }
+                                                                             ]
+                                                         }
+                                     },
+                      "id":  "9d26aa43-7106-4f23-82bc-f76a5de0b6e8",
+                      "name":  "Dados Evolution Alerta",
+                      "type":  "n8n-nodes-base.set",
+                      "typeVersion":  3.4,
+                      "position":  [
+                                       520,
+                                       520
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "workflowId":  {
+                                                            "mode":  "list",
+                                                            "__rl":  true,
+                                                            "cachedResultUrl":  null,
+                                                            "value":  "REPLACE_CAMPAIGN_WRAPPER_ID",
+                                                            "cachedResultName":  "sw metricas campanhas"
+                                                        },
+                                         "workflowInputs":  {
+                                                                "value":  {
+                                                                              "source_execution_id":  "={{ $json.source_execution_id }}",
+                                                                              "execution_id":  "={{ $json.execution_id }}",
+                                                                              "client_id":  "={{ $json.client_id }}"
+                                                                          },
+                                                                "mappingMode":  "defineBelow",
+                                                                "schema":  [
+                                                                               {
+                                                                                   "id":  "execution_id",
+                                                                                   "displayName":  "execution_id",
+                                                                                   "canBeUsedToMatch":  true,
+                                                                                   "display":  true,
+                                                                                   "removed":  false,
+                                                                                   "required":  false,
+                                                                                   "defaultMatch":  false
+                                                                               },
+                                                                               {
+                                                                                   "id":  "client_id",
+                                                                                   "displayName":  "client_id",
+                                                                                   "canBeUsedToMatch":  true,
+                                                                                   "display":  true,
+                                                                                   "removed":  false,
+                                                                                   "required":  false,
+                                                                                   "defaultMatch":  false
+                                                                               },
+                                                                               {
+                                                                                   "id":  "source_execution_id",
+                                                                                   "displayName":  "source_execution_id",
+                                                                                   "canBeUsedToMatch":  true,
+                                                                                   "display":  true,
+                                                                                   "removed":  false,
+                                                                                   "required":  false,
+                                                                                   "defaultMatch":  false
+                                                                               }
+                                                                           ],
+                                                                "attemptToConvertTypes":  false,
+                                                                "matchingColumns":  [
+
+                                                                                    ],
+                                                                "convertFieldsToString":  true
+                                                            },
+                                         "options":  {
+                                                         "waitForSubWorkflow":  true
+                                                     }
+                                     },
+                      "id":  "33ea8c70-6c7d-4643-a264-c9df1152add1",
+                      "name":  "Call SW Metricas Campanhas",
+                      "type":  "n8n-nodes-base.executeWorkflow",
+                      "typeVersion":  1.2,
+                      "position":  [
+                                       820,
+                                       320
+                                   ],
+                      "alwaysOutputData":  true,
+                      "continueOnFail":  true
+                  },
+                  {
+                      "parameters":  {
+                                         "options":  {
+
+                                                     },
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "version":  3,
+                                                                            "typeValidation":  "strict",
+                                                                            "leftValue":  "",
+                                                                            "caseSensitive":  true
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "operator":  {
+                                                                                                    "operation":  "true",
+                                                                                                    "type":  "boolean"
+                                                                                                },
+                                                                                   "rightValue":  true,
+                                                                                   "leftValue":  "={{ !!$json.error || !!$json.executionError || !!$json.stack }}"
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        }
+                                     },
+                      "id":  "fae4f511-5093-4a54-b4c3-6be8154718c2",
+                      "name":  "If Falhou SW Campanhas",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.3,
+                      "position":  [
+                                       1040,
+                                       320
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const errorValue = $json.error ?? $json.executionError ?? $json.stack ?? null;\nconst errorMessage =\n  typeof errorValue === \"string\"\n    ? errorValue\n    : errorValue?.message || $json.message || \"Falha sem mensagem retornada\";\n\nreturn [{\n  json: {\n    ...$json,\n    alert_type: \"subworkflow_failure\",\n    failed_subworkflow: \"sw metricas campanhas\",\n    alert_message: \"Falha no subworkflow: sw metricas campanhas\",\n    alert_details: errorMessage\n  }\n}];"
+                                     },
+                      "id":  "29018735-c420-4b38-b2b4-fca2ced5b2cf",
+                      "name":  "Code Alerta SW Campanhas",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       1260,
+                                       220
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "workflowId":  {
+                                                            "mode":  "list",
+                                                            "__rl":  true,
+                                                            "cachedResultUrl":  "/workflow/nPBVPzw2qK7epQtU",
+                                                            "value":  "nPBVPzw2qK7epQtU",
+                                                            "cachedResultName":  "sw metricas conjuntos"
+                                                        },
+                                         "workflowInputs":  {
+                                                                "value":  {
+                                                                              "source_execution_id":  "={{ $json.source_execution_id }}",
+                                                                              "execution_id":  "={{ $json.execution_id }}",
+                                                                              "client_id":  "={{ $json.client_id }}"
+                                                                          },
+                                                                "mappingMode":  "defineBelow",
+                                                                "schema":  [
+                                                                               {
+                                                                                   "id":  "execution_id",
+                                                                                   "displayName":  "execution_id",
+                                                                                   "canBeUsedToMatch":  true,
+                                                                                   "display":  true,
+                                                                                   "removed":  false,
+                                                                                   "required":  false,
+                                                                                   "defaultMatch":  false
+                                                                               },
+                                                                               {
+                                                                                   "id":  "client_id",
+                                                                                   "displayName":  "client_id",
+                                                                                   "canBeUsedToMatch":  true,
+                                                                                   "display":  true,
+                                                                                   "removed":  false,
+                                                                                   "required":  false,
+                                                                                   "defaultMatch":  false
+                                                                               },
+                                                                               {
+                                                                                   "id":  "source_execution_id",
+                                                                                   "displayName":  "source_execution_id",
+                                                                                   "canBeUsedToMatch":  true,
+                                                                                   "display":  true,
+                                                                                   "removed":  false,
+                                                                                   "required":  false,
+                                                                                   "defaultMatch":  false
+                                                                               }
+                                                                           ],
+                                                                "attemptToConvertTypes":  false,
+                                                                "matchingColumns":  [
+
+                                                                                    ],
+                                                                "convertFieldsToString":  true
+                                                            },
+                                         "options":  {
+                                                         "waitForSubWorkflow":  true
+                                                     }
+                                     },
+                      "id":  "d67daca1-1917-450c-8d3c-90b9b53f1bac",
+                      "name":  "Call SW Metricas Conjuntos",
+                      "type":  "n8n-nodes-base.executeWorkflow",
+                      "typeVersion":  1.2,
+                      "position":  [
+                                       1260,
+                                       320
+                                   ],
+                      "alwaysOutputData":  true,
+                      "continueOnFail":  true
+                  },
+                  {
+                      "parameters":  {
+                                         "options":  {
+
+                                                     },
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "version":  3,
+                                                                            "typeValidation":  "strict",
+                                                                            "leftValue":  "",
+                                                                            "caseSensitive":  true
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "operator":  {
+                                                                                                    "operation":  "true",
+                                                                                                    "type":  "boolean"
+                                                                                                },
+                                                                                   "rightValue":  true,
+                                                                                   "leftValue":  "={{ !!$json.error || !!$json.executionError || !!$json.stack }}"
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        }
+                                     },
+                      "id":  "3bd352b2-b820-4d28-ae8a-079dca460b05",
+                      "name":  "If Falhou SW Conjuntos",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.3,
+                      "position":  [
+                                       1480,
+                                       320
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const errorValue = $json.error ?? $json.executionError ?? $json.stack ?? null;\nconst errorMessage =\n  typeof errorValue === \"string\"\n    ? errorValue\n    : errorValue?.message || $json.message || \"Falha sem mensagem retornada\";\n\nreturn [{\n  json: {\n    ...$json,\n    alert_type: \"subworkflow_failure\",\n    failed_subworkflow: \"sw metricas conjuntos\",\n    alert_message: \"Falha no subworkflow: sw metricas conjuntos\",\n    alert_details: errorMessage\n  }\n}];"
+                                     },
+                      "id":  "07f9ccb4-182c-4077-988e-8ad1ea3bcf71",
+                      "name":  "Code Alerta SW Conjuntos",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       1700,
+                                       220
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "workflowId":  {
+                                                            "mode":  "list",
+                                                            "__rl":  true,
+                                                            "cachedResultUrl":  "/workflow/sZYkRjHcFwEatKOJ",
+                                                            "value":  "sZYkRjHcFwEatKOJ",
+                                                            "cachedResultName":  "sw metricas e diagnosticos anuncios"
+                                                        },
+                                         "workflowInputs":  {
+                                                                "value":  {
+                                                                              "source_execution_id":  "={{ $json.source_execution_id }}",
+                                                                              "execution_id":  "={{ $json.execution_id }}",
+                                                                              "client_id":  "={{ $json.client_id }}"
+                                                                          },
+                                                                "mappingMode":  "defineBelow",
+                                                                "schema":  [
+                                                                               {
+                                                                                   "id":  "execution_id",
+                                                                                   "displayName":  "execution_id",
+                                                                                   "canBeUsedToMatch":  true,
+                                                                                   "display":  true,
+                                                                                   "removed":  false,
+                                                                                   "required":  false,
+                                                                                   "defaultMatch":  false
+                                                                               },
+                                                                               {
+                                                                                   "id":  "client_id",
+                                                                                   "displayName":  "client_id",
+                                                                                   "canBeUsedToMatch":  true,
+                                                                                   "display":  true,
+                                                                                   "removed":  false,
+                                                                                   "required":  false,
+                                                                                   "defaultMatch":  false
+                                                                               },
+                                                                               {
+                                                                                   "id":  "source_execution_id",
+                                                                                   "displayName":  "source_execution_id",
+                                                                                   "canBeUsedToMatch":  true,
+                                                                                   "display":  true,
+                                                                                   "removed":  false,
+                                                                                   "required":  false,
+                                                                                   "defaultMatch":  false
+                                                                               }
+                                                                           ],
+                                                                "attemptToConvertTypes":  false,
+                                                                "matchingColumns":  [
+
+                                                                                    ],
+                                                                "convertFieldsToString":  true
+                                                            },
+                                         "options":  {
+                                                         "waitForSubWorkflow":  true
+                                                     }
+                                     },
+                      "id":  "b110d606-ffe0-4eeb-8806-071ab3b1a8d9",
+                      "name":  "Call SW Metricas Anuncios",
+                      "type":  "n8n-nodes-base.executeWorkflow",
+                      "typeVersion":  1.2,
+                      "position":  [
+                                       1700,
+                                       320
+                                   ],
+                      "alwaysOutputData":  true,
+                      "continueOnFail":  true
+                  },
+                  {
+                      "parameters":  {
+                                         "options":  {
+
+                                                     },
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "version":  3,
+                                                                            "typeValidation":  "strict",
+                                                                            "leftValue":  "",
+                                                                            "caseSensitive":  true
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "operator":  {
+                                                                                                    "operation":  "true",
+                                                                                                    "type":  "boolean"
+                                                                                                },
+                                                                                   "rightValue":  true,
+                                                                                   "leftValue":  "={{ !!$json.error || !!$json.executionError || !!$json.stack }}"
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        }
+                                     },
+                      "id":  "edf887c6-a756-462d-8141-35f732fa3406",
+                      "name":  "If Falhou SW Anuncios",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.3,
+                      "position":  [
+                                       1920,
+                                       320
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const errorValue = $json.error ?? $json.executionError ?? $json.stack ?? null;\nconst errorMessage =\n  typeof errorValue === \"string\"\n    ? errorValue\n    : errorValue?.message || $json.message || \"Falha sem mensagem retornada\";\n\nreturn [{\n  json: {\n    ...$json,\n    alert_type: \"subworkflow_failure\",\n    failed_subworkflow: \"sw metricas e diagnosticos anuncios\",\n    alert_message: \"Falha no subworkflow: sw metricas e diagnosticos anuncios\",\n    alert_details: errorMessage\n  }\n}];"
+                                     },
+                      "id":  "a29d28a1-89ff-4149-a476-1e6c1d18e394",
+                      "name":  "Code Alerta SW Anuncios",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       2140,
+                                       220
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "workflowId":  {
+                                                            "mode":  "list",
+                                                            "__rl":  true,
+                                                            "cachedResultUrl":  null,
+                                                            "value":  "REPLACE_PHI_WRAPPER_ID",
+                                                            "cachedResultName":  "sw phi pipeline_v2"
+                                                        },
+                                         "workflowInputs":  {
+                                                                "value":  {
+                                                                              "source_execution_id":  "={{ $json.source_execution_id }}",
+                                                                              "execution_id":  "={{ $json.execution_id }}",
+                                                                              "client_id":  "={{ $json.client_id }}"
+                                                                          },
+                                                                "mappingMode":  "defineBelow",
+                                                                "schema":  [
+                                                                               {
+                                                                                   "id":  "execution_id",
+                                                                                   "displayName":  "execution_id",
+                                                                                   "canBeUsedToMatch":  true,
+                                                                                   "display":  true,
+                                                                                   "removed":  false,
+                                                                                   "required":  false,
+                                                                                   "defaultMatch":  false
+                                                                               },
+                                                                               {
+                                                                                   "id":  "client_id",
+                                                                                   "displayName":  "client_id",
+                                                                                   "canBeUsedToMatch":  true,
+                                                                                   "display":  true,
+                                                                                   "removed":  false,
+                                                                                   "required":  false,
+                                                                                   "defaultMatch":  false
+                                                                               },
+                                                                               {
+                                                                                   "id":  "source_execution_id",
+                                                                                   "displayName":  "source_execution_id",
+                                                                                   "canBeUsedToMatch":  true,
+                                                                                   "display":  true,
+                                                                                   "removed":  false,
+                                                                                   "required":  false,
+                                                                                   "defaultMatch":  false
+                                                                               }
+                                                                           ],
+                                                                "attemptToConvertTypes":  false,
+                                                                "matchingColumns":  [
+
+                                                                                    ],
+                                                                "convertFieldsToString":  true
+                                                            },
+                                         "options":  {
+                                                         "waitForSubWorkflow":  true
+                                                     }
+                                     },
+                      "id":  "3c10eb6a-f8a0-41df-a4cc-3cef811196f9",
+                      "name":  "Call SW PHI Pipeline",
+                      "type":  "n8n-nodes-base.executeWorkflow",
+                      "typeVersion":  1.2,
+                      "position":  [
+                                       2140,
+                                       320
+                                   ],
+                      "alwaysOutputData":  true,
+                      "continueOnFail":  true
+                  },
+                  {
+                      "parameters":  {
+                                         "options":  {
+
+                                                     },
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "version":  3,
+                                                                            "typeValidation":  "strict",
+                                                                            "leftValue":  "",
+                                                                            "caseSensitive":  true
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "operator":  {
+                                                                                                    "operation":  "true",
+                                                                                                    "type":  "boolean"
+                                                                                                },
+                                                                                   "rightValue":  true,
+                                                                                   "leftValue":  "={{ !!$json.error || !!$json.executionError || !!$json.stack }}"
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        }
+                                     },
+                      "id":  "4d134357-7c1c-499d-bf2e-87a2ab2cde62",
+                      "name":  "If Falhou SW PHI",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.3,
+                      "position":  [
+                                       2360,
+                                       320
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const errorValue = $json.error ?? $json.executionError ?? $json.stack ?? null;\nconst errorMessage =\n  typeof errorValue === \"string\"\n    ? errorValue\n    : errorValue?.message || $json.message || \"Falha sem mensagem retornada\";\n\nreturn [{\n  json: {\n    ...$json,\n    alert_type: \"subworkflow_failure\",\n    failed_subworkflow: \"sw phi pipeline_v2\",\n    alert_message: \"Falha no subworkflow: sw phi pipeline_v2\",\n    alert_details: errorMessage\n  }\n}];"
+                                     },
+                      "id":  "38993661-aaa8-497e-b173-7bdffc19e870",
+                      "name":  "Code Alerta SW PHI",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       2580,
+                                       220
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "throw new Error(`${$json.alert_message}. Detalhes: ${$json.alert_details}`);"
+                                     },
+                      "id":  "112de20d-f541-4943-9b4d-c20cf127ca55",
+                      "name":  "Interromper Apos Alerta",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       3040,
+                                       220
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "sendBody":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "value":  "={{ $(\"Dados Evolution Alerta\").item.json.EVOLUTION_API_KEY }}",
+                                                                                         "name":  "apikey"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "bodyParameters":  {
+                                                                "parameters":  [
+                                                                                   {
+                                                                                       "value":  "={{ $(\"Dados Evolution Alerta\").item.json.ALERT_PHONE }}",
+                                                                                       "name":  "number"
+                                                                                   },
+                                                                                   {
+                                                                                       "value":  "={{ \"*ALERTA PHI*\\n\\n\" + $json.alert_message + \"\\n\\nExecucao: \" + ($json.execution_id || \"sem execution_id\") + \"\\nDetalhes: \" + ($json.alert_details || \"sem detalhes\") }}",
+                                                                                       "name":  "text"
+                                                                                   }
+                                                                               ]
+                                                            },
+                                         "method":  "POST",
+                                         "options":  {
+
+                                                     },
+                                         "sendHeaders":  true,
+                                         "url":  "={{ $(\"Dados Evolution Alerta\").item.json.EVOLUTION_API_URL + \"/message/sendText/\" + encodeURIComponent($(\"Dados Evolution Alerta\").item.json.EVOLUTION_INSTANCE) }}"
+                                     },
+                      "id":  "e3e3d596-000b-4894-86c6-6bc3699264cd",
+                      "name":  "Enviar WhatsApp Alerta",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.3,
+                      "position":  [
+                                       2820,
+                                       360
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+
+                                     },
+                      "id":  "9953a102-c17a-4e88-b13d-c33cc6402385",
+                      "name":  "Fim Operador Unico",
+                      "type":  "n8n-nodes-base.noOp",
+                      "typeVersion":  1,
+                      "position":  [
+                                       3040,
+                                       420
+                                   ]
+                  }
+              ],
+    "connections":  {
+                        "Code Alerta SW Anuncios":  {
+                                                        "main":  [
+                                                                     [
+                                                                         {
+                                                                             "node":  "Enviar WhatsApp Alerta",
+                                                                             "type":  "main",
+                                                                             "index":  0
+                                                                         }
+                                                                     ]
+                                                                 ]
+                                                    },
+                        "Call SW Metricas Anuncios":  {
+                                                          "main":  [
+                                                                       [
+                                                                           {
+                                                                               "node":  "If Falhou SW Anuncios",
+                                                                               "type":  "main",
+                                                                               "index":  0
+                                                                           }
+                                                                       ]
+                                                                   ]
+                                                      },
+                        "Code Alerta SW Campanhas":  {
+                                                         "main":  [
+                                                                      [
+                                                                          {
+                                                                              "node":  "Enviar WhatsApp Alerta",
+                                                                              "type":  "main",
+                                                                              "index":  0
+                                                                          }
+                                                                      ]
+                                                                  ]
+                                                     },
+                        "If Falhou SW Anuncios":  {
+                                                      "main":  [
+                                                                   [
+                                                                       {
+                                                                           "node":  "Code Alerta SW Anuncios",
+                                                                           "type":  "main",
+                                                                           "index":  0
+                                                                       }
+                                                                   ],
+                                                                   [
+                                                                       {
+                                                                           "node":  "Call SW PHI Pipeline",
+                                                                           "type":  "main",
+                                                                           "index":  0
+                                                                       }
+                                                                   ]
+                                                               ]
+                                                  },
+                        "If Falhou SW Conjuntos":  {
+                                                       "main":  [
+                                                                    [
+                                                                        {
+                                                                            "node":  "Code Alerta SW Conjuntos",
+                                                                            "type":  "main",
+                                                                            "index":  0
+                                                                        }
+                                                                    ],
+                                                                    [
+                                                                        {
+                                                                            "node":  "Call SW Metricas Anuncios",
+                                                                            "type":  "main",
+                                                                            "index":  0
+                                                                        }
+                                                                    ]
+                                                                ]
+                                                   },
+                        "Call SW Metricas Campanhas":  {
+                                                           "main":  [
+                                                                        [
+                                                                            {
+                                                                                "node":  "If Falhou SW Campanhas",
+                                                                                "type":  "main",
+                                                                                "index":  0
+                                                                            }
+                                                                        ]
+                                                                    ]
+                                                       },
+                        "Call SW Metricas Conjuntos":  {
+                                                           "main":  [
+                                                                        [
+                                                                            {
+                                                                                "node":  "If Falhou SW Conjuntos",
+                                                                                "type":  "main",
+                                                                                "index":  0
+                                                                            }
+                                                                        ]
+                                                                    ]
+                                                       },
+                        "If Falhou SW Campanhas":  {
+                                                       "main":  [
+                                                                    [
+                                                                        {
+                                                                            "node":  "Code Alerta SW Campanhas",
+                                                                            "type":  "main",
+                                                                            "index":  0
+                                                                        }
+                                                                    ],
+                                                                    [
+                                                                        {
+                                                                            "node":  "Call SW Metricas Conjuntos",
+                                                                            "type":  "main",
+                                                                            "index":  0
+                                                                        }
+                                                                    ]
+                                                                ]
+                                                   },
+                        "Manual Trigger":  {
+                                               "main":  [
+                                                            [
+                                                                {
+                                                                    "node":  "Code Contexto Execucao",
+                                                                    "type":  "main",
+                                                                    "index":  0
+                                                                },
+                                                                {
+                                                                    "node":  "Dados Evolution Alerta",
+                                                                    "type":  "main",
+                                                                    "index":  0
+                                                                }
+                                                            ]
+                                                        ]
+                                           },
+                        "Code Alerta SW PHI":  {
+                                                   "main":  [
+                                                                [
+                                                                    {
+                                                                        "node":  "Enviar WhatsApp Alerta",
+                                                                        "type":  "main",
+                                                                        "index":  0
+                                                                    }
+                                                                ]
+                                                            ]
+                                               },
+                        "If Falhou SW PHI":  {
+                                                 "main":  [
+                                                              [
+                                                                  {
+                                                                      "node":  "Code Alerta SW PHI",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ],
+                                                              [
+                                                                  {
+                                                                      "node":  "Fim Operador Unico",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ]
+                                                          ]
+                                             },
+                        "Schedule Trigger":  {
+                                                 "main":  [
+                                                              [
+                                                                  {
+                                                                      "node":  "Code Contexto Execucao",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  },
+                                                                  {
+                                                                      "node":  "Dados Evolution Alerta",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ]
+                                                          ]
+                                             },
+                        "Call SW PHI Pipeline":  {
+                                                     "main":  [
+                                                                  [
+                                                                      {
+                                                                          "node":  "If Falhou SW PHI",
+                                                                          "type":  "main",
+                                                                          "index":  0
+                                                                      }
+                                                                  ]
+                                                              ]
+                                                 },
+                        "Code Alerta SW Conjuntos":  {
+                                                         "main":  [
+                                                                      [
+                                                                          {
+                                                                              "node":  "Enviar WhatsApp Alerta",
+                                                                              "type":  "main",
+                                                                              "index":  0
+                                                                          }
+                                                                      ]
+                                                                  ]
+                                                     },
+                        "Code Contexto Execucao":  {
+                                                       "main":  [
+                                                                    [
+                                                                        {
+                                                                            "node":  "Call SW Metricas Campanhas",
+                                                                            "type":  "main",
+                                                                            "index":  0
+                                                                        }
+                                                                    ]
+                                                                ]
+                                                   },
+                        "Enviar WhatsApp Alerta":  {
+                                                       "main":  [
+                                                                    [
+                                                                        {
+                                                                            "node":  "Interromper Apos Alerta",
+                                                                            "type":  "main",
+                                                                            "index":  0
+                                                                        }
+                                                                    ]
+                                                                ]
+                                                   }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1"
+                 },
+    "id":  "2e88451e-9705-4e8c-979d-70ec342c26e2"
+}
