@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "Onb - Briefing to Client",
   "nodes": [
     {
@@ -265,15 +265,15 @@
               "selectValue": "Em andamento"
             },
             {
-              "key": "Data de inÃ­cio|date",
+              "key": "Data de início|date",
               "date": "={{ $json.cliente_properties.data_inicio }}"
             },
             {
-              "key": "Modelo de negÃ³cio (business_model)|select",
+              "key": "Modelo de negócio (business_model)|select",
               "selectValue": "={{ $json.cliente_properties.modelo_negocio }}"
             },
             {
-              "key": "ServiÃ§o|multi_select",
+              "key": "Serviço|multi_select",
               "multiSelectValues": "={{ $json.cliente_properties.servico }}"
             },
             {
@@ -281,15 +281,15 @@
               "textContent": "={{ $json.cliente_properties.origem_comercial }}"
             },
             {
-              "key": "ObservaÃ§Ãµes|rich_text",
+              "key": "Observações|rich_text",
               "textContent": "={{ $json.cliente_properties.observacoes }}"
             },
             {
-              "key": "SLA atÃ© 1Âª entrega (dias)|number",
+              "key": "SLA até 1ª entrega (dias)|number",
               "numberValue": 21
             },
             {
-              "key": "ResponsÃ¡vel geral|people",
+              "key": "Responsável geral|people",
               "peopleIds": "={{ $json.cliente_properties.responsavel_geral_id ? [$json.cliente_properties.responsavel_geral_id] : [] }}"
             }
           ]
@@ -313,7 +313,7 @@
     },
     {
       "parameters": {
-        "filePath": "/home/user/phi/onboarding/etapas-a1.json",
+        "filePath": "={{ $env.ONBOARDING_DATA_PATH }}/etapas-a1.json",
         "options": {}
       },
       "id": "b1360fa4-dd4a-4d4b-83af-58fdd01e68fe",
@@ -341,7 +341,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const cliente = $('[Onb A2.1] Criar Cliente').first().json;\nconst contexto = $('[Onb A2.1] Resolver Responsavel Geral').first().json;\nconst raw = $input.first().json;\nlet dataset = raw;\nif (typeof raw.data === 'string') {\n  dataset = JSON.parse(raw.data);\n} else if (typeof raw.json === 'string') {\n  dataset = JSON.parse(raw.json);\n}\nconst etapas = Array.isArray(dataset)\n  ? dataset\n  : Array.isArray(raw.etapas)\n    ? raw.etapas\n    : Array.isArray(dataset.etapas)\n      ? dataset.etapas\n      : null;\nif (!Array.isArray(etapas)) {\n  throw new Error('Arquivo etapas-a1.json invalido: esperado objeto com raw.etapas ou dataset.etapas');\n}\nconst addDays = (isoDate, days) => {\n  const dt = new Date(`${isoDate}T00:00:00.000Z`);\n  dt.setUTCDate(dt.getUTCDate() + Number(days || 0));\n  return dt.toISOString().slice(0, 10);\n};\nreturn etapas.map((etapa) => ({\n  json: {\n    cliente_page_id: cliente.id,\n    cliente_nome: contexto.cliente_nome,\n    data_inicio: contexto.data_inicio,\n    etapa_nome: etapa.nome,\n    sequencia: etapa.sequencia,\n    tipo_etapa: etapa.tipo_etapa,\n    aguardando: etapa.aguardando,\n    prazo_dias: etapa.prazo_dias,\n    inputs: etapa.inputs,\n    output_dod: etapa.output_dod,\n    data_prevista: addDays(contexto.data_inicio, etapa.prazo_dias),\n    etapas_esperadas: etapas.length,\n    raw_payload: contexto.raw_payload\n  }\n}));"
+        "jsCode": "const cliente = $('[Onb A2.1] Criar Cliente').first().json;\nconst contexto = $('[Onb A2.1] Resolver Responsavel Geral').first().json;\nconst raw = $input.first().json;\nlet dataset = raw;\nif (typeof raw.data === 'string') {\n  dataset = JSON.parse(raw.data);\n} else if (typeof raw.json === 'string') {\n  dataset = JSON.parse(raw.json);\n}\nconst etapas = Array.isArray(dataset)\n  ? dataset\n  : Array.isArray(raw.etapas)\n    ? raw.etapas\n    : Array.isArray(dataset.etapas)\n      ? dataset.etapas\n      : null;\nif (!Array.isArray(etapas)) {\n  throw new Error('Arquivo etapas-a1.json invalido: esperado objeto com raw.etapas ou dataset.etapas');\n}\n// Contrato v1: data_inicio e date-only sem timezone; somamos dias em UTC para evitar drift de fuso.\nconst addDays = (isoDate, days) => {\n  const dt = new Date(`${isoDate}T00:00:00.000Z`);\n  dt.setUTCDate(dt.getUTCDate() + Number(days || 0));\n  return dt.toISOString().slice(0, 10);\n};\nreturn etapas.map((etapa) => ({\n  json: {\n    cliente_page_id: cliente.id,\n    cliente_nome: contexto.cliente_nome,\n    data_inicio: contexto.data_inicio,\n    etapa_nome: etapa.nome,\n    sequencia: etapa.sequencia,\n    tipo_etapa: etapa.tipo_etapa,\n    aguardando: etapa.aguardando,\n    prazo_dias: etapa.prazo_dias,\n    inputs: etapa.inputs,\n    output_dod: etapa.output_dod,\n    data_prevista: addDays(contexto.data_inicio, etapa.prazo_dias),\n    etapas_esperadas: etapas.length,\n    raw_payload: contexto.raw_payload\n  }\n}));"
       },
       "id": "f8f55b9c-fd93-4f1f-9d2e-f884d63ab2b9",
       "name": "[Onb A2.1] Montar Itens Etapas",
@@ -366,7 +366,7 @@
         "propertiesUi": {
           "propertyValues": [
             {
-              "key": "SequÃªncia|number",
+              "key": "Sequência|number",
               "numberValue": "={{ $json.sequencia }}"
             },
             {
@@ -378,11 +378,11 @@
               "selectValue": "={{ $json.aguardando }}"
             },
             {
-              "key": "Prazo (dias apÃ³s D=0)|number",
+              "key": "Prazo (dias após D=0)|number",
               "numberValue": "={{ $json.prazo_dias }}"
             },
             {
-              "key": "Inputs necessÃ¡rios|rich_text",
+              "key": "Inputs necessários|rich_text",
               "textContent": "={{ $json.inputs }}"
             },
             {
@@ -788,4 +788,3 @@
   },
   "versionId": "8353d803-796f-4ddb-8c87-f12ddf0f72e0"
 }
-
