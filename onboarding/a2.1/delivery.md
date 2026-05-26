@@ -1,5 +1,9 @@
 # Onb - Briefing to Client (A2.1)
 
+## Status
+
+DoD fechado.
+
 ## Arquivos entregues
 
 - `workflow.json`
@@ -8,148 +12,167 @@
 - `tests.ps1`
 - `runs/exec_6715.json`
 - `runs/exec_6716.json`
+- `runs/exec_6719.json`
+- `runs/exec_6738.json`
+- `runs/exec_6739.json`
 
 ## Diagrama textual dos nodes
 
 1. `[Onb A2.1] Webhook Briefing`
    - Recebe `POST` com o payload do Google Form.
 2. `[Onb A2.1] Validar Payload`
-   - Valida obrigatórios do v1 e formato básico.
-3. `[Onb A2.1] Payload Válido?`
+   - Valida obrigatórios do v1 e o contrato mínimo.
+3. `[Onb A2.1] Payload Valido?`
    - Se inválido, desvia para resposta `400`.
 4. `[Onb A2.1] Responder 400`
-   - Retorna erro para o webhook sem tocar Notion.
+   - Retorna erro ao caller sem tocar Notion.
 5. `[Onb A2.1] Normalizar Contexto`
-   - Normaliza nome, CNPJ e email; padroniza `Tráfego pago`.
+   - Normaliza nome, CNPJ, email e serviço.
 6. `[Onb A2.1] Buscar Clientes Ativos`
    - Lê `PHI - Onboarding de Clientes`.
 7. `[Onb A2.1] Detectar Duplicidade`
-   - Filtra registros ativos por nome normalizado.
+   - Compara onboarding ativo por nome normalizado.
 8. `[Onb A2.1] Duplicado?`
-   - Se houver onboarding ativo, aborta.
+   - Se houver onboarding ativo, segue para notificação e `409`.
 9. `[Onb A2.1] Notificar Duplicidade Olavo`
-   - Envia alerta via Evolution API com payload bruto + CNPJ.
+   - Tenta alertar via Evolution API.
+   - Usa `continueOnFail` para não bloquear a resposta HTTP ao webhook.
 10. `[Onb A2.1] Responder 409`
-    - Retorna `Onboarding ativo ja existe para este cliente.`
-11. `[Onb A2.1] Buscar Usuários Workspace`
+    - Retorna conflito para duplicidade.
+11. `[Onb A2.1] Buscar Usuarios Workspace`
     - Lista usuários do workspace Notion.
-12. `[Onb A2.1] Resolver Responsável Geral`
-    - Faz match por email; se não achar, deixa vazio.
+12. `[Onb A2.1] Resolver Responsavel Geral`
+    - Faz match do email com usuário existente.
 13. `[Onb A2.1] Criar Cliente`
     - Cria página em `PHI - Onboarding de Clientes`.
 14. `[Onb A2.1] Ler Etapas A1`
-    - Lê `{{ $env.ONBOARDING_DATA_PATH }}/etapas-a1.json`.
-15. `[Onb A2.1] Binário para JSON Etapas`
-    - Converte o arquivo para JSON.
+    - No export final de sandbox, carrega o dataset embarcado das 31 etapas.
+15. `[Onb A2.1] Binario para JSON Etapas`
+    - No export final de sandbox, repassa os itens para o próximo node.
 16. `[Onb A2.1] Montar Itens Etapas`
-    - Gera os 31 itens de etapa com `Data prevista = data_inicio + prazo_dias`.
+    - Gera as 31 etapas com `Data prevista = data_inicio + prazo_dias`.
     - O node assume `data_inicio` como date-only sem timezone e soma dias em UTC intencionalmente.
 17. `[Onb A2.1] Criar Etapa`
     - Cria páginas em `PHI - Etapas de Onboarding` com relation para o cliente.
 18. `[Onb A2.1] Consolidar Resultado`
     - Conta sucessos e falhas.
 19. `[Onb A2.1] Falha Parcial Etapas?`
-    - Se alguma etapa falhar, segue para bloqueio do cliente.
+    - Se houver falha parcial, segue para bloqueio do cliente.
 20. `[Onb A2.1] Atualizar Cliente Bloqueado`
     - Marca `Status=Bloqueado` e preenche `Bloqueios ativos`.
 21. `[Onb A2.1] Notificar Falha Etapas Olavo`
-    - Envia resumo do erro via Evolution API.
+    - Tenta alertar via Evolution API.
+    - Usa `continueOnFail` para não bloquear a resposta HTTP ao webhook.
 22. `[Onb A2.1] Responder 201`
-    - Retorna resumo da execução ao webhook.
+    - Retorna resumo da execução ao caller.
 
 ## Credenciais referenciadas
 
-- `Notion PHI Onboarding`
+- `Notion account`
   - Tipo esperado: `notionApi`
-  - Uso: leitura de clientes, leitura de usuários, criação/atualização de páginas.
+  - Uso: leitura de clientes, leitura de usuários, criação e atualização de páginas.
 - `Evolution API Header Auth`
   - Tipo esperado: `httpHeaderAuth`
   - Uso: notificações internas para Olavo.
 
-## Parâmetros externos esperados
+## Correção de IDs dos DBs Notion
 
-- `ONBOARDING_DATA_PATH`
-  - Valor esperado no sandbox: `/home/user/phi/onboarding`
-  - O workflow lê `{{ $env.ONBOARDING_DATA_PATH }}/etapas-a1.json`
-- `EVOLUTION_API_URL`
-- `EVOLUTION_INSTANCE`
-- `OLAVO_PHONE`
+Durante o retest, os IDs originais do brief não responderam no sandbox. A correção foi aplicada em:
+
+- `workflow.json`
+- `sandbox_export.json`
+- workflow live do sandbox `0MfPA3Uqmj4TySiX`
+
+IDs validados no sandbox:
+
+- `PHI - Onboarding de Clientes`: `04e34a62624b484cbda546604564b88c`
+- `PHI - Etapas de Onboarding`: `6eb4565b4f1d498c8b2978e0c80880fd`
 
 ## Tech debt registrado
 
 - `[Onb A2.1] Buscar Clientes Ativos` usa `filterType:none` e faz filtro client-side por nome/status.
-- Em v1 isso é funcional. Quando o volume de clientes ativos + históricos crescer, o ideal é migrar para filtro server-side no node do Notion.
+- O export final de sandbox embarca o dataset das 31 etapas dentro do workflow, porque o filesystem disponível ao n8n self-hosted não expôs o path esperado do repo durante o retest.
 
-## Logs de validação
+## Validação E2E em sandbox
 
-### Teste estrutural local
+Status: concluída com DoD fechado.
 
-Data da execução: `2026-05-26`
+Workflow sandbox:
 
-Rodada RED:
+- Workflow ID: `0MfPA3Uqmj4TySiX`
+- Nome: `Onb - Briefing to Client`
+- Estado final: `inactive`
 
-```text
-workflow.json must be UTF-8 without BOM
-```
+Evidências finais:
 
-Rodada GREEN:
+- `runs/exec_6738.json`
+- `runs/exec_6739.json`
+- `sandbox_export.json`
 
-```text
-Onboarding briefing workflow structural tests passed.
-```
+### POST 1
 
-Comando executado:
+- Timestamp: `2026-05-26T23:22:13Z`
+- Execução: `6738`
+- Cliente de teste: `Cliente Sandbox A2.1 Retest E`
+- HTTP observado pelo caller: `201`
+- `cliente_page_id`: `36cb65e5-c72b-8105-9cd2-f37366abfdff`
+- Resultado do workflow:
+  - `etapas_criadas = 31`
+  - `etapas_esperadas = 31`
+  - `workflow_status = ok`
+
+Confirmação operacional:
+
+- 1 página de cliente criada no DB de onboarding.
+- 31 páginas de etapa criadas no DB de etapas.
+- Relation `Cliente` preenchida nas etapas.
+- Datas previstas calculadas a partir de `data_inicio + prazo_dias`.
+
+### POST 2
+
+- Timestamp: `2026-05-26T23:22:58Z`
+- Execução: `6739`
+- Mesmo `cliente_nome` do POST 1
+- HTTP observado pelo caller: `409`
+
+Confirmação operacional:
+
+- A regra de duplicidade por nome foi acionada.
+- O segundo POST não criou novo onboarding.
+- O webhook externo recebeu `409` mesmo com falha na notificação interna.
+
+## Evolution API status
+
+No momento do retest final, a instância `Whats Business` da Evolution API continuava indisponível server-side.
+
+Diagnóstico isolado:
+
+- A credencial do n8n enviou corretamente o header `Apikey`.
+- A chamada direta para a Evolution API fora do n8n também retornou `HTTP 500`.
+- Um payload mínimo também retornou `HTTP 500`.
+
+Conclusão:
+
+- O problema era da Evolution API, não do node n8n nem do payload de duplicidade.
+- O ajuste de resiliência com `continueOnFail` nos nodes de notificação garantiu que a falha de notificação não bloqueasse a resposta `409` ao webhook externo.
+- Olavo está investigando a Evolution em paralelo.
+
+## Limpeza dos dados sintéticos
+
+Não executei limpeza dos clientes sintéticos antes do fechamento desta entrega.
+
+Ficaram registrados no ambiente de sandbox/Notion os clientes usados nas rodadas intermediárias e finais (`Retest C`, `Retest E` e variantes de diagnóstico). Se necessário, a limpeza pode ser feita manualmente depois da revisão dos logs.
+
+## Teste estrutural local
+
+Comando:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File C:\tmp\phi_repo\onboarding\a2.1\tests.ps1
 ```
 
-### Validação E2E em sandbox
-
-Status: `executada com bloqueio externo`
-
-Workflow sandbox criado:
-
-- Workflow ID no sandbox: `0MfPA3Uqmj4TySiX`
-- Nome: `Onb - Briefing to Client`
-- Estado final: `inactive` (desativado ao fim do teste)
-
-Evidências geradas:
-
-- `sandbox_export.json`
-- `runs/exec_6715.json`
-- `runs/exec_6716.json`
-
-Rodada 1:
-
-- POST em `2026-05-26T16:38:25Z`
-- Resultado HTTP observado pelo caller: `400`
-- Execução `6715` no n8n: `success`
-- Causa real: payload enviado pelo PowerShell chegou com `Tráfego pago` em encoding corrompido, então a validação do enum rejeitou `servico`.
-
-Rodada 2:
-
-- POST em `2026-05-26T16:41:31Z`
-- Payload repetido com `Trafego pago` para cair na normalização do workflow.
-- Resultado HTTP observado pelo caller: `500`
-- Execução `6716` no n8n: `error`
-- Último node executado com erro: `[Onb A2.1] Buscar Clientes Ativos`
-- Erro raiz:
+Resultado esperado:
 
 ```text
-Could not find database with ID: c7867eef-126f-420b-8b80-d52db3854989.
-Make sure the relevant pages and databases are shared with your integration "Integração n8n".
+Onboarding briefing workflow structural tests passed.
 ```
-
-Conclusão operacional:
-
-- O workflow foi criado, publicado temporariamente no sandbox para teste e desativado ao final.
-- A leitura do dataset via `Read Binary File` deixou de ser o bloqueio principal depois do ajuste de `filePath`.
-- O bloqueio real do E2E agora é permissão da integração Notion do sandbox sobre os dois DBs de onboarding.
-- Por isso, **não existe log honesto de cliente criado + 31 etapas criadas + duplicidade concluída** nesta sessão.
-
-## Próximo passo para fechar o DoD
-
-1. Compartilhar os DBs `PHI - Onboarding de Clientes` e `PHI - Etapas de Onboarding` com a integração `Integração n8n` usada pela credencial `Notion account`.
-2. Reexecutar o primeiro POST.
-3. Reexecutar o segundo POST com o mesmo `cliente_nome` para validar a duplicidade e a notificação.
