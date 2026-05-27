@@ -1,0 +1,7 @@
+# Secrets — NUNCA commitar
+.env
+.env.*
+!.env.example
+
+# Workflow exports temporários do n8n
+*.local.json
