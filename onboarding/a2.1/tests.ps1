@@ -63,6 +63,23 @@ if ($nodeMap['[Onb A2.1] Criar Etapa'].parameters.databaseId.value -ne '6eb4565b
   throw 'Unexpected etapas DB ID in Criar Etapa'
 }
 
+$criarEtapaProperties = $nodeMap['[Onb A2.1] Criar Etapa'].parameters.propertiesUi.propertyValues
+$clienteRelationProperty = $criarEtapaProperties | Where-Object { $_.key -eq 'Cliente|relation' } | Select-Object -First 1
+if (-not $clienteRelationProperty) {
+  throw 'Criar Etapa must set Cliente|relation'
+}
+if ($clienteRelationProperty.PSObject.Properties.Name -contains 'relationValues') {
+  throw 'Criar Etapa must not use ignored Notion v2.2 parameter relationValues'
+}
+if ($clienteRelationProperty.relationValue -ne '={{ [$json.cliente_page_id] }}') {
+  throw 'Criar Etapa must set Cliente relation via relationValue array from cliente_page_id'
+}
+
+$montarItensCode = $nodeMap['[Onb A2.1] Montar Itens Etapas'].parameters.jsCode
+if ($montarItensCode -notmatch [regex]::Escape("throw new Error('cliente.id ausente - nao criar etapas orfas');")) {
+  throw 'Montar Itens Etapas must fail fast when cliente.id is absent'
+}
+
 if ($nodeMap['[Onb A2.1] Ler Etapas A1'].type -ne 'n8n-nodes-base.code') {
   throw 'Ler Etapas A1 must be a code node in the sandbox export'
 }

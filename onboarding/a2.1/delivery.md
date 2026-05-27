@@ -163,6 +163,32 @@ Não executei limpeza dos clientes sintéticos antes do fechamento desta entrega
 
 Ficaram registrados no ambiente de sandbox/Notion os clientes usados nas rodadas intermediárias e finais (`Retest C`, `Retest E` e variantes de diagnóstico). Se necessário, a limpeza pode ser feita manualmente depois da revisão dos logs.
 
+## Bugfix 2026-05-27 - relation Cliente
+
+O aceite de A2.1 foi revogado no mesmo dia porque o cleanup em dry-run retornou `0` etapas para clientes sintéticos que tinham etapas criadas no DB. A validação via Notion API confirmou a causa raiz: as páginas de etapa existiam, mas a property `Cliente` não estava populada.
+
+Diagnóstico:
+
+- H1 descartada: em `runs/exec_6738.json`, `[Onb A2.1] Criar Cliente` retornou `id` no top-level e `[Onb A2.1] Montar Itens Etapas` propagou `cliente_page_id` corretamente para 31 itens.
+- H2 confirmada: o node Notion v2.2 estava configurado com `relationValues`, parâmetro ignorado pelo node. A primeira tentativa com `relationValue` string falhou com `value.relationValue.filter is not a function`, confirmando que o runtime espera array.
+- Correção aplicada: `Cliente|relation` passou para `relationValue: ={{ [$json.cliente_page_id] }}`.
+- Guarda defensiva adicionada em `[Onb A2.1] Montar Itens Etapas`: se `cliente.id` estiver ausente, o workflow falha antes de criar etapas órfãs.
+
+Evidências do reteste sandbox:
+
+- Execução `6769`: `Cliente Sandbox A2.1 Bugfix B`, `cliente_page_id = 36db65e5-c72b-81cf-aa85-f011e36b15d1`, `etapas_criadas = 31`, `etapas_esperadas = 31`, `workflow_status = ok`.
+- Validação Notion API por query no DB de Etapas: `31` páginas retornaram com `Cliente contains 36db65e5-c72b-81cf-aa85-f011e36b15d1`.
+- Fetch paginado da property `Total de etapas` no cliente: `rollup.number = 31`. O fetch simples de página mostrou `25` porque a relation `Etapas de Onboarding` veio paginada com `has_more = true`.
+- Fetch da etapa `36db65e5-c72b-8179-be81-ec64dafc7a28` (`Receber handoff do Comercial`): property `Cliente` presente com `Count = 1` e ID `36db65e5-c72b-81cf-aa85-f011e36b15d1`.
+- Execução `6770`: POST 2 de duplicidade retornou `409`; `has_duplicate = true`, `duplicate_page_id = 36db65e5-c72b-81cf-aa85-f011e36b15d1`, `duplicate_status = Em andamento`.
+
+Arquivos atualizados:
+
+- `workflow.json`
+- `sandbox_export.json`
+- `runs/exec_6769.json`
+- `runs/exec_6770.json`
+
 ## Teste estrutural local
 
 Comando:
