@@ -2,7 +2,7 @@
 
 ## Status
 
-DoD fechado.
+DoD CLOSED.
 
 ## Arquivos entregues
 
@@ -15,6 +15,9 @@ DoD fechado.
 - `runs/exec_6719.json`
 - `runs/exec_6738.json`
 - `runs/exec_6739.json`
+- `runs/exec_6769.json`
+- `runs/exec_6770.json`
+- `cleanup_synthetic_clients.ps1`
 
 ## Diagrama textual dos nodes
 
@@ -188,6 +191,27 @@ Arquivos atualizados:
 - `sandbox_export.json`
 - `runs/exec_6769.json`
 - `runs/exec_6770.json`
+
+## Cleanup 2026-05-27 - sandbox synthetic archived
+
+Cleanup real executado após aprovação do Cérebro. O cliente `Cliente Sandbox A2.1 Bugfix B` (`36db65e5-c72b-81cf-aa85-f011e36b15d1`) foi preservado como evidência viva do bugfix, junto com suas 31 etapas vinculadas.
+
+Tabela final:
+
+| Alvo | Page ID | Itens arquivados | Status |
+| --- | --- | ---: | --- |
+| Cliente Sandbox A2.1 Retest | `36cb65e5-c72b-8161-bbf0-da0a4416e2aa` | 1 cliente | archived |
+| Cliente Sandbox A2.1 Retest B | `36cb65e5-c72b-818b-ae4d-ee918908d49e` | 1 cliente | archived |
+| Cliente Sandbox A2.1 Retest C | `36cb65e5-c72b-814c-808d-dd142f112a1e` | 1 cliente | archived |
+| Cliente Sandbox A2.1 Retest E | `36cb65e5-c72b-8105-9cd2-f37366abfdff` | 1 cliente | archived |
+| Etapas orfas conhecidas A2.1 | filtro `created_time >= 2026-05-26`, `Status = Pendente`, nome em `etapas-a1.json`, relation `Cliente` vazia | 62 etapas | archived |
+
+Validação pós-cleanup via Notion API:
+
+- Os 4 clientes Retest retornaram `archived = true`.
+- Filtro de candidatas após cleanup: `ActiveKnownPending = 31`, `ActiveOrphans = 0`, `ActiveLinked = 31`.
+- `Cliente Sandbox A2.1 Bugfix B` retornou `archived = false`.
+- Query no DB de Etapas com `Cliente contains 36db65e5-c72b-81cf-aa85-f011e36b15d1` retornou `31` etapas.
 
 ## Teste estrutural local
 

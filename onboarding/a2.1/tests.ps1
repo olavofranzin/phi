@@ -2,12 +2,17 @@ $ErrorActionPreference = 'Stop'
 
 $workflowPath = 'C:\tmp\phi_repo\onboarding\a2.1\workflow.json'
 $deliveryPath = 'C:\tmp\phi_repo\onboarding\a2.1\delivery.md'
+$cleanupPath = 'C:\tmp\phi_repo\onboarding\a2.1\cleanup_synthetic_clients.ps1'
+$etapasFixturePath = 'C:\tmp\phi_repo\onboarding\etapas-a1.json'
 
 if (-not (Test-Path $workflowPath)) {
   throw "Missing workflow file: $workflowPath"
 }
 if (-not (Test-Path $deliveryPath)) {
   throw "Missing delivery file: $deliveryPath"
+}
+if (-not (Test-Path $cleanupPath)) {
+  throw "Missing cleanup file: $cleanupPath"
 }
 
 $workflowBytes = [System.IO.File]::ReadAllBytes($workflowPath)
@@ -18,6 +23,7 @@ if ($workflowBytes.Length -ge 3 -and $workflowBytes[0] -eq 0xEF -and $workflowBy
 $workflowRaw = [System.Text.Encoding]::UTF8.GetString($workflowBytes)
 $workflow = $workflowRaw | ConvertFrom-Json
 $delivery = [System.IO.File]::ReadAllText($deliveryPath, [System.Text.Encoding]::UTF8)
+$cleanup = [System.IO.File]::ReadAllText($cleanupPath, [System.Text.Encoding]::UTF8)
 
 if ($workflow.name -ne 'Onb - Briefing to Client') {
   throw "Unexpected workflow name: $($workflow.name)"
@@ -110,7 +116,22 @@ if ($workflowRaw -match [regex]::Escape('{{ $env.ONBOARDING_DATA_PATH }}/etapas-
   throw 'Sandbox-final workflow must not depend on ONBOARDING_DATA_PATH'
 }
 
-foreach ($requiredText in @('DoD fechado', 'Evolution API status', 'exec_6738.json', 'exec_6739.json')) {
+foreach ($requiredCleanupText in @(
+  'Get-Content -Raw -Encoding UTF8 -LiteralPath $etapasFixturePath',
+  "timestamp = 'created_time'",
+  "on_or_after = '2026-05-26T00:00:00.000Z'",
+  "property = 'Status'",
+  "equals = 'Pendente'",
+  "KnownEtapaNames",
+  "Safety check failed for etapa",
+  "RemainingArgs -contains '--yes'"
+)) {
+  if ($cleanup -notmatch [regex]::Escape($requiredCleanupText)) {
+    throw "cleanup_synthetic_clients.ps1 is missing required text '$requiredCleanupText'"
+  }
+}
+
+foreach ($requiredText in @('DoD CLOSED', 'Evolution API status', 'exec_6738.json', 'exec_6739.json')) {
   if ($delivery -notmatch [regex]::Escape($requiredText)) {
     throw "delivery.md is missing required text '$requiredText'"
   }
