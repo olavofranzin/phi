@@ -1,790 +1,839 @@
 {
-  "name": "Onb - Briefing to Client",
-  "nodes": [
-    {
-      "parameters": {
-        "httpMethod": "POST",
-        "path": "onb-briefing-to-client",
-        "responseMode": "responseNode",
-        "options": {}
-      },
-      "id": "d8f6db3d-f644-49ff-bb9d-f0ec53f6dce1",
-      "name": "[Onb A2.1] Webhook Briefing",
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2,
-      "position": [
-        240,
-        300
-      ],
-      "webhookId": "7eeab309-f742-4f72-ac58-329f48a151a7"
-    },
-    {
-      "parameters": {
-        "jsCode": "const payload = $json.body ?? $json;\nconst required = ['cnpj_cliente', 'cliente_nome', 'data_inicio', 'modelo_negocio', 'servico', 'origem_comercial'];\nconst errors = [];\nfor (const field of required) {\n  if (payload[field] === undefined || payload[field] === null || payload[field] === '') {\n    errors.push(`Campo obrigatorio ausente: ${field}`);\n  }\n}\nconst modelosAceitos = ['Infoproduto', 'Lead Gen', 'E-Commerce'];\nconst servicosAceitos = new Set(['Tr\\u00e1fego pago', 'Trafego pago', 'Site', 'Agente IA']);\nif (payload.modelo_negocio && !modelosAceitos.includes(payload.modelo_negocio)) {\n  errors.push('modelo_negocio invalido');\n}\nif (payload.servico && !Array.isArray(payload.servico)) {\n  errors.push('servico deve ser array');\n}\nif (Array.isArray(payload.servico)) {\n  const invalidos = payload.servico.filter((item) => !servicosAceitos.has(item));\n  if (invalidos.length) {\n    errors.push(`servico invalido: ${invalidos.join(', ')}`);\n  }\n}\nif (payload.data_inicio && !/^\\d{4}-\\d{2}-\\d{2}$/.test(payload.data_inicio)) {\n  errors.push('data_inicio deve estar em YYYY-MM-DD');\n}\nif (errors.length) {\n  return [{ json: { is_valid: false, statusCode: 400, error: 'Payload invalido', details: errors, received_payload: payload } }];\n}\nreturn [{ json: { is_valid: true, payload } }];"
-      },
-      "id": "e329cc83-8245-4687-a918-8ec704bcb35c",
-      "name": "[Onb A2.1] Validar Payload",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        480,
-        300
-      ]
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 2
-          },
-          "conditions": [
-            {
-              "leftValue": "={{ $json.is_valid }}",
-              "rightValue": true,
-              "operator": {
-                "type": "boolean",
-                "operation": "equals"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "id": "9f4ac0c6-ca80-4777-a1a3-795466ad6329",
-      "name": "[Onb A2.1] Payload Valido?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        720,
-        300
-      ]
-    },
-    {
-      "parameters": {
-        "respondWith": "json",
-        "responseBody": "={{ { ok: false, error: $json.error, details: $json.details, received_payload: $json.received_payload } }}",
-        "options": {
-          "responseCode": "={{ $json.statusCode || 400 }}"
-        }
-      },
-      "id": "3c40cd40-dc8c-4666-b13b-9a17b8426c87",
-      "name": "[Onb A2.1] Responder 400",
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1.3,
-      "position": [
-        960,
-        448
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "const payload = $json.payload;\nconst normalizarTexto = (value) => String(value ?? '').trim();\nconst normalizarNome = (value) => normalizarTexto(value).toLocaleLowerCase('pt-BR');\nconst cnpj_normalizado = String(payload.cnpj_cliente ?? '').replace(/\\D/g, '');\nconst cliente_nome = normalizarTexto(payload.cliente_nome);\nconst servico = Array.isArray(payload.servico)\n  ? payload.servico.map((item) => normalizarTexto(item) === 'Trafego pago' ? 'Tr\\u00e1fego pago' : normalizarTexto(item))\n  : [];\nreturn [{ json: {\n  cliente_nome,\n  cliente_nome_normalizado: normalizarNome(cliente_nome),\n  cnpj_original: payload.cnpj_cliente,\n  cnpj_normalizado,\n  data_inicio: payload.data_inicio,\n  modelo_negocio: payload.modelo_negocio,\n  servico,\n  origem_comercial: normalizarTexto(payload.origem_comercial),\n  responsavel_geral_email: payload.responsavel_geral_email ? normalizarTexto(payload.responsavel_geral_email).toLowerCase() : null,\n  observacoes: `CNPJ normalizado: ${cnpj_normalizado}`,\n  raw_payload: payload,\n  active_statuses: ['Em andamento', 'N\\u00e3o iniciado', 'Bloqueado']\n} }];"
-      },
-      "id": "31fe1d8d-dd53-4876-9b75-270e10ffd2f5",
-      "name": "[Onb A2.1] Normalizar Contexto",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        960,
-        160
-      ]
-    },
-    {
-      "parameters": {
-        "resource": "databasePage",
-        "operation": "getAll",
-        "databaseId": {
-          "__rl": true,
-          "mode": "list",
-          "value": "04e34a62624b484cbda546604564b88c"
-        },
-        "returnAll": true,
-        "simple": false,
-        "options": {},
-        "filterType": "none"
-      },
-      "id": "2db78590-93b3-490d-b8cf-f8fe0fae492d",
-      "name": "[Onb A2.1] Buscar Clientes Ativos",
-      "type": "n8n-nodes-base.notion",
-      "typeVersion": 2.2,
-      "position": [
-        1200,
-        160
-      ],
-      "alwaysOutputData": true,
-      "credentials": {
-        "notionApi": {
-          "id": "<credential_id_redacted>",
-          "name": "Notion account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "jsCode": "const contexto = $('[Onb A2.1] Normalizar Contexto').first().json;\nconst rows = $input.all();\nconst pickPlain = (prop) => {\n  if (!prop) return '';\n  if (prop.title?.length) return prop.title.map((item) => item.plain_text || '').join('').trim();\n  if (prop.rich_text?.length) return prop.rich_text.map((item) => item.plain_text || '').join('').trim();\n  return '';\n};\nconst pickSelect = (prop) => prop?.select?.name ?? '';\nconst activeStatuses = new Set(contexto.active_statuses);\nconst duplicate = rows.find((item) => {\n  const props = item.json.properties || {};\n  const nome = pickPlain(props['Cliente']);\n  const nomeNormalizado = nome.trim().toLocaleLowerCase('pt-BR');\n  const status = pickSelect(props['Status']);\n  return activeStatuses.has(status) && nomeNormalizado === contexto.cliente_nome_normalizado;\n});\nif (!duplicate) {\n  return [{ json: { ...contexto, has_duplicate: false } }];\n}\nreturn [{ json: {\n  ...contexto,\n  has_duplicate: true,\n  duplicate_page_id: duplicate.json.id,\n  duplicate_status: pickSelect(duplicate.json.properties?.Status),\n  duplicate_message: 'Onboarding ativo ja existe para este cliente.'\n} }];"
-      },
-      "id": "a0cf9ec4-a0cf-4d1b-a40b-d61285a6f46f",
-      "name": "[Onb A2.1] Detectar Duplicidade",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        1440,
-        160
-      ]
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 2
-          },
-          "conditions": [
-            {
-              "leftValue": "={{ $json.has_duplicate }}",
-              "rightValue": true,
-              "operator": {
-                "type": "boolean",
-                "operation": "equals"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "id": "783a06e1-7815-4441-9db7-dca468488d27",
-      "name": "[Onb A2.1] Duplicado?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        1680,
-        160
-      ]
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "https://n8n-evolution.1unqx7.easypanel.host/message/sendText/Whats%20Business",
-        "authentication": "predefinedCredentialType",
-        "nodeCredentialType": "httpHeaderAuth",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ { number: '5511888880001', text: '[Onb A2.1] Duplicidade detectada\\ncliente=' + $json.cliente_nome + '\\ncnpj=' + $json.cnpj_normalizado + '\\npayload=' + JSON.stringify($json.raw_payload) } }}",
-        "options": {}
-      },
-      "id": "f530eaf6-71d2-4eb8-b24b-fc3d0f972679",
-      "name": "[Onb A2.1] Notificar Duplicidade Olavo",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.3,
-      "continueOnFail": true,
-      "position": [
-        1920,
-        48
-      ],
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "<credential_id_redacted>",
-          "name": "Evolution API Header Auth"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "respondWith": "json",
-        "responseBody": "={{ { ok: false, error: $json.duplicate_message, cliente_nome: $json.cliente_nome, cnpj_normalizado: $json.cnpj_normalizado } }}",
-        "options": {
-          "responseCode": 409
-        }
-      },
-      "id": "7cd5c0ba-90b2-4b1f-b3a6-a28735f44ad0",
-      "name": "[Onb A2.1] Responder 409",
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1.3,
-      "position": [
-        2160,
-        48
-      ]
-    },
-    {
-      "parameters": {
-        "resource": "user",
-        "operation": "getAll",
-        "returnAll": true,
-        "options": {}
-      },
-      "id": "f099bcb8-fe7b-4b5b-a96a-b5f49e23f18e",
-      "name": "[Onb A2.1] Buscar Usuarios Workspace",
-      "type": "n8n-nodes-base.notion",
-      "typeVersion": 2.2,
-      "position": [
-        1920,
-        272
-      ],
-      "alwaysOutputData": true,
-      "credentials": {
-        "notionApi": {
-          "id": "<credential_id_redacted>",
-          "name": "Notion account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "jsCode": "const contexto = $('[Onb A2.1] Detectar Duplicidade').first().json;\nconst users = $input.all().map((item) => item.json);\nconst responsavel = contexto.responsavel_geral_email\n  ? users.find((user) => String(user.person?.email || '').toLowerCase() === contexto.responsavel_geral_email)\n  : null;\nreturn [{ json: {\n  ...contexto,\n  responsavel_geral_id: responsavel?.id ?? null,\n  schema_hints: {\n    cliente_relation_inverse: 'Etapas de Onboarding',\n    etapas_title_property: 'Nome da etapa'\n  },\n  cliente_properties: {\n    cliente_nome: contexto.cliente_nome,\n    status: 'Em andamento',\n    data_inicio: contexto.data_inicio,\n    modelo_negocio: contexto.modelo_negocio,\n    servico: contexto.servico,\n    origem_comercial: contexto.origem_comercial,\n    observacoes: contexto.observacoes,\n    sla_primeira_entrega: 21,\n    responsavel_geral_id: responsavel?.id ?? null\n  }\n} }];"
-      },
-      "id": "1fcfa5ef-f2cc-47aa-a417-33c5144e1ed8",
-      "name": "[Onb A2.1] Resolver Responsavel Geral",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        2160,
-        272
-      ]
-    },
-    {
-      "parameters": {
-        "resource": "databasePage",
-        "operation": "create",
-        "databaseId": {
-          "__rl": true,
-          "mode": "list",
-          "value": "04e34a62624b484cbda546604564b88c"
-        },
-        "title": "={{ $json.cliente_properties.cliente_nome }}",
-        "simple": false,
-        "propertiesUi": {
-          "propertyValues": [
-            {
-              "key": "Status|select",
-              "selectValue": "Em andamento"
-            },
-            {
-              "key": "Data de início|date",
-              "date": "={{ $json.cliente_properties.data_inicio }}"
-            },
-            {
-              "key": "Modelo de negócio (business_model)|select",
-              "selectValue": "={{ $json.cliente_properties.modelo_negocio }}"
-            },
-            {
-              "key": "Serviço|multi_select",
-              "multiSelectValues": "={{ $json.cliente_properties.servico }}"
-            },
-            {
-              "key": "Origem (vendedor / comercial)|rich_text",
-              "textContent": "={{ $json.cliente_properties.origem_comercial }}"
-            },
-            {
-              "key": "Observações|rich_text",
-              "textContent": "={{ $json.cliente_properties.observacoes }}"
-            },
-            {
-              "key": "SLA até 1ª entrega (dias)|number",
-              "numberValue": 21
-            },
-            {
-              "key": "Responsável geral|people",
-              "peopleIds": "={{ $json.cliente_properties.responsavel_geral_id ? [$json.cliente_properties.responsavel_geral_id] : [] }}"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "id": "bf068205-d58d-46e9-b8fb-dc6767504c72",
-      "name": "[Onb A2.1] Criar Cliente",
-      "type": "n8n-nodes-base.notion",
-      "typeVersion": 2.2,
-      "position": [
-        2400,
-        272
-      ],
-      "credentials": {
-        "notionApi": {
-          "id": "<credential_id_redacted>",
-          "name": "Notion account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "jsCode": "const etapas = [{\"sequencia\": 1, \"nome\": \"Receber handoff do Comercial\", \"tipo_etapa\": \"Documentação interna\", \"aguardando\": \"Comercial\", \"prazo_dias\": 0, \"inputs\": \"Contrato assinado e dados mínimos\", \"output_dod\": \"Pacote de handoff entregue\"}, {\"sequencia\": 2, \"nome\": \"Validar completude do handoff\", \"tipo_etapa\": \"Documentação interna\", \"aguardando\": \"Nada\", \"prazo_dias\": 0, \"inputs\": \"Pacote recebido\", \"output_dod\": \"Lacunas críticas identificadas ou sanadas\"}, {\"sequencia\": 3, \"nome\": \"Criar registro em PHI - Onboarding de Clientes\", \"tipo_etapa\": \"Documentação interna\", \"aguardando\": \"Nada\", \"prazo_dias\": 0, \"inputs\": \"Dados mínimos validados\", \"output_dod\": \"Página do onboarding criada\"}, {\"sequencia\": 4, \"nome\": \"Definir responsável operacional\", \"tipo_etapa\": \"Documentação interna\", \"aguardando\": \"Nada\", \"prazo_dias\": 0, \"inputs\": \"Registro criado\", \"output_dod\": \"Dono do onboarding definido\"}, {\"sequencia\": 5, \"nome\": \"Enviar mensagem inicial + briefing\", \"tipo_etapa\": \"Marco de comunicação\", \"aguardando\": \"Cliente\", \"prazo_dias\": 0, \"inputs\": \"Contato principal confirmado\", \"output_dod\": \"Cliente recebe instruções e link do form\"}, {\"sequencia\": 6, \"nome\": \"Cobrar briefing não respondido\", \"tipo_etapa\": \"Marco de comunicação\", \"aguardando\": \"Cliente\", \"prazo_dias\": 1, \"inputs\": \"Form enviado sem resposta\", \"output_dod\": \"Follow-up executado\"}, {\"sequencia\": 7, \"nome\": \"Validar briefing recebido\", \"tipo_etapa\": \"Documentação interna\", \"aguardando\": \"Cliente\", \"prazo_dias\": 2, \"inputs\": \"Resposta do Google Form\", \"output_dod\": \"Briefing classificado como aprovado, com lacunas ou insuficiente\"}, {\"sequencia\": 8, \"nome\": \"Produzir resumo operacional do briefing\", \"tipo_etapa\": \"Documentação interna\", \"aguardando\": \"Nada\", \"prazo_dias\": 2, \"inputs\": \"Briefing validado\", \"output_dod\": \"Resumo com oferta, público, meta e riscos anexado ao PHI\"}, {\"sequencia\": 9, \"nome\": \"Executar análise de ativos e presença digital\", \"tipo_etapa\": \"Documentação interna\", \"aguardando\": \"Nada\", \"prazo_dias\": 3, \"inputs\": \"Briefing validado + links\", \"output_dod\": \"Achados principais coletados\"}, {\"sequencia\": 10, \"nome\": \"Rodar cliente oculto e checar rastreamento aparente\", \"tipo_etapa\": \"Setup técnico\", \"aguardando\": \"Nada\", \"prazo_dias\": 3, \"inputs\": \"Site/contato do cliente\", \"output_dod\": \"Fricções e lacunas técnicas registradas\"}, {\"sequencia\": 11, \"nome\": \"Analisar concorrentes prioritários\", \"tipo_etapa\": \"Documentação interna\", \"aguardando\": \"Nada\", \"prazo_dias\": 3, \"inputs\": \"Lista de concorrentes\", \"output_dod\": \"Benchmark mínimo concluído\"}, {\"sequencia\": 12, \"nome\": \"Consolidar relatório curto pré-kickoff\", \"tipo_etapa\": \"Entrega\", \"aguardando\": \"Nada\", \"prazo_dias\": 4, \"inputs\": \"Achados da análise prévia\", \"output_dod\": \"Relatório curto pronto para sustentar a kickoff\"}, {\"sequencia\": 13, \"nome\": \"Conduzir call de kickoff e preencher ata\", \"tipo_etapa\": \"Marco de comunicação\", \"aguardando\": \"Cliente\", \"prazo_dias\": 4, \"inputs\": \"Briefing + relatório prévio + agenda da reunião\", \"output_dod\": \"Kickoff executada e ata preenchida\"}, {\"sequencia\": 14, \"nome\": \"Consolidar pendências, responsáveis e cronograma pós-kickoff\", \"tipo_etapa\": \"Documentação interna\", \"aguardando\": \"Nada\", \"prazo_dias\": 4, \"inputs\": \"Ata da kickoff\", \"output_dod\": \"Lista de pendências e cronograma macro enviados ao cliente\"}, {\"sequencia\": 15, \"nome\": \"Enviar materiais bônus D+1 / D+2\", \"tipo_etapa\": \"Entrega\", \"aguardando\": \"Cliente\", \"prazo_dias\": 5, \"inputs\": \"Resumo da call e materiais de apoio\", \"output_dod\": \"Cliente recebe reforço pós-kickoff e próximos passos\"}, {\"sequencia\": 16, \"nome\": \"Estruturar Business Manager e ativos Meta\", \"tipo_etapa\": \"Setup técnico\", \"aguardando\": \"Cliente\", \"prazo_dias\": 5, \"inputs\": \"Acessos Meta e dados do domínio\", \"output_dod\": \"BM, Página, Instagram, conta de anúncios e domínio estruturados\"}, {\"sequencia\": 17, \"nome\": \"Implantar GTM, GA4 e base de tracking\", \"tipo_etapa\": \"Setup técnico\", \"aguardando\": \"Fornecedor externo\", \"prazo_dias\": 6, \"inputs\": \"Acesso ao site/CMS e IDs das plataformas\", \"output_dod\": \"GTM e GA4 instalados e publicados com versionamento\"}, {\"sequencia\": 18, \"nome\": \"Configurar Pixel e eventos Meta\", \"tipo_etapa\": \"Setup técnico\", \"aguardando\": \"Fornecedor externo\", \"prazo_dias\": 6, \"inputs\": \"Pixel criado + GTM funcional\", \"output_dod\": \"Eventos Meta críticos disparando corretamente\"}, {\"sequencia\": 19, \"nome\": \"Configurar Google Ads e importação de conversões\", \"tipo_etapa\": \"Setup técnico\", \"aguardando\": \"Cliente\", \"prazo_dias\": 7, \"inputs\": \"Conta Google Ads + vínculo com GA4\", \"output_dod\": \"Conversões importadas e elegíveis para uso\"}, {\"sequencia\": 20, \"nome\": \"Criar públicos mínimos em GA4 / Google Ads / Meta\", \"tipo_etapa\": \"Setup técnico\", \"aguardando\": \"Nada\", \"prazo_dias\": 7, \"inputs\": \"Tracking base validado\", \"output_dod\": \"Públicos mínimos em preenchimento\"}, {\"sequencia\": 21, \"nome\": \"Executar validação final PASS/FAIL da stack\", \"tipo_etapa\": \"Entrega\", \"aguardando\": \"Nada\", \"prazo_dias\": 8, \"inputs\": \"Todas as configurações anteriores\", \"output_dod\": \"Jornada ponta a ponta validada e pendências remanescentes registradas\"}, {\"sequencia\": 22, \"nome\": \"Revisar hipótese estratégica e definir canal de entrada\", \"tipo_etapa\": \"Documentação interna\", \"aguardando\": \"Nada\", \"prazo_dias\": 8, \"inputs\": \"Fase 4 concluída + orçamento definido\", \"output_dod\": \"Hipótese inicial revisada, papel de Meta/Google definido e oferta foco escolhida\"}, {\"sequencia\": 23, \"nome\": \"Criar arquitetura de públicos quente, morna e fria\", \"tipo_etapa\": \"Setup técnico\", \"aguardando\": \"Nada\", \"prazo_dias\": 9, \"inputs\": \"Eventos validados + listas/base disponíveis\", \"output_dod\": \"Públicos estratégicos criados ou documentados com exceções\"}, {\"sequencia\": 24, \"nome\": \"Emitir naming convention e briefing de criativos\", \"tipo_etapa\": \"Documentação interna\", \"aguardando\": \"Cliente\", \"prazo_dias\": 9, \"inputs\": \"Estrutura estratégica definida\", \"output_dod\": \"Convenção de nomes aprovada e briefing criativo emitido com responsável e prazo\"}, {\"sequencia\": 25, \"nome\": \"Publicar primeira leva de campanhas\", \"tipo_etapa\": \"Entrega\", \"aguardando\": \"Cliente\", \"prazo_dias\": 10, \"inputs\": \"Públicos prontos + criativos aprovados + orçamento liberado\", \"output_dod\": \"Campanhas publicadas conforme ordem e checklist pré-publish\"}, {\"sequencia\": 26, \"nome\": \"Monitorar campanha intensivamente e registrar sinais iniciais\", \"tipo_etapa\": \"Documentação interna\", \"aguardando\": \"Nada\", \"prazo_dias\": 10, \"inputs\": \"Campanhas ativas\", \"output_dod\": \"Janela crítica de 3-7 dias acompanhada com intervenções registradas\"}, {\"sequencia\": 27, \"nome\": \"Comunicar resultados e emitir relatórios de onboarding\", \"tipo_etapa\": \"Marco de comunicação\", \"aguardando\": \"Nada\", \"prazo_dias\": 14, \"inputs\": \"Dados iniciais de campanha\", \"output_dod\": \"Cliente recebe atualizações a cada 3-4 dias e relatórios D+14 / D+21\"}, {\"sequencia\": 28, \"nome\": \"Avaliar primeiro valor e decidir transição\", \"tipo_etapa\": \"Entrega\", \"aguardando\": \"Nada\", \"prazo_dias\": 21, \"inputs\": \"Relatórios + marco de first value\", \"output_dod\": \"Resultado classificado como atingido, parcial ou não atingido com próximo passo definido\"}, {\"sequencia\": 29, \"nome\": \"Disparar CSAT e NPS\", \"tipo_etapa\": \"Marco de comunicação\", \"aguardando\": \"Cliente\", \"prazo_dias\": 21, \"inputs\": \"Encerramento do onboarding decidido\", \"output_dod\": \"Formulários enviados ao contato principal do cliente\"}, {\"sequencia\": 30, \"nome\": \"Finalizar handoff documental para ongoing\", \"tipo_etapa\": \"Documentação interna\", \"aguardando\": \"Nada\", \"prazo_dias\": 21, \"inputs\": \"Estado final das campanhas, públicos e hipóteses\", \"output_dod\": \"Documento de handoff pronto para operação contínua\"}, {\"sequencia\": 31, \"nome\": \"Encerrar página do onboarding no PHI e vincular aprendizados/ADRs\", \"tipo_etapa\": \"Documentação interna\", \"aguardando\": \"Nada\", \"prazo_dias\": 21, \"inputs\": \"Handoff concluído + retrospectiva\", \"output_dod\": \"Status do onboarding concluído, data da 1ª entrega preenchida e vínculos criados\"}];\nreturn [{ json: { etapas } }];"
-      },
-      "id": "b1360fa4-dd4a-4d4b-83af-58fdd01e68fe",
-      "name": "[Onb A2.1] Ler Etapas A1",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        2640,
-        272
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "return items;"
-      },
-      "id": "e2255f05-5b9f-4d0d-a19a-5d3850064c42",
-      "name": "[Onb A2.1] Binario para JSON Etapas",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        2880,
-        272
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "const cliente = $('[Onb A2.1] Criar Cliente').first().json;\nconst contexto = $('[Onb A2.1] Resolver Responsavel Geral').first().json;\nconst raw = $input.first().json;\nlet dataset = raw;\nif (typeof raw.data === 'string') {\n  dataset = JSON.parse(raw.data);\n} else if (typeof raw.json === 'string') {\n  dataset = JSON.parse(raw.json);\n}\nconst etapas = Array.isArray(dataset)\n  ? dataset\n  : Array.isArray(raw.etapas)\n    ? raw.etapas\n    : Array.isArray(dataset.etapas)\n      ? dataset.etapas\n      : null;\nif (!Array.isArray(etapas)) {\n  throw new Error('Arquivo etapas-a1.json invalido: esperado objeto com raw.etapas ou dataset.etapas');\n}\nif (!cliente.id) {\n  throw new Error('cliente.id ausente - nao criar etapas orfas');\n}\n// Contrato v1: data_inicio e date-only sem timezone; somamos dias em UTC para evitar drift de fuso.\nconst addDays = (isoDate, days) => {\n  const dt = new Date(`${isoDate}T00:00:00.000Z`);\n  dt.setUTCDate(dt.getUTCDate() + Number(days || 0));\n  return dt.toISOString().slice(0, 10);\n};\nreturn etapas.map((etapa) => ({\n  json: {\n    cliente_page_id: cliente.id,\n    cliente_nome: contexto.cliente_nome,\n    data_inicio: contexto.data_inicio,\n    etapa_nome: etapa.nome,\n    sequencia: etapa.sequencia,\n    tipo_etapa: etapa.tipo_etapa,\n    aguardando: etapa.aguardando,\n    prazo_dias: etapa.prazo_dias,\n    inputs: etapa.inputs,\n    output_dod: etapa.output_dod,\n    data_prevista: addDays(contexto.data_inicio, etapa.prazo_dias),\n    etapas_esperadas: etapas.length,\n    raw_payload: contexto.raw_payload\n  }\n}));"
-      },
-      "id": "f8f55b9c-fd93-4f1f-9d2e-f884d63ab2b9",
-      "name": "[Onb A2.1] Montar Itens Etapas",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        3120,
-        272
-      ]
-    },
-    {
-      "parameters": {
-        "resource": "databasePage",
-        "operation": "create",
-        "databaseId": {
-          "__rl": true,
-          "mode": "list",
-          "value": "6eb4565b4f1d498c8b2978e0c80880fd"
-        },
-        "title": "={{ $json.etapa_nome }}",
-        "simple": false,
-        "propertiesUi": {
-          "propertyValues": [
-            {
-              "key": "Sequência|number",
-              "numberValue": "={{ $json.sequencia }}"
-            },
-            {
-              "key": "Tipo de etapa|select",
-              "selectValue": "={{ $json.tipo_etapa }}"
-            },
-            {
-              "key": "Aguardando|select",
-              "selectValue": "={{ $json.aguardando }}"
-            },
-            {
-              "key": "Prazo (dias após D=0)|number",
-              "numberValue": "={{ $json.prazo_dias }}"
-            },
-            {
-              "key": "Inputs necessários|rich_text",
-              "textContent": "={{ $json.inputs }}"
-            },
-            {
-              "key": "Output esperado (DoD - Definition of Done)|rich_text",
-              "textContent": "={{ $json.output_dod }}"
-            },
-            {
-              "key": "Status|select",
-              "selectValue": "Pendente"
-            },
-            {
-              "key": "Cliente|relation",
-              "relationValue": "={{ [$json.cliente_page_id] }}"
-            },
-            {
-              "key": "Data prevista|date",
-              "date": "={{ $json.data_prevista }}"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "id": "2e7b4283-13d1-4ab7-8f28-907451ce5f70",
-      "name": "[Onb A2.1] Criar Etapa",
-      "type": "n8n-nodes-base.notion",
-      "typeVersion": 2.2,
-      "position": [
-        3360,
-        272
-      ],
-      "continueOnFail": true,
-      "credentials": {
-        "notionApi": {
-          "id": "<credential_id_redacted>",
-          "name": "Notion account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "jsCode": "const items = $input.all();\nconst contexto = $('[Onb A2.1] Resolver Responsavel Geral').first().json;\nconst cliente = $('[Onb A2.1] Criar Cliente').first().json;\nconst sucesso = [];\nconst falhas = [];\nfor (const item of items) {\n  const payload = item.json || {};\n  const hasError = Boolean(payload.error || payload.message || payload.stack);\n  if (hasError && !payload.id) {\n    falhas.push(payload.error?.message || payload.message || payload.description || JSON.stringify(payload));\n  } else {\n    sucesso.push(payload.id || payload);\n  }\n}\nreturn [{ json: {\n  cliente_page_id: cliente.id,\n  cliente_nome: contexto.cliente_nome,\n  cnpj_normalizado: contexto.cnpj_normalizado,\n  raw_payload: contexto.raw_payload,\n  etapas_esperadas: items[0]?.json?.etapas_esperadas ?? items.length,\n  etapas_criadas: sucesso.length,\n  etapas_falhas: falhas.length,\n  falha_resumo: falhas.slice(0, 5).join(' | '),\n  workflow_status: sucesso.length === (items[0]?.json?.etapas_esperadas ?? items.length) ? 'ok' : 'partial_failure'\n} }];"
-      },
-      "id": "f3c8f76f-d041-454f-ac25-4eaf005cd5c0",
-      "name": "[Onb A2.1] Consolidar Resultado",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        3600,
-        272
-      ]
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 2
-          },
-          "conditions": [
-            {
-              "leftValue": "={{ $json.etapas_criadas < $json.etapas_esperadas }}",
-              "rightValue": true,
-              "operator": {
-                "type": "boolean",
-                "operation": "equals"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "id": "8b8fca07-1d71-4d5a-8821-62a912fe7f08",
-      "name": "[Onb A2.1] Falha Parcial Etapas?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        3840,
-        272
-      ]
-    },
-    {
-      "parameters": {
-        "resource": "databasePage",
-        "operation": "update",
-        "pageId": {
-          "__rl": true,
-          "mode": "id",
-          "value": "={{ $json.cliente_page_id }}"
-        },
-        "simple": false,
-        "propertiesUi": {
-          "propertyValues": [
-            {
-              "key": "Status|select",
-              "selectValue": "Bloqueado"
-            },
-            {
-              "key": "Bloqueios ativos|rich_text",
-              "textContent": "={{ 'Etapas criadas: ' + $json.etapas_criadas + '/' + $json.etapas_esperadas + '. ' + $json.falha_resumo + ' | Status=\"Bloqueado\"' }}"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "id": "37b80ab8-aa4c-43c0-bab5-9c524bab6e6b",
-      "name": "[Onb A2.1] Atualizar Cliente Bloqueado",
-      "type": "n8n-nodes-base.notion",
-      "typeVersion": 2.2,
-      "position": [
-        4080,
-        176
-      ],
-      "credentials": {
-        "notionApi": {
-          "id": "<credential_id_redacted>",
-          "name": "Notion account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "https://n8n-evolution.1unqx7.easypanel.host/message/sendText/Whats%20Business",
-        "authentication": "predefinedCredentialType",
-        "nodeCredentialType": "httpHeaderAuth",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ { number: '5511888880001', text: '[Onb A2.1] Falha parcial na criacao de etapas\\ncliente=' + $json.cliente_nome + '\\ncnpj=' + $json.cnpj_normalizado + '\\nresultado=' + $json.etapas_criadas + '/' + $json.etapas_esperadas + '\\nerro=' + $json.falha_resumo + '\\npayload=' + JSON.stringify($json.raw_payload) } }}",
-        "options": {}
-      },
-      "id": "3f55d70e-aa60-465d-8e6e-ab3d9b95af46",
-      "name": "[Onb A2.1] Notificar Falha Etapas Olavo",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.3,
-      "continueOnFail": true,
-      "position": [
-        4320,
-        176
-      ],
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "<credential_id_redacted>",
-          "name": "Evolution API Header Auth"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "respondWith": "json",
-        "responseBody": "={{ { ok: true, workflow: 'Onb - Briefing to Client', cliente_page_id: $json.cliente_page_id, etapas_criadas: $json.etapas_criadas, etapas_esperadas: $json.etapas_esperadas, workflow_status: $json.workflow_status } }}",
-        "options": {
-          "responseCode": 201
-        }
-      },
-      "id": "995b8740-1854-4c15-90f8-b500f5886db0",
-      "name": "[Onb A2.1] Responder 201",
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1.3,
-      "position": [
-        4560,
-        272
-      ]
-    }
-  ],
-  "connections": {
-    "[Onb A2.1] Webhook Briefing": {
-      "main": [
-        [
-          {
-            "node": "[Onb A2.1] Validar Payload",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "[Onb A2.1] Validar Payload": {
-      "main": [
-        [
-          {
-            "node": "[Onb A2.1] Payload Valido?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "[Onb A2.1] Payload Valido?": {
-      "main": [
-        [
-          {
-            "node": "[Onb A2.1] Normalizar Contexto",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "[Onb A2.1] Responder 400",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "[Onb A2.1] Normalizar Contexto": {
-      "main": [
-        [
-          {
-            "node": "[Onb A2.1] Buscar Clientes Ativos",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "[Onb A2.1] Buscar Clientes Ativos": {
-      "main": [
-        [
-          {
-            "node": "[Onb A2.1] Detectar Duplicidade",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "[Onb A2.1] Detectar Duplicidade": {
-      "main": [
-        [
-          {
-            "node": "[Onb A2.1] Duplicado?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "[Onb A2.1] Duplicado?": {
-      "main": [
-        [
-          {
-            "node": "[Onb A2.1] Notificar Duplicidade Olavo",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "[Onb A2.1] Buscar Usuarios Workspace",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "[Onb A2.1] Notificar Duplicidade Olavo": {
-      "main": [
-        [
-          {
-            "node": "[Onb A2.1] Responder 409",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "[Onb A2.1] Buscar Usuarios Workspace": {
-      "main": [
-        [
-          {
-            "node": "[Onb A2.1] Resolver Responsavel Geral",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "[Onb A2.1] Resolver Responsavel Geral": {
-      "main": [
-        [
-          {
-            "node": "[Onb A2.1] Criar Cliente",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "[Onb A2.1] Criar Cliente": {
-      "main": [
-        [
-          {
-            "node": "[Onb A2.1] Ler Etapas A1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "[Onb A2.1] Ler Etapas A1": {
-      "main": [
-        [
-          {
-            "node": "[Onb A2.1] Binario para JSON Etapas",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "[Onb A2.1] Binario para JSON Etapas": {
-      "main": [
-        [
-          {
-            "node": "[Onb A2.1] Montar Itens Etapas",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "[Onb A2.1] Montar Itens Etapas": {
-      "main": [
-        [
-          {
-            "node": "[Onb A2.1] Criar Etapa",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "[Onb A2.1] Criar Etapa": {
-      "main": [
-        [
-          {
-            "node": "[Onb A2.1] Consolidar Resultado",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "[Onb A2.1] Consolidar Resultado": {
-      "main": [
-        [
-          {
-            "node": "[Onb A2.1] Falha Parcial Etapas?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "[Onb A2.1] Falha Parcial Etapas?": {
-      "main": [
-        [
-          {
-            "node": "[Onb A2.1] Atualizar Cliente Bloqueado",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "[Onb A2.1] Responder 201",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "[Onb A2.1] Atualizar Cliente Bloqueado": {
-      "main": [
-        [
-          {
-            "node": "[Onb A2.1] Notificar Falha Etapas Olavo",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "[Onb A2.1] Notificar Falha Etapas Olavo": {
-      "main": [
-        [
-          {
-            "node": "[Onb A2.1] Responder 201",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    }
-  },
-  "active": false,
-  "settings": {
-    "executionOrder": "v1",
-    "timezone": "America/Sao_Paulo"
-  },
-  "versionId": "dcf5b596-ad2c-44c9-bdf9-8aee7df16979"
+    "updatedAt":  "2026-05-28T19:16:55.358Z",
+    "createdAt":  "2026-05-26T16:31:52.942Z",
+    "id":  "0MfPA3Uqmj4TySiX",
+    "name":  "Onb - Briefing to Client",
+    "description":  null,
+    "active":  false,
+    "isArchived":  false,
+    "nodes":  [
+                  {
+                      "parameters":  {
+                                         "httpMethod":  "POST",
+                                         "path":  "onb-briefing-to-client",
+                                         "responseMode":  "responseNode",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "d8f6db3d-f644-49ff-bb9d-f0ec53f6dce1",
+                      "name":  "[Onb A2.1] Webhook Briefing",
+                      "type":  "n8n-nodes-base.webhook",
+                      "typeVersion":  2,
+                      "position":  [
+                                       240,
+                                       300
+                                   ],
+                      "webhookId":  "7eeab309-f742-4f72-ac58-329f48a151a7"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const payload = $json.body ?? $json;\nconst required = [\u0027cnpj_cliente\u0027, \u0027cliente_nome\u0027, \u0027data_inicio\u0027, \u0027modelo_negocio\u0027, \u0027servico\u0027, \u0027origem_comercial\u0027];\nconst errors = [];\nfor (const field of required) {\n  if (payload[field] === undefined || payload[field] === null || payload[field] === \u0027\u0027) {\n    errors.push(`Campo obrigatorio ausente: ${field}`);\n  }\n}\nconst modelosAceitos = [\u0027Infoproduto\u0027, \u0027Lead Gen\u0027, \u0027E-Commerce\u0027];\nconst servicosAceitos = new Set([\u0027Tr\\u00e1fego pago\u0027, \u0027Trafego pago\u0027, \u0027Site\u0027, \u0027Agente IA\u0027]);\nif (payload.modelo_negocio \u0026\u0026 !modelosAceitos.includes(payload.modelo_negocio)) {\n  errors.push(\u0027modelo_negocio invalido\u0027);\n}\nif (payload.servico \u0026\u0026 !Array.isArray(payload.servico)) {\n  errors.push(\u0027servico deve ser array\u0027);\n}\nif (Array.isArray(payload.servico)) {\n  const invalidos = payload.servico.filter((item) =\u003e !servicosAceitos.has(item));\n  if (invalidos.length) {\n    errors.push(`servico invalido: ${invalidos.join(\u0027, \u0027)}`);\n  }\n}\nif (payload.data_inicio \u0026\u0026 !/^\\d{4}-\\d{2}-\\d{2}$/.test(payload.data_inicio)) {\n  errors.push(\u0027data_inicio deve estar em YYYY-MM-DD\u0027);\n}\nif (errors.length) {\n  return [{ json: { is_valid: false, statusCode: 400, error: \u0027Payload invalido\u0027, details: errors, received_payload: payload } }];\n}\nreturn [{ json: { is_valid: true, payload } }];"
+                                     },
+                      "id":  "e329cc83-8245-4687-a918-8ec704bcb35c",
+                      "name":  "[Onb A2.1] Validar Payload",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       480,
+                                       300
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  true,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "strict",
+                                                                            "version":  2
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "leftValue":  "={{ $json.is_valid }}",
+                                                                                   "rightValue":  true,
+                                                                                   "operator":  {
+                                                                                                    "type":  "boolean",
+                                                                                                    "operation":  "equals"
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "9f4ac0c6-ca80-4777-a1a3-795466ad6329",
+                      "name":  "[Onb A2.1] Payload Valido?",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       720,
+                                       300
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "respondWith":  "json",
+                                         "responseBody":  "={{ { ok: false, error: $json.error, details: $json.details, received_payload: $json.received_payload } }}",
+                                         "options":  {
+                                                         "responseCode":  "={{ $json.statusCode || 400 }}"
+                                                     }
+                                     },
+                      "id":  "3c40cd40-dc8c-4666-b13b-9a17b8426c87",
+                      "name":  "[Onb A2.1] Responder 400",
+                      "type":  "n8n-nodes-base.respondToWebhook",
+                      "typeVersion":  1.3,
+                      "position":  [
+                                       960,
+                                       448
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const payload = $json.payload;\nconst normalizarTexto = (value) =\u003e String(value ?? \u0027\u0027).trim();\nconst normalizarNome = (value) =\u003e normalizarTexto(value).toLocaleLowerCase(\u0027pt-BR\u0027);\nconst cnpj_normalizado = String(payload.cnpj_cliente ?? \u0027\u0027).replace(/\\D/g, \u0027\u0027);\nconst cliente_nome = normalizarTexto(payload.cliente_nome);\nconst servico = Array.isArray(payload.servico)\n  ? payload.servico.map((item) =\u003e normalizarTexto(item) === \u0027Trafego pago\u0027 ? \u0027Tr\\u00e1fego pago\u0027 : normalizarTexto(item))\n  : [];\nreturn [{ json: {\n  cliente_nome,\n  cliente_nome_normalizado: normalizarNome(cliente_nome),\n  cnpj_original: payload.cnpj_cliente,\n  cnpj_normalizado,\n  data_inicio: payload.data_inicio,\n  modelo_negocio: payload.modelo_negocio,\n  servico,\n  origem_comercial: normalizarTexto(payload.origem_comercial),\n  responsavel_geral_email: payload.responsavel_geral_email ? normalizarTexto(payload.responsavel_geral_email).toLowerCase() : null,\n  observacoes: `CNPJ normalizado: ${cnpj_normalizado}`,\n  raw_payload: payload,\n  active_statuses: [\u0027Em andamento\u0027, \u0027N\\u00e3o iniciado\u0027, \u0027Bloqueado\u0027]\n} }];"
+                                     },
+                      "id":  "31fe1d8d-dd53-4876-9b75-270e10ffd2f5",
+                      "name":  "[Onb A2.1] Normalizar Contexto",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       960,
+                                       160
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "resource":  "databasePage",
+                                         "operation":  "getAll",
+                                         "databaseId":  {
+                                                            "__rl":  true,
+                                                            "mode":  "list",
+                                                            "value":  "04e34a62624b484cbda546604564b88c"
+                                                        },
+                                         "returnAll":  true,
+                                         "simple":  false,
+                                         "options":  {
+
+                                                     },
+                                         "filterType":  "none"
+                                     },
+                      "id":  "2db78590-93b3-490d-b8cf-f8fe0fae492d",
+                      "name":  "[Onb A2.1] Buscar Clientes Ativos",
+                      "type":  "n8n-nodes-base.notion",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       1200,
+                                       160
+                                   ],
+                      "alwaysOutputData":  true,
+                      "credentials":  {
+                                          "notionApi":  {
+                                                            "id": "<credential_id_redacted>", "name": "Notion account"
+                                                        }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const contexto = $(\u0027[Onb A2.1] Normalizar Contexto\u0027).first().json;\nconst rows = $input.all();\nconst pickPlain = (prop) =\u003e {\n  if (!prop) return \u0027\u0027;\n  if (prop.title?.length) return prop.title.map((item) =\u003e item.plain_text || \u0027\u0027).join(\u0027\u0027).trim();\n  if (prop.rich_text?.length) return prop.rich_text.map((item) =\u003e item.plain_text || \u0027\u0027).join(\u0027\u0027).trim();\n  return \u0027\u0027;\n};\nconst pickSelect = (prop) =\u003e prop?.select?.name ?? \u0027\u0027;\nconst activeStatuses = new Set(contexto.active_statuses);\nconst duplicate = rows.find((item) =\u003e {\n  const props = item.json.properties || {};\n  const nome = pickPlain(props[\u0027Cliente\u0027]);\n  const nomeNormalizado = nome.trim().toLocaleLowerCase(\u0027pt-BR\u0027);\n  const status = pickSelect(props[\u0027Status\u0027]);\n  return activeStatuses.has(status) \u0026\u0026 nomeNormalizado === contexto.cliente_nome_normalizado;\n});\nif (!duplicate) {\n  return [{ json: { ...contexto, has_duplicate: false } }];\n}\nreturn [{ json: {\n  ...contexto,\n  has_duplicate: true,\n  duplicate_page_id: duplicate.json.id,\n  duplicate_status: pickSelect(duplicate.json.properties?.Status),\n  duplicate_message: \u0027Onboarding ativo ja existe para este cliente.\u0027\n} }];"
+                                     },
+                      "id":  "a0cf9ec4-a0cf-4d1b-a40b-d61285a6f46f",
+                      "name":  "[Onb A2.1] Detectar Duplicidade",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       1440,
+                                       160
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  true,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "strict",
+                                                                            "version":  2
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "leftValue":  "={{ $json.has_duplicate }}",
+                                                                                   "rightValue":  true,
+                                                                                   "operator":  {
+                                                                                                    "type":  "boolean",
+                                                                                                    "operation":  "equals"
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "783a06e1-7815-4441-9db7-dca468488d27",
+                      "name":  "[Onb A2.1] Duplicado?",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       1680,
+                                       160
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "<evolution_base_url_redacted>/message/sendText/Whats%20Business",
+                                         "authentication":  "predefinedCredentialType",
+                                         "nodeCredentialType":  "httpHeaderAuth",
+                                         "sendBody":  true,
+                                         "specifyBody":  "json",
+                                         "jsonBody":  "={{ { number: \u0027<OLAVO_PHONE_redacted>\u0027, text: \u0027[Onb A2.1] Duplicidade detectada\\ncliente=\u0027 + $json.cliente_nome + \u0027\\ncnpj=\u0027 + $json.cnpj_normalizado + \u0027\\npayload=\u0027 + JSON.stringify($json.raw_payload) } }}",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "f530eaf6-71d2-4eb8-b24b-fc3d0f972679",
+                      "name":  "[Onb A2.1] Notificar Duplicidade Olavo",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.3,
+                      "continueOnFail":  true,
+                      "position":  [
+                                       1920,
+                                       48
+                                   ],
+                      "credentials":  {
+                                          "httpHeaderAuth":  {
+                                                                 "id": "<credential_id_redacted>", "name": "Evolution API Header Auth"
+                                                             }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "respondWith":  "json",
+                                         "responseBody":  "={{ { ok: false, error: $json.duplicate_message, cliente_nome: $json.cliente_nome, cnpj_normalizado: $json.cnpj_normalizado } }}",
+                                         "options":  {
+                                                         "responseCode":  409
+                                                     }
+                                     },
+                      "id":  "7cd5c0ba-90b2-4b1f-b3a6-a28735f44ad0",
+                      "name":  "[Onb A2.1] Responder 409",
+                      "type":  "n8n-nodes-base.respondToWebhook",
+                      "typeVersion":  1.3,
+                      "position":  [
+                                       2160,
+                                       48
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "resource":  "user",
+                                         "operation":  "getAll",
+                                         "returnAll":  true,
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "f099bcb8-fe7b-4b5b-a96a-b5f49e23f18e",
+                      "name":  "[Onb A2.1] Buscar Usuarios Workspace",
+                      "type":  "n8n-nodes-base.notion",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       1920,
+                                       272
+                                   ],
+                      "alwaysOutputData":  true,
+                      "credentials":  {
+                                          "notionApi":  {
+                                                            "id": "<credential_id_redacted>", "name": "Notion account"
+                                                        }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const contexto = $(\u0027[Onb A2.1] Detectar Duplicidade\u0027).first().json;\nconst users = $input.all().map((item) =\u003e item.json);\nconst responsavel = contexto.responsavel_geral_email\n  ? users.find((user) =\u003e String(user.person?.email || \u0027\u0027).toLowerCase() === contexto.responsavel_geral_email)\n  : null;\nreturn [{ json: {\n  ...contexto,\n  responsavel_geral_id: responsavel?.id ?? null,\n  schema_hints: {\n    cliente_relation_inverse: \u0027Etapas de Onboarding\u0027,\n    etapas_title_property: \u0027Nome da etapa\u0027\n  },\n  cliente_properties: {\n    cliente_nome: contexto.cliente_nome,\n    status: \u0027Em andamento\u0027,\n    data_inicio: contexto.data_inicio,\n    modelo_negocio: contexto.modelo_negocio,\n    servico: contexto.servico,\n    origem_comercial: contexto.origem_comercial,\n    observacoes: contexto.observacoes,\n    sla_primeira_entrega: 21,\n    responsavel_geral_id: responsavel?.id ?? null\n  }\n} }];"
+                                     },
+                      "id":  "1fcfa5ef-f2cc-47aa-a417-33c5144e1ed8",
+                      "name":  "[Onb A2.1] Resolver Responsavel Geral",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       2160,
+                                       272
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "resource":  "databasePage",
+                                         "operation":  "create",
+                                         "databaseId":  {
+                                                            "__rl":  true,
+                                                            "mode":  "list",
+                                                            "value":  "04e34a62624b484cbda546604564b88c"
+                                                        },
+                                         "title":  "={{ $json.cliente_properties.cliente_nome }}",
+                                         "simple":  false,
+                                         "propertiesUi":  {
+                                                              "propertyValues":  [
+                                                                                     {
+                                                                                         "key":  "Status|select",
+                                                                                         "selectValue":  "Em andamento"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "Data de início|date",
+                                                                                         "date":  "={{ $json.cliente_properties.data_inicio }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "Modelo de negócio (business_model)|select",
+                                                                                         "selectValue":  "={{ $json.cliente_properties.modelo_negocio }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "Serviço|multi_select",
+                                                                                         "multiSelectValues":  "={{ $json.cliente_properties.servico }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "Origem (vendedor / comercial)|rich_text",
+                                                                                         "textContent":  "={{ $json.cliente_properties.origem_comercial }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "Observações|rich_text",
+                                                                                         "textContent":  "={{ $json.cliente_properties.observacoes }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "SLA até 1ª entrega (dias)|number",
+                                                                                         "numberValue":  21
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "Responsável geral|people",
+                                                                                         "peopleIds":  "={{ $json.cliente_properties.responsavel_geral_id ? [$json.cliente_properties.responsavel_geral_id] : [] }}"
+                                                                                     }
+                                                                                 ]
+                                                          },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "bf068205-d58d-46e9-b8fb-dc6767504c72",
+                      "name":  "[Onb A2.1] Criar Cliente",
+                      "type":  "n8n-nodes-base.notion",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       2400,
+                                       272
+                                   ],
+                      "credentials":  {
+                                          "notionApi":  {
+                                                            "id": "<credential_id_redacted>", "name": "Notion account"
+                                                        }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const etapas = [{\"sequencia\": 1, \"nome\": \"Receber handoff do Comercial\", \"tipo_etapa\": \"Documentação interna\", \"aguardando\": \"Comercial\", \"prazo_dias\": 0, \"inputs\": \"Contrato assinado e dados mínimos\", \"output_dod\": \"Pacote de handoff entregue\"}, {\"sequencia\": 2, \"nome\": \"Validar completude do handoff\", \"tipo_etapa\": \"Documentação interna\", \"aguardando\": \"Nada\", \"prazo_dias\": 0, \"inputs\": \"Pacote recebido\", \"output_dod\": \"Lacunas críticas identificadas ou sanadas\"}, {\"sequencia\": 3, \"nome\": \"Criar registro em PHI - Onboarding de Clientes\", \"tipo_etapa\": \"Documentação interna\", \"aguardando\": \"Nada\", \"prazo_dias\": 0, \"inputs\": \"Dados mínimos validados\", \"output_dod\": \"Página do onboarding criada\"}, {\"sequencia\": 4, \"nome\": \"Definir responsável operacional\", \"tipo_etapa\": \"Documentação interna\", \"aguardando\": \"Nada\", \"prazo_dias\": 0, \"inputs\": \"Registro criado\", \"output_dod\": \"Dono do onboarding definido\"}, {\"sequencia\": 5, \"nome\": \"Enviar mensagem inicial + briefing\", \"tipo_etapa\": \"Marco de comunicação\", \"aguardando\": \"Cliente\", \"prazo_dias\": 0, \"inputs\": \"Contato principal confirmado\", \"output_dod\": \"Cliente recebe instruções e link do form\"}, {\"sequencia\": 6, \"nome\": \"Cobrar briefing não respondido\", \"tipo_etapa\": \"Marco de comunicação\", \"aguardando\": \"Cliente\", \"prazo_dias\": 1, \"inputs\": \"Form enviado sem resposta\", \"output_dod\": \"Follow-up executado\"}, {\"sequencia\": 7, \"nome\": \"Validar briefing recebido\", \"tipo_etapa\": \"Documentação interna\", \"aguardando\": \"Cliente\", \"prazo_dias\": 2, \"inputs\": \"Resposta do Google Form\", \"output_dod\": \"Briefing classificado como aprovado, com lacunas ou insuficiente\"}, {\"sequencia\": 8, \"nome\": \"Produzir resumo operacional do briefing\", \"tipo_etapa\": \"Documentação interna\", \"aguardando\": \"Nada\", \"prazo_dias\": 2, \"inputs\": \"Briefing validado\", \"output_dod\": \"Resumo com oferta, público, meta e riscos anexado ao PHI\"}, {\"sequencia\": 9, \"nome\": \"Executar análise de ativos e presença digital\", \"tipo_etapa\": \"Documentação interna\", \"aguardando\": \"Nada\", \"prazo_dias\": 3, \"inputs\": \"Briefing validado + links\", \"output_dod\": \"Achados principais coletados\"}, {\"sequencia\": 10, \"nome\": \"Rodar cliente oculto e checar rastreamento aparente\", \"tipo_etapa\": \"Setup técnico\", \"aguardando\": \"Nada\", \"prazo_dias\": 3, \"inputs\": \"Site/contato do cliente\", \"output_dod\": \"Fricções e lacunas técnicas registradas\"}, {\"sequencia\": 11, \"nome\": \"Analisar concorrentes prioritários\", \"tipo_etapa\": \"Documentação interna\", \"aguardando\": \"Nada\", \"prazo_dias\": 3, \"inputs\": \"Lista de concorrentes\", \"output_dod\": \"Benchmark mínimo concluído\"}, {\"sequencia\": 12, \"nome\": \"Consolidar relatório curto pré-kickoff\", \"tipo_etapa\": \"Entrega\", \"aguardando\": \"Nada\", \"prazo_dias\": 4, \"inputs\": \"Achados da análise prévia\", \"output_dod\": \"Relatório curto pronto para sustentar a kickoff\"}, {\"sequencia\": 13, \"nome\": \"Conduzir call de kickoff e preencher ata\", \"tipo_etapa\": \"Marco de comunicação\", \"aguardando\": \"Cliente\", \"prazo_dias\": 4, \"inputs\": \"Briefing + relatório prévio + agenda da reunião\", \"output_dod\": \"Kickoff executada e ata preenchida\"}, {\"sequencia\": 14, \"nome\": \"Consolidar pendências, responsáveis e cronograma pós-kickoff\", \"tipo_etapa\": \"Documentação interna\", \"aguardando\": \"Nada\", \"prazo_dias\": 4, \"inputs\": \"Ata da kickoff\", \"output_dod\": \"Lista de pendências e cronograma macro enviados ao cliente\"}, {\"sequencia\": 15, \"nome\": \"Enviar materiais bônus D+1 / D+2\", \"tipo_etapa\": \"Entrega\", \"aguardando\": \"Cliente\", \"prazo_dias\": 5, \"inputs\": \"Resumo da call e materiais de apoio\", \"output_dod\": \"Cliente recebe reforço pós-kickoff e próximos passos\"}, {\"sequencia\": 16, \"nome\": \"Estruturar Business Manager e ativos Meta\", \"tipo_etapa\": \"Setup técnico\", \"aguardando\": \"Cliente\", \"prazo_dias\": 5, \"inputs\": \"Acessos Meta e dados do domínio\", \"output_dod\": \"BM, Página, Instagram, conta de anúncios e domínio estruturados\"}, {\"sequencia\": 17, \"nome\": \"Implantar GTM, GA4 e base de tracking\", \"tipo_etapa\": \"Setup técnico\", \"aguardando\": \"Fornecedor externo\", \"prazo_dias\": 6, \"inputs\": \"Acesso ao site/CMS e IDs das plataformas\", \"output_dod\": \"GTM e GA4 instalados e publicados com versionamento\"}, {\"sequencia\": 18, \"nome\": \"Configurar Pixel e eventos Meta\", \"tipo_etapa\": \"Setup técnico\", \"aguardando\": \"Fornecedor externo\", \"prazo_dias\": 6, \"inputs\": \"Pixel criado + GTM funcional\", \"output_dod\": \"Eventos Meta críticos disparando corretamente\"}, {\"sequencia\": 19, \"nome\": \"Configurar Google Ads e importação de conversões\", \"tipo_etapa\": \"Setup técnico\", \"aguardando\": \"Cliente\", \"prazo_dias\": 7, \"inputs\": \"Conta Google Ads + vínculo com GA4\", \"output_dod\": \"Conversões importadas e elegíveis para uso\"}, {\"sequencia\": 20, \"nome\": \"Criar públicos mínimos em GA4 / Google Ads / Meta\", \"tipo_etapa\": \"Setup técnico\", \"aguardando\": \"Nada\", \"prazo_dias\": 7, \"inputs\": \"Tracking base validado\", \"output_dod\": \"Públicos mínimos em preenchimento\"}, {\"sequencia\": 21, \"nome\": \"Executar validação final PASS/FAIL da stack\", \"tipo_etapa\": \"Entrega\", \"aguardando\": \"Nada\", \"prazo_dias\": 8, \"inputs\": \"Todas as configurações anteriores\", \"output_dod\": \"Jornada ponta a ponta validada e pendências remanescentes registradas\"}, {\"sequencia\": 22, \"nome\": \"Revisar hipótese estratégica e definir canal de entrada\", \"tipo_etapa\": \"Documentação interna\", \"aguardando\": \"Nada\", \"prazo_dias\": 8, \"inputs\": \"Fase 4 concluída + orçamento definido\", \"output_dod\": \"Hipótese inicial revisada, papel de Meta/Google definido e oferta foco escolhida\"}, {\"sequencia\": 23, \"nome\": \"Criar arquitetura de públicos quente, morna e fria\", \"tipo_etapa\": \"Setup técnico\", \"aguardando\": \"Nada\", \"prazo_dias\": 9, \"inputs\": \"Eventos validados + listas/base disponíveis\", \"output_dod\": \"Públicos estratégicos criados ou documentados com exceções\"}, {\"sequencia\": 24, \"nome\": \"Emitir naming convention e briefing de criativos\", \"tipo_etapa\": \"Documentação interna\", \"aguardando\": \"Cliente\", \"prazo_dias\": 9, \"inputs\": \"Estrutura estratégica definida\", \"output_dod\": \"Convenção de nomes aprovada e briefing criativo emitido com responsável e prazo\"}, {\"sequencia\": 25, \"nome\": \"Publicar primeira leva de campanhas\", \"tipo_etapa\": \"Entrega\", \"aguardando\": \"Cliente\", \"prazo_dias\": 10, \"inputs\": \"Públicos prontos + criativos aprovados + orçamento liberado\", \"output_dod\": \"Campanhas publicadas conforme ordem e checklist pré-publish\"}, {\"sequencia\": 26, \"nome\": \"Monitorar campanha intensivamente e registrar sinais iniciais\", \"tipo_etapa\": \"Documentação interna\", \"aguardando\": \"Nada\", \"prazo_dias\": 10, \"inputs\": \"Campanhas ativas\", \"output_dod\": \"Janela crítica de 3-7 dias acompanhada com intervenções registradas\"}, {\"sequencia\": 27, \"nome\": \"Comunicar resultados e emitir relatórios de onboarding\", \"tipo_etapa\": \"Marco de comunicação\", \"aguardando\": \"Nada\", \"prazo_dias\": 14, \"inputs\": \"Dados iniciais de campanha\", \"output_dod\": \"Cliente recebe atualizações a cada 3-4 dias e relatórios D+14 / D+21\"}, {\"sequencia\": 28, \"nome\": \"Avaliar primeiro valor e decidir transição\", \"tipo_etapa\": \"Entrega\", \"aguardando\": \"Nada\", \"prazo_dias\": 21, \"inputs\": \"Relatórios + marco de first value\", \"output_dod\": \"Resultado classificado como atingido, parcial ou não atingido com próximo passo definido\"}, {\"sequencia\": 29, \"nome\": \"Disparar CSAT e NPS\", \"tipo_etapa\": \"Marco de comunicação\", \"aguardando\": \"Cliente\", \"prazo_dias\": 21, \"inputs\": \"Encerramento do onboarding decidido\", \"output_dod\": \"Formulários enviados ao contato principal do cliente\"}, {\"sequencia\": 30, \"nome\": \"Finalizar handoff documental para ongoing\", \"tipo_etapa\": \"Documentação interna\", \"aguardando\": \"Nada\", \"prazo_dias\": 21, \"inputs\": \"Estado final das campanhas, públicos e hipóteses\", \"output_dod\": \"Documento de handoff pronto para operação contínua\"}, {\"sequencia\": 31, \"nome\": \"Encerrar página do onboarding no PHI e vincular aprendizados/ADRs\", \"tipo_etapa\": \"Documentação interna\", \"aguardando\": \"Nada\", \"prazo_dias\": 21, \"inputs\": \"Handoff concluído + retrospectiva\", \"output_dod\": \"Status do onboarding concluído, data da 1ª entrega preenchida e vínculos criados\"}];\nreturn [{ json: { etapas } }];"
+                                     },
+                      "id":  "b1360fa4-dd4a-4d4b-83af-58fdd01e68fe",
+                      "name":  "[Onb A2.1] Ler Etapas A1",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       2640,
+                                       272
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "return items;"
+                                     },
+                      "id":  "e2255f05-5b9f-4d0d-a19a-5d3850064c42",
+                      "name":  "[Onb A2.1] Binario para JSON Etapas",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       2880,
+                                       272
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const cliente = $(\u0027[Onb A2.1] Criar Cliente\u0027).first().json;\nconst contexto = $(\u0027[Onb A2.1] Resolver Responsavel Geral\u0027).first().json;\nconst raw = $input.first().json;\nlet dataset = raw;\nif (typeof raw.data === \u0027string\u0027) {\n  dataset = JSON.parse(raw.data);\n} else if (typeof raw.json === \u0027string\u0027) {\n  dataset = JSON.parse(raw.json);\n}\nconst etapas = Array.isArray(dataset)\n  ? dataset\n  : Array.isArray(raw.etapas)\n    ? raw.etapas\n    : Array.isArray(dataset.etapas)\n      ? dataset.etapas\n      : null;\nif (!Array.isArray(etapas)) {\n  throw new Error(\u0027Arquivo etapas-a1.json invalido: esperado objeto com raw.etapas ou dataset.etapas\u0027);\n}\nif (!cliente.id) {\n  throw new Error(\u0027cliente.id ausente - nao criar etapas orfas\u0027);\n}\n// Contrato v1: data_inicio e date-only sem timezone; somamos dias em UTC para evitar drift de fuso.\nconst addDays = (isoDate, days) =\u003e {\n  const dt = new Date(`${isoDate}T00:00:00.000Z`);\n  dt.setUTCDate(dt.getUTCDate() + Number(days || 0));\n  return dt.toISOString().slice(0, 10);\n};\nreturn etapas.map((etapa) =\u003e ({\n  json: {\n    cliente_page_id: cliente.id,\n    cliente_nome: contexto.cliente_nome,\n    data_inicio: contexto.data_inicio,\n    etapa_nome: etapa.nome,\n    sequencia: etapa.sequencia,\n    tipo_etapa: etapa.tipo_etapa,\n    aguardando: etapa.aguardando,\n    prazo_dias: etapa.prazo_dias,\n    inputs: etapa.inputs,\n    output_dod: etapa.output_dod,\n    data_prevista: addDays(contexto.data_inicio, etapa.prazo_dias),\n    etapas_esperadas: etapas.length,\n    raw_payload: contexto.raw_payload\n  }\n}));"
+                                     },
+                      "id":  "f8f55b9c-fd93-4f1f-9d2e-f884d63ab2b9",
+                      "name":  "[Onb A2.1] Montar Itens Etapas",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       3120,
+                                       272
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "resource":  "databasePage",
+                                         "operation":  "create",
+                                         "databaseId":  {
+                                                            "__rl":  true,
+                                                            "mode":  "list",
+                                                            "value":  "6eb4565b4f1d498c8b2978e0c80880fd"
+                                                        },
+                                         "title":  "={{ $json.etapa_nome }}",
+                                         "simple":  false,
+                                         "propertiesUi":  {
+                                                              "propertyValues":  [
+                                                                                     {
+                                                                                         "key":  "Sequência|number",
+                                                                                         "numberValue":  "={{ $json.sequencia }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "Tipo de etapa|select",
+                                                                                         "selectValue":  "={{ $json.tipo_etapa }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "Aguardando|select",
+                                                                                         "selectValue":  "={{ $json.aguardando }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "Prazo (dias após D=0)|number",
+                                                                                         "numberValue":  "={{ $json.prazo_dias }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "Inputs necessários|rich_text",
+                                                                                         "textContent":  "={{ $json.inputs }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "Output esperado (DoD - Definition of Done)|rich_text",
+                                                                                         "textContent":  "={{ $json.output_dod }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "Status|select",
+                                                                                         "selectValue":  "Pendente"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "Cliente|relation",
+                                                                                         "relationValue":  "={{ [$json.cliente_page_id] }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "Data prevista|date",
+                                                                                         "date":  "={{ $json.data_prevista }}"
+                                                                                     }
+                                                                                 ]
+                                                          },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "2e7b4283-13d1-4ab7-8f28-907451ce5f70",
+                      "name":  "[Onb A2.1] Criar Etapa",
+                      "type":  "n8n-nodes-base.notion",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       3360,
+                                       272
+                                   ],
+                      "continueOnFail":  true,
+                      "credentials":  {
+                                          "notionApi":  {
+                                                            "id": "<credential_id_redacted>", "name": "Notion account"
+                                                        }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const items = $input.all();\nconst contexto = $(\u0027[Onb A2.1] Resolver Responsavel Geral\u0027).first().json;\nconst cliente = $(\u0027[Onb A2.1] Criar Cliente\u0027).first().json;\nconst sucesso = [];\nconst falhas = [];\nfor (const item of items) {\n  const payload = item.json || {};\n  const hasError = Boolean(payload.error || payload.message || payload.stack);\n  if (hasError \u0026\u0026 !payload.id) {\n    falhas.push(payload.error?.message || payload.message || payload.description || JSON.stringify(payload));\n  } else {\n    sucesso.push(payload.id || payload);\n  }\n}\nreturn [{ json: {\n  cliente_page_id: cliente.id,\n  cliente_nome: contexto.cliente_nome,\n  cnpj_normalizado: contexto.cnpj_normalizado,\n  raw_payload: contexto.raw_payload,\n  etapas_esperadas: items[0]?.json?.etapas_esperadas ?? items.length,\n  etapas_criadas: sucesso.length,\n  etapas_falhas: falhas.length,\n  falha_resumo: falhas.slice(0, 5).join(\u0027 | \u0027),\n  workflow_status: sucesso.length === (items[0]?.json?.etapas_esperadas ?? items.length) ? \u0027ok\u0027 : \u0027partial_failure\u0027\n} }];"
+                                     },
+                      "id":  "f3c8f76f-d041-454f-ac25-4eaf005cd5c0",
+                      "name":  "[Onb A2.1] Consolidar Resultado",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       3600,
+                                       272
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  true,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "strict",
+                                                                            "version":  2
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "leftValue":  "={{ $json.etapas_criadas \u003c $json.etapas_esperadas }}",
+                                                                                   "rightValue":  true,
+                                                                                   "operator":  {
+                                                                                                    "type":  "boolean",
+                                                                                                    "operation":  "equals"
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "8b8fca07-1d71-4d5a-8821-62a912fe7f08",
+                      "name":  "[Onb A2.1] Falha Parcial Etapas?",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       3840,
+                                       272
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "resource":  "databasePage",
+                                         "operation":  "update",
+                                         "pageId":  {
+                                                        "__rl":  true,
+                                                        "mode":  "id",
+                                                        "value":  "={{ $json.cliente_page_id }}"
+                                                    },
+                                         "simple":  false,
+                                         "propertiesUi":  {
+                                                              "propertyValues":  [
+                                                                                     {
+                                                                                         "key":  "Status|select",
+                                                                                         "selectValue":  "Bloqueado"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "Bloqueios ativos|rich_text",
+                                                                                         "textContent":  "={{ \u0027Etapas criadas: \u0027 + $json.etapas_criadas + \u0027/\u0027 + $json.etapas_esperadas + \u0027. \u0027 + $json.falha_resumo + \u0027 | Status=\"Bloqueado\"\u0027 }}"
+                                                                                     }
+                                                                                 ]
+                                                          },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "37b80ab8-aa4c-43c0-bab5-9c524bab6e6b",
+                      "name":  "[Onb A2.1] Atualizar Cliente Bloqueado",
+                      "type":  "n8n-nodes-base.notion",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       4080,
+                                       176
+                                   ],
+                      "credentials":  {
+                                          "notionApi":  {
+                                                            "id": "<credential_id_redacted>", "name": "Notion account"
+                                                        }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "<evolution_base_url_redacted>/message/sendText/Whats%20Business",
+                                         "authentication":  "predefinedCredentialType",
+                                         "nodeCredentialType":  "httpHeaderAuth",
+                                         "sendBody":  true,
+                                         "specifyBody":  "json",
+                                         "jsonBody":  "={{ { number: \u0027<OLAVO_PHONE_redacted>\u0027, text: \u0027[Onb A2.1] Falha parcial na criacao de etapas\\ncliente=\u0027 + $json.cliente_nome + \u0027\\ncnpj=\u0027 + $json.cnpj_normalizado + \u0027\\nresultado=\u0027 + $json.etapas_criadas + \u0027/\u0027 + $json.etapas_esperadas + \u0027\\nerro=\u0027 + $json.falha_resumo + \u0027\\npayload=\u0027 + JSON.stringify($json.raw_payload) } }}",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "3f55d70e-aa60-465d-8e6e-ab3d9b95af46",
+                      "name":  "[Onb A2.1] Notificar Falha Etapas Olavo",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.3,
+                      "continueOnFail":  true,
+                      "position":  [
+                                       4320,
+                                       176
+                                   ],
+                      "credentials":  {
+                                          "httpHeaderAuth":  {
+                                                                 "id": "<credential_id_redacted>", "name": "Evolution API Header Auth"
+                                                             }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "respondWith":  "json",
+                                         "responseBody":  "={{ { ok: true, workflow: \u0027Onb - Briefing to Client\u0027, cliente_page_id: $json.cliente_page_id, etapas_criadas: $json.etapas_criadas, etapas_esperadas: $json.etapas_esperadas, workflow_status: $json.workflow_status } }}",
+                                         "options":  {
+                                                         "responseCode":  201
+                                                     }
+                                     },
+                      "id":  "995b8740-1854-4c15-90f8-b500f5886db0",
+                      "name":  "[Onb A2.1] Responder 201",
+                      "type":  "n8n-nodes-base.respondToWebhook",
+                      "typeVersion":  1.3,
+                      "position":  [
+                                       4560,
+                                       272
+                                   ]
+                  }
+              ],
+    "connections":  {
+                        "[Onb A2.1] Webhook Briefing":  {
+                                                            "main":  [
+                                                                         [
+                                                                             {
+                                                                                 "node":  "[Onb A2.1] Validar Payload",
+                                                                                 "type":  "main",
+                                                                                 "index":  0
+                                                                             }
+                                                                         ]
+                                                                     ]
+                                                        },
+                        "[Onb A2.1] Validar Payload":  {
+                                                           "main":  [
+                                                                        [
+                                                                            {
+                                                                                "node":  "[Onb A2.1] Payload Valido?",
+                                                                                "type":  "main",
+                                                                                "index":  0
+                                                                            }
+                                                                        ]
+                                                                    ]
+                                                       },
+                        "[Onb A2.1] Payload Valido?":  {
+                                                           "main":  [
+                                                                        [
+                                                                            {
+                                                                                "node":  "[Onb A2.1] Normalizar Contexto",
+                                                                                "type":  "main",
+                                                                                "index":  0
+                                                                            }
+                                                                        ],
+                                                                        [
+                                                                            {
+                                                                                "node":  "[Onb A2.1] Responder 400",
+                                                                                "type":  "main",
+                                                                                "index":  0
+                                                                            }
+                                                                        ]
+                                                                    ]
+                                                       },
+                        "[Onb A2.1] Normalizar Contexto":  {
+                                                               "main":  [
+                                                                            [
+                                                                                {
+                                                                                    "node":  "[Onb A2.1] Buscar Clientes Ativos",
+                                                                                    "type":  "main",
+                                                                                    "index":  0
+                                                                                }
+                                                                            ]
+                                                                        ]
+                                                           },
+                        "[Onb A2.1] Buscar Clientes Ativos":  {
+                                                                  "main":  [
+                                                                               [
+                                                                                   {
+                                                                                       "node":  "[Onb A2.1] Detectar Duplicidade",
+                                                                                       "type":  "main",
+                                                                                       "index":  0
+                                                                                   }
+                                                                               ]
+                                                                           ]
+                                                              },
+                        "[Onb A2.1] Detectar Duplicidade":  {
+                                                                "main":  [
+                                                                             [
+                                                                                 {
+                                                                                     "node":  "[Onb A2.1] Duplicado?",
+                                                                                     "type":  "main",
+                                                                                     "index":  0
+                                                                                 }
+                                                                             ]
+                                                                         ]
+                                                            },
+                        "[Onb A2.1] Duplicado?":  {
+                                                      "main":  [
+                                                                   [
+                                                                       {
+                                                                           "node":  "[Onb A2.1] Notificar Duplicidade Olavo",
+                                                                           "type":  "main",
+                                                                           "index":  0
+                                                                       }
+                                                                   ],
+                                                                   [
+                                                                       {
+                                                                           "node":  "[Onb A2.1] Buscar Usuarios Workspace",
+                                                                           "type":  "main",
+                                                                           "index":  0
+                                                                       }
+                                                                   ]
+                                                               ]
+                                                  },
+                        "[Onb A2.1] Notificar Duplicidade Olavo":  {
+                                                                       "main":  [
+                                                                                    [
+                                                                                        {
+                                                                                            "node":  "[Onb A2.1] Responder 409",
+                                                                                            "type":  "main",
+                                                                                            "index":  0
+                                                                                        }
+                                                                                    ]
+                                                                                ]
+                                                                   },
+                        "[Onb A2.1] Buscar Usuarios Workspace":  {
+                                                                     "main":  [
+                                                                                  [
+                                                                                      {
+                                                                                          "node":  "[Onb A2.1] Resolver Responsavel Geral",
+                                                                                          "type":  "main",
+                                                                                          "index":  0
+                                                                                      }
+                                                                                  ]
+                                                                              ]
+                                                                 },
+                        "[Onb A2.1] Resolver Responsavel Geral":  {
+                                                                      "main":  [
+                                                                                   [
+                                                                                       {
+                                                                                           "node":  "[Onb A2.1] Criar Cliente",
+                                                                                           "type":  "main",
+                                                                                           "index":  0
+                                                                                       }
+                                                                                   ]
+                                                                               ]
+                                                                  },
+                        "[Onb A2.1] Criar Cliente":  {
+                                                         "main":  [
+                                                                      [
+                                                                          {
+                                                                              "node":  "[Onb A2.1] Ler Etapas A1",
+                                                                              "type":  "main",
+                                                                              "index":  0
+                                                                          }
+                                                                      ]
+                                                                  ]
+                                                     },
+                        "[Onb A2.1] Ler Etapas A1":  {
+                                                         "main":  [
+                                                                      [
+                                                                          {
+                                                                              "node":  "[Onb A2.1] Binario para JSON Etapas",
+                                                                              "type":  "main",
+                                                                              "index":  0
+                                                                          }
+                                                                      ]
+                                                                  ]
+                                                     },
+                        "[Onb A2.1] Binario para JSON Etapas":  {
+                                                                    "main":  [
+                                                                                 [
+                                                                                     {
+                                                                                         "node":  "[Onb A2.1] Montar Itens Etapas",
+                                                                                         "type":  "main",
+                                                                                         "index":  0
+                                                                                     }
+                                                                                 ]
+                                                                             ]
+                                                                },
+                        "[Onb A2.1] Montar Itens Etapas":  {
+                                                               "main":  [
+                                                                            [
+                                                                                {
+                                                                                    "node":  "[Onb A2.1] Criar Etapa",
+                                                                                    "type":  "main",
+                                                                                    "index":  0
+                                                                                }
+                                                                            ]
+                                                                        ]
+                                                           },
+                        "[Onb A2.1] Criar Etapa":  {
+                                                       "main":  [
+                                                                    [
+                                                                        {
+                                                                            "node":  "[Onb A2.1] Consolidar Resultado",
+                                                                            "type":  "main",
+                                                                            "index":  0
+                                                                        }
+                                                                    ]
+                                                                ]
+                                                   },
+                        "[Onb A2.1] Consolidar Resultado":  {
+                                                                "main":  [
+                                                                             [
+                                                                                 {
+                                                                                     "node":  "[Onb A2.1] Falha Parcial Etapas?",
+                                                                                     "type":  "main",
+                                                                                     "index":  0
+                                                                                 }
+                                                                             ]
+                                                                         ]
+                                                            },
+                        "[Onb A2.1] Falha Parcial Etapas?":  {
+                                                                 "main":  [
+                                                                              [
+                                                                                  {
+                                                                                      "node":  "[Onb A2.1] Atualizar Cliente Bloqueado",
+                                                                                      "type":  "main",
+                                                                                      "index":  0
+                                                                                  }
+                                                                              ],
+                                                                              [
+                                                                                  {
+                                                                                      "node":  "[Onb A2.1] Responder 201",
+                                                                                      "type":  "main",
+                                                                                      "index":  0
+                                                                                  }
+                                                                              ]
+                                                                          ]
+                                                             },
+                        "[Onb A2.1] Atualizar Cliente Bloqueado":  {
+                                                                       "main":  [
+                                                                                    [
+                                                                                        {
+                                                                                            "node":  "[Onb A2.1] Notificar Falha Etapas Olavo",
+                                                                                            "type":  "main",
+                                                                                            "index":  0
+                                                                                        }
+                                                                                    ]
+                                                                                ]
+                                                                   },
+                        "[Onb A2.1] Notificar Falha Etapas Olavo":  {
+                                                                        "main":  [
+                                                                                     [
+                                                                                         {
+                                                                                             "node":  "[Onb A2.1] Responder 201",
+                                                                                             "type":  "main",
+                                                                                             "index":  0
+                                                                                         }
+                                                                                     ]
+                                                                                 ]
+                                                                    }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "timezone":  "America/Sao_Paulo"
+                 },
+    "staticData":  null,
+    "meta":  null,
+    "pinData":  null,
+    "versionId":  "6d417c4c-7e98-4fa6-a378-23b48e48208f",
+    "activeVersionId":  null,
+    "versionCounter":  38,
+    "triggerCount":  1,
+    "shared":  [
+                   {
+                       "updatedAt":  "2026-05-26T16:31:52.942Z",
+                       "createdAt":  "2026-05-26T16:31:52.942Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "0MfPA3Uqmj4TySiX",
+                       "projectId":  "QAumYwlPGm37G3p1",
+                       "project":  {
+                                       "updatedAt":  "2025-11-29T00:11:17.205Z",
+                                       "createdAt":  "2025-11-29T00:04:49.350Z",
+                                       "id":  "QAumYwlPGm37G3p1",
+                                       "name":  "Olavo Franzin \u003colavofranzin@franzcomunicacao.com\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "creatorId":  "2f681992-45e6-4ec9-afe2-d79763e3d45b"
+                                   }
+                   }
+               ],
+    "tags":  [
+
+             ],
+    "activeVersion":  null
 }

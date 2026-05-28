@@ -1,5 +1,5 @@
 {
-    "updatedAt":  "2026-05-28T12:31:40.869Z",
+    "updatedAt":  "2026-05-28T19:16:56.205Z",
     "createdAt":  "2026-05-28T12:18:14.789Z",
     "id":  "Vqxb3G0KLeKerdCy",
     "name":  "Onb - Cobrar Acessos Pos-Kickoff",
@@ -52,7 +52,7 @@
                                      },
                       "credentials":  {
                                           "notionApi":  {
-                                                            "id":"<credential_id_redacted>","name":"Notion account"
+                                                            "id": "<credential_id_redacted>", "name": "Notion account"
                                                         }
                                       }
                   },
@@ -91,7 +91,7 @@
                                      },
                       "credentials":  {
                                           "notionApi":  {
-                                                            "id":"<credential_id_redacted>","name":"Notion account"
+                                                            "id": "<credential_id_redacted>", "name": "Notion account"
                                                         }
                                       }
                   },
@@ -106,7 +106,7 @@
                                    ],
                       "parameters":  {
                                          "mode":  "runOnceForAllItems",
-                                         "jsCode":  "const activeStatuses = new Set([\u0027Em andamento\u0027, \u0027Não iniciado\u0027, \u0027Bloqueado\u0027]);\nconst etapas = $(\u0027[Onb A2.9] Extrair Acessos Pendentes\u0027).all().map((item) =\u003e item.json);\nconst pickTitle = (page) =\u003e {\n  for (const prop of Object.values(page.properties || {})) {\n    if (prop?.type === \u0027title\u0027) return (prop.title || []).map((item) =\u003e item.plain_text || \u0027\u0027).join(\u0027\u0027).trim();\n  }\n  return \u0027\u0027;\n};\nconst pickSelect = (prop) =\u003e prop?.select?.name || \u0027\u0027;\nconst out = [];\nfor (const [index, item] of $input.all().entries()) {\n  const cliente = item.json || {};\n  const etapa = etapas[index];\n  if (!etapa) continue;\n  const clienteNome = pickTitle(cliente);\n  const clienteStatus = pickSelect(cliente.properties?.Status);\n  if (!activeStatuses.has(clienteStatus)) continue;\n  const number = $env.OLAVO_PHONE;\n  if (!number) throw new Error(\u0027OLAVO_PHONE ausente\u0027);\n  const text = `[Onb A2.9] Acessos pendentes do cliente ${clienteNome}\\netapa=Conduzir call de kickoff e preencher ata\\ncliente=${clienteNome}\\nstatus_cliente=${clienteStatus}\\nID da etapa=${etapa.etapa_page_id}\\nID do cliente=${etapa.cliente_page_id}\\nAcessos:\\n${etapa.acessos_pendentes}\\nAção: cobrar acessos do cliente off-platform; agendar D+2.`;\n  out.push({ json: { ...etapa, cliente_nome: clienteNome, cliente_status: clienteStatus, number, text } });\n}\nreturn out;"
+                                         "jsCode":  "const activeStatuses = new Set([\u0027Em andamento\u0027, \u0027Não iniciado\u0027, \u0027Bloqueado\u0027]);\nconst etapas = $(\u0027[Onb A2.9] Extrair Acessos Pendentes\u0027).all().map((item) =\u003e item.json);\nconst pickTitle = (page) =\u003e {\n  for (const prop of Object.values(page.properties || {})) {\n    if (prop?.type === \u0027title\u0027) return (prop.title || []).map((item) =\u003e item.plain_text || \u0027\u0027).join(\u0027\u0027).trim();\n  }\n  return \u0027\u0027;\n};\nconst pickSelect = (prop) =\u003e prop?.select?.name || \u0027\u0027;\nconst out = [];\nfor (const [index, item] of $input.all().entries()) {\n  const cliente = item.json || {};\n  const etapa = etapas[index];\n  if (!etapa) continue;\n  const clienteNome = pickTitle(cliente);\n  const clienteStatus = pickSelect(cliente.properties?.Status);\n  if (!activeStatuses.has(clienteStatus)) continue;\n  const number = <OLAVO_PHONE_redacted>;\n  if (!number) throw new Error(\u0027OLAVO_PHONE ausente\u0027);\n  const text = `[Onb A2.9] Acessos pendentes do cliente ${clienteNome}\\netapa=Conduzir call de kickoff e preencher ata\\ncliente=${clienteNome}\\nstatus_cliente=${clienteStatus}\\nID da etapa=${etapa.etapa_page_id}\\nID do cliente=${etapa.cliente_page_id}\\nAcessos:\\n${etapa.acessos_pendentes}\\nAção: cobrar acessos do cliente off-platform; agendar D+2.`;\n  out.push({ json: { ...etapa, cliente_nome: clienteNome, cliente_status: clienteStatus, number, text } });\n}\nreturn out;"
                                      }
                   },
                   {
@@ -138,7 +138,7 @@
                                      },
                       "credentials":  {
                                           "httpHeaderAuth":  {
-                                                                 "id":"<credential_id_redacted>","name":"Evolution API Header Auth"
+                                                                 "id": "<credential_id_redacted>", "name": "Evolution API Header Auth"
                                                              }
                                       },
                       "continueOnFail":  true
@@ -189,7 +189,7 @@
                                      },
                       "credentials":  {
                                           "notionApi":  {
-                                                            "id":"<credential_id_redacted>","name":"Notion account"
+                                                            "id": "<credential_id_redacted>", "name": "Notion account"
                                                         }
                                       }
                   },
@@ -332,10 +332,29 @@
     "staticData":  null,
     "meta":  null,
     "pinData":  null,
-    "versionId":  "7eb71712-9ce2-4606-8a38-87742226a64d",
+    "versionId":  "d2eca9ab-22ec-48d1-b957-079ae6860679",
     "activeVersionId":  null,
-    "versionCounter":  6,
+    "versionCounter":  7,
     "triggerCount":  0,
+    "shared":  [
+                   {
+                       "updatedAt":  "2026-05-28T12:18:14.789Z",
+                       "createdAt":  "2026-05-28T12:18:14.789Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "Vqxb3G0KLeKerdCy",
+                       "projectId":  "QAumYwlPGm37G3p1",
+                       "project":  {
+                                       "updatedAt":  "2025-11-29T00:11:17.205Z",
+                                       "createdAt":  "2025-11-29T00:04:49.350Z",
+                                       "id":  "QAumYwlPGm37G3p1",
+                                       "name":  "Olavo Franzin \u003colavofranzin@franzcomunicacao.com\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "creatorId":  "2f681992-45e6-4ec9-afe2-d79763e3d45b"
+                                   }
+                   }
+               ],
     "tags":  [
 
              ],

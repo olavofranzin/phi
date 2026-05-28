@@ -1,5 +1,5 @@
 {
-    "updatedAt":  "2026-05-28T00:18:13.194Z",
+    "updatedAt":  "2026-05-28T19:16:55.811Z",
     "createdAt":  "2026-05-28T00:09:20.194Z",
     "id":  "7lQ3AuNMtt4NXYZZ",
     "name":  "Onb - Cobrar Form D+1",
@@ -52,7 +52,7 @@
                                      },
                       "credentials":  {
                                           "notionApi":  {
-                                                            "id":"<credential_id_redacted>","name":"Notion account"
+                                                            "id": "<credential_id_redacted>", "name": "Notion account"
                                                         }
                                       }
                   },
@@ -91,7 +91,7 @@
                                      },
                       "credentials":  {
                                           "notionApi":  {
-                                                            "id":"<credential_id_redacted>","name":"Notion account"
+                                                            "id": "<credential_id_redacted>", "name": "Notion account"
                                                         }
                                       }
                   },
@@ -138,7 +138,7 @@
                                      },
                       "credentials":  {
                                           "httpHeaderAuth":  {
-                                                                 "id":"<credential_id_redacted>","name":"Evolution API Header Auth"
+                                                                 "id": "<credential_id_redacted>", "name": "Evolution API Header Auth"
                                                              }
                                       },
                       "continueOnFail":  true
@@ -193,7 +193,7 @@
                                      },
                       "credentials":  {
                                           "notionApi":  {
-                                                            "id":"<credential_id_redacted>","name":"Notion account"
+                                                            "id": "<credential_id_redacted>", "name": "Notion account"
                                                         }
                                       }
                   },
@@ -313,9 +313,9 @@
                  "builderVariant":  "mcp"
              },
     "pinData":  null,
-    "versionId":  "5f8629e0-d2d7-4eb1-a4c7-dead478df4e9",
+    "versionId":  "7f4dc3fc-e4e1-4773-af63-8844db5cd86e",
     "activeVersionId":  null,
-    "versionCounter":  5,
+    "versionCounter":  6,
     "triggerCount":  0,
     "shared":  [
                    {

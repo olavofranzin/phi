@@ -52,8 +52,7 @@
                                      },
                       "credentials":  {
                                           "notionApi":  {
-                                                            "id":  "KpPCTsYPAvGXGfp2",
-                                                            "name":  "Notion account"
+                                                            "id": "<credential_id_redacted>", "name": "Notion account"
                                                         }
                                       }
                   },
@@ -114,8 +113,7 @@
                                      },
                       "credentials":  {
                                           "httpHeaderAuth":  {
-                                                                 "id":  "LdS8ReA6W9KUKENM",
-                                                                 "name":  "Evolution API Header Auth"
+                                                                 "id": "<credential_id_redacted>", "name": "Evolution API Header Auth"
                                                              }
                                       },
                       "continueOnFail":  true
@@ -166,8 +164,7 @@
                                      },
                       "credentials":  {
                                           "notionApi":  {
-                                                            "id":  "KpPCTsYPAvGXGfp2",
-                                                            "name":  "Notion account"
+                                                            "id": "<credential_id_redacted>", "name": "Notion account"
                                                         }
                                       }
                   },
