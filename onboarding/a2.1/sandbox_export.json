@@ -1,5 +1,5 @@
 {
-    "updatedAt":  "2026-05-28T19:16:55.358Z",
+    "updatedAt":  "2026-05-29T16:23:36.544Z",
     "createdAt":  "2026-05-26T16:31:52.942Z",
     "id":  "0MfPA3Uqmj4TySiX",
     "name":  "Onb - Briefing to Client",
@@ -568,6 +568,72 @@
                                        4560,
                                        272
                                    ]
+                  },
+                  {
+                      "parameters":  {
+                                         "mode":  "runOnceForAllItems",
+                                         "language":  "javaScript",
+                                         "jsCode":  "const ONB_WEBHOOK_SECRET = \u0027<ONB_WEBHOOK_SECRET_redacted>\u0027;\nconst out = [];\nfor (const item of $input.all()) {\n  const headers = item.json.headers || {};\n  const lowerHeaders = {};\n  for (const [key, value] of Object.entries(headers)) {\n    lowerHeaders[String(key).toLowerCase()] = value;\n  }\n  const provided = String(lowerHeaders[\u0027x-onb-secret\u0027] || \u0027\u0027).trim();\n  out.push({ json: { ...item.json, onb_secret_valid: provided === ONB_WEBHOOK_SECRET } });\n}\nreturn out;"
+                                     },
+                      "id":  "5512e3a8-e247-42c5-be1a-adee1caca9cd",
+                      "name":  "[Onb A2.1] Validar Secret",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       240,
+                                       0
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  true,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "strict",
+                                                                            "version":  2
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "leftValue":  "={{ $json.onb_secret_valid }}",
+                                                                                   "rightValue":  true,
+                                                                                   "operator":  {
+                                                                                                    "type":  "boolean",
+                                                                                                    "operation":  "equals"
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "a6f6031e-07df-43bd-aaf4-da1a0d6a3e2f",
+                      "name":  "[Onb A2.1] Secret Valido?",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       464,
+                                       0
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "respondWith":  "json",
+                                         "responseBody":  "={{ { ok: false, error: \"unauthorized\" } }}",
+                                         "options":  {
+                                                         "responseCode":  401
+                                                     }
+                                     },
+                      "id":  "1d3d0594-44e8-47f6-a4be-867c88ccfa12",
+                      "name":  "[Onb A2.1] Responder 401",
+                      "type":  "n8n-nodes-base.respondToWebhook",
+                      "typeVersion":  1.3,
+                      "position":  [
+                                       704,
+                                       -176
+                                   ]
                   }
               ],
     "connections":  {
@@ -575,7 +641,7 @@
                                                             "main":  [
                                                                          [
                                                                              {
-                                                                                 "node":  "[Onb A2.1] Validar Payload",
+                                                                                 "node":  "[Onb A2.1] Validar Secret",
                                                                                  "type":  "main",
                                                                                  "index":  0
                                                                              }
@@ -800,7 +866,36 @@
                                                                                          }
                                                                                      ]
                                                                                  ]
-                                                                    }
+                                                                    },
+                        "[Onb A2.1] Validar Secret":  {
+                                                          "main":  [
+                                                                       [
+                                                                           {
+                                                                               "node":  "[Onb A2.1] Secret Valido?",
+                                                                               "type":  "main",
+                                                                               "index":  0
+                                                                           }
+                                                                       ]
+                                                                   ]
+                                                      },
+                        "[Onb A2.1] Secret Valido?":  {
+                                                          "main":  [
+                                                                       [
+                                                                           {
+                                                                               "node":  "[Onb A2.1] Validar Payload",
+                                                                               "type":  "main",
+                                                                               "index":  0
+                                                                           }
+                                                                       ],
+                                                                       [
+                                                                           {
+                                                                               "node":  "[Onb A2.1] Responder 401",
+                                                                               "type":  "main",
+                                                                               "index":  0
+                                                                           }
+                                                                       ]
+                                                                   ]
+                                                      }
                     },
     "settings":  {
                      "executionOrder":  "v1",
@@ -809,9 +904,9 @@
     "staticData":  null,
     "meta":  null,
     "pinData":  null,
-    "versionId":  "6d417c4c-7e98-4fa6-a378-23b48e48208f",
-    "activeVersionId":  "6d417c4c-7e98-4fa6-a378-23b48e48208f",
-    "versionCounter":  38,
+    "versionId":  "4c2e8fa0-f44e-4699-8168-ce6388506ee1",
+    "activeVersionId":  "4c2e8fa0-f44e-4699-8168-ce6388506ee1",
+    "versionCounter":  39,
     "triggerCount":  1,
     "shared":  [
                    {
@@ -836,9 +931,9 @@
 
              ],
     "activeVersion":  {
-                          "updatedAt":  "2026-05-28T19:16:55.365Z",
-                          "createdAt":  "2026-05-28T19:16:55.365Z",
-                          "versionId":  "6d417c4c-7e98-4fa6-a378-23b48e48208f",
+                          "updatedAt":  "2026-05-29T16:23:36.550Z",
+                          "createdAt":  "2026-05-29T16:23:36.550Z",
+                          "versionId":  "4c2e8fa0-f44e-4699-8168-ce6388506ee1",
                           "workflowId":  "0MfPA3Uqmj4TySiX",
                           "nodes":  [
                                         {
@@ -1402,6 +1497,72 @@
                                                              4560,
                                                              272
                                                          ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "mode":  "runOnceForAllItems",
+                                                               "language":  "javaScript",
+                                                               "jsCode":  "const ONB_WEBHOOK_SECRET = \u0027<ONB_WEBHOOK_SECRET_redacted>\u0027;\nconst out = [];\nfor (const item of $input.all()) {\n  const headers = item.json.headers || {};\n  const lowerHeaders = {};\n  for (const [key, value] of Object.entries(headers)) {\n    lowerHeaders[String(key).toLowerCase()] = value;\n  }\n  const provided = String(lowerHeaders[\u0027x-onb-secret\u0027] || \u0027\u0027).trim();\n  out.push({ json: { ...item.json, onb_secret_valid: provided === ONB_WEBHOOK_SECRET } });\n}\nreturn out;"
+                                                           },
+                                            "id":  "5512e3a8-e247-42c5-be1a-adee1caca9cd",
+                                            "name":  "[Onb A2.1] Validar Secret",
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             240,
+                                                             0
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "conditions":  {
+                                                                                  "options":  {
+                                                                                                  "caseSensitive":  true,
+                                                                                                  "leftValue":  "",
+                                                                                                  "typeValidation":  "strict",
+                                                                                                  "version":  2
+                                                                                              },
+                                                                                  "conditions":  [
+                                                                                                     {
+                                                                                                         "leftValue":  "={{ $json.onb_secret_valid }}",
+                                                                                                         "rightValue":  true,
+                                                                                                         "operator":  {
+                                                                                                                          "type":  "boolean",
+                                                                                                                          "operation":  "equals"
+                                                                                                                      }
+                                                                                                     }
+                                                                                                 ],
+                                                                                  "combinator":  "and"
+                                                                              },
+                                                               "options":  {
+
+                                                                           }
+                                                           },
+                                            "id":  "a6f6031e-07df-43bd-aaf4-da1a0d6a3e2f",
+                                            "name":  "[Onb A2.1] Secret Valido?",
+                                            "type":  "n8n-nodes-base.if",
+                                            "typeVersion":  2.2,
+                                            "position":  [
+                                                             464,
+                                                             0
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "respondWith":  "json",
+                                                               "responseBody":  "={{ { ok: false, error: \"unauthorized\" } }}",
+                                                               "options":  {
+                                                                               "responseCode":  401
+                                                                           }
+                                                           },
+                                            "id":  "1d3d0594-44e8-47f6-a4be-867c88ccfa12",
+                                            "name":  "[Onb A2.1] Responder 401",
+                                            "type":  "n8n-nodes-base.respondToWebhook",
+                                            "typeVersion":  1.3,
+                                            "position":  [
+                                                             704,
+                                                             -176
+                                                         ]
                                         }
                                     ],
                           "connections":  {
@@ -1409,7 +1570,7 @@
                                                                                   "main":  [
                                                                                                [
                                                                                                    {
-                                                                                                       "node":  "[Onb A2.1] Validar Payload",
+                                                                                                       "node":  "[Onb A2.1] Validar Secret",
                                                                                                        "type":  "main",
                                                                                                        "index":  0
                                                                                                    }
@@ -1634,7 +1795,36 @@
                                                                                                                }
                                                                                                            ]
                                                                                                        ]
-                                                                                          }
+                                                                                          },
+                                              "[Onb A2.1] Validar Secret":  {
+                                                                                "main":  [
+                                                                                             [
+                                                                                                 {
+                                                                                                     "node":  "[Onb A2.1] Secret Valido?",
+                                                                                                     "type":  "main",
+                                                                                                     "index":  0
+                                                                                                 }
+                                                                                             ]
+                                                                                         ]
+                                                                            },
+                                              "[Onb A2.1] Secret Valido?":  {
+                                                                                "main":  [
+                                                                                             [
+                                                                                                 {
+                                                                                                     "node":  "[Onb A2.1] Validar Payload",
+                                                                                                     "type":  "main",
+                                                                                                     "index":  0
+                                                                                                 }
+                                                                                             ],
+                                                                                             [
+                                                                                                 {
+                                                                                                     "node":  "[Onb A2.1] Responder 401",
+                                                                                                     "type":  "main",
+                                                                                                     "index":  0
+                                                                                                 }
+                                                                                             ]
+                                                                                         ]
+                                                                            }
                                           },
                           "authors":  "Olavo Franzin",
                           "name":  null,
@@ -1642,10 +1832,34 @@
                           "autosaved":  false,
                           "workflowPublishHistory":  [
                                                          {
-                                                             "createdAt":  "2026-05-29T12:38:00.061Z",
-                                                             "id":  405,
+                                                             "createdAt":  "2026-05-29T16:23:36.771Z",
+                                                             "id":  410,
                                                              "workflowId":  "0MfPA3Uqmj4TySiX",
-                                                             "versionId":  "6d417c4c-7e98-4fa6-a378-23b48e48208f",
+                                                             "versionId":  "4c2e8fa0-f44e-4699-8168-ce6388506ee1",
+                                                             "event":  "deactivated",
+                                                             "userId":  "2f681992-45e6-4ec9-afe2-d79763e3d45b"
+                                                         },
+                                                         {
+                                                             "createdAt":  "2026-05-29T16:23:36.849Z",
+                                                             "id":  411,
+                                                             "workflowId":  "0MfPA3Uqmj4TySiX",
+                                                             "versionId":  "4c2e8fa0-f44e-4699-8168-ce6388506ee1",
+                                                             "event":  "activated",
+                                                             "userId":  "2f681992-45e6-4ec9-afe2-d79763e3d45b"
+                                                         },
+                                                         {
+                                                             "createdAt":  "2026-05-29T16:23:37.325Z",
+                                                             "id":  412,
+                                                             "workflowId":  "0MfPA3Uqmj4TySiX",
+                                                             "versionId":  "4c2e8fa0-f44e-4699-8168-ce6388506ee1",
+                                                             "event":  "deactivated",
+                                                             "userId":  "2f681992-45e6-4ec9-afe2-d79763e3d45b"
+                                                         },
+                                                         {
+                                                             "createdAt":  "2026-05-29T16:23:37.542Z",
+                                                             "id":  413,
+                                                             "workflowId":  "0MfPA3Uqmj4TySiX",
+                                                             "versionId":  "4c2e8fa0-f44e-4699-8168-ce6388506ee1",
                                                              "event":  "activated",
                                                              "userId":  "2f681992-45e6-4ec9-afe2-d79763e3d45b"
                                                          }

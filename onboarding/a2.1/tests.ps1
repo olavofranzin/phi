@@ -31,6 +31,9 @@ if ($workflow.name -ne 'Onb - Briefing to Client') {
 
 $requiredNodeNames = @(
   '[Onb A2.1] Webhook Briefing',
+  '[Onb A2.1] Validar Secret',
+  '[Onb A2.1] Secret Valido?',
+  '[Onb A2.1] Responder 401',
   '[Onb A2.1] Validar Payload',
   '[Onb A2.1] Buscar Clientes Ativos',
   '[Onb A2.1] Detectar Duplicidade',
@@ -57,6 +60,32 @@ foreach ($name in $requiredNodeNames) {
   if (-not $nodeMap.ContainsKey($name)) {
     throw "Workflow is missing node '$name'"
   }
+}
+
+$validarSecretCode = $nodeMap['[Onb A2.1] Validar Secret'].parameters.jsCode
+foreach ($requiredSecretSnippet in @(
+  '<ONB_WEBHOOK_SECRET_redacted>',
+  'x-onb-secret',
+  'onb_secret_valid',
+  'headers'
+)) {
+  if ($validarSecretCode -notmatch [regex]::Escape($requiredSecretSnippet)) {
+    throw "Validar Secret is missing required text '$requiredSecretSnippet'"
+  }
+}
+if ($workflowRaw -match "const ONB_WEBHOOK_SECRET = '(?!<ONB_WEBHOOK_SECRET_redacted>)[^']+'") {
+  throw 'workflow.json must not contain raw ONB_WEBHOOK_SECRET'
+}
+
+$responder401 = $nodeMap['[Onb A2.1] Responder 401']
+if ($responder401.type -ne 'n8n-nodes-base.respondToWebhook') {
+  throw 'Responder 401 must be a respondToWebhook node'
+}
+if ([string]$responder401.parameters.options.responseCode -ne '401') {
+  throw 'Responder 401 must return HTTP 401'
+}
+if ($responder401.parameters.responseBody -notmatch 'unauthorized') {
+  throw 'Responder 401 must return unauthorized body'
 }
 
 if ($nodeMap['[Onb A2.1] Buscar Clientes Ativos'].parameters.databaseId.value -ne '04e34a62624b484cbda546604564b88c') {
