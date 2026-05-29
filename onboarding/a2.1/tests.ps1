@@ -77,6 +77,38 @@ if ($workflowRaw -match "const ONB_WEBHOOK_SECRET = '(?!<ONB_WEBHOOK_SECRET_reda
   throw 'workflow.json must not contain raw ONB_WEBHOOK_SECRET'
 }
 
+$validarPayloadCode = $nodeMap['[Onb A2.1] Validar Payload'].parameters.jsCode
+foreach ($requiredPayloadSnippet in @(
+  "const required = ['cnpj_cliente', 'cliente_nome'];",
+  'if (payload.data_inicio',
+  'if (payload.modelo_negocio',
+  'if (payload.servico'
+)) {
+  if ($validarPayloadCode -notmatch [regex]::Escape($requiredPayloadSnippet)) {
+    throw "Validar Payload is missing minimum-contract text '$requiredPayloadSnippet'"
+  }
+}
+foreach ($forbiddenPayloadSnippet in @(
+  "'data_inicio', 'modelo_negocio'",
+  "'servico', 'origem_comercial'"
+)) {
+  if ($validarPayloadCode -match [regex]::Escape($forbiddenPayloadSnippet)) {
+    throw "Validar Payload still requires optional field group '$forbiddenPayloadSnippet'"
+  }
+}
+
+$normalizarCode = $nodeMap['[Onb A2.1] Normalizar Contexto'].parameters.jsCode
+foreach ($requiredNormalizarSnippet in @(
+  'America/Sao_Paulo',
+  'payload.data_inicio || currentDateBr',
+  'modelo_negocio: normalizarTexto(payload.modelo_negocio)',
+  'origem_comercial: normalizarTexto(payload.origem_comercial)'
+)) {
+  if ($normalizarCode -notmatch [regex]::Escape($requiredNormalizarSnippet)) {
+    throw "Normalizar Contexto is missing minimum-contract text '$requiredNormalizarSnippet'"
+  }
+}
+
 $responder401 = $nodeMap['[Onb A2.1] Responder 401']
 if ($responder401.type -ne 'n8n-nodes-base.respondToWebhook') {
   throw 'Responder 401 must be a respondToWebhook node'
@@ -108,6 +140,19 @@ if ($clienteRelationProperty.PSObject.Properties.Name -contains 'relationValues'
 }
 if ($clienteRelationProperty.relationValue -ne '={{ [$json.cliente_page_id] }}') {
   throw 'Criar Etapa must set Cliente relation via relationValue array from cliente_page_id'
+}
+
+$criarClienteProperties = $nodeMap['[Onb A2.1] Criar Cliente'].parameters.propertiesUi.propertyValues
+$modeloProperty = $criarClienteProperties | Where-Object { $_.key -like 'Modelo de neg*cio (business_model)|select' } | Select-Object -First 1
+$servicoProperty = $criarClienteProperties | Where-Object { $_.key -like 'Servi*o|multi_select' } | Select-Object -First 1
+if (-not $modeloProperty -or $modeloProperty.selectValue -notmatch 'undefined') {
+  throw 'Criar Cliente must omit Modelo de negocio when optional value is absent'
+}
+if (-not $servicoProperty -or $servicoProperty.multiSelectValue -notmatch [regex]::Escape('cliente_properties.servico')) {
+  throw 'Criar Cliente must set Servico through Notion multiSelectValue singular'
+}
+if ($servicoProperty.PSObject.Properties.Name -contains 'multiSelectValues') {
+  throw 'Criar Cliente must not use ignored Notion v2.2 parameter multiSelectValues'
 }
 
 $montarItensCode = $nodeMap['[Onb A2.1] Montar Itens Etapas'].parameters.jsCode

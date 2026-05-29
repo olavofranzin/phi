@@ -1,5 +1,5 @@
 {
-    "updatedAt":  "2026-05-29T16:23:36.544Z",
+    "updatedAt":  "2026-05-29T18:39:47.410Z",
     "createdAt":  "2026-05-26T16:31:52.942Z",
     "id":  "0MfPA3Uqmj4TySiX",
     "name":  "Onb - Briefing to Client",
@@ -28,7 +28,7 @@
                   },
                   {
                       "parameters":  {
-                                         "jsCode":  "const payload = $json.body ?? $json;\nconst required = [\u0027cnpj_cliente\u0027, \u0027cliente_nome\u0027, \u0027data_inicio\u0027, \u0027modelo_negocio\u0027, \u0027servico\u0027, \u0027origem_comercial\u0027];\nconst errors = [];\nfor (const field of required) {\n  if (payload[field] === undefined || payload[field] === null || payload[field] === \u0027\u0027) {\n    errors.push(`Campo obrigatorio ausente: ${field}`);\n  }\n}\nconst modelosAceitos = [\u0027Infoproduto\u0027, \u0027Lead Gen\u0027, \u0027E-Commerce\u0027];\nconst servicosAceitos = new Set([\u0027Tr\\u00e1fego pago\u0027, \u0027Trafego pago\u0027, \u0027Site\u0027, \u0027Agente IA\u0027]);\nif (payload.modelo_negocio \u0026\u0026 !modelosAceitos.includes(payload.modelo_negocio)) {\n  errors.push(\u0027modelo_negocio invalido\u0027);\n}\nif (payload.servico \u0026\u0026 !Array.isArray(payload.servico)) {\n  errors.push(\u0027servico deve ser array\u0027);\n}\nif (Array.isArray(payload.servico)) {\n  const invalidos = payload.servico.filter((item) =\u003e !servicosAceitos.has(item));\n  if (invalidos.length) {\n    errors.push(`servico invalido: ${invalidos.join(\u0027, \u0027)}`);\n  }\n}\nif (payload.data_inicio \u0026\u0026 !/^\\d{4}-\\d{2}-\\d{2}$/.test(payload.data_inicio)) {\n  errors.push(\u0027data_inicio deve estar em YYYY-MM-DD\u0027);\n}\nif (errors.length) {\n  return [{ json: { is_valid: false, statusCode: 400, error: \u0027Payload invalido\u0027, details: errors, received_payload: payload } }];\n}\nreturn [{ json: { is_valid: true, payload } }];"
+                                         "jsCode":  "const payload = $json.body ?? $json;\nconst required = [\u0027cnpj_cliente\u0027, \u0027cliente_nome\u0027];\nconst errors = [];\nfor (const field of required) {\n  if (payload[field] === undefined || payload[field] === null || payload[field] === \u0027\u0027) {\n    errors.push(\u0027Campo obrigatorio ausente: \u0027 + field);\n  }\n}\nconst modelosAceitos = [\u0027Infoproduto\u0027, \u0027Lead Gen\u0027, \u0027E-Commerce\u0027];\nconst canonicalServico = (value) =\u003e {\n  const text = String(value ?? \u0027\u0027).trim();\n  const key = text.normalize(\u0027NFD\u0027).replace(/[\\u0300-\\u036f]/g, \u0027\u0027).toLocaleLowerCase(\u0027pt-BR\u0027);\n  if (key === \u0027trafego pago\u0027) return \u0027Tr\\u00e1fego pago\u0027;\n  if (key === \u0027site\u0027) return \u0027Site\u0027;\n  if (key === \u0027agente ia\u0027) return \u0027Agente IA\u0027;\n  return null;\n};\nif (payload.modelo_negocio \u0026\u0026 !modelosAceitos.includes(payload.modelo_negocio)) {\n  errors.push(\u0027modelo_negocio invalido\u0027);\n}\nif (payload.servico \u0026\u0026 !Array.isArray(payload.servico)) {\n  errors.push(\u0027servico deve ser array\u0027);\n}\nif (Array.isArray(payload.servico)) {\n  const invalidos = payload.servico.filter((item) =\u003e !canonicalServico(item));\n  if (invalidos.length) {\n    errors.push(\u0027servico invalido: \u0027 + invalidos.join(\u0027, \u0027));\n  }\n}\nif (payload.data_inicio \u0026\u0026 !/^\\d{4}-\\d{2}-\\d{2}$/.test(payload.data_inicio)) {\n  errors.push(\u0027data_inicio deve estar em YYYY-MM-DD\u0027);\n}\nif (errors.length) {\n  return [{ json: { is_valid: false, statusCode: 400, error: \u0027Payload invalido\u0027, details: errors, received_payload: payload } }];\n}\nreturn [{ json: { is_valid: true, payload } }];"
                                      },
                       "id":  "e329cc83-8245-4687-a918-8ec704bcb35c",
                       "name":  "[Onb A2.1] Validar Payload",
@@ -92,7 +92,7 @@
                   },
                   {
                       "parameters":  {
-                                         "jsCode":  "const payload = $json.payload;\nconst normalizarTexto = (value) =\u003e String(value ?? \u0027\u0027).trim();\nconst normalizarNome = (value) =\u003e normalizarTexto(value).toLocaleLowerCase(\u0027pt-BR\u0027);\nconst cnpj_normalizado = String(payload.cnpj_cliente ?? \u0027\u0027).replace(/\\D/g, \u0027\u0027);\nconst cliente_nome = normalizarTexto(payload.cliente_nome);\nconst servico = Array.isArray(payload.servico)\n  ? payload.servico.map((item) =\u003e normalizarTexto(item) === \u0027Trafego pago\u0027 ? \u0027Tr\\u00e1fego pago\u0027 : normalizarTexto(item))\n  : [];\nreturn [{ json: {\n  cliente_nome,\n  cliente_nome_normalizado: normalizarNome(cliente_nome),\n  cnpj_original: payload.cnpj_cliente,\n  cnpj_normalizado,\n  data_inicio: payload.data_inicio,\n  modelo_negocio: payload.modelo_negocio,\n  servico,\n  origem_comercial: normalizarTexto(payload.origem_comercial),\n  responsavel_geral_email: payload.responsavel_geral_email ? normalizarTexto(payload.responsavel_geral_email).toLowerCase() : null,\n  observacoes: `CNPJ normalizado: ${cnpj_normalizado}`,\n  raw_payload: payload,\n  active_statuses: [\u0027Em andamento\u0027, \u0027N\\u00e3o iniciado\u0027, \u0027Bloqueado\u0027]\n} }];"
+                                         "jsCode":  "const payload = $json.payload;\nconst normalizarTexto = (value) =\u003e String(value ?? \u0027\u0027).trim();\nconst normalizarNome = (value) =\u003e normalizarTexto(value).toLocaleLowerCase(\u0027pt-BR\u0027);\nconst canonicalServico = (value) =\u003e {\n  const text = normalizarTexto(value);\n  const key = text.normalize(\u0027NFD\u0027).replace(/[\\u0300-\\u036f]/g, \u0027\u0027).toLocaleLowerCase(\u0027pt-BR\u0027);\n  if (key === \u0027trafego pago\u0027) return \u0027Tr\\u00e1fego pago\u0027;\n  if (key === \u0027site\u0027) return \u0027Site\u0027;\n  if (key === \u0027agente ia\u0027) return \u0027Agente IA\u0027;\n  return text;\n};\nconst currentDateBr = new Date().toLocaleDateString(\u0027en-CA\u0027, { timeZone: \u0027America/Sao_Paulo\u0027 });\nconst cnpj_normalizado = String(payload.cnpj_cliente ?? \u0027\u0027).replace(/\\D/g, \u0027\u0027);\nconst cliente_nome = normalizarTexto(payload.cliente_nome);\nconst servico = Array.isArray(payload.servico)\n  ? payload.servico.map((item) =\u003e canonicalServico(item)).filter(Boolean)\n  : [];\nreturn [{ json: {\n  cliente_nome,\n  cliente_nome_normalizado: normalizarNome(cliente_nome),\n  cnpj_original: payload.cnpj_cliente,\n  cnpj_normalizado,\n  data_inicio: payload.data_inicio || currentDateBr,\n  modelo_negocio: normalizarTexto(payload.modelo_negocio),\n  servico,\n  origem_comercial: normalizarTexto(payload.origem_comercial),\n  responsavel_geral_email: payload.responsavel_geral_email ? normalizarTexto(payload.responsavel_geral_email).toLowerCase() : null,\n  observacoes: \u0027CNPJ normalizado: \u0027 + cnpj_normalizado,\n  raw_payload: payload,\n  active_statuses: [\u0027Em andamento\u0027, \u0027N?o iniciado\u0027, \u0027Bloqueado\u0027]\n} }];"
                                      },
                       "id":  "31fe1d8d-dd53-4876-9b75-270e10ffd2f5",
                       "name":  "[Onb A2.1] Normalizar Contexto",
@@ -286,15 +286,15 @@
                                                                                      },
                                                                                      {
                                                                                          "key":  "Modelo de negócio (business_model)|select",
-                                                                                         "selectValue":  "={{ $json.cliente_properties.modelo_negocio }}"
+                                                                                         "selectValue":  "={{ $json.cliente_properties.modelo_negocio || undefined }}"
                                                                                      },
                                                                                      {
                                                                                          "key":  "Serviço|multi_select",
-                                                                                         "multiSelectValues":  "={{ $json.cliente_properties.servico }}"
+                                                                                         "multiSelectValue":  "={{ $json.cliente_properties ? $json.cliente_properties.servico : $(\"[Onb A2.1] Resolver Responsavel Geral\").first().json.cliente_properties.servico }}"
                                                                                      },
                                                                                      {
                                                                                          "key":  "Origem (vendedor / comercial)|rich_text",
-                                                                                         "textContent":  "={{ $json.cliente_properties.origem_comercial }}"
+                                                                                         "textContent":  "={{ $json.cliente_properties.origem_comercial || \"\" }}"
                                                                                      },
                                                                                      {
                                                                                          "key":  "Observações|rich_text",
@@ -634,6 +634,76 @@
                                        704,
                                        -176
                                    ]
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  true,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "strict",
+                                                                            "version":  2
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "leftValue":  "={{ $(\u0027[Onb A2.1] Resolver Responsavel Geral\u0027).first().json.cliente_properties.servico.length \u003e 0 }}",
+                                                                                   "rightValue":  true,
+                                                                                   "operator":  {
+                                                                                                    "type":  "boolean",
+                                                                                                    "operation":  "equals"
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "38b11508-e1a0-47a3-9c6a-0caa5c210cf8",
+                      "name":  "[Onb A2.1] Tem Servico?",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       1776,
+                                       0
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "resource":  "databasePage",
+                                         "operation":  "update",
+                                         "pageId":  {
+                                                        "__rl":  true,
+                                                        "mode":  "id",
+                                                        "value":  "={{ $json.id }}"
+                                                    },
+                                         "simple":  false,
+                                         "propertiesUi":  {
+                                                              "propertyValues":  [
+                                                                                     {
+                                                                                         "key":  "Serviço|multi_select",
+                                                                                         "multiSelectValue":  "={{ $json.cliente_properties ? $json.cliente_properties.servico : $(\"[Onb A2.1] Resolver Responsavel Geral\").first().json.cliente_properties.servico }}"
+                                                                                     }
+                                                                                 ]
+                                                          },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "838bf79e-6082-471f-a4c1-93a4c7685b34",
+                      "name":  "[Onb A2.1] Atualizar Servico Cliente",
+                      "type":  "n8n-nodes-base.notion",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       2000,
+                                       -112
+                                   ],
+                      "credentials":  {
+                                          "notionApi":  {
+                                                            "id": "<credential_id_redacted>", "name": "Notion account"
+                                                        }
+                                      }
                   }
               ],
     "connections":  {
@@ -765,7 +835,7 @@
                                                          "main":  [
                                                                       [
                                                                           {
-                                                                              "node":  "[Onb A2.1] Ler Etapas A1",
+                                                                              "node":  "[Onb A2.1] Tem Servico?",
                                                                               "type":  "main",
                                                                               "index":  0
                                                                           }
@@ -895,7 +965,36 @@
                                                                            }
                                                                        ]
                                                                    ]
-                                                      }
+                                                      },
+                        "[Onb A2.1] Tem Servico?":  {
+                                                        "main":  [
+                                                                     [
+                                                                         {
+                                                                             "node":  "[Onb A2.1] Atualizar Servico Cliente",
+                                                                             "type":  "main",
+                                                                             "index":  0
+                                                                         }
+                                                                     ],
+                                                                     [
+                                                                         {
+                                                                             "node":  "[Onb A2.1] Ler Etapas A1",
+                                                                             "type":  "main",
+                                                                             "index":  0
+                                                                         }
+                                                                     ]
+                                                                 ]
+                                                    },
+                        "[Onb A2.1] Atualizar Servico Cliente":  {
+                                                                     "main":  [
+                                                                                  [
+                                                                                      {
+                                                                                          "node":  "[Onb A2.1] Ler Etapas A1",
+                                                                                          "type":  "main",
+                                                                                          "index":  0
+                                                                                      }
+                                                                                  ]
+                                                                              ]
+                                                                 }
                     },
     "settings":  {
                      "executionOrder":  "v1",
@@ -904,9 +1003,9 @@
     "staticData":  null,
     "meta":  null,
     "pinData":  null,
-    "versionId":  "4c2e8fa0-f44e-4699-8168-ce6388506ee1",
-    "activeVersionId":  "4c2e8fa0-f44e-4699-8168-ce6388506ee1",
-    "versionCounter":  39,
+    "versionId":  "cc6c32af-2262-45c3-8d9b-8fc87c5ed989",
+    "activeVersionId":  "cc6c32af-2262-45c3-8d9b-8fc87c5ed989",
+    "versionCounter":  48,
     "triggerCount":  1,
     "shared":  [
                    {
@@ -931,9 +1030,9 @@
 
              ],
     "activeVersion":  {
-                          "updatedAt":  "2026-05-29T16:23:36.550Z",
-                          "createdAt":  "2026-05-29T16:23:36.550Z",
-                          "versionId":  "4c2e8fa0-f44e-4699-8168-ce6388506ee1",
+                          "updatedAt":  "2026-05-29T18:39:47.430Z",
+                          "createdAt":  "2026-05-29T18:39:47.430Z",
+                          "versionId":  "cc6c32af-2262-45c3-8d9b-8fc87c5ed989",
                           "workflowId":  "0MfPA3Uqmj4TySiX",
                           "nodes":  [
                                         {
@@ -957,7 +1056,7 @@
                                         },
                                         {
                                             "parameters":  {
-                                                               "jsCode":  "const payload = $json.body ?? $json;\nconst required = [\u0027cnpj_cliente\u0027, \u0027cliente_nome\u0027, \u0027data_inicio\u0027, \u0027modelo_negocio\u0027, \u0027servico\u0027, \u0027origem_comercial\u0027];\nconst errors = [];\nfor (const field of required) {\n  if (payload[field] === undefined || payload[field] === null || payload[field] === \u0027\u0027) {\n    errors.push(`Campo obrigatorio ausente: ${field}`);\n  }\n}\nconst modelosAceitos = [\u0027Infoproduto\u0027, \u0027Lead Gen\u0027, \u0027E-Commerce\u0027];\nconst servicosAceitos = new Set([\u0027Tr\\u00e1fego pago\u0027, \u0027Trafego pago\u0027, \u0027Site\u0027, \u0027Agente IA\u0027]);\nif (payload.modelo_negocio \u0026\u0026 !modelosAceitos.includes(payload.modelo_negocio)) {\n  errors.push(\u0027modelo_negocio invalido\u0027);\n}\nif (payload.servico \u0026\u0026 !Array.isArray(payload.servico)) {\n  errors.push(\u0027servico deve ser array\u0027);\n}\nif (Array.isArray(payload.servico)) {\n  const invalidos = payload.servico.filter((item) =\u003e !servicosAceitos.has(item));\n  if (invalidos.length) {\n    errors.push(`servico invalido: ${invalidos.join(\u0027, \u0027)}`);\n  }\n}\nif (payload.data_inicio \u0026\u0026 !/^\\d{4}-\\d{2}-\\d{2}$/.test(payload.data_inicio)) {\n  errors.push(\u0027data_inicio deve estar em YYYY-MM-DD\u0027);\n}\nif (errors.length) {\n  return [{ json: { is_valid: false, statusCode: 400, error: \u0027Payload invalido\u0027, details: errors, received_payload: payload } }];\n}\nreturn [{ json: { is_valid: true, payload } }];"
+                                                               "jsCode":  "const payload = $json.body ?? $json;\nconst required = [\u0027cnpj_cliente\u0027, \u0027cliente_nome\u0027];\nconst errors = [];\nfor (const field of required) {\n  if (payload[field] === undefined || payload[field] === null || payload[field] === \u0027\u0027) {\n    errors.push(\u0027Campo obrigatorio ausente: \u0027 + field);\n  }\n}\nconst modelosAceitos = [\u0027Infoproduto\u0027, \u0027Lead Gen\u0027, \u0027E-Commerce\u0027];\nconst canonicalServico = (value) =\u003e {\n  const text = String(value ?? \u0027\u0027).trim();\n  const key = text.normalize(\u0027NFD\u0027).replace(/[\\u0300-\\u036f]/g, \u0027\u0027).toLocaleLowerCase(\u0027pt-BR\u0027);\n  if (key === \u0027trafego pago\u0027) return \u0027Tr\\u00e1fego pago\u0027;\n  if (key === \u0027site\u0027) return \u0027Site\u0027;\n  if (key === \u0027agente ia\u0027) return \u0027Agente IA\u0027;\n  return null;\n};\nif (payload.modelo_negocio \u0026\u0026 !modelosAceitos.includes(payload.modelo_negocio)) {\n  errors.push(\u0027modelo_negocio invalido\u0027);\n}\nif (payload.servico \u0026\u0026 !Array.isArray(payload.servico)) {\n  errors.push(\u0027servico deve ser array\u0027);\n}\nif (Array.isArray(payload.servico)) {\n  const invalidos = payload.servico.filter((item) =\u003e !canonicalServico(item));\n  if (invalidos.length) {\n    errors.push(\u0027servico invalido: \u0027 + invalidos.join(\u0027, \u0027));\n  }\n}\nif (payload.data_inicio \u0026\u0026 !/^\\d{4}-\\d{2}-\\d{2}$/.test(payload.data_inicio)) {\n  errors.push(\u0027data_inicio deve estar em YYYY-MM-DD\u0027);\n}\nif (errors.length) {\n  return [{ json: { is_valid: false, statusCode: 400, error: \u0027Payload invalido\u0027, details: errors, received_payload: payload } }];\n}\nreturn [{ json: { is_valid: true, payload } }];"
                                                            },
                                             "id":  "e329cc83-8245-4687-a918-8ec704bcb35c",
                                             "name":  "[Onb A2.1] Validar Payload",
@@ -1021,7 +1120,7 @@
                                         },
                                         {
                                             "parameters":  {
-                                                               "jsCode":  "const payload = $json.payload;\nconst normalizarTexto = (value) =\u003e String(value ?? \u0027\u0027).trim();\nconst normalizarNome = (value) =\u003e normalizarTexto(value).toLocaleLowerCase(\u0027pt-BR\u0027);\nconst cnpj_normalizado = String(payload.cnpj_cliente ?? \u0027\u0027).replace(/\\D/g, \u0027\u0027);\nconst cliente_nome = normalizarTexto(payload.cliente_nome);\nconst servico = Array.isArray(payload.servico)\n  ? payload.servico.map((item) =\u003e normalizarTexto(item) === \u0027Trafego pago\u0027 ? \u0027Tr\\u00e1fego pago\u0027 : normalizarTexto(item))\n  : [];\nreturn [{ json: {\n  cliente_nome,\n  cliente_nome_normalizado: normalizarNome(cliente_nome),\n  cnpj_original: payload.cnpj_cliente,\n  cnpj_normalizado,\n  data_inicio: payload.data_inicio,\n  modelo_negocio: payload.modelo_negocio,\n  servico,\n  origem_comercial: normalizarTexto(payload.origem_comercial),\n  responsavel_geral_email: payload.responsavel_geral_email ? normalizarTexto(payload.responsavel_geral_email).toLowerCase() : null,\n  observacoes: `CNPJ normalizado: ${cnpj_normalizado}`,\n  raw_payload: payload,\n  active_statuses: [\u0027Em andamento\u0027, \u0027N\\u00e3o iniciado\u0027, \u0027Bloqueado\u0027]\n} }];"
+                                                               "jsCode":  "const payload = $json.payload;\nconst normalizarTexto = (value) =\u003e String(value ?? \u0027\u0027).trim();\nconst normalizarNome = (value) =\u003e normalizarTexto(value).toLocaleLowerCase(\u0027pt-BR\u0027);\nconst canonicalServico = (value) =\u003e {\n  const text = normalizarTexto(value);\n  const key = text.normalize(\u0027NFD\u0027).replace(/[\\u0300-\\u036f]/g, \u0027\u0027).toLocaleLowerCase(\u0027pt-BR\u0027);\n  if (key === \u0027trafego pago\u0027) return \u0027Tr\\u00e1fego pago\u0027;\n  if (key === \u0027site\u0027) return \u0027Site\u0027;\n  if (key === \u0027agente ia\u0027) return \u0027Agente IA\u0027;\n  return text;\n};\nconst currentDateBr = new Date().toLocaleDateString(\u0027en-CA\u0027, { timeZone: \u0027America/Sao_Paulo\u0027 });\nconst cnpj_normalizado = String(payload.cnpj_cliente ?? \u0027\u0027).replace(/\\D/g, \u0027\u0027);\nconst cliente_nome = normalizarTexto(payload.cliente_nome);\nconst servico = Array.isArray(payload.servico)\n  ? payload.servico.map((item) =\u003e canonicalServico(item)).filter(Boolean)\n  : [];\nreturn [{ json: {\n  cliente_nome,\n  cliente_nome_normalizado: normalizarNome(cliente_nome),\n  cnpj_original: payload.cnpj_cliente,\n  cnpj_normalizado,\n  data_inicio: payload.data_inicio || currentDateBr,\n  modelo_negocio: normalizarTexto(payload.modelo_negocio),\n  servico,\n  origem_comercial: normalizarTexto(payload.origem_comercial),\n  responsavel_geral_email: payload.responsavel_geral_email ? normalizarTexto(payload.responsavel_geral_email).toLowerCase() : null,\n  observacoes: \u0027CNPJ normalizado: \u0027 + cnpj_normalizado,\n  raw_payload: payload,\n  active_statuses: [\u0027Em andamento\u0027, \u0027N?o iniciado\u0027, \u0027Bloqueado\u0027]\n} }];"
                                                            },
                                             "id":  "31fe1d8d-dd53-4876-9b75-270e10ffd2f5",
                                             "name":  "[Onb A2.1] Normalizar Contexto",
@@ -1215,15 +1314,15 @@
                                                                                                            },
                                                                                                            {
                                                                                                                "key":  "Modelo de negócio (business_model)|select",
-                                                                                                               "selectValue":  "={{ $json.cliente_properties.modelo_negocio }}"
+                                                                                                               "selectValue":  "={{ $json.cliente_properties.modelo_negocio || undefined }}"
                                                                                                            },
                                                                                                            {
                                                                                                                "key":  "Serviço|multi_select",
-                                                                                                               "multiSelectValues":  "={{ $json.cliente_properties.servico }}"
+                                                                                                               "multiSelectValue":  "={{ $json.cliente_properties ? $json.cliente_properties.servico : $(\"[Onb A2.1] Resolver Responsavel Geral\").first().json.cliente_properties.servico }}"
                                                                                                            },
                                                                                                            {
                                                                                                                "key":  "Origem (vendedor / comercial)|rich_text",
-                                                                                                               "textContent":  "={{ $json.cliente_properties.origem_comercial }}"
+                                                                                                               "textContent":  "={{ $json.cliente_properties.origem_comercial || \"\" }}"
                                                                                                            },
                                                                                                            {
                                                                                                                "key":  "Observações|rich_text",
@@ -1563,6 +1662,76 @@
                                                              704,
                                                              -176
                                                          ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "conditions":  {
+                                                                                  "options":  {
+                                                                                                  "caseSensitive":  true,
+                                                                                                  "leftValue":  "",
+                                                                                                  "typeValidation":  "strict",
+                                                                                                  "version":  2
+                                                                                              },
+                                                                                  "conditions":  [
+                                                                                                     {
+                                                                                                         "leftValue":  "={{ $(\u0027[Onb A2.1] Resolver Responsavel Geral\u0027).first().json.cliente_properties.servico.length \u003e 0 }}",
+                                                                                                         "rightValue":  true,
+                                                                                                         "operator":  {
+                                                                                                                          "type":  "boolean",
+                                                                                                                          "operation":  "equals"
+                                                                                                                      }
+                                                                                                     }
+                                                                                                 ],
+                                                                                  "combinator":  "and"
+                                                                              },
+                                                               "options":  {
+
+                                                                           }
+                                                           },
+                                            "id":  "38b11508-e1a0-47a3-9c6a-0caa5c210cf8",
+                                            "name":  "[Onb A2.1] Tem Servico?",
+                                            "type":  "n8n-nodes-base.if",
+                                            "typeVersion":  2.2,
+                                            "position":  [
+                                                             1776,
+                                                             0
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "resource":  "databasePage",
+                                                               "operation":  "update",
+                                                               "pageId":  {
+                                                                              "__rl":  true,
+                                                                              "mode":  "id",
+                                                                              "value":  "={{ $json.id }}"
+                                                                          },
+                                                               "simple":  false,
+                                                               "propertiesUi":  {
+                                                                                    "propertyValues":  [
+                                                                                                           {
+                                                                                                               "key":  "Serviço|multi_select",
+                                                                                                               "multiSelectValue":  "={{ $json.cliente_properties ? $json.cliente_properties.servico : $(\"[Onb A2.1] Resolver Responsavel Geral\").first().json.cliente_properties.servico }}"
+                                                                                                           }
+                                                                                                       ]
+                                                                                },
+                                                               "options":  {
+
+                                                                           }
+                                                           },
+                                            "id":  "838bf79e-6082-471f-a4c1-93a4c7685b34",
+                                            "name":  "[Onb A2.1] Atualizar Servico Cliente",
+                                            "type":  "n8n-nodes-base.notion",
+                                            "typeVersion":  2.2,
+                                            "position":  [
+                                                             2000,
+                                                             -112
+                                                         ],
+                                            "credentials":  {
+                                                                "notionApi":  {
+                                                                                  "id": "<credential_id_redacted>", "name": "Notion account"
+                                                                              }
+                                                            }
                                         }
                                     ],
                           "connections":  {
@@ -1694,7 +1863,7 @@
                                                                                "main":  [
                                                                                             [
                                                                                                 {
-                                                                                                    "node":  "[Onb A2.1] Ler Etapas A1",
+                                                                                                    "node":  "[Onb A2.1] Tem Servico?",
                                                                                                     "type":  "main",
                                                                                                     "index":  0
                                                                                                 }
@@ -1824,7 +1993,36 @@
                                                                                                  }
                                                                                              ]
                                                                                          ]
-                                                                            }
+                                                                            },
+                                              "[Onb A2.1] Tem Servico?":  {
+                                                                              "main":  [
+                                                                                           [
+                                                                                               {
+                                                                                                   "node":  "[Onb A2.1] Atualizar Servico Cliente",
+                                                                                                   "type":  "main",
+                                                                                                   "index":  0
+                                                                                               }
+                                                                                           ],
+                                                                                           [
+                                                                                               {
+                                                                                                   "node":  "[Onb A2.1] Ler Etapas A1",
+                                                                                                   "type":  "main",
+                                                                                                   "index":  0
+                                                                                               }
+                                                                                           ]
+                                                                                       ]
+                                                                          },
+                                              "[Onb A2.1] Atualizar Servico Cliente":  {
+                                                                                           "main":  [
+                                                                                                        [
+                                                                                                            {
+                                                                                                                "node":  "[Onb A2.1] Ler Etapas A1",
+                                                                                                                "type":  "main",
+                                                                                                                "index":  0
+                                                                                                            }
+                                                                                                        ]
+                                                                                                    ]
+                                                                                       }
                                           },
                           "authors":  "Olavo Franzin",
                           "name":  null,
@@ -1832,34 +2030,34 @@
                           "autosaved":  false,
                           "workflowPublishHistory":  [
                                                          {
-                                                             "createdAt":  "2026-05-29T16:23:36.771Z",
-                                                             "id":  410,
+                                                             "createdAt":  "2026-05-29T18:39:47.618Z",
+                                                             "id":  446,
                                                              "workflowId":  "0MfPA3Uqmj4TySiX",
-                                                             "versionId":  "4c2e8fa0-f44e-4699-8168-ce6388506ee1",
+                                                             "versionId":  "cc6c32af-2262-45c3-8d9b-8fc87c5ed989",
                                                              "event":  "deactivated",
                                                              "userId":  "2f681992-45e6-4ec9-afe2-d79763e3d45b"
                                                          },
                                                          {
-                                                             "createdAt":  "2026-05-29T16:23:36.849Z",
-                                                             "id":  411,
+                                                             "createdAt":  "2026-05-29T18:39:47.643Z",
+                                                             "id":  447,
                                                              "workflowId":  "0MfPA3Uqmj4TySiX",
-                                                             "versionId":  "4c2e8fa0-f44e-4699-8168-ce6388506ee1",
+                                                             "versionId":  "cc6c32af-2262-45c3-8d9b-8fc87c5ed989",
                                                              "event":  "activated",
                                                              "userId":  "2f681992-45e6-4ec9-afe2-d79763e3d45b"
                                                          },
                                                          {
-                                                             "createdAt":  "2026-05-29T16:23:37.325Z",
-                                                             "id":  412,
+                                                             "createdAt":  "2026-05-29T18:39:47.801Z",
+                                                             "id":  448,
                                                              "workflowId":  "0MfPA3Uqmj4TySiX",
-                                                             "versionId":  "4c2e8fa0-f44e-4699-8168-ce6388506ee1",
+                                                             "versionId":  "cc6c32af-2262-45c3-8d9b-8fc87c5ed989",
                                                              "event":  "deactivated",
                                                              "userId":  "2f681992-45e6-4ec9-afe2-d79763e3d45b"
                                                          },
                                                          {
-                                                             "createdAt":  "2026-05-29T16:23:37.542Z",
-                                                             "id":  413,
+                                                             "createdAt":  "2026-05-29T18:39:47.828Z",
+                                                             "id":  449,
                                                              "workflowId":  "0MfPA3Uqmj4TySiX",
-                                                             "versionId":  "4c2e8fa0-f44e-4699-8168-ce6388506ee1",
+                                                             "versionId":  "cc6c32af-2262-45c3-8d9b-8fc87c5ed989",
                                                              "event":  "activated",
                                                              "userId":  "2f681992-45e6-4ec9-afe2-d79763e3d45b"
                                                          }

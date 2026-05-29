@@ -44,11 +44,23 @@ function buildOnboardingPayload_(namedValues) {
   const payload = {
     cnpj_cliente: getRequiredValue_(namedValues, 'cnpj_cliente'),
     cliente_nome: getRequiredValue_(namedValues, 'cliente_nome'),
-    data_inicio: normalizeDate_(getRequiredValue_(namedValues, 'data_inicio')),
-    modelo_negocio: normalizeModelo_(getRequiredValue_(namedValues, 'modelo_negocio')),
-    servico: normalizeServicos_(getRequiredValue_(namedValues, 'servico')),
-    origem_comercial: getRequiredValue_(namedValues, 'origem_comercial')
+    data_inicio: normalizeDate_(getOptionalValue_(namedValues, 'data_inicio') || Utilities.formatDate(new Date(), 'America/Sao_Paulo', 'yyyy-MM-dd'))
   };
+
+  const modelo = getOptionalValue_(namedValues, 'modelo_negocio');
+  if (modelo) {
+    payload.modelo_negocio = normalizeModelo_(modelo);
+  }
+
+  const servico = getOptionalValue_(namedValues, 'servico');
+  if (servico) {
+    payload.servico = normalizeServicos_(servico);
+  }
+
+  const origem = getOptionalValue_(namedValues, 'origem_comercial');
+  if (origem) {
+    payload.origem_comercial = origem;
+  }
 
   const responsavel = getOptionalValue_(namedValues, 'responsavel_geral_email');
   if (responsavel) {
@@ -95,6 +107,7 @@ function normalizeDate_(value) {
 
 function normalizeModelo_(value) {
   const trimmed = String(value).trim();
+  if (!trimmed) return '';
   if (!VALID_MODELOS.includes(trimmed)) {
     throw new Error('modelo_negocio inválido: ' + trimmed + '. Esperado: ' + VALID_MODELOS.join(', '));
   }
@@ -102,6 +115,7 @@ function normalizeModelo_(value) {
 }
 
 function normalizeServicos_(value) {
+  if (!String(value).trim()) return [];
   const parts = String(value)
     .split(/[,;\n]+/)
     .map(item => item.trim())

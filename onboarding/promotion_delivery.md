@@ -89,3 +89,70 @@ O script:
 7. Salvar e autorizar o script.
 
 Se algum campo do Form não casar com `FIELD_ALIASES`, ajustar o alias no `.gs` antes de ativar o trigger.
+
+## Passo 5c - Contrato mínimo alinhado ao Form real
+
+Status: concluído em 2026-05-29. Smoke completo do Passo 6 ainda não executado.
+
+### Ajuste de contrato A2.1
+
+O Form real do briefing expõe apenas estes campos com mapeamento direto para o contrato:
+
+- `Nome da empresa` -> `cliente_nome`
+- `CNPJ` -> `cnpj_cliente`
+
+O workflow A2.1 foi ajustado para aceitar payload mínimo:
+
+- `[Onb A2.1] Validar Payload` agora exige somente `cnpj_cliente` e `cliente_nome`.
+- `data_inicio` é opcional; quando ausente, `[Onb A2.1] Normalizar Contexto` resolve a data atual em `America/Sao_Paulo`.
+- `modelo_negocio`, `servico` e `origem_comercial` são opcionais.
+- `modelo_negocio` e `servico` continuam validados se forem enviados.
+- Hardening por `X-Onb-Secret` foi mantido intacto.
+
+### Ajuste em Criar Cliente
+
+Campos sempre enviados:
+
+- `Cliente`
+- `Status = Em andamento`
+- `Data de início`
+- `SLA até 1ª entrega (dias) = 21`
+- `Observações`
+
+Campos opcionais:
+
+- `Modelo de negócio (business_model)` usa `undefined` quando ausente.
+- `Serviço` usa `multiSelectValue` singular do Notion v2.2; `multiSelectValues` plural é ignorado pelo node.
+- `Origem (vendedor / comercial)` usa string vazia quando ausente.
+- `Responsável geral` mantém a lógica existente por match de e-mail com usuário do workspace.
+
+Para garantir que `Serviço` seja preenchido no payload completo, foi adicionado:
+
+- `[Onb A2.1] Tem Servico?`
+- `[Onb A2.1] Atualizar Servico Cliente`
+
+### Ajuste no Apps Script
+
+`onboarding/apps-script-briefing.gs` foi atualizado para:
+
+- exigir só `cliente_nome` e `cnpj_cliente`;
+- gerar `data_inicio` com `Utilities.formatDate(new Date(), 'America/Sao_Paulo', 'yyyy-MM-dd')`;
+- omitir `modelo_negocio`, `servico`, `origem_comercial` e `responsavel_geral_email` quando não houver campo equivalente no Form;
+- manter `ONB_WEBHOOK_SECRET` exclusivamente em Script Properties.
+
+### Testes E2E 5c
+
+| Cenário | Resultado HTTP | Validação |
+| --- | ---: | --- |
+| Header válido + payload mínimo (`cnpj_cliente`, `cliente_nome`) | 201 | Cliente `36fb65e5-c72b-8101-9e99-c92920f2de21` criado com `Status=Em andamento`, `Data de início=2026-05-29`, `Modelo=null`, `Serviço=[]`, `Origem=''`, 31 etapas. |
+| Header válido + payload completo | 201 | Cliente `36fb65e5-c72b-81fd-ad3e-c9dfc9e40afb` criado com `Modelo=Lead Gen`, `Serviço=Tráfego pago, Agente IA`, `Origem=Olavo`, 31 etapas. |
+| Sem header | 401 | 0 clientes criados para `Cliente Sandbox A2.1 Minimal NoHeader Final`. |
+
+### Cleanup 5c
+
+Todos os clientes sintéticos criados durante os retestes 5c foram arquivados com guarda `Cliente Sandbox`, junto com suas etapas vinculadas.
+
+Validação final:
+
+- 9 clientes sintéticos arquivados.
+- 0 etapas ativas vinculadas aos 9 clientes.
