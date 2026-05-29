@@ -4,7 +4,7 @@
     "id":  "xoFU3G3xfEm0Zfjl",
     "name":  "Onb - Disparar CSAT NPS",
     "description":  null,
-    "active":  false,
+    "active":  true,
     "isArchived":  false,
     "nodes":  [
                   {
@@ -267,13 +267,19 @@
                      "availableInMCP":  true,
                      "timezone":  "America/Sao_Paulo"
                  },
-    "staticData":  null,
+    "staticData":  {
+                       "node:[Onb A2.11] Schedule Trigger":  {
+                                                                 "recurrenceRules":  [
+
+                                                                                     ]
+                                                             }
+                   },
     "meta":  null,
     "pinData":  null,
     "versionId":  "079faf69-e825-429f-8279-3afee9d8d25b",
-    "activeVersionId":  null,
+    "activeVersionId":  "079faf69-e825-429f-8279-3afee9d8d25b",
     "versionCounter":  2,
-    "triggerCount":  0,
+    "triggerCount":  1,
     "shared":  [
                    {
                        "updatedAt":  "2026-05-28T17:59:21.844Z",
@@ -296,5 +302,280 @@
     "tags":  [
 
              ],
-    "activeVersion":  null
+    "activeVersion":  {
+                          "updatedAt":  "2026-05-28T18:04:46.866Z",
+                          "createdAt":  "2026-05-28T18:04:46.866Z",
+                          "versionId":  "079faf69-e825-429f-8279-3afee9d8d25b",
+                          "workflowId":  "xoFU3G3xfEm0Zfjl",
+                          "nodes":  [
+                                        {
+                                            "id":  "8a9059b6-4cf3-406b-af14-7a3f32056d9c",
+                                            "name":  "[Onb A2.11] Schedule Trigger",
+                                            "type":  "n8n-nodes-base.scheduleTrigger",
+                                            "typeVersion":  1.3,
+                                            "position":  [
+                                                             0,
+                                                             0
+                                                         ],
+                                            "parameters":  {
+                                                               "rule":  {
+                                                                            "interval":  [
+                                                                                             {
+                                                                                                 "field":  "days",
+                                                                                                 "daysInterval":  1,
+                                                                                                 "triggerAtHour":  9,
+                                                                                                 "triggerAtMinute":  0
+                                                                                             }
+                                                                                         ]
+                                                                        }
+                                                           }
+                                        },
+                                        {
+                                            "id":  "6a0751f6-0e8c-4288-9a38-c554cd2845b0",
+                                            "name":  "[Onb A2.11] Buscar Clientes Concluidos",
+                                            "type":  "n8n-nodes-base.notion",
+                                            "typeVersion":  2.2,
+                                            "position":  [
+                                                             224,
+                                                             0
+                                                         ],
+                                            "parameters":  {
+                                                               "resource":  "databasePage",
+                                                               "operation":  "getAll",
+                                                               "databaseId":  {
+                                                                                  "__rl":  true,
+                                                                                  "mode":  "list",
+                                                                                  "value":  "04e34a62624b484cbda546604564b88c"
+                                                                              },
+                                                               "returnAll":  true,
+                                                               "simple":  false,
+                                                               "filterType":  "none"
+                                                           },
+                                            "credentials":  {
+                                                                "notionApi":  {
+                                                                                  "id": "<credential_id_redacted>", "name": "Notion account"
+                                                                              }
+                                                            }
+                                        },
+                                        {
+                                            "id":  "f87a34a2-9fbf-4d57-b83e-a0b8c6bc5b0b",
+                                            "name":  "[Onb A2.11] Filtrar Clientes Elegiveis",
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             448,
+                                                             0
+                                                         ],
+                                            "parameters":  {
+                                                               "mode":  "runOnceForAllItems",
+                                                               "jsCode":  "const TARGET_STATUS = \u0027Concluído\u0027;\nconst IDEMPOTENCY_MARK = \u0027A2.11 disparada em\u0027;\nconst pickTitle = (page) =\u003e {\n  for (const prop of Object.values(page.properties || {})) {\n    if (prop?.type === \u0027title\u0027) return (prop.title || []).map((item) =\u003e item.plain_text || \u0027\u0027).join(\u0027\u0027).trim();\n  }\n  return \u0027\u0027;\n};\nconst pickSelect = (prop) =\u003e prop?.select?.name || \u0027\u0027;\nconst pickPlainText = (prop) =\u003e (prop?.rich_text || []).map((item) =\u003e item.plain_text || \u0027\u0027).join(\u0027\u0027);\nconst out = [];\nfor (const item of $input.all()) {\n  const page = item.json || {};\n  const props = page.properties || {};\n  const status = pickSelect(props.Status);\n  const observacoes_atual = pickPlainText(props[\u0027Observações\u0027]);\n  if (status === TARGET_STATUS \u0026\u0026 !observacoes_atual.includes(IDEMPOTENCY_MARK) \u0026\u0026 !page.archived) {\n    out.push({ json: { cliente_page_id: page.id, cliente_nome: pickTitle(page), cliente_status: status, observacoes_atual } });\n  }\n}\nreturn out;"
+                                                           }
+                                        },
+                                        {
+                                            "id":  "8343f7f9-4e63-4196-8eb8-feb98cdbbe62",
+                                            "name":  "[Onb A2.11] Montar Mensagem e Links",
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             896,
+                                                             0
+                                                         ],
+                                            "parameters":  {
+                                                               "mode":  "runOnceForAllItems",
+                                                               "jsCode":  "const CSAT_FORM_URL = \u0027<CSAT_FORM_URL_redacted>\u0027;\nconst NPS_FORM_URL = \u0027<NPS_FORM_URL_redacted>\u0027;\nconst OLAVO_PHONE = \u0027<OLAVO_PHONE_redacted>\u0027;\nconst out = [];\nfor (const item of $input.all()) {\n  const cliente = item.json || {};\n  const cliente_page_id = cliente.cliente_page_id;\n  const cliente_nome = cliente.cliente_nome || \u0027\u0027;\n  if (!cliente_page_id) {\n    throw new Error(\u0027cliente_page_id ausente - nao montar CSAT/NPS sem cliente\u0027);\n  }\n  const encodedId = encodeURIComponent(cliente_page_id);\n  const encodedName = encodeURIComponent(cliente_nome);\n  const csat_link = `${CSAT_FORM_URL}#cliente=${encodedId}\u0026cliente_nome=${encodedName}`;\n  const nps_link = `${NPS_FORM_URL}#cliente=${encodedId}\u0026cliente_nome=${encodedName}`;\n  const text = `[Onb A2.11] Disparar CSAT/NPS para cliente ${cliente_nome}\nCSAT: ${csat_link}\nNPS: ${nps_link}\nID do cliente=${cliente_page_id}\nAcao: enviar os 2 links ao cliente off-platform.`;\n  out.push({ json: { ...cliente, number: OLAVO_PHONE, csat_link, nps_link, text } });\n}\nreturn out;"
+                                                           }
+                                        },
+                                        {
+                                            "id":  "742fd55c-92db-4c58-9210-804c5465ad00",
+                                            "name":  "[Onb A2.11] Enviar via Evolution",
+                                            "type":  "n8n-nodes-base.httpRequest",
+                                            "typeVersion":  4.4,
+                                            "position":  [
+                                                             1120,
+                                                             0
+                                                         ],
+                                            "parameters":  {
+                                                               "method":  "POST",
+                                                               "url":  "<evolution_base_url_redacted>/message/sendText/Whats%20Business",
+                                                               "authentication":  "predefinedCredentialType",
+                                                               "nodeCredentialType":  "httpHeaderAuth",
+                                                               "sendBody":  true,
+                                                               "contentType":  "json",
+                                                               "specifyBody":  "json",
+                                                               "jsonBody":  "={{ { number: $json.number, text: $json.text } }}",
+                                                               "options":  {
+                                                                               "response":  {
+                                                                                                "response":  {
+                                                                                                                 "fullResponse":  true,
+                                                                                                                 "responseFormat":  "json"
+                                                                                                             }
+                                                                                            }
+                                                                           }
+                                                           },
+                                            "credentials":  {
+                                                                "httpHeaderAuth":  {
+                                                                                       "id": "<credential_id_redacted>", "name": "Evolution API Header Auth"
+                                                                                   }
+                                                            },
+                                            "continueOnFail":  true
+                                        },
+                                        {
+                                            "id":  "d1ebf798-ca68-4a90-8463-8717adc39f58",
+                                            "name":  "[Onb A2.11] Preparar Update Observacoes",
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             1344,
+                                                             0
+                                                         ],
+                                            "parameters":  {
+                                                               "mode":  "runOnceForAllItems",
+                                                               "jsCode":  "const mensagens = $(\u0027[Onb A2.11] Montar Mensagem e Links\u0027).all().map((item) =\u003e item.json);\nconst responses = $input.all();\nconst now = new Date();\nconst brTimestamp = now.toLocaleString(\u0027sv-SE\u0027, { timeZone: \u0027America/Sao_Paulo\u0027 }).replace(\u0027 \u0027, \u0027T\u0027) + \u0027-03:00\u0027;\nconst out = [];\nfor (const [index, responseItem] of responses.entries()) {\n  const msg = mensagens[index];\n  if (!msg) continue;\n  const payload = responseItem.json || {};\n  const statusCode = Number(payload.statusCode || payload.response?.statusCode || 0);\n  const failed = Boolean(payload.error || payload.message || (statusCode \u0026\u0026 (statusCode \u003c 200 || statusCode \u003e= 300)));\n  const evolutionStatus = failed ? \u0027falhou\u0027 : \u0027ok\u0027;\n  const detail = statusCode ? `HTTP ${statusCode}` : (failed ? \u0027erro sem status HTTP\u0027 : \u0027\u0027);\n  const linhaNova = `A2.11 disparada em ${brTimestamp}. CSAT: ${msg.csat_link}, NPS: ${msg.nps_link}. Status Evolution: ${evolutionStatus}${detail ? ` (${detail})` : \u0027\u0027}.`;\n  const observacoes_atual = msg.observacoes_atual || \u0027\u0027;\n  const observacoes_finais = observacoes_atual ? `${observacoes_atual}\\n${linhaNova}` : linhaNova;\n  out.push({ json: { ...msg, evolution_status: evolutionStatus, evolution_detail: detail, linha_nova: linhaNova, observacoes_finais } });\n}\nreturn out;"
+                                                           }
+                                        },
+                                        {
+                                            "id":  "1cd4700b-720a-49ef-88e5-7040f04c16c7",
+                                            "name":  "[Onb A2.11] Atualizar Observacoes Cliente",
+                                            "type":  "n8n-nodes-base.notion",
+                                            "typeVersion":  2.2,
+                                            "position":  [
+                                                             1568,
+                                                             0
+                                                         ],
+                                            "parameters":  {
+                                                               "resource":  "databasePage",
+                                                               "operation":  "update",
+                                                               "pageId":  {
+                                                                              "__rl":  true,
+                                                                              "mode":  "id",
+                                                                              "value":  "={{ $json.cliente_page_id }}"
+                                                                          },
+                                                               "simple":  false,
+                                                               "propertiesUi":  {
+                                                                                    "propertyValues":  [
+                                                                                                           {
+                                                                                                               "key":  "Observações|rich_text",
+                                                                                                               "textContent":  "={{ $json.observacoes_finais }}"
+                                                                                                           }
+                                                                                                       ]
+                                                                                },
+                                                               "options":  {
+
+                                                                           }
+                                                           },
+                                            "credentials":  {
+                                                                "notionApi":  {
+                                                                                  "id": "<credential_id_redacted>", "name": "Notion account"
+                                                                              }
+                                                            }
+                                        },
+                                        {
+                                            "id":  "0e176969-be6b-4e70-9556-33a709350bb6",
+                                            "name":  "[Onb A2.11] Consolidar Resultado",
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             1792,
+                                                             0
+                                                         ],
+                                            "parameters":  {
+                                                               "mode":  "runOnceForAllItems",
+                                                               "jsCode":  "const updates = $(\u0027[Onb A2.11] Preparar Update Observacoes\u0027).all().map((item) =\u003e item.json);\nreturn [{ json: { workflow: \u0027Onb - Disparar CSAT NPS\u0027, clientes_processados: updates.length, evolution_sucesso: updates.filter((item) =\u003e item.evolution_status === \u0027ok\u0027).length, evolution_falha: updates.filter((item) =\u003e item.evolution_status === \u0027falhou\u0027).length, cliente_ids: updates.map((item) =\u003e item.cliente_page_id) } }];"
+                                                           }
+                                        }
+                                    ],
+                          "connections":  {
+                                              "[Onb A2.11] Schedule Trigger":  {
+                                                                                   "main":  [
+                                                                                                [
+                                                                                                    {
+                                                                                                        "node":  "[Onb A2.11] Buscar Clientes Concluidos",
+                                                                                                        "type":  "main",
+                                                                                                        "index":  0
+                                                                                                    }
+                                                                                                ]
+                                                                                            ]
+                                                                               },
+                                              "[Onb A2.11] Buscar Clientes Concluidos":  {
+                                                                                             "main":  [
+                                                                                                          [
+                                                                                                              {
+                                                                                                                  "node":  "[Onb A2.11] Filtrar Clientes Elegiveis",
+                                                                                                                  "type":  "main",
+                                                                                                                  "index":  0
+                                                                                                              }
+                                                                                                          ]
+                                                                                                      ]
+                                                                                         },
+                                              "[Onb A2.11] Filtrar Clientes Elegiveis":  {
+                                                                                             "main":  [
+                                                                                                          [
+                                                                                                              {
+                                                                                                                  "node":  "[Onb A2.11] Montar Mensagem e Links",
+                                                                                                                  "type":  "main",
+                                                                                                                  "index":  0
+                                                                                                              }
+                                                                                                          ]
+                                                                                                      ]
+                                                                                         },
+                                              "[Onb A2.11] Montar Mensagem e Links":  {
+                                                                                          "main":  [
+                                                                                                       [
+                                                                                                           {
+                                                                                                               "node":  "[Onb A2.11] Enviar via Evolution",
+                                                                                                               "type":  "main",
+                                                                                                               "index":  0
+                                                                                                           }
+                                                                                                       ]
+                                                                                                   ]
+                                                                                      },
+                                              "[Onb A2.11] Enviar via Evolution":  {
+                                                                                       "main":  [
+                                                                                                    [
+                                                                                                        {
+                                                                                                            "node":  "[Onb A2.11] Preparar Update Observacoes",
+                                                                                                            "type":  "main",
+                                                                                                            "index":  0
+                                                                                                        }
+                                                                                                    ]
+                                                                                                ]
+                                                                                   },
+                                              "[Onb A2.11] Preparar Update Observacoes":  {
+                                                                                              "main":  [
+                                                                                                           [
+                                                                                                               {
+                                                                                                                   "node":  "[Onb A2.11] Atualizar Observacoes Cliente",
+                                                                                                                   "type":  "main",
+                                                                                                                   "index":  0
+                                                                                                               }
+                                                                                                           ]
+                                                                                                       ]
+                                                                                          },
+                                              "[Onb A2.11] Atualizar Observacoes Cliente":  {
+                                                                                                "main":  [
+                                                                                                             [
+                                                                                                                 {
+                                                                                                                     "node":  "[Onb A2.11] Consolidar Resultado",
+                                                                                                                     "type":  "main",
+                                                                                                                     "index":  0
+                                                                                                                 }
+                                                                                                             ]
+                                                                                                         ]
+                                                                                            }
+                                          },
+                          "authors":  "Olavo Franzin",
+                          "name":  null,
+                          "description":  null,
+                          "autosaved":  false,
+                          "workflowPublishHistory":  [
+                                                         {
+                                                             "createdAt":  "2026-05-29T12:38:00.817Z",
+                                                             "id":  409,
+                                                             "workflowId":  "xoFU3G3xfEm0Zfjl",
+                                                             "versionId":  "079faf69-e825-429f-8279-3afee9d8d25b",
+                                                             "event":  "activated",
+                                                             "userId":  "2f681992-45e6-4ec9-afe2-d79763e3d45b"
+                                                         }
+                                                     ]
+                      }
 }

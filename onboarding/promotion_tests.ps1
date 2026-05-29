@@ -29,6 +29,10 @@ foreach ($relativePath in $workflowPaths) {
   if (-not $workflow.nodes -or $workflow.nodes.Count -eq 0) {
     throw "$relativePath has no nodes"
   }
+
+  if (-not $workflow.active) {
+    throw "$relativePath must be active for production promotion"
+  }
 }
 
 $requiredSanitizedConfig = @{
@@ -81,6 +85,33 @@ foreach ($relativePath in $workflowPaths) {
   if ($unexpectedNames.Count -gt 0) {
     throw "$relativePath references unexpected credential(s): $($unexpectedNames -join ', ')"
   }
+}
+
+$scheduleWorkflowPaths = @(
+  'onboarding\a2.2\workflow.json',
+  'onboarding\a2.5\workflow.json',
+  'onboarding\a2.9\workflow.json',
+  'onboarding\a2.11\workflow.json'
+)
+
+foreach ($relativePath in $scheduleWorkflowPaths) {
+  $path = Join-Path $repo $relativePath
+  $workflow = [System.IO.File]::ReadAllText($path, [System.Text.Encoding]::UTF8) | ConvertFrom-Json
+  $scheduleNodes = @($workflow.nodes | Where-Object { $_.type -eq 'n8n-nodes-base.scheduleTrigger' })
+  if ($scheduleNodes.Count -ne 1) {
+    throw "$relativePath must contain exactly one schedule trigger"
+  }
+
+  $interval = @($scheduleNodes[0].parameters.rule.interval)[0]
+  if ($interval.field -ne 'days' -or [int]$interval.daysInterval -ne 1 -or [int]$interval.triggerAtHour -ne 9 -or [int]$interval.triggerAtMinute -ne 0) {
+    throw "$relativePath schedule must run daily at 09:00"
+  }
+}
+
+$a21Workflow = [System.IO.File]::ReadAllText((Join-Path $repo 'onboarding\a2.1\workflow.json'), [System.Text.Encoding]::UTF8) | ConvertFrom-Json
+$webhookNodes = @($a21Workflow.nodes | Where-Object { $_.type -eq 'n8n-nodes-base.webhook' })
+if ($webhookNodes.Count -ne 1 -or $webhookNodes[0].parameters.httpMethod -ne 'POST' -or $webhookNodes[0].parameters.path -ne 'onb-briefing-to-client') {
+  throw 'A2.1 must expose POST webhook path onb-briefing-to-client'
 }
 
 Write-Output 'Promotion ADR-19 config and credential tests passed.'
