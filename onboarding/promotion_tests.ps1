@@ -49,4 +49,38 @@ foreach ($entry in $requiredSanitizedConfig.GetEnumerator()) {
   }
 }
 
-Write-Output 'Promotion ADR-19 config tests passed.'
+$canonicalCredentialNames = @('Notion account', 'Evolution API Header Auth')
+$retiredCredentialNames = @('Phi Notion', 'Evolution API')
+
+foreach ($relativePath in $workflowPaths) {
+  $path = Join-Path $repo $relativePath
+  $raw = [System.IO.File]::ReadAllText($path, [System.Text.Encoding]::UTF8)
+  $workflow = $raw | ConvertFrom-Json
+  $credentialNames = @()
+  foreach ($node in $workflow.nodes) {
+    if ($node.credentials) {
+      $node.credentials.PSObject.Properties | ForEach-Object {
+        $credentialNames += $_.Value.name
+      }
+    }
+  }
+
+  foreach ($retiredName in $retiredCredentialNames) {
+    if ($credentialNames -contains $retiredName) {
+      throw "$relativePath still references retired credential name $retiredName"
+    }
+  }
+
+  foreach ($canonicalName in $canonicalCredentialNames) {
+    if ($credentialNames -notcontains $canonicalName) {
+      throw "$relativePath does not reference canonical credential $canonicalName"
+    }
+  }
+
+  $unexpectedNames = $credentialNames | Where-Object { $canonicalCredentialNames -notcontains $_ } | Sort-Object -Unique
+  if ($unexpectedNames.Count -gt 0) {
+    throw "$relativePath references unexpected credential(s): $($unexpectedNames -join ', ')"
+  }
+}
+
+Write-Output 'Promotion ADR-19 config and credential tests passed.'
