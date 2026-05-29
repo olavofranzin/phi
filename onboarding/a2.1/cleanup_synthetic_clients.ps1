@@ -11,6 +11,7 @@ $DryRun = $false
 if ($RemainingArgs -contains '--dry-run' -or $RemainingArgs -contains '-DryRun') {
     $DryRun = $true
 }
+
 $AssumeYes = $false
 if ($RemainingArgs -contains '--yes' -or $RemainingArgs -contains '-Yes') {
     $AssumeYes = $true
@@ -20,30 +21,28 @@ $clientesDatabaseId = '04e34a62624b484cbda546604564b88c'
 $etapasDatabaseId = '6eb4565b4f1d498c8b2978e0c80880fd'
 $notionVersion = '2022-06-28'
 $syntheticPrefix = 'Cliente Sandbox'
-$createdOnOrAfter = '2026-05-26T00:00:00.000Z'
-$etapasFixturePath = 'C:\tmp\phi_repo\onboarding\etapas-a1.json'
 
 $targets = @(
-    @{ Nome = 'Cliente Sandbox A2.1 Retest'; PageId = '36cb65e5-c72b-8161-bbf0-da0a4416e2aa' },
-    @{ Nome = 'Cliente Sandbox A2.1 Retest B'; PageId = '36cb65e5-c72b-818b-ae4d-ee918908d49e' },
-    @{ Nome = 'Cliente Sandbox A2.1 Retest C'; PageId = '36cb65e5-c72b-814c-808d-dd142f112a1e' },
-    @{ Nome = 'Cliente Sandbox A2.1 Retest E'; PageId = '36cb65e5-c72b-8105-9cd2-f37366abfdff' }
+    @{
+        Nome = 'Cliente Sandbox A2.1 Bugfix B'
+        PageId = '36db65e5-c72b-81cf-aa85-f011e36b15d1'
+        ArchiveLinkedEtapas = $true
+    },
+    @{
+        Nome = 'Cliente Sandbox A2.11 Test'
+        PageId = '36eb65e5-c72b-81b0-92d3-e70b4613e2a6'
+        ArchiveLinkedEtapas = $true
+    }
 )
 
 if ([string]::IsNullOrWhiteSpace($env:NOTION_API_KEY)) {
     throw 'NOTION_API_KEY is required in the environment.'
 }
 
-$etapasFixture = Get-Content -Raw -Encoding UTF8 -LiteralPath $etapasFixturePath | ConvertFrom-Json
-$KnownEtapaNames = New-Object 'System.Collections.Generic.HashSet[string]' ([System.StringComparer]::Ordinal)
-foreach ($etapa in $etapasFixture.etapas) {
-    [void]$KnownEtapaNames.Add([string]$etapa.nome)
-}
-
 $headers = @{
-    Authorization   = "Bearer $($env:NOTION_API_KEY)"
+    Authorization    = "Bearer $($env:NOTION_API_KEY)"
     'Notion-Version' = $notionVersion
-    'Content-Type'  = 'application/json'
+    'Content-Type'   = 'application/json'
 }
 
 function Invoke-NotionJson {
@@ -56,7 +55,7 @@ function Invoke-NotionJson {
     $uri = "https://api.notion.com/v1/$Path"
     if ($PSBoundParameters.ContainsKey('Body')) {
         $jsonBody = $Body | ConvertTo-Json -Depth 20 -Compress
-        return Invoke-RestMethod -Method $Method -Uri $uri -Headers $headers -Body $jsonBody
+        return Invoke-RestMethod -Method $Method -Uri $uri -Headers $headers -Body ([System.Text.Encoding]::UTF8.GetBytes($jsonBody))
     }
 
     return Invoke-RestMethod -Method $Method -Uri $uri -Headers $headers
@@ -84,7 +83,11 @@ function Get-ClientPage {
     return Invoke-NotionJson -Method GET -Path "pages/$PageId"
 }
 
-function Get-CandidateEtapas {
+function Get-LinkedEtapas {
+    param(
+        [Parameter(Mandatory = $true)][string]$ClientPageId
+    )
+
     $results = @()
     $nextCursor = $null
 
@@ -92,20 +95,10 @@ function Get-CandidateEtapas {
         $body = @{
             page_size = 100
             filter = @{
-                and = @(
-                    @{
-                        timestamp = 'created_time'
-                        created_time = @{
-                            on_or_after = '2026-05-26T00:00:00.000Z'
-                        }
-                    },
-                    @{
-                        property = 'Status'
-                        select = @{
-                            equals = 'Pendente'
-                        }
-                    }
-                )
+                property = 'Cliente'
+                relation = @{
+                    contains = $ClientPageId
+                }
             }
         }
 
@@ -118,34 +111,21 @@ function Get-CandidateEtapas {
         $nextCursor = $response.next_cursor
     } while ($response.has_more)
 
-    return $results
+    return @($results | Where-Object { -not $_.archived })
 }
 
-function Get-OrphanSyntheticEtapas {
-    $candidateEtapas = @(Get-CandidateEtapas)
-    $orphanEtapas = @()
-    $linkedKnownEtapas = 0
+function Assert-SyntheticClient {
+    param(
+        [Parameter(Mandatory = $true)][object]$ClientPage,
+        [Parameter(Mandatory = $true)][string]$ExpectedPageId
+    )
 
-    foreach ($etapa in $candidateEtapas) {
-        $title = Get-NotionPageTitle -Page $etapa
-        if (-not $KnownEtapaNames.Contains($title)) {
-            throw "Safety check failed for etapa $($etapa.id): title '$title' is not in etapas-a1.json."
-        }
-
-        $clienteRelation = @($etapa.properties.Cliente.relation)
-        if ($clienteRelation.Count -eq 0) {
-            $orphanEtapas += $etapa
-        }
-        else {
-            $linkedKnownEtapas += 1
-        }
+    $clientTitle = Get-NotionPageTitle -Page $ClientPage
+    if (-not $clientTitle.StartsWith($syntheticPrefix, [System.StringComparison]::Ordinal)) {
+        throw "Safety check failed for page $ExpectedPageId`: title '$clientTitle' does not start with '$syntheticPrefix'."
     }
 
-    return [pscustomobject]@{
-        CandidateEtapas = $candidateEtapas.Count
-        OrphanEtapas    = $orphanEtapas
-        LinkedKnownEtapas = $linkedKnownEtapas
-    }
+    return $clientTitle
 }
 
 function Archive-NotionPage {
@@ -153,78 +133,54 @@ function Archive-NotionPage {
         [Parameter(Mandatory = $true)][string]$PageId
     )
 
-    $body = @{
-        archived = $true
-    }
-
-    [void](Invoke-NotionJson -Method PATCH -Path "pages/$PageId" -Body $body)
+    [void](Invoke-NotionJson -Method PATCH -Path "pages/$PageId" -Body @{ archived = $true })
 }
 
 $summary = New-Object System.Collections.Generic.List[object]
-$orphanResult = Get-OrphanSyntheticEtapas
-$orphanEtapas = @($orphanResult.OrphanEtapas)
+$totalEtapas = 0
 
 foreach ($target in $targets) {
     $clientPage = Get-ClientPage -PageId $target.PageId
-    $clientTitle = Get-NotionPageTitle -Page $clientPage
-
-    if (-not $clientTitle.StartsWith($syntheticPrefix, [System.StringComparison]::Ordinal)) {
-        throw "Safety check failed for page $($target.PageId): title '$clientTitle' does not start with '$syntheticPrefix'."
+    $clientTitle = Assert-SyntheticClient -ClientPage $clientPage -ExpectedPageId $target.PageId
+    $linkedEtapas = @()
+    if ($target.ArchiveLinkedEtapas) {
+        $linkedEtapas = @(Get-LinkedEtapas -ClientPageId $target.PageId)
     }
-
-    $status = 'pending'
+    $totalEtapas += $linkedEtapas.Count
 
     if ($DryRun) {
+        Write-Host "[dry-run] Cliente $clientTitle seria arquivado."
+        Write-Host "[dry-run] $($linkedEtapas.Count) etapas vinculadas a $clientTitle seriam arquivadas."
         $status = 'dry-run'
-        Write-Host "[dry-run] Cliente $clientTitle sera arquivado. Nenhuma alteracao aplicada."
     }
     else {
-        $confirmation = if ($AssumeYes) { 'y' } else { Read-Host "Cliente $clientTitle. Confirmar archive? [y/N]" }
+        $confirmation = if ($AssumeYes) { 'y' } else { Read-Host "Cliente $clientTitle + $($linkedEtapas.Count) etapas vinculadas. Confirmar archive? [y/N]" }
         if ($confirmation -ceq 'y') {
+            foreach ($etapa in $linkedEtapas) {
+                Archive-NotionPage -PageId $etapa.id
+            }
             Archive-NotionPage -PageId $target.PageId
+            Write-Host "Archived cliente $clientTitle e $($linkedEtapas.Count) etapas vinculadas."
             $status = 'archived'
-            Write-Host "Archived cliente $clientTitle."
         }
         else {
-            $status = 'skipped'
             Write-Host "Skipped cliente $clientTitle."
+            $status = 'skipped'
         }
     }
 
     $summary.Add([pscustomobject]@{
-        Cliente          = $clientTitle
-        ClientePageId    = $target.PageId
-        EtapasArchivadas = 0
-        Status           = $status
+        Cliente       = $clientTitle
+        ClientePageId = $target.PageId
+        EtapasAtivasVinculadas = $linkedEtapas.Count
+        Status        = $status
     })
 }
 
-$etapasStatus = 'pending'
-if ($DryRun) {
-    $etapasStatus = 'dry-run'
-    Write-Host "[dry-run] $($orphanEtapas.Count) etapas orfas conhecidas seriam arquivadas. Nenhuma alteracao aplicada."
-}
-else {
-    $confirmation = if ($AssumeYes) { 'y' } else { Read-Host "$($orphanEtapas.Count) etapas orfas conhecidas. Confirmar archive? [y/N]" }
-    if ($confirmation -ceq 'y') {
-        foreach ($etapa in $orphanEtapas) {
-            Archive-NotionPage -PageId $etapa.id
-        }
-        $etapasStatus = 'archived'
-        Write-Host "Archived $($orphanEtapas.Count) etapas orfas conhecidas."
-    }
-    else {
-        $etapasStatus = 'skipped'
-        Write-Host "Skipped etapas orfas conhecidas."
-    }
-}
+$totalClientes = $summary.Count
+$totalPaginas = $totalClientes + $totalEtapas
 
-$summary.Add([pscustomobject]@{
-    Cliente          = '[orphan etapas]'
-    ClientePageId    = ''
-    EtapasArchivadas = $orphanEtapas.Count
-    Status           = $etapasStatus
-})
-
-Write-Host "Candidate etapas: $($orphanResult.CandidateEtapas); orphan known etapas: $($orphanEtapas.Count); linked known etapas skipped: $($orphanResult.LinkedKnownEtapas)."
+Write-Host "Total clientes alvo: $totalClientes"
+Write-Host "Total etapas vinculadas ativas: $totalEtapas"
+Write-Host "Total paginas afetadas: $totalPaginas"
 $summary | Format-Table -AutoSize

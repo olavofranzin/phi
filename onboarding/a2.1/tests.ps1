@@ -117,13 +117,13 @@ if ($workflowRaw -match [regex]::Escape('{{ $env.ONBOARDING_DATA_PATH }}/etapas-
 }
 
 foreach ($requiredCleanupText in @(
-  'Get-Content -Raw -Encoding UTF8 -LiteralPath $etapasFixturePath',
-  "timestamp = 'created_time'",
-  "on_or_after = '2026-05-26T00:00:00.000Z'",
-  "property = 'Status'",
-  "equals = 'Pendente'",
-  "KnownEtapaNames",
-  "Safety check failed for etapa",
+  '36db65e5-c72b-81cf-aa85-f011e36b15d1',
+  '36eb65e5-c72b-81b0-92d3-e70b4613e2a6',
+  'Cliente Sandbox A2.1 Bugfix B',
+  'Cliente Sandbox A2.11 Test',
+  "property = 'Cliente'",
+  "contains = `$ClientPageId",
+  "StartsWith(`$syntheticPrefix",
   "RemainingArgs -contains '--yes'"
 )) {
   if ($cleanup -notmatch [regex]::Escape($requiredCleanupText)) {
