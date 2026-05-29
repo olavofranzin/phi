@@ -102,11 +102,15 @@ foreach ($requiredNormalizarSnippet in @(
   'America/Sao_Paulo',
   'payload.data_inicio || currentDateBr',
   'modelo_negocio: normalizarTexto(payload.modelo_negocio)',
-  'origem_comercial: normalizarTexto(payload.origem_comercial)'
+  'origem_comercial: normalizarTexto(payload.origem_comercial)',
+  'active_statuses: [''Em andamento'', ''N\u00e3o iniciado'', ''Bloqueado'']'
 )) {
   if ($normalizarCode -notmatch [regex]::Escape($requiredNormalizarSnippet)) {
     throw "Normalizar Contexto is missing minimum-contract text '$requiredNormalizarSnippet'"
   }
+}
+if ($normalizarCode -match [regex]::Escape('N?o iniciado')) {
+  throw 'Normalizar Contexto must not contain corrupted active status N?o iniciado'
 }
 
 $responder401 = $nodeMap['[Onb A2.1] Responder 401']
