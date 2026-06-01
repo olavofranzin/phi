@@ -114,4 +114,44 @@ if ($webhookNodes.Count -ne 1 -or $webhookNodes[0].parameters.httpMethod -ne 'PO
   throw 'A2.1 must expose POST webhook path onb-briefing-to-client'
 }
 
+foreach ($relativePath in @('onboarding\a2.1\workflow.json', 'onboarding\a2.1\sandbox_export.json')) {
+  $path = Join-Path $repo $relativePath
+  $raw = [System.IO.File]::ReadAllText($path, [System.Text.Encoding]::UTF8)
+  $workflow = $raw | ConvertFrom-Json
+
+  $nodeMap = @{}
+  foreach ($node in $workflow.nodes) {
+    $nodeMap[$node.name] = $node
+  }
+
+  foreach ($requiredHardeningNode in @(
+    '[Onb A2.1] Validar Secret',
+    '[Onb A2.1] Secret Valido?',
+    '[Onb A2.1] Responder 401'
+  )) {
+    if (-not $nodeMap.ContainsKey($requiredHardeningNode)) {
+      throw "$relativePath missing A2.1 hardening node $requiredHardeningNode"
+    }
+  }
+
+  $validarSecretCode = [string]$nodeMap['[Onb A2.1] Validar Secret'].parameters.jsCode
+  if ($validarSecretCode -notmatch 'ONB_WEBHOOK_SECRET|x-onb-secret') {
+    throw "$relativePath Validar Secret must check ONB_WEBHOOK_SECRET or x-onb-secret"
+  }
+
+  $webhookNext = @($workflow.connections.'[Onb A2.1] Webhook Briefing'.main[0] | ForEach-Object { $_.node })
+  if ($webhookNext.Count -ne 1 -or $webhookNext[0] -ne '[Onb A2.1] Validar Secret') {
+    throw "$relativePath must connect Webhook Briefing directly to Validar Secret"
+  }
+
+  $secretTrue = @($workflow.connections.'[Onb A2.1] Secret Valido?'.main[0] | ForEach-Object { $_.node })
+  $secretFalse = @($workflow.connections.'[Onb A2.1] Secret Valido?'.main[1] | ForEach-Object { $_.node })
+  if ($secretTrue.Count -ne 1 -or $secretTrue[0] -ne '[Onb A2.1] Validar Payload') {
+    throw "$relativePath must route valid secret to Validar Payload"
+  }
+  if ($secretFalse.Count -ne 1 -or $secretFalse[0] -ne '[Onb A2.1] Responder 401') {
+    throw "$relativePath must route invalid secret to Responder 401"
+  }
+}
+
 Write-Output 'Promotion ADR-19 config and credential tests passed.'

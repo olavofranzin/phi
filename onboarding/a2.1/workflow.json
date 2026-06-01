@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-06-01T17:49:32.322Z",
+  "updatedAt": "2026-06-01T19:13:45.883Z",
   "createdAt": "2026-05-26T16:31:52.942Z",
   "id": "0MfPA3Uqmj4TySiX",
   "name": "Onb - Briefing to Client",
@@ -33,7 +33,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        480,
+        960,
         304
       ]
     },
@@ -65,7 +65,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        720,
+        1200,
         304
       ]
     },
@@ -124,7 +124,7 @@
       "credentials": {
         "notionApi": {
           "id": "<credential_id_redacted>",
-          "name": "Notion account"
+            "name": "Notion account"
         }
       }
     },
@@ -208,7 +208,7 @@
       "credentials": {
         "notionApi": {
           "id": "<credential_id_redacted>",
-          "name": "Notion account"
+            "name": "Notion account"
         }
       }
     },
@@ -282,7 +282,7 @@
       "credentials": {
         "notionApi": {
           "id": "<credential_id_redacted>",
-          "name": "Notion account"
+            "name": "Notion account"
         }
       }
     },
@@ -388,7 +388,7 @@
       "credentials": {
         "notionApi": {
           "id": "<credential_id_redacted>",
-          "name": "Notion account"
+            "name": "Notion account"
         }
       },
       "continueOnFail": true
@@ -473,7 +473,7 @@
       "credentials": {
         "notionApi": {
           "id": "<credential_id_redacted>",
-          "name": "Notion account"
+            "name": "Notion account"
         }
       }
     },
@@ -514,7 +514,7 @@
       "credentials": {
         "telegramApi": {
           "id": "<TELEGRAM_CREDENTIAL_ID_redacted>",
-          "name": "Telegram account"
+            "name": "Telegram account"
         }
       }
     },
@@ -538,7 +538,7 @@
       "credentials": {
         "telegramApi": {
           "id": "<TELEGRAM_CREDENTIAL_ID_redacted>",
-          "name": "Telegram account"
+            "name": "Telegram account"
         }
       }
     },
@@ -554,6 +554,70 @@
       "parameters": {
         "jsCode": "const result = $('[Onb A2.1] Consolidar Resultado').first().json;\nconst text = '[Onb A2.1] Falha parcial na criacao de etapas\\ncliente=' + result.cliente_nome + '\\ncnpj=' + result.cnpj_normalizado + '\\nresultado=' + result.etapas_criadas + '/' + result.etapas_esperadas + '\\nerro=' + result.falha_resumo + '\\npayload=' + JSON.stringify(result.raw_payload);\nreturn [{ json: { ...result, text } }];"
       }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const ONB_WEBHOOK_SECRET = '<ONB_WEBHOOK_SECRET_redacted>';\nconst out = [];\nfor (const item of $input.all()) {\n  const headers = item.json.headers || {};\n  const lowerHeaders = {};\n  for (const [key, value] of Object.entries(headers)) {\n    lowerHeaders[String(key).toLowerCase()] = value;\n  }\n  const provided = String(lowerHeaders['x-onb-secret'] || '').trim();\n  out.push({ json: { ...item.json, onb_secret_valid: provided === ONB_WEBHOOK_SECRET } });\n}\nreturn out;"
+      },
+      "id": "5512e3a8-e247-42c5-be1a-adee1caca9cd",
+      "name": "[Onb A2.1] Validar Secret",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.onb_secret_valid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a6f6031e-07df-43bd-aaf4-da1a0d6a3e2f",
+      "name": "[Onb A2.1] Secret Valido?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        720,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: false, error: \"unauthorized\" } }}",
+        "options": {
+          "responseCode": 401
+        }
+      },
+      "id": "1d3d0594-44e8-47f6-a4be-867c88ccfa12",
+      "name": "[Onb A2.1] Responder 401",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.3,
+      "position": [
+        960,
+        448
+      ]
     }
   ],
   "connections": {
@@ -561,7 +625,7 @@
       "main": [
         [
           {
-            "node": "[Onb A2.1] Validar Payload",
+            "node": "[Onb A2.1] Validar Secret",
             "type": "main",
             "index": 0
           }
@@ -797,6 +861,35 @@
           }
         ]
       ]
+    },
+    "[Onb A2.1] Validar Secret": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.1] Secret Valido?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.1] Secret Valido?": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.1] Validar Payload",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "[Onb A2.1] Responder 401",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -809,9 +902,9 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "efb4aacb-e2bc-4e4f-9df1-0c76e7eeff11",
-  "activeVersionId": "efb4aacb-e2bc-4e4f-9df1-0c76e7eeff11",
-  "versionCounter": 98,
+  "versionId": "b7075f01-319b-4ff9-b2af-7c1a074df4ee",
+  "activeVersionId": "b7075f01-319b-4ff9-b2af-7c1a074df4ee",
+  "versionCounter": 99,
   "triggerCount": 1,
   "shared": [
     {
@@ -834,9 +927,9 @@
   ],
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-06-01T17:49:32.323Z",
-    "createdAt": "2026-06-01T17:49:32.323Z",
-    "versionId": "efb4aacb-e2bc-4e4f-9df1-0c76e7eeff11",
+    "updatedAt": "2026-06-01T19:13:45.885Z",
+    "createdAt": "2026-06-01T19:13:45.885Z",
+    "versionId": "b7075f01-319b-4ff9-b2af-7c1a074df4ee",
     "workflowId": "0MfPA3Uqmj4TySiX",
     "nodes": [
       {
@@ -865,7 +958,7 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          480,
+          960,
           304
         ]
       },
@@ -897,7 +990,7 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2.2,
         "position": [
-          720,
+          1200,
           304
         ]
       },
@@ -1386,6 +1479,70 @@
         "parameters": {
           "jsCode": "const result = $('[Onb A2.1] Consolidar Resultado').first().json;\nconst text = '[Onb A2.1] Falha parcial na criacao de etapas\\ncliente=' + result.cliente_nome + '\\ncnpj=' + result.cnpj_normalizado + '\\nresultado=' + result.etapas_criadas + '/' + result.etapas_esperadas + '\\nerro=' + result.falha_resumo + '\\npayload=' + JSON.stringify(result.raw_payload);\nreturn [{ json: { ...result, text } }];"
         }
+      },
+      {
+        "parameters": {
+          "mode": "runOnceForAllItems",
+          "language": "javaScript",
+          "jsCode": "const ONB_WEBHOOK_SECRET = '<ONB_WEBHOOK_SECRET_redacted>';\nconst out = [];\nfor (const item of $input.all()) {\n  const headers = item.json.headers || {};\n  const lowerHeaders = {};\n  for (const [key, value] of Object.entries(headers)) {\n    lowerHeaders[String(key).toLowerCase()] = value;\n  }\n  const provided = String(lowerHeaders['x-onb-secret'] || '').trim();\n  out.push({ json: { ...item.json, onb_secret_valid: provided === ONB_WEBHOOK_SECRET } });\n}\nreturn out;"
+        },
+        "id": "5512e3a8-e247-42c5-be1a-adee1caca9cd",
+        "name": "[Onb A2.1] Validar Secret",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          480,
+          304
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "leftValue": "={{ $json.onb_secret_valid }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "a6f6031e-07df-43bd-aaf4-da1a0d6a3e2f",
+        "name": "[Onb A2.1] Secret Valido?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          720,
+          304
+        ]
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ { ok: false, error: \"unauthorized\" } }}",
+          "options": {
+            "responseCode": 401
+          }
+        },
+        "id": "1d3d0594-44e8-47f6-a4be-867c88ccfa12",
+        "name": "[Onb A2.1] Responder 401",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.3,
+        "position": [
+          960,
+          448
+        ]
       }
     ],
     "connections": {
@@ -1393,7 +1550,7 @@
         "main": [
           [
             {
-              "node": "[Onb A2.1] Validar Payload",
+              "node": "[Onb A2.1] Validar Secret",
               "type": "main",
               "index": 0
             }
@@ -1629,6 +1786,35 @@
             }
           ]
         ]
+      },
+      "[Onb A2.1] Validar Secret": {
+        "main": [
+          [
+            {
+              "node": "[Onb A2.1] Secret Valido?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[Onb A2.1] Secret Valido?": {
+        "main": [
+          [
+            {
+              "node": "[Onb A2.1] Validar Payload",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "[Onb A2.1] Responder 401",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
       }
     },
     "authors": "Olavo Franzin",
@@ -1637,34 +1823,18 @@
     "autosaved": false,
     "workflowPublishHistory": [
       {
-        "createdAt": "2026-06-01T17:49:32.887Z",
-        "id": 608,
+        "createdAt": "2026-06-01T19:13:46.070Z",
+        "id": 632,
         "workflowId": "0MfPA3Uqmj4TySiX",
-        "versionId": "efb4aacb-e2bc-4e4f-9df1-0c76e7eeff11",
+        "versionId": "b7075f01-319b-4ff9-b2af-7c1a074df4ee",
         "event": "deactivated",
         "userId": "2f681992-45e6-4ec9-afe2-d79763e3d45b"
       },
       {
-        "createdAt": "2026-06-01T17:49:32.909Z",
-        "id": 609,
+        "createdAt": "2026-06-01T19:13:46.117Z",
+        "id": 633,
         "workflowId": "0MfPA3Uqmj4TySiX",
-        "versionId": "efb4aacb-e2bc-4e4f-9df1-0c76e7eeff11",
-        "event": "activated",
-        "userId": "2f681992-45e6-4ec9-afe2-d79763e3d45b"
-      },
-      {
-        "createdAt": "2026-06-01T17:49:33.026Z",
-        "id": 610,
-        "workflowId": "0MfPA3Uqmj4TySiX",
-        "versionId": "efb4aacb-e2bc-4e4f-9df1-0c76e7eeff11",
-        "event": "deactivated",
-        "userId": "2f681992-45e6-4ec9-afe2-d79763e3d45b"
-      },
-      {
-        "createdAt": "2026-06-01T17:49:33.044Z",
-        "id": 611,
-        "workflowId": "0MfPA3Uqmj4TySiX",
-        "versionId": "efb4aacb-e2bc-4e4f-9df1-0c76e7eeff11",
+        "versionId": "b7075f01-319b-4ff9-b2af-7c1a074df4ee",
         "event": "activated",
         "userId": "2f681992-45e6-4ec9-afe2-d79763e3d45b"
       }
