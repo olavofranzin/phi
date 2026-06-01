@@ -152,6 +152,36 @@ foreach ($relativePath in @('onboarding\a2.1\workflow.json', 'onboarding\a2.1\sa
   if ($secretFalse.Count -ne 1 -or $secretFalse[0] -ne '[Onb A2.1] Responder 401') {
     throw "$relativePath must route invalid secret to Responder 401"
   }
+
+  $validarPayloadCode = [string]$nodeMap['[Onb A2.1] Validar Payload'].parameters.jsCode
+  if ($validarPayloadCode -notmatch [regex]::Escape("const required = ['cnpj_cliente', 'cliente_nome'];")) {
+    throw "$relativePath Validar Payload must require exactly cnpj_cliente and cliente_nome"
+  }
+  foreach ($forbiddenRequiredField in @('data_inicio', 'modelo_negocio', 'servico', 'origem_comercial')) {
+    $requiredListMatch = [regex]::Match($validarPayloadCode, "const required = \[(.*?)\];", 'Singleline')
+    if ($requiredListMatch.Success -and $requiredListMatch.Groups[1].Value -match [regex]::Escape($forbiddenRequiredField)) {
+      throw "$relativePath Validar Payload must not require optional field $forbiddenRequiredField"
+    }
+  }
+
+  foreach ($requiredServicoNode in @('[Onb A2.1] Tem Servico?', '[Onb A2.1] Atualizar Servico Cliente')) {
+    if (-not $nodeMap.ContainsKey($requiredServicoNode)) {
+      throw "$relativePath missing A2.1 optional service node $requiredServicoNode"
+    }
+  }
+
+  $criarClienteNext = @($workflow.connections.'[Onb A2.1] Criar Cliente'.main[0] | ForEach-Object { $_.node })
+  if ($criarClienteNext.Count -ne 1 -or $criarClienteNext[0] -ne '[Onb A2.1] Tem Servico?') {
+    throw "$relativePath must connect Criar Cliente directly to Tem Servico?"
+  }
+
+  $normalizarCode = [string]$nodeMap['[Onb A2.1] Normalizar Contexto'].parameters.jsCode
+  if ($normalizarCode -notmatch [regex]::Escape("'N\u00e3o iniciado'")) {
+    throw "$relativePath Normalizar Contexto must keep ASCII-safe active status N\u00e3o iniciado"
+  }
+  if ($normalizarCode -match [regex]::Escape(('N' + '?o iniciado'))) {
+    throw "$relativePath Normalizar Contexto must not contain mojibake active status"
+  }
 }
 
 Write-Output 'Promotion ADR-19 config and credential tests passed.'
