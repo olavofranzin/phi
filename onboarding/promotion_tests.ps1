@@ -36,11 +36,11 @@ foreach ($relativePath in $workflowPaths) {
 }
 
 $requiredSanitizedConfig = @{
-  'onboarding\a2.1\workflow.json' = @('<OLAVO_PHONE_redacted>')
-  'onboarding\a2.2\workflow.json' = @('<OLAVO_PHONE_redacted>')
-  'onboarding\a2.5\workflow.json' = @('<OLAVO_PHONE_redacted>')
-  'onboarding\a2.9\workflow.json' = @('<OLAVO_PHONE_redacted>')
-  'onboarding\a2.11\workflow.json' = @('<OLAVO_PHONE_redacted>', '<CSAT_FORM_URL_redacted>', '<NPS_FORM_URL_redacted>')
+  'onboarding\a2.1\workflow.json' = @('<TELEGRAM_CHAT_ID_redacted>')
+  'onboarding\a2.2\workflow.json' = @('<TELEGRAM_CHAT_ID_redacted>')
+  'onboarding\a2.5\workflow.json' = @('<TELEGRAM_CHAT_ID_redacted>')
+  'onboarding\a2.9\workflow.json' = @('<TELEGRAM_CHAT_ID_redacted>')
+  'onboarding\a2.11\workflow.json' = @('<TELEGRAM_CHAT_ID_redacted>', '<OLAVO_PHONE_redacted>', '<CSAT_FORM_URL_redacted>', '<NPS_FORM_URL_redacted>')
 }
 
 foreach ($entry in $requiredSanitizedConfig.GetEnumerator()) {
@@ -53,8 +53,8 @@ foreach ($entry in $requiredSanitizedConfig.GetEnumerator()) {
   }
 }
 
-$canonicalCredentialNames = @('Notion account', 'Evolution API Header Auth')
-$retiredCredentialNames = @('Phi Notion', 'Evolution API')
+$canonicalCredentialNames = @('Notion account', 'Telegram account')
+$retiredCredentialNames = @('Phi Notion', 'Evolution API', 'Evolution API Header Auth')
 
 foreach ($relativePath in $workflowPaths) {
   $path = Join-Path $repo $relativePath
