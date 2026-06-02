@@ -4,6 +4,7 @@ $repo = 'C:\tmp\phi_repo'
 $workflowPaths = @(
   'onboarding\a2.1\workflow.json',
   'onboarding\a2.2\workflow.json',
+  'onboarding\a2.7\workflow.json',
   'onboarding\a2.5\workflow.json',
   'onboarding\a2.9\workflow.json',
   'onboarding\a2.11\workflow.json'
@@ -38,6 +39,7 @@ foreach ($relativePath in $workflowPaths) {
 $requiredSanitizedConfig = @{
   'onboarding\a2.1\workflow.json' = @('<TELEGRAM_CHAT_ID_redacted>')
   'onboarding\a2.2\workflow.json' = @('<TELEGRAM_CHAT_ID_redacted>')
+  'onboarding\a2.7\workflow.json' = @('<TELEGRAM_CHAT_ID_redacted>')
   'onboarding\a2.5\workflow.json' = @('<TELEGRAM_CHAT_ID_redacted>')
   'onboarding\a2.9\workflow.json' = @('<TELEGRAM_CHAT_ID_redacted>')
   'onboarding\a2.11\workflow.json' = @('<TELEGRAM_CHAT_ID_redacted>', '<OLAVO_PHONE_redacted>', '<CSAT_FORM_URL_redacted>', '<NPS_FORM_URL_redacted>')
@@ -75,13 +77,18 @@ foreach ($relativePath in $workflowPaths) {
     }
   }
 
-  foreach ($canonicalName in $canonicalCredentialNames) {
+  $pathCanonicalCredentialNames = @($canonicalCredentialNames)
+  if ($relativePath -eq 'onboarding\a2.7\workflow.json') {
+    $pathCanonicalCredentialNames += 'Google Gemini(PaLM) Api account'
+  }
+
+  foreach ($canonicalName in $pathCanonicalCredentialNames) {
     if ($credentialNames -notcontains $canonicalName) {
       throw "$relativePath does not reference canonical credential $canonicalName"
     }
   }
 
-  $unexpectedNames = $credentialNames | Where-Object { $canonicalCredentialNames -notcontains $_ } | Sort-Object -Unique
+  $unexpectedNames = $credentialNames | Where-Object { $pathCanonicalCredentialNames -notcontains $_ } | Sort-Object -Unique
   if ($unexpectedNames.Count -gt 0) {
     throw "$relativePath references unexpected credential(s): $($unexpectedNames -join ', ')"
   }
@@ -89,6 +96,7 @@ foreach ($relativePath in $workflowPaths) {
 
 $scheduleWorkflowPaths = @(
   'onboarding\a2.2\workflow.json',
+  'onboarding\a2.7\workflow.json',
   'onboarding\a2.5\workflow.json',
   'onboarding\a2.9\workflow.json',
   'onboarding\a2.11\workflow.json'
