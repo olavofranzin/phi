@@ -1,0 +1,1283 @@
+{
+  "id": "5WD3ilbH1C7fKiVs",
+  "name": "Onb - Gate Validacao Final PASS FAIL",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "id": "a210-schedule",
+      "name": "[Onb A2.10] Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "daysInterval": 1,
+              "triggerAtHour": 9,
+              "triggerAtMinute": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "a210-buscar-etapas",
+      "name": "[Onb A2.10] Buscar Etapas",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        224,
+        0
+      ],
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "6eb4565b4f1d498c8b2978e0c80880fd"
+        },
+        "returnAll": true,
+        "simple": false,
+        "filterType": "none"
+      },
+      "credentials": {
+        "notionApi": {
+          "id": "<credential_id_redacted>",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "id": "a210-filtrar",
+      "name": "[Onb A2.10] Filtrar Elegiveis",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const pickTitle = (page) => {\n  for (const prop of Object.values(page.properties || {})) {\n    if (prop?.type === 'title') return (prop.title || []).map((item) => item.plain_text || '').join('').trim();\n  }\n  return '';\n};\nconst pickSelect = (prop) => prop?.select?.name || prop?.status?.name || '';\nconst pickNumber = (prop) => prop?.number ?? prop?.rollup?.number ?? null;\nconst pickPlainText = (prop) => (prop?.rich_text || []).map((item) => item.plain_text || '').join('').trim();\nconst richText = (text) => [{ type: 'text', text: { content: String(text || '').slice(0, 1900) } }];\nconst brIso = () => new Date().toLocaleString('sv-SE', { timeZone: 'America/Sao_Paulo' }).replace(' ', 'T') + '-03:00';\nconst TARGET_TITLE = 'Executar valida\\u00e7\\u00e3o final PASS/FAIL da stack';\nconst TARGET_STATUS = 'Conclu\\u00eddo';\nconst activeStatuses = new Set(['Em andamento', 'N\\u00e3o iniciado', 'Bloqueado']);\nconst out = [];\nfor (const item of $input.all()) {\n  const page = item.json || {};\n  if (page.archived || page.is_archived) continue;\n  const props = page.properties || {};\n  const title = pickTitle(page);\n  const status = pickSelect(props.Status);\n  const clienteRelation = props.Cliente?.relation || [];\n  if (title !== TARGET_TITLE || status !== TARGET_STATUS || clienteRelation.length === 0) continue;\n  out.push({ json: {\n    seq21_page_id: page.id,\n    seq21_nome: title,\n    seq21_observacoes: pickPlainText(props['Observa\\u00e7\\u00f5es']) || pickPlainText(props['Observacoes']) || '',\n    cliente_page_id: clienteRelation[0].id,\n    active_statuses: ['Em andamento', 'N\\u00e3o iniciado', 'Bloqueado']\n  } });\n}\nreturn out;"
+      }
+    },
+    {
+      "id": "a210-obter-cliente",
+      "name": "[Onb A2.10] Obter Cliente",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        672,
+        0
+      ],
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "get",
+        "pageId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $json.cliente_page_id }}"
+        },
+        "simple": false
+      },
+      "credentials": {
+        "notionApi": {
+          "id": "<credential_id_redacted>",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "id": "a210-filtrar-ativo",
+      "name": "[Onb A2.10] Filtrar Cliente Ativo",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const pickTitle = (page) => {\n  for (const prop of Object.values(page.properties || {})) {\n    if (prop?.type === 'title') return (prop.title || []).map((item) => item.plain_text || '').join('').trim();\n  }\n  return '';\n};\nconst pickSelect = (prop) => prop?.select?.name || prop?.status?.name || '';\nconst pickNumber = (prop) => prop?.number ?? prop?.rollup?.number ?? null;\nconst pickPlainText = (prop) => (prop?.rich_text || []).map((item) => item.plain_text || '').join('').trim();\nconst richText = (text) => [{ type: 'text', text: { content: String(text || '').slice(0, 1900) } }];\nconst brIso = () => new Date().toLocaleString('sv-SE', { timeZone: 'America/Sao_Paulo' }).replace(' ', 'T') + '-03:00';\nconst activeStatuses = new Set(['Em andamento', 'N\\u00e3o iniciado', 'Bloqueado']);\nconst etapa = $('[Onb A2.10] Filtrar Elegiveis').item.json;\nconst cliente = $json || {};\nconst status = pickSelect((cliente.properties || {}).Status);\nif (!activeStatuses.has(status)) return [];\nreturn [{ json: { ...etapa, cliente_nome: pickTitle(cliente), cliente_status: status, cliente_observacoes: pickPlainText((cliente.properties || {})['Observa\\u00e7\\u00f5es']) || '' } }];"
+      }
+    },
+    {
+      "id": "a210-seq22",
+      "name": "[Onb A2.10] Buscar seq 22 do Cliente",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const pickTitle = (page) => {\n  for (const prop of Object.values(page.properties || {})) {\n    if (prop?.type === 'title') return (prop.title || []).map((item) => item.plain_text || '').join('').trim();\n  }\n  return '';\n};\nconst pickSelect = (prop) => prop?.select?.name || prop?.status?.name || '';\nconst pickNumber = (prop) => prop?.number ?? prop?.rollup?.number ?? null;\nconst pickPlainText = (prop) => (prop?.rich_text || []).map((item) => item.plain_text || '').join('').trim();\nconst richText = (text) => [{ type: 'text', text: { content: String(text || '').slice(0, 1900) } }];\nconst brIso = () => new Date().toLocaleString('sv-SE', { timeZone: 'America/Sao_Paulo' }).replace(' ', 'T') + '-03:00';\nconst current = $json;\nconst MARK = 'Bloqueio gate A2.10';\nlet seq22 = null;\nfor (const item of $('[Onb A2.10] Buscar Etapas').all()) {\n  const page = item.json || {};\n  if (page.archived || page.is_archived) continue;\n  const props = page.properties || {};\n  const rel = props.Cliente?.relation || [];\n  const seq = pickNumber(props['Sequ\\u00eancia']) ?? pickNumber(props.Sequencia);\n  if (rel[0]?.id === current.cliente_page_id && Number(seq) === 22) {\n    seq22 = {\n      page_id: page.id,\n      nome: pickTitle(page),\n      status: pickSelect(props.Status),\n      observacoes: pickPlainText(props['Observa\\u00e7\\u00f5es']) || pickPlainText(props.Observacoes) || '',\n    };\n    break;\n  }\n}\nif (!seq22) return [];\nconst fired = current.seq21_observacoes.includes('A2.10 disparada em');\nconst blockedByGate = seq22.observacoes.includes(MARK);\nif (fired && !blockedByGate) return [];\nreturn [{ json: { ...current, seq22 } }];"
+      }
+    },
+    {
+      "id": "a210-buscar-subpagina",
+      "name": "[Onb A2.10] Buscar Sub-pagina Quadro",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1344,
+        0
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ \"https://api.notion.com/v1/blocks/\" + $json.seq21_page_id + \"/children?page_size=100\" }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "notionApi",
+        "sendHeaders": true,
+        "specifyHeaders": "keypair",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Notion-Version",
+              "value": "2022-06-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json",
+              "neverError": false
+            }
+          }
+        }
+      },
+      "credentials": {
+        "notionApi": {
+          "id": "<credential_id_redacted>",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "id": "a210-preparar-quadro",
+      "name": "[Onb A2.10] Preparar Quadro",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1568,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const prev = $('[Onb A2.10] Buscar seq 22 do Cliente').item.json;\nconst results = $json.results || [];\nconst quadro = results.find((block) => block.type === 'child_page' && /pass\\/fail/i.test(block.child_page?.title || ''));\nreturn [{ json: { ...prev, quadro_page_id: quadro?.id || null, modo: quadro ? 'LER_QUADRO' : 'CRIAR_TEMPLATE' } }];"
+      }
+    },
+    {
+      "id": "a210-switch-inicial",
+      "name": "[Onb A2.10] Triage Modo",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        1792,
+        0
+      ],
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "outputKey": "CRIAR_TEMPLATE",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.modo }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "rightValue": "CRIAR_TEMPLATE"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "outputKey": "LER_QUADRO",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.modo }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "rightValue": "LER_QUADRO"
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "none"
+        }
+      }
+    },
+    {
+      "id": "a210-criar-template",
+      "name": "[Onb A2.10] Criar Sub-pagina Template",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2016,
+        -240
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.notion.com/v1/pages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "notionApi",
+        "sendHeaders": true,
+        "specifyHeaders": "keypair",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Notion-Version",
+              "value": "2022-06-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json",
+              "neverError": false
+            }
+          }
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  parent: { page_id: $json.seq21_page_id },\n  properties: { title: { title: [{ text: { content: 'Quadro PASS/FAIL - Validacao Final' } }] } },\n  children: [\n    { object: 'block', type: 'table', table: { table_width: 5, has_column_header: true, has_row_header: false, children: [\n      { object: 'block', type: 'table_row', table_row: { cells: [['Item validado'], ['Ferramenta'], ['PASS/FAIL'], ['Evidencia'], ['Acao se FAIL']].map(c => [{ type: 'text', text: { content: c[0] } }]) } },\n      ...[\n        ['Snippet GTM instalado', 'GTM', '-', '-', '-'],\n        ['Tag base GA4', 'GA4', '-', '-', '-'],\n        ['Evento-chave GA4', 'GA4', '-', '-', '-'],\n        ['Pixel base', 'Meta', '-', '-', '-'],\n        ['Evento-chave Meta', 'Meta', '-', '-', '-'],\n        ['Conversao importada', 'Google Ads', '-', '-', '-'],\n        ['Jornada completa', 'Stack', '-', '-', '-'],\n      ].map(row => ({ object: 'block', type: 'table_row', table_row: { cells: row.map(cell => [{ type: 'text', text: { content: cell } }]) } }))\n    ] } }\n  ]\n} }}"
+      },
+      "credentials": {
+        "notionApi": {
+          "id": "<credential_id_redacted>",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "id": "a210-msg-criacao",
+      "name": "[Onb A2.10] Montar Telegram Criacao",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2240,
+        -240
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const p = $('[Onb A2.10] Preparar Quadro').item.json; return [{ json: { ...p, text: 'Cliente ' + p.cliente_nome + ': sub-pagina de Validacao Final criada. Preencha o quadro PASS/FAIL + evidencia por item, depois confirme a etapa seq 21 como Concluido pra liberar o gate.' } }];"
+      }
+    },
+    {
+      "id": "a210-tg-criacao",
+      "name": "[Onb A2.10] Telegram Criacao",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2464,
+        -240
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "<TELEGRAM_CHAT_ID_redacted>",
+        "text": "={{ String($json.text || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }}",
+        "additionalFields": {
+          "parse_mode": "HTML",
+          "appendAttribution": false
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "<TELEGRAM_CREDENTIAL_ID_redacted>",
+          "name": "Telegram account"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "id": "a210-ler-quadro",
+      "name": "[Onb A2.10] Ler Conteudo Quadro",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2016,
+        80
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ \"https://api.notion.com/v1/blocks/\" + $json.quadro_page_id + \"/children?page_size=100\" }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "notionApi",
+        "sendHeaders": true,
+        "specifyHeaders": "keypair",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Notion-Version",
+              "value": "2022-06-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json",
+              "neverError": false
+            }
+          }
+        }
+      },
+      "credentials": {
+        "notionApi": {
+          "id": "<credential_id_redacted>",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "id": "a210-triage-conteudo",
+      "name": "[Onb A2.10] Triage Conteudo Quadro",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2240,
+        80
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const prev = $('[Onb A2.10] Preparar Quadro').item.json;\nconst blocks = $json.results || [];\nconst textOf = (rt) => (rt || []).map((x) => x.plain_text || x.text?.content || '').join('');\nconst rows = [];\nfor (const block of blocks) {\n  if (block.type === 'table_row') {\n    rows.push((block.table_row?.cells || []).map(textOf));\n  } else if (block.type === 'paragraph') {\n    const line = textOf(block.paragraph?.rich_text);\n    if (line.includes('|')) rows.push(line.split('|').map((x) => x.trim()));\n  }\n}\nconst dataRows = rows.filter((row) => row.length >= 5 && !/^item validado$/i.test(String(row[0] || '').trim()));\nconst valid = dataRows.length >= 7;\nreturn [{ json: { ...prev, quadro_rows: dataRows.slice(0, 7), modo: valid ? 'AVALIAR' : 'ALERTAR' } }];"
+      }
+    },
+    {
+      "id": "a210-switch-conteudo",
+      "name": "[Onb A2.10] Roteador Conteudo",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        2464,
+        80
+      ],
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "outputKey": "ALERTAR",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.modo }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "rightValue": "ALERTAR"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "outputKey": "AVALIAR",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.modo }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "rightValue": "AVALIAR"
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "none"
+        }
+      }
+    },
+    {
+      "id": "a210-msg-alerta",
+      "name": "[Onb A2.10] Montar Telegram Alerta",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2688,
+        -32
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "return [{ json: { ...$json, text: 'ALERTA Cliente ' + $json.cliente_nome + ': quadro PASS/FAIL existe mas esta vazio/mal-formatado. Preencha pra liberar gate.' } }];"
+      }
+    },
+    {
+      "id": "a210-tg-alerta",
+      "name": "[Onb A2.10] Telegram Alerta",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2912,
+        -32
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "<TELEGRAM_CHAT_ID_redacted>",
+        "text": "={{ String($json.text || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }}",
+        "additionalFields": {
+          "parse_mode": "HTML",
+          "appendAttribution": false
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "<TELEGRAM_CREDENTIAL_ID_redacted>",
+          "name": "Telegram account"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "id": "a210-extrair",
+      "name": "[Onb A2.10] Extrair Tabela",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2688,
+        176
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const rows = $json.quadro_rows || [];\nconst tabela = rows.slice(0, 7).map((row) => ({\n  item: String(row[0] || '').replace(/^\\d+\\.\\s*/, '').trim(),\n  ferramenta: String(row[1] || '').trim(),\n  status: String(row[2] || '').trim().toUpperCase(),\n  evidencia: String(row[3] || '').trim(),\n  acao: String(row[4] || '').trim(),\n}));\nreturn [{ json: { ...$json, tabela, payload: { cliente_nome: $json.cliente_nome, tabela } } }];"
+      }
+    },
+    {
+      "id": "a210-gemini",
+      "name": "[Onb A2.10] Avaliar via Gemini",
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        2912,
+        176
+      ],
+      "parameters": {
+        "resource": "text",
+        "operation": "message",
+        "modelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "models/gemini-2.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "role": "user",
+              "content": "={{ JSON.stringify($json.payload) }}"
+            }
+          ]
+        },
+        "simplify": true,
+        "options": {
+          "includeMergedResponse": true,
+          "systemMessage": "Voce avalia gate de validacao final do onboarding. Recebe uma tabela com 7 itens (GTM, GA4 tag, GA4 evento, Pixel Meta, evento Meta, conversao Google Ads, jornada completa). Decida: PASS (TODOS os 7 marcados PASS) ou FAIL (qualquer um FAIL ou ausente ou ambiguo). Resposta APENAS JSON valido, sem markdown, sem comentarios extras: { \"resultado\": \"PASS\" ou \"FAIL\", \"justificativa\": \"<frase curta>\", \"itens_fail\": [\"<nome do item>\", ...] }",
+          "temperature": 0.1,
+          "maxOutputTokens": 512
+        }
+      },
+      "credentials": {
+        "googlePalmApi": {
+          "id": "cZNPIzF5ZCMrpnDr",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      },
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "waitBetweenTries": 2000
+    },
+    {
+      "id": "a210-normalizar",
+      "name": "[Onb A2.10] Normalizar Decisao",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3136,
+        176
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const pickText = (data) => {\n  if (typeof data.text === 'string' && data.text.trim()) return data.text;\n  if (typeof data.mergedResponse === 'string' && data.mergedResponse.trim()) return data.mergedResponse;\n  if (Array.isArray(data.content?.parts)) return data.content.parts.map((part) => part.text || '').join('');\n  if (typeof data.content === 'string') return data.content;\n  return '';\n};\nconst prev = $('[Onb A2.10] Extrair Tabela').item.json;\nconst raw = pickText($json).replace(new RegExp('\\\\x60{3}json|\\\\x60{3}', 'g'), '').trim();\nlet parsed;\ntry { parsed = JSON.parse(raw); } catch (error) { parsed = null; }\nconst failFallback = { resultado: 'FAIL', justificativa: 'Gemini indisponivel - bloqueio conservador.', itens_fail: ['Avaliacao automatica falhou'] };\nconst decisao = parsed && ['PASS', 'FAIL'].includes(String(parsed.resultado || '').toUpperCase())\n  ? { resultado: String(parsed.resultado).toUpperCase(), justificativa: String(parsed.justificativa || ''), itens_fail: Array.isArray(parsed.itens_fail) ? parsed.itens_fail : [] }\n  : failFallback;\nreturn [{ json: { ...prev, decisao } }];"
+      }
+    },
+    {
+      "id": "a210-if-pass",
+      "name": "[Onb A2.10] Resultado PASS?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        3360,
+        176
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.decisao.resultado }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "rightValue": "PASS"
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "a210-prep-pass",
+      "name": "[Onb A2.10] Preparar PASS",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3584,
+        32
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const pickTitle = (page) => {\n  for (const prop of Object.values(page.properties || {})) {\n    if (prop?.type === 'title') return (prop.title || []).map((item) => item.plain_text || '').join('').trim();\n  }\n  return '';\n};\nconst pickSelect = (prop) => prop?.select?.name || prop?.status?.name || '';\nconst pickNumber = (prop) => prop?.number ?? prop?.rollup?.number ?? null;\nconst pickPlainText = (prop) => (prop?.rich_text || []).map((item) => item.plain_text || '').join('').trim();\nconst richText = (text) => [{ type: 'text', text: { content: String(text || '').slice(0, 1900) } }];\nconst brIso = () => new Date().toLocaleString('sv-SE', { timeZone: 'America/Sao_Paulo' }).replace(' ', 'T') + '-03:00';\nconst iso = brIso();\nconst seq21Obs = ($json.seq21_observacoes || '') + '\\nA2.10 disparada em ' + iso + '. Resultado: PASS. Liberado pra Fase 5.';\nconst seq22Obs = ($json.seq22?.observacoes || '') + '\\nDestravada por A2.10 PASS em ' + iso + '.';\nconst should_unlock_seq22 = String($json.seq22?.observacoes || '').includes('Bloqueio gate A2.10');\nreturn [{ json: {\n  ...$json,\n  should_unlock_seq22,\n  seq21_update_body: { properties: { 'Observa\\u00e7\\u00f5es': { rich_text: richText(seq21Obs) } } },\n  seq22_update_body: { properties: { Status: { select: { name: 'Pendente' } }, 'Observa\\u00e7\\u00f5es': { rich_text: richText(seq22Obs) } } },\n  text: 'OK Cliente ' + $json.cliente_nome + ': validacao PASS - liberado pra Fase 5.'\n} }];"
+      }
+    },
+    {
+      "id": "a210-update21-pass",
+      "name": "[Onb A2.10] Atualizar Seq 21 PASS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        3808,
+        32
+      ],
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ \"https://api.notion.com/v1/pages/\" + $json.seq21_page_id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "notionApi",
+        "sendHeaders": true,
+        "specifyHeaders": "keypair",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Notion-Version",
+              "value": "2022-06-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json",
+              "neverError": false
+            }
+          }
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.seq21_update_body }}"
+      },
+      "credentials": {
+        "notionApi": {
+          "id": "<credential_id_redacted>",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "id": "a210-if-unlock",
+      "name": "[Onb A2.10] Deve Destravar Seq 22?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        4032,
+        32
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $('[Onb A2.10] Preparar PASS').item.json.should_unlock_seq22 }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              },
+              "rightValue": true
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "a210-unlock22",
+      "name": "[Onb A2.10] Destravar Seq 22 se Bloqueada",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        4256,
+        -64
+      ],
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ 'https://api.notion.com/v1/pages/' + $('[Onb A2.10] Preparar PASS').item.json.seq22.page_id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "notionApi",
+        "sendHeaders": true,
+        "specifyHeaders": "keypair",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Notion-Version",
+              "value": "2022-06-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json",
+              "neverError": false
+            }
+          }
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ $('[Onb A2.10] Preparar PASS').item.json.seq22_update_body }}"
+      },
+      "credentials": {
+        "notionApi": {
+          "id": "<credential_id_redacted>",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "id": "a210-restore-pass",
+      "name": "[Onb A2.10] Restaurar Telegram PASS",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4480,
+        32
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const p = $('[Onb A2.10] Preparar PASS').item.json; return [{ json: { ...p, notion_response: $json, text: p.text } }];"
+      }
+    },
+    {
+      "id": "a210-tg-pass",
+      "name": "[Onb A2.10] Telegram PASS",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        4704,
+        32
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "<TELEGRAM_CHAT_ID_redacted>",
+        "text": "={{ String($json.text || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }}",
+        "additionalFields": {
+          "parse_mode": "HTML",
+          "appendAttribution": false
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "<TELEGRAM_CREDENTIAL_ID_redacted>",
+          "name": "Telegram account"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "id": "a210-prep-fail",
+      "name": "[Onb A2.10] Preparar FAIL",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3584,
+        320
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const pickTitle = (page) => {\n  for (const prop of Object.values(page.properties || {})) {\n    if (prop?.type === 'title') return (prop.title || []).map((item) => item.plain_text || '').join('').trim();\n  }\n  return '';\n};\nconst pickSelect = (prop) => prop?.select?.name || prop?.status?.name || '';\nconst pickNumber = (prop) => prop?.number ?? prop?.rollup?.number ?? null;\nconst pickPlainText = (prop) => (prop?.rich_text || []).map((item) => item.plain_text || '').join('').trim();\nconst richText = (text) => [{ type: 'text', text: { content: String(text || '').slice(0, 1900) } }];\nconst brIso = () => new Date().toLocaleString('sv-SE', { timeZone: 'America/Sao_Paulo' }).replace(' ', 'T') + '-03:00';\nconst iso = brIso();\nconst fails = ($json.decisao?.itens_fail || []).join(', ') || 'sem item especifico';\nconst seq21Obs = ($json.seq21_observacoes || '') + '\\nA2.10 disparada em ' + iso + '. Resultado: FAIL. Itens FAIL: ' + fails + '.';\nconst seq22Obs = ($json.seq22?.observacoes || '') + '\\nBloqueio gate A2.10 em ' + iso + '. FAIL na seq 21 - itens: ' + fails + '.';\nreturn [{ json: {\n  ...$json,\n  seq21_update_body: { properties: { 'Observa\\u00e7\\u00f5es': { rich_text: richText(seq21Obs) } } },\n  seq22_update_body: { properties: { Status: { select: { name: 'Bloqueado' } }, 'Observa\\u00e7\\u00f5es': { rich_text: richText(seq22Obs) } } },\n  text: 'ALERTA Cliente ' + $json.cliente_nome + ': validacao FAIL. Itens: ' + fails + '. Proxima fase (seq 22) BLOQUEADA ate correcao.'\n} }];"
+      }
+    },
+    {
+      "id": "a210-update21-fail",
+      "name": "[Onb A2.10] Atualizar Seq 21 FAIL",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        3808,
+        320
+      ],
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ \"https://api.notion.com/v1/pages/\" + $json.seq21_page_id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "notionApi",
+        "sendHeaders": true,
+        "specifyHeaders": "keypair",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Notion-Version",
+              "value": "2022-06-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json",
+              "neverError": false
+            }
+          }
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.seq21_update_body }}"
+      },
+      "credentials": {
+        "notionApi": {
+          "id": "<credential_id_redacted>",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "id": "a210-block22",
+      "name": "[Onb A2.10] Bloquear Seq 22",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        4032,
+        320
+      ],
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ 'https://api.notion.com/v1/pages/' + $('[Onb A2.10] Preparar FAIL').item.json.seq22.page_id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "notionApi",
+        "sendHeaders": true,
+        "specifyHeaders": "keypair",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Notion-Version",
+              "value": "2022-06-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json",
+              "neverError": false
+            }
+          }
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ $('[Onb A2.10] Preparar FAIL').item.json.seq22_update_body }}"
+      },
+      "credentials": {
+        "notionApi": {
+          "id": "<credential_id_redacted>",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "id": "a210-restore-fail",
+      "name": "[Onb A2.10] Restaurar Telegram FAIL",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4256,
+        320
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const p = $('[Onb A2.10] Preparar FAIL').item.json; return [{ json: { ...p, notion_response: $json, text: p.text } }];"
+      }
+    },
+    {
+      "id": "a210-tg-fail",
+      "name": "[Onb A2.10] Telegram FAIL",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        4480,
+        320
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "<TELEGRAM_CHAT_ID_redacted>",
+        "text": "={{ String($json.text || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }}",
+        "additionalFields": {
+          "parse_mode": "HTML",
+          "appendAttribution": false
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "<TELEGRAM_CREDENTIAL_ID_redacted>",
+          "name": "Telegram account"
+        }
+      },
+      "continueOnFail": true
+    }
+  ],
+  "connections": {
+    "[Onb A2.10] Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.10] Buscar Etapas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.10] Buscar Etapas": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.10] Filtrar Elegiveis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.10] Filtrar Elegiveis": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.10] Obter Cliente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.10] Obter Cliente": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.10] Filtrar Cliente Ativo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.10] Filtrar Cliente Ativo": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.10] Buscar seq 22 do Cliente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.10] Buscar seq 22 do Cliente": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.10] Buscar Sub-pagina Quadro",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.10] Buscar Sub-pagina Quadro": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.10] Preparar Quadro",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.10] Preparar Quadro": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.10] Triage Modo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.10] Triage Modo": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.10] Criar Sub-pagina Template",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "[Onb A2.10] Ler Conteudo Quadro",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.10] Criar Sub-pagina Template": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.10] Montar Telegram Criacao",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.10] Montar Telegram Criacao": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.10] Telegram Criacao",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.10] Ler Conteudo Quadro": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.10] Triage Conteudo Quadro",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.10] Triage Conteudo Quadro": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.10] Roteador Conteudo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.10] Roteador Conteudo": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.10] Montar Telegram Alerta",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "[Onb A2.10] Extrair Tabela",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.10] Montar Telegram Alerta": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.10] Telegram Alerta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.10] Extrair Tabela": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.10] Avaliar via Gemini",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.10] Avaliar via Gemini": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.10] Normalizar Decisao",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.10] Normalizar Decisao": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.10] Resultado PASS?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.10] Resultado PASS?": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.10] Preparar PASS",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "[Onb A2.10] Preparar FAIL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.10] Preparar PASS": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.10] Atualizar Seq 21 PASS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.10] Atualizar Seq 21 PASS": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.10] Deve Destravar Seq 22?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.10] Deve Destravar Seq 22?": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.10] Destravar Seq 22 se Bloqueada",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "[Onb A2.10] Restaurar Telegram PASS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.10] Destravar Seq 22 se Bloqueada": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.10] Restaurar Telegram PASS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.10] Restaurar Telegram PASS": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.10] Telegram PASS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.10] Preparar FAIL": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.10] Atualizar Seq 21 FAIL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.10] Atualizar Seq 21 FAIL": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.10] Bloquear Seq 22",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.10] Bloquear Seq 22": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.10] Restaurar Telegram FAIL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.10] Restaurar Telegram FAIL": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.10] Telegram FAIL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true,
+    "timezone": "America/Sao_Paulo"
+  },
+  "staticData": {
+    "node:[Onb A2.10] Schedule Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": null,
+  "pinData": {}
+}
