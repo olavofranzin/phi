@@ -80,14 +80,21 @@ linhas.push('Detalhe: ' + (detalhes.length ? detalhes.join('\n') : 'sem detalhes
 return [{ json: { text: linhas.join('\n'), payload } }];`;
 
 const normalizeCode = String.raw`const out = [];
+const pickText = (data) => {
+  if (typeof data.text === 'string' && data.text.trim()) return data.text;
+  if (typeof data.mergedResponse === 'string' && data.mergedResponse.trim()) return data.mergedResponse;
+  if (Array.isArray(data.content?.parts)) return data.content.parts.map((part) => part.text || '').join('');
+  if (typeof data.content === 'string') return data.content;
+  return '';
+};
 for (const item of $input.all()) {
   const data = item.json || {};
-  const text = String(data.text || data.mergedResponse || data.content?.parts?.map((part) => part.text || '').join('') || data.content || '').trim();
+  const text = pickText(data).replace(/\*\*/g, '').trim();
   out.push({ json: { ...data, text } });
 }
 return out;`;
 
-const systemPrompt = 'Voce e o assistente operacional da agencia. Gere digest diario CURTO e OBJETIVO em portugues brasileiro, formato Telegram. Use bullets simples (-). Sem markdown pesado (sem **negrito**, sem links inline). Emojis sobrios e poucos (alerta e ok). Estrutura fixa: 1) Resumo numerico, 2) Clientes com etapas atrasadas (so se houver), 3) Bloqueios ativos (so se houver), 4) Acao recomendada do dia (uma frase). Se nao houver onboarding ativo, diga apenas isso. NUNCA invente dados que nao estao no payload.';
+const systemPrompt = 'Voce e o assistente operacional da agencia. Gere digest diario CURTO e OBJETIVO em portugues brasileiro, formato Telegram. Use bullets simples (-). Nao use markdown pesado, asteriscos, negrito, titulos com **, nem links inline. Emojis sobrios e poucos (alerta e ok). Estrutura fixa: 1) Resumo numerico, 2) Clientes com etapas atrasadas (so se houver), 3) Bloqueios ativos (so se houver), 4) Acao recomendada do dia (uma frase). Se nao houver onboarding ativo, diga apenas isso. NUNCA invente dados que nao estao no payload.';
 
 const nodeBase = {
   notionApi: { id: '<credential_id_redacted>', name: 'Notion account' },
@@ -107,7 +114,7 @@ const workflow = {
     { id: 'a27-agregar', name: '[Onb A2.7] Filtrar e Agregar', type: 'n8n-nodes-base.code', typeVersion: 2, position: [672, 0], parameters: { mode: 'runOnceForAllItems', jsCode: aggregateCode } },
     { id: 'a27-gemini', name: '[Onb A2.7] Gerar Digest Gemini', type: '@n8n/n8n-nodes-langchain.googleGemini', typeVersion: 1.2, position: [896, 0], parameters: { resource: 'text', operation: 'message', modelId: { __rl: true, mode: 'list', value: 'models/gemini-2.5-flash' }, messages: { values: [{ role: 'user', content: '={{ JSON.stringify($json.payload) }}' }] }, simplify: true, options: { includeMergedResponse: true, systemMessage: systemPrompt, temperature: 0.2, maxOutputTokens: 1024 } }, credentials: { googlePalmApi: nodeBase.googlePalmApi }, continueOnFail: true },
     { id: 'a27-normalizar-gemini', name: '[Onb A2.7] Normalizar Digest', type: 'n8n-nodes-base.code', typeVersion: 2, position: [1008, 0], parameters: { mode: 'runOnceForAllItems', jsCode: normalizeCode } },
-    { id: 'a27-if', name: '[Onb A2.7] Tem Resposta?', type: 'n8n-nodes-base.if', typeVersion: 2.3, position: [1120, 0], parameters: { conditions: { options: { caseSensitive: true, leftValue: '', typeValidation: 'loose', version: 2 }, conditions: [{ leftValue: '={{ (($json.text || $json.content || \"\") + \"\").trim() }}', operator: { type: 'string', operation: 'notEmpty' }, rightValue: '' }], combinator: 'and' } } },
+    { id: 'a27-if', name: '[Onb A2.7] Tem Resposta?', type: 'n8n-nodes-base.if', typeVersion: 2.3, position: [1120, 0], parameters: { conditions: { options: { caseSensitive: true, leftValue: '', typeValidation: 'loose', version: 2 }, conditions: [{ leftValue: '={{ String($json.text || \"\").trim() }}', operator: { type: 'string', operation: 'notEmpty' }, rightValue: '' }], combinator: 'and' } } },
     { id: 'a27-fallback', name: '[Onb A2.7] Montar Fallback', type: 'n8n-nodes-base.code', typeVersion: 2, position: [1344, 160], parameters: { mode: 'runOnceForAllItems', jsCode: fallbackCode } },
     { id: 'a27-telegram', name: '[Onb A2.7] Enviar Telegram Olavo', type: 'n8n-nodes-base.telegram', typeVersion: 1.2, position: [1568, 0], parameters: { resource: 'message', operation: 'sendMessage', chatId: '<TELEGRAM_CHAT_ID_redacted>', text: "={{ String($json.text || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }}", additionalFields: { parse_mode: 'HTML', appendAttribution: false } }, credentials: { telegramApi: nodeBase.telegramApi }, continueOnFail: true },
   ],

@@ -127,7 +127,7 @@
         "simplify": true,
         "options": {
           "includeMergedResponse": true,
-          "systemMessage": "Voce e o assistente operacional da agencia. Gere digest diario CURTO e OBJETIVO em portugues brasileiro, formato Telegram. Use bullets simples (-). Sem markdown pesado (sem **negrito**, sem links inline). Emojis sobrios e poucos (alerta e ok). Estrutura fixa: 1) Resumo numerico, 2) Clientes com etapas atrasadas (so se houver), 3) Bloqueios ativos (so se houver), 4) Acao recomendada do dia (uma frase). Se nao houver onboarding ativo, diga apenas isso. NUNCA invente dados que nao estao no payload.",
+          "systemMessage": "Voce e o assistente operacional da agencia. Gere digest diario CURTO e OBJETIVO em portugues brasileiro, formato Telegram. Use bullets simples (-). Nao use markdown pesado, asteriscos, negrito, titulos com **, nem links inline. Emojis sobrios e poucos (alerta e ok). Estrutura fixa: 1) Resumo numerico, 2) Clientes com etapas atrasadas (so se houver), 3) Bloqueios ativos (so se houver), 4) Acao recomendada do dia (uma frase). Se nao houver onboarding ativo, diga apenas isso. NUNCA invente dados que nao estao no payload.",
           "temperature": 0.2,
           "maxOutputTokens": 1024
         }
@@ -151,7 +151,7 @@
       ],
       "parameters": {
         "mode": "runOnceForAllItems",
-        "jsCode": "const out = [];\nfor (const item of $input.all()) {\n  const data = item.json || {};\n  const text = String(data.text || data.mergedResponse || data.content?.parts?.map((part) => part.text || '').join('') || data.content || '').trim();\n  out.push({ json: { ...data, text } });\n}\nreturn out;"
+        "jsCode": "const out = [];\nconst pickText = (data) => {\n  if (typeof data.text === 'string' && data.text.trim()) return data.text;\n  if (typeof data.mergedResponse === 'string' && data.mergedResponse.trim()) return data.mergedResponse;\n  if (Array.isArray(data.content?.parts)) return data.content.parts.map((part) => part.text || '').join('');\n  if (typeof data.content === 'string') return data.content;\n  return '';\n};\nfor (const item of $input.all()) {\n  const data = item.json || {};\n  const text = pickText(data).replace(/\\*\\*/g, '').trim();\n  out.push({ json: { ...data, text } });\n}\nreturn out;"
       }
     },
     {
@@ -173,7 +173,7 @@
           },
           "conditions": [
             {
-              "leftValue": "={{ (($json.text || $json.content || \"\") + \"\").trim() }}",
+              "leftValue": "={{ String($json.text || \"\").trim() }}",
               "operator": {
                 "type": "string",
                 "operation": "notEmpty"

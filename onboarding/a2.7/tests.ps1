@@ -101,6 +101,22 @@ if ($gemini.credentials.googlePalmApi.id -ne 'cZNPIzF5ZCMrpnDr') {
   throw 'Gerar Digest Gemini must reference credential id cZNPIzF5ZCMrpnDr'
 }
 
+$normalizeCode = [string]$nodeMap['[Onb A2.7] Normalizar Digest'].parameters.jsCode
+if (-not $normalizeCode.Contains("Array.isArray(data.content?.parts)")) {
+  throw 'Normalizar Digest must extract Gemini content.parts without casting content objects'
+}
+if ($normalizeCode.Contains("|| data.content ||")) {
+  throw 'Normalizar Digest must not cast object content to a non-empty string'
+}
+if (-not $normalizeCode.Contains("replace(/\*\*/g, '')")) {
+  throw 'Normalizar Digest must strip heavy markdown markers before Telegram'
+}
+
+$ifCondition = [string]$nodeMap['[Onb A2.7] Tem Resposta?'].parameters.conditions.conditions[0].leftValue
+if ($ifCondition -ne '={{ String($json.text || "").trim() }}') {
+  throw 'Tem Resposta? must check normalized $json.text only'
+}
+
 $telegram = $nodeMap['[Onb A2.7] Enviar Telegram Olavo']
 $expectedText = "={{ String(`$json.text || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }}"
 if ($telegram.parameters.text -ne $expectedText) {
