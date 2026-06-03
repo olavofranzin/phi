@@ -124,7 +124,7 @@
       "credentials": {
         "notionApi": {
           "id": "<credential_id_redacted>",
-            "name": "Notion account"
+          "name": "Notion account"
         }
       }
     },
@@ -208,7 +208,7 @@
       "credentials": {
         "notionApi": {
           "id": "<credential_id_redacted>",
-            "name": "Notion account"
+          "name": "Notion account"
         }
       }
     },
@@ -285,7 +285,7 @@
       "credentials": {
         "notionApi": {
           "id": "<credential_id_redacted>",
-            "name": "Notion account"
+          "name": "Notion account"
         }
       }
     },
@@ -391,7 +391,7 @@
       "credentials": {
         "notionApi": {
           "id": "<credential_id_redacted>",
-            "name": "Notion account"
+          "name": "Notion account"
         }
       },
       "continueOnFail": true
@@ -476,7 +476,7 @@
       "credentials": {
         "notionApi": {
           "id": "<credential_id_redacted>",
-            "name": "Notion account"
+          "name": "Notion account"
         }
       }
     },
@@ -517,9 +517,10 @@
       "credentials": {
         "telegramApi": {
           "id": "<TELEGRAM_CREDENTIAL_ID_redacted>",
-            "name": "Telegram account"
+          "name": "Telegram account"
         }
-      }
+      },
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -541,9 +542,10 @@
       "credentials": {
         "telegramApi": {
           "id": "<TELEGRAM_CREDENTIAL_ID_redacted>",
-            "name": "Telegram account"
+          "name": "Telegram account"
         }
-      }
+      },
+      "continueOnFail": true
     },
     {
       "id": "a21-telegram-falha-text",
@@ -685,9 +687,48 @@
       "credentials": {
         "notionApi": {
           "id": "<credential_id_redacted>",
-            "name": "Notion account"
+          "name": "Notion account"
         }
       }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "<A2_3_WEBHOOK_URL_redacted>",
+        "sendHeaders": true,
+        "specifyHeaders": "keypair",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Onb-Secret",
+              "value": "<ONB_WEBHOOK_SECRET_redacted>"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { cliente_page_id: $('[Onb A2.1] Criar Cliente').item.json.id, briefing_payload: $('[Onb A2.1] Normalizar Contexto').item.json.raw_payload } }}",
+        "options": {
+          "timeout": 10000,
+          "response": {
+            "response": {
+              "responseFormat": "json",
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "a21-disparar-a23",
+      "name": "[Onb A2.1] Disparar A2.3",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2640,
+        520
+      ],
+      "continueOnFail": true,
+      "retryOnFail": false
     }
   ],
   "connections": {
@@ -809,6 +850,11 @@
         [
           {
             "node": "[Onb A2.1] Tem Servico?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "[Onb A2.1] Disparar A2.3",
             "type": "main",
             "index": 0
           }

@@ -37,7 +37,7 @@ foreach ($relativePath in $workflowPaths) {
 }
 
 $requiredSanitizedConfig = @{
-  'onboarding\a2.1\workflow.json' = @('<TELEGRAM_CHAT_ID_redacted>')
+  'onboarding\a2.1\workflow.json' = @('<TELEGRAM_CHAT_ID_redacted>', '<A2_3_WEBHOOK_URL_redacted>', '<ONB_WEBHOOK_SECRET_redacted>')
   'onboarding\a2.2\workflow.json' = @('<TELEGRAM_CHAT_ID_redacted>')
   'onboarding\a2.7\workflow.json' = @('<TELEGRAM_CHAT_ID_redacted>')
   'onboarding\a2.5\workflow.json' = @('<TELEGRAM_CHAT_ID_redacted>')
@@ -178,9 +178,33 @@ foreach ($relativePath in @('onboarding\a2.1\workflow.json', 'onboarding\a2.1\sa
     }
   }
 
+  if (-not $nodeMap.ContainsKey('[Onb A2.1] Disparar A2.3')) {
+    throw "$relativePath missing A2.1 A2.3 dispatch node"
+  }
+  $dispatchA23 = $nodeMap['[Onb A2.1] Disparar A2.3']
+  if ($dispatchA23.type -ne 'n8n-nodes-base.httpRequest' -or [string]$dispatchA23.typeVersion -ne '4.3') {
+    throw "$relativePath A2.3 dispatch must be HTTP Request v4.3"
+  }
+  if ($dispatchA23.parameters.method -ne 'POST' -or $dispatchA23.parameters.url -ne '<A2_3_WEBHOOK_URL_redacted>') {
+    throw "$relativePath A2.3 dispatch must POST to sanitized A2.3 webhook URL"
+  }
+  $dispatchHeader = @($dispatchA23.parameters.headerParameters.parameters | Where-Object { $_.name -eq 'X-Onb-Secret' }) | Select-Object -First 1
+  if (-not $dispatchHeader -or $dispatchHeader.value -ne '<ONB_WEBHOOK_SECRET_redacted>') {
+    throw "$relativePath A2.3 dispatch must send sanitized X-Onb-Secret"
+  }
+  if ($dispatchA23.continueOnFail -ne $true -or $dispatchA23.retryOnFail -ne $false -or [int]$dispatchA23.parameters.options.timeout -ne 10000) {
+    throw "$relativePath A2.3 dispatch must be continueOnFail=true, retryOnFail=false, timeout=10000"
+  }
+  $dispatchBody = [string]$dispatchA23.parameters.jsonBody
+  foreach ($requiredDispatchBody in @('cliente_page_id', 'briefing_payload', '[Onb A2.1] Criar Cliente', '[Onb A2.1] Normalizar Contexto', 'raw_payload')) {
+    if (-not $dispatchBody.Contains($requiredDispatchBody)) {
+      throw "$relativePath A2.3 dispatch body missing $requiredDispatchBody"
+    }
+  }
+
   $criarClienteNext = @($workflow.connections.'[Onb A2.1] Criar Cliente'.main[0] | ForEach-Object { $_.node })
-  if ($criarClienteNext.Count -ne 1 -or $criarClienteNext[0] -ne '[Onb A2.1] Tem Servico?') {
-    throw "$relativePath must connect Criar Cliente directly to Tem Servico?"
+  if ($criarClienteNext.Count -ne 2 -or -not ($criarClienteNext -contains '[Onb A2.1] Tem Servico?') -or -not ($criarClienteNext -contains '[Onb A2.1] Disparar A2.3')) {
+    throw "$relativePath must connect Criar Cliente to Tem Servico? and Disparar A2.3"
   }
 
   $normalizarCode = [string]$nodeMap['[Onb A2.1] Normalizar Contexto'].parameters.jsCode

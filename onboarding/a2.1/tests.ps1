@@ -39,6 +39,7 @@ $requiredNodeNames = @(
   '[Onb A2.1] Detectar Duplicidade',
   '[Onb A2.1] Notificar Duplicidade Olavo',
   '[Onb A2.1] Criar Cliente',
+  '[Onb A2.1] Disparar A2.3',
   '[Onb A2.1] Ler Etapas A1',
   '[Onb A2.1] Binario para JSON Etapas',
   '[Onb A2.1] Montar Itens Etapas',
@@ -122,6 +123,31 @@ if ([string]$responder401.parameters.options.responseCode -ne '401') {
 }
 if ($responder401.parameters.responseBody -notmatch 'unauthorized') {
   throw 'Responder 401 must return unauthorized body'
+}
+
+$dispatchA23 = $nodeMap['[Onb A2.1] Disparar A2.3']
+if ($dispatchA23.type -ne 'n8n-nodes-base.httpRequest' -or [string]$dispatchA23.typeVersion -ne '4.3') {
+  throw 'Disparar A2.3 must be an HTTP Request v4.3 node'
+}
+if ($dispatchA23.parameters.method -ne 'POST' -or $dispatchA23.parameters.url -ne '<A2_3_WEBHOOK_URL_redacted>') {
+  throw 'Disparar A2.3 must POST to sanitized A2.3 webhook URL'
+}
+$dispatchHeader = @($dispatchA23.parameters.headerParameters.parameters | Where-Object { $_.name -eq 'X-Onb-Secret' }) | Select-Object -First 1
+if (-not $dispatchHeader -or $dispatchHeader.value -ne '<ONB_WEBHOOK_SECRET_redacted>') {
+  throw 'Disparar A2.3 must send sanitized X-Onb-Secret'
+}
+if ($dispatchA23.continueOnFail -ne $true -or $dispatchA23.retryOnFail -ne $false -or [int]$dispatchA23.parameters.options.timeout -ne 10000) {
+  throw 'Disparar A2.3 must use continueOnFail=true, retryOnFail=false and timeout=10000'
+}
+$dispatchBody = [string]$dispatchA23.parameters.jsonBody
+foreach ($requiredDispatchBody in @('cliente_page_id', 'briefing_payload', '[Onb A2.1] Criar Cliente', '[Onb A2.1] Normalizar Contexto', 'raw_payload')) {
+  if (-not $dispatchBody.Contains($requiredDispatchBody)) {
+    throw "Disparar A2.3 body is missing $requiredDispatchBody"
+  }
+}
+$criarClienteNext = @($workflow.connections.'[Onb A2.1] Criar Cliente'.main[0] | ForEach-Object { $_.node })
+if ($criarClienteNext.Count -ne 2 -or -not ($criarClienteNext -contains '[Onb A2.1] Tem Servico?') -or -not ($criarClienteNext -contains '[Onb A2.1] Disparar A2.3')) {
+  throw 'Criar Cliente must connect to Tem Servico? and Disparar A2.3'
 }
 
 if ($nodeMap['[Onb A2.1] Buscar Clientes Ativos'].parameters.databaseId.value -ne '04e34a62624b484cbda546604564b88c') {
