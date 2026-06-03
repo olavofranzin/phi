@@ -1,6 +1,8 @@
-# [BRUTO v0.1] Execução das Demandas — Extração do tácito + Design Lote 0
+# [BRUTO v0.2] Execução das Demandas — Extração do tácito + Design Lote 0
 
-> **STATUS:** Rascunho strawman v0.1. Aguardando red-line do Olavo.
+> **STATUS:** Strawman v0.2. v0.1 red-lined por Olavo em 2026-06-03;
+> §4 e §11 atualizados; demais seções confirmadas. Aguarda v0.3 pendente de
+> definição do **Curador de Procedimentos** (frente nova — ver §16).
 > Nada aqui tocou Notion canônico nem código (Codex). Este doc é o artefato
 > de revisão. Cada premissa de domínio está marcada `[PRESUMIDO]` — risque,
 > corrija ou confirme.
@@ -72,22 +74,25 @@ Aplicados a TODA entidade/regra desta área desde já:
 
 ---
 
-## 4. Tipos de demanda v0.1 `[PRESUMIDO — valide/corrija/adicione]`
+## 4. Tipos de demanda v0.2 (red-lined por Olavo)
 
 ### Recorrentes (Schedule Trigger)
-| Tipo | Cadência sugerida | Origem |
+| Tipo | Cadência | Origem |
 |---|---|---|
 | Conferência de ingestão de métricas (daily entry) | Diária | `daily_entry_v4` |
 | Checagem de pacing/verba por campanha | Diária | `phi_subworkflow_ads_operational` |
 | Revisão de PHI Score em degradação | Diária | `phi_pipeline_v2` |
 | Higiene de leads (intake WhatsApp) | Diária | `wpp-intake-*` |
+| **Prospecção comercial** | Diária | red-line Olavo |
 | Relatório de performance por cliente | Semanal | `phi_operator_metricas` |
+| **Reunião de resultados com cliente** | Semanal | red-line Olavo |
 
 ### Tickets internos (ad-hoc)
 | Tipo | Gatilho |
 |---|---|
 | Ajuste de verba/orçamento | Decisão sua / alerta de pacing |
 | Subir ou pausar criativo | Decisão sua |
+| **Criação de campanhas** | red-line Olavo — projeto novo / aquisição de cliente |
 | Investigar anomalia de métrica (PHI Score caiu) | Alerta automático |
 | Setup/config de conta nova | Liga com Projeto Setup (L1 Priorização) |
 | Solicitação operacional pontual | Telegram → intake |
@@ -95,6 +100,15 @@ Aplicados a TODA entidade/regra desta área desde já:
 **Demandas também nascem upstream:** Etapas de Onboarding (A2.1) e itens do
 checklist de Projeto Setup (L1) são demandas a executar — a Execução as
 **consome**, não as recria.
+
+> **Tensão de fronteira a re-examinar (não bloqueia agora):**
+> "Prospecção comercial" e "Reunião de resultados com cliente" são
+> semanticamente da área **Abordagem Comercial** (outro pilar). Enquanto
+> Olavo opera solo, caem na fila única da Execução. Quando a área Comercial
+> existir como entidade, esses dois tipos provavelmente **migram** pra lá e
+> a Execução só consome o output (lead qualificado / pauta de reunião).
+> Re-examinar quando Comercial entrar no escopo. Esse tipo de mudança é
+> EXATAMENTE o que o Curador de Procedimentos (§16) automatiza.
 
 ---
 
@@ -218,20 +232,12 @@ confiança no agente).
 
 ---
 
-## 11. Miro `[PRESUMIDO — confirme o papel exato]`
+## 11. Miro v0.2 (red-lined por Olavo — kanban cortado)
 
-Dois usos, ambos **espelho/documentação**, nunca fonte de cálculo:
-- **Board de fluxo das demandas** = kanban espelho do estado das Demandas.
-  n8n sincroniza cards quando a demanda muda de estado. Tratar como **sink
-  derivado idempotente** (marca de idempotência, igual Telegram). Notion segue
-  canônico.
-- **Mapa visual do processo** = diagrama do SOP (estados + roteamento).
-  Documentação viva, atualizada quando o SOP muda.
-
-⚠️ **Tensão a registrar:** Miro board (fluxo operacional interno) + Dashboard
-futuro (PHI Score, produto) são duas superfícies de visualização. Propósitos
-distintos (interno vs vendável), ok — mas vale não duplicar a MESMA informação
-nos dois.
+**Uso único:** **Mapa visual do processo** = diagrama do SOP (estados +
+roteamento). Documentação viva, atualizada quando o SOP muda. Sem sync
+operacional n8n→Miro (kanban cortado no red-line — Notion serve esse
+papel sozinho, sem duplicação).
 
 ---
 
@@ -263,26 +269,56 @@ white-label. Alinha com "white-label core + brand layer" dos docs.
 
 ---
 
-## 14. Red-line: o que preciso que você confirme/corrija
+## 14. Status do red-line v0.1 → v0.2 (resolvido 2026-06-03)
 
-1. **Tipos de demanda (§4)** — a lista bate com a operação real? O que falta/sobra?
-2. **Ciclo de vida (§5)** — esses estados servem? Algum tipo precisa de ciclo próprio?
-3. **Classes/prazos de SLA (§7)** — os prazos estão realistas?
-4. **DoD de padronização (§8)** — o exemplo de relatório reflete teu padrão?
-5. **2 agentes vs 1 (§6)** — concorda em separar Orquestrador (Pro) e
-   Padronizador (Flash)? Ou quer 1 agente só?
-6. **DB novo `PHI - Demandas` (§9)** — ok criar entidade nova, ou prefere
-   reaproveitar algo existente da Central de Operações?
-7. **White-label config-driven (§12)** — aprova personas neutras com `{{BRAND}}`?
-8. **Eventos/métricas (§10)** — as 6 métricas cobrem o que você quer medir?
+| # | Item | Status |
+|---|---|---|
+| 1 | Tipos de demanda (§4) | ✅ Atualizado — +prospecção, +reunião resultados, +criação de campanhas. Tensão fronteira Comercial registrada. |
+| 2 | Ciclo de vida (§5) | ✅ OK |
+| 3 | Classes/prazos SLA (§7) | ✅ OK |
+| 4 | DoD padronização (§8) | ✅ OK |
+| 5 | 2 agentes vs 1 (§6) | ✅ OK — Orquestrador (Pro) + Padronizador (Flash) |
+| 6 | DB novo `PHI - Demandas` (§9) | ✅ OK |
+| 7 | White-label `{{BRAND}}` (§12) | ✅ OK |
+| 8 | Eventos/métricas (§10) | ✅ OK |
+| 9 | Miro (§11) | ✅ Reduzido a mapa visual do processo (kanban cortado) |
+
+**Pendência ABERTA — não bloqueia a v0.2 da Execução, mas redesenha o pilar:**
+Olavo trouxe um **3º agente** (vide §16) que não é da Execução — é
+meta-agente do pilar Procedimentos. Definição dele em scoping separado.
 
 ---
 
-## 15. Próximos passos (após red-line)
+## 15. Próximos passos
 
-1. Incorporo correções → v0.2.
-2. Derivo o **SOP** + abro **DB `PHI - Demandas`** + **âncora** no Notion
-   (canônico) — só após teu OK.
-3. Rascunho os 2 **ADRs** (tiering, evento/BQ).
-4. Brifo o **Codex** pro Lote 1 (engine mínimo), seguindo os padrões
-   inegociáveis do Lote 1 Onboarding.
+1. ✅ v0.2 incorporada.
+2. ⏸ **Aguardando** definição do Curador (§16) — não bloqueia, mas pode
+   afetar S1/§9 se o Curador exigir campos extras na Demanda (ex:
+   `versao_sop_aplicada`).
+3. Após teu OK final: derivo **SOP** + abro **DB `PHI - Demandas`** + **âncora**
+   no Notion (canônico).
+4. Rascunho os 2 **ADRs** (tiering, evento/BQ).
+5. Brifo o **Codex** pro Lote 1 (engine mínimo), seguindo padrões inegociáveis
+   do Lote 1 Onboarding.
+
+---
+
+## 16. Curador de Procedimentos (frente nova — scoping)
+
+**Origem:** red-line do Olavo (2026-06-03). Pediu um agente que entenda
+mudanças de escopo da agência (ex: entrada de Sites/Agentes IA além de
+tráfego pago) e reorganize SOPs/SLAs/modelos de dados/prompts dos outros
+agentes sem retrabalho manual.
+
+**Status:** scoping. Detalhamento, análise estratégica de onde mora
+(Procedimentos da Operação vs Execução vs PHI inteiro), trigger,
+aplica-vs-propõe e tier do agente estão sendo discutidos com Olavo em
+paralelo a este doc. **Não é o 3º agente da Execução** — é meta-agente
+do pilar Procedimentos da Operação.
+
+**Dependência crítica identificada:** o Curador exige um **Catálogo de
+Artefatos Operacionais** vivo (inventário do que existe: SOPs, DBs, prompts,
+ADRs, SLAs por área). Provavelmente vira o 1º entregável do Lote 0 dele.
+
+Strawman do Curador entra como doc próprio quando o scoping fechar:
+`docs/strategic-planning/curador-procedimentos/BRUTO-v0.1-design.md`.
