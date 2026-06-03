@@ -289,36 +289,48 @@ meta-agente do pilar Procedimentos. Definição dele em scoping separado.
 
 ---
 
-## 15. Próximos passos
+## 15. Próximos passos — sequenciamento global (janela 1-2 meses)
 
-1. ✅ v0.2 incorporada.
-2. ⏸ **Aguardando** definição do Curador (§16) — não bloqueia, mas pode
-   afetar S1/§9 se o Curador exigir campos extras na Demanda (ex:
-   `versao_sop_aplicada`).
-3. Após teu OK final: derivo **SOP** + abro **DB `PHI - Demandas`** + **âncora**
-   no Notion (canônico).
-4. Rascunho os 2 **ADRs** (tiering, evento/BQ).
-5. Brifo o **Codex** pro Lote 1 (engine mínimo), seguindo padrões inegociáveis
-   do Lote 1 Onboarding.
+1. ✅ v0.2 da Execução incorporada.
+2. ✅ Curador escopado (§16) — strawman v0.1 em `docs/strategic-planning/curador/`.
+3. **Sem 1-2:** v0.3 Execução (campo `versao_sop_aplicada` na Demanda pra
+   plugar no Curador) → SOP + DB `PHI - Demandas` + âncora no Notion canônico
+   + ADRs + brief Codex pro Lote 1.
+4. **Sem 2-4:** Lote 1 Execução roda (engine mínimo, 1 tipo recorrente
+   ponta a ponta) **+** Lote 0 Curador em paralelo (Catálogo de Artefatos
+   Operacionais — descoberta + DB Notion).
+5. **Sem 4-6:** Lote 1 Curador (1 Mudança de Escopo simulada → diff →
+   aplicação manual).
+6. **Sem 6-8:** Lote 2 Curador (aplicação via Codex) + Lote 3 (aplicação
+   via MCP Notion).
+7. **Fallback honesto:** se Sites/IA entrarem antes do Curador estar
+   pronto, Olavo + Claude fazem a 1ª reorganização **manualmente** mas
+   com rigor de documentação — vira input de treino do Curador depois.
 
 ---
 
-## 16. Curador de Procedimentos (frente nova — scoping)
+## 16. Curador — meta-agente do pilar Procedimentos (decisões travadas)
 
-**Origem:** red-line do Olavo (2026-06-03). Pediu um agente que entenda
-mudanças de escopo da agência (ex: entrada de Sites/Agentes IA além de
-tráfego pago) e reorganize SOPs/SLAs/modelos de dados/prompts dos outros
-agentes sem retrabalho manual.
+**Origem:** red-line Olavo 2026-06-03. Pediu agente que entenda mudanças de
+escopo da agência (entrada de Sites/Agentes IA além de tráfego pago) e
+reorganize SOPs/SLAs/modelos de dados/prompts dos outros agentes sem
+retrabalho manual.
 
-**Status:** scoping. Detalhamento, análise estratégica de onde mora
-(Procedimentos da Operação vs Execução vs PHI inteiro), trigger,
-aplica-vs-propõe e tier do agente estão sendo discutidos com Olavo em
-paralelo a este doc. **Não é o 3º agente da Execução** — é meta-agente
-do pilar Procedimentos da Operação.
+**Decisões travadas (2026-06-03):**
 
-**Dependência crítica identificada:** o Curador exige um **Catálogo de
-Artefatos Operacionais** vivo (inventário do que existe: SOPs, DBs, prompts,
-ADRs, SLAs por área). Provavelmente vira o 1º entregável do Lote 0 dele.
+| Dim | Decisão |
+|---|---|
+| D1 — Aplica vs Propõe | **Propõe.** Nunca aplica direto. Gera diff legível → Olavo aprova → aciona Codex/MCP Notion. |
+| D2 — Disparo | **Trigger explícito.** Olavo abre registro "Mudança de Escopo" no Notion. (Drift detection automática fica pra fase 2.) |
+| D3 — Timing | **Ambos modos.** ANTES (planejamento, hipotético) + DEPOIS (retroativo, já aconteceu). Sempre propondo. |
+| D4 — Mora | **(B) Procedimentos da Operação.** Cobre Onboarding + Execução + futura Comercial. NÃO é 3º agente da Execução. |
+| Nome | **Curador.** |
+| Tier | Gemini Pro (denso, raciocínio caro multi-artefato). |
+| Janela | **1-2 meses** (Sites/IA). |
 
-Strawman do Curador entra como doc próprio quando o scoping fechar:
-`docs/strategic-planning/curador-procedimentos/BRUTO-v0.1-design.md`.
+**Dependência crítica:** **Catálogo de Artefatos Operacionais** vivo
+(inventário de SOPs, DBs, prompts, ADRs, SLAs por área). 1º entregável do
+Lote 0 do Curador.
+
+**Strawman completo:**
+`docs/strategic-planning/curador/BRUTO-v0.1-design.md`
