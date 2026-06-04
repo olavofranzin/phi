@@ -42,18 +42,34 @@ não bloquear evolução depois.
 
 ### 1.2. Tronco do Miro → áreas formais
 
-> ⚠️ **Lista incompleta.** O handoff de extração do Miro
-> (`docs/handoff/2026-05-11-miro-onboarding-extraction.md`) registrou só
-> 4 troncos porque a sessão de captura travou (board não expôs texto
-> via API pública). Olavo vai enviar lista completa pra atualizar.
+Mapeamento dos **10 troncos** do Miro de Onboarding/governança original.
+Lista completa fornecida por Olavo em 2026-06-04.
 
-| Tronco Miro | Nome formal | Status no projeto |
-|---|---|---|
-| Tronco 1 — Procedimentos da Área de Atendimento | (área de Atendimento) | Não aberto ainda |
-| Tronco 2 — Procedimentos da Área de Operações | Onboarding · Execução de Demandas · Priorização · Comercial | Onboarding em produção; outras em design |
-| Tronco 3 — Integração Entre Áreas | (cross-cutting) | Implícito nas áreas; sem âncora |
-| Tronco 4 — Documentação e Ferramentas | Documentação e Ferramentas | **Aberto formalmente em 2026-06-04** (esta entrega) |
-| *Demais troncos* | *[PENDENTE — Olavo enviar lista]* | *[PENDENTE]* |
+| # | Tronco Miro | Natureza | Status no projeto |
+|---|---|---|---|
+| 1 | Procedimentos da Área de Atendimento | **Área operacional** | Não aberto ainda |
+| 2 | Procedimentos da Área de Operações | **Área operacional** (subdividida em Onboarding · Execução de Demandas · Priorização · Comercial) | Onboarding em produção; outras em design |
+| 3 | Integração Entre Áreas | Transversal | Implícito nas áreas; sem âncora |
+| 4 | Documentação e Ferramentas | Transversal | **Aberto formalmente em 2026-06-04** (com âncora própria) |
+| 5 | Treinamento e Implantação | Transversal | Implicitamente tocado nos Lotes 0/1 de cada área |
+| 6 | Indicadores de Sucesso | Transversal | Implicitamente tocado (§10 strawman Curador, §10 strawman Execução, PHI Score) — gap T6 (Telemetria Mínima) endereça parte |
+| 7 | Governança e Melhoria Contínua | Transversal | Tocado via ADRs, PHI™ — Aprendizados, Curador, este doc mestre |
+| 8 | Estrutura Padrão dos Procedimentos | Transversal | Tocado via strawmans BRUTO vX.Y + padrões inegociáveis do Lote 1 |
+| 9 | Etapas para Criação dos Procedimentos | Transversal | Implícito na sequência Lote 0 → Lote 1 → Lote N+ usada em todas as áreas |
+| 10 | Papéis e Responsabilidades | Transversal | Tocado via §3 (Governança) de cada âncora (Cérebro Estratégico / Codex / Antigravity / Olavo) |
+
+> **Releitura importante:** dos 10 troncos do Miro, **2 são áreas
+> operacionais** (Atendimento + Operações) e **8 são dimensões
+> transversais** que governam como as áreas operacionais são executadas.
+> Por isso "já entramos na maioria" (Olavo 2026-06-04) — não são áreas
+> independentes a abrir formalmente, são lentes que emergem dentro de
+> cada área operacional.
+>
+> **Implicação operacional:** NÃO criar âncora separada pra cada tronco
+> transversal. Documentar via este doc mestre (§7 glossário) + ADRs +
+> seções dedicadas dentro dos strawmans das áreas operacionais. Os
+> troncos transversais ganham visibilidade explícita aqui pra outsider
+> entender, sem fragmentar a estrutura.
 
 ---
 
@@ -191,7 +207,7 @@ Estados: `Backlog` · `Em design` · `Em execução` · `Em smoke` ·
 | 2026-06-04 | Lote paralelo "Telemetria Mínima da Operação Interna" | Decidir se entra agora | Sem visibilidade do que rodou no Onboarding desde 2026-05-29 |
 | 2026-06-04 | v0.3 Execução + abertura SOP/DB Notion canônico | Aguarda OK do Olavo | Lote 1 Execução |
 | 2026-06-04 | Mudança de Escopo PLANEJADA: reposicionar Curador → Documentação e Ferramentas | **ME criada como dogfood ([ME-20260604-reposicionar-curador](https://www.notion.so/375b65e5c72b8121834fd65d5395b481))** — aprovação pendente | — |
-| 2026-06-04 | Lista completa de troncos do Miro (§1.2) | Olavo enviar lista; atualizar §1.2 | Não bloqueia |
+| 2026-06-04 | Lista completa de troncos do Miro (§1.2) | ✅ Recebida 2026-06-04 — 10 troncos mapeados. 2 áreas operacionais + 8 transversais. Releitura registrada (transversais NÃO viram âncoras separadas). | Resolvido |
 
 ---
 
@@ -236,6 +252,13 @@ destrava o vocabulário.
 | **Mudança de Escopo** | Entidade canônica do Curador. Representa entrada de novo serviço/regra/fronteira/ferramenta. | Modos Planejado/Retroativo. |
 | **Catálogo (de Artefatos Operacionais)** | Inventário vivo dos artefatos da Operação Interna (SOPs, DBs, workflows, prompts, ADRs, SLAs, DoDs, páginas âncora). | Dependência crítica do Curador. |
 | **Chassi** | **Termo legado** — substituído por "Operação Interna" em 2026-06-04. Aparece em commits antigos e strawmans. | Não usar daqui em diante. |
+| **Tronco do Miro** | Eixo de organização do board Miro original do projeto. 10 troncos no total (§1.2). 2 são áreas operacionais, 8 são dimensões transversais. | Ver §1.2 para a lista. |
+| **Tronco 5 — Treinamento e Implantação** *(transversal)* | Como procedimentos novos são treinados e implantados (operadores humanos + prompts de agentes IA). | Implícito em Lote 0/1 de cada área. |
+| **Tronco 6 — Indicadores de Sucesso** *(transversal)* | Métricas de saúde de processos e produto. | PHI Score (produto), métricas §10 do Curador, métricas §10 da Execução, T6 Telemetria Mínima. |
+| **Tronco 7 — Governança e Melhoria Contínua** *(transversal)* | Decisões arquiteturais, aprendizados versionados, drift detection. | Vivo via ADRs, PHI™ — Aprendizados, Curador, este doc mestre. |
+| **Tronco 8 — Estrutura Padrão dos Procedimentos** *(transversal)* | Formato canônico dos procedimentos. | Vivo via strawmans BRUTO vX.Y + padrões inegociáveis do Lote 1. |
+| **Tronco 9 — Etapas para Criação dos Procedimentos** *(transversal)* | Metodologia de criação: extração do tácito → BRUTO → red-line → SOP → DB → workflow → smoke. | Implícito na sequência Lote 0 → 1 → N+. |
+| **Tronco 10 — Papéis e Responsabilidades** *(transversal)* | Quem faz o quê: Cérebro Estratégico (Claude) · Executor (Codex) · Revisor técnico (Antigravity) · Decisor (Olavo). | §3 (Governança) de cada âncora de área. |
 
 ---
 
@@ -382,3 +405,4 @@ Escopo Retroativa automaticamente.
 |---|---|---|
 | v0.1 | 2026-06-04 | Criação. Inclui nomenclatura D1-D6 travada, glossário, mapa de agentes, protocolo de checkpoint, abertura formal da área Documentação e Ferramentas (Tronco 4 Miro). |
 | v0.1.1 | 2026-06-04 | Atualização in-place pós-OK P1.5 + T10. Adicionados: URLs reais da âncora Doc&Ferramentas + Aprendizado #16 + ME-20260604 dogfood. §1.2 marcado pendente (Olavo enviar lista completa de troncos do Miro). §3.7 reflete Lote 0 e Lote 1 concluídos. §6 T10 atualizada com ME criada. Nenhuma mudança estrutural. |
+| v0.1.2 | 2026-06-04 | Lista completa dos 10 troncos do Miro recebida e incorporada (§1.2). Releitura registrada: 2 áreas operacionais + 8 dimensões transversais. Troncos transversais 5-10 adicionados ao glossário (§7). §5 pendência de troncos marcada como resolvida. Nenhuma mudança estrutural — confirma que estamos no caminho certo: já tocamos 8 dos 10 troncos implicitamente. |
