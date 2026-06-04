@@ -42,7 +42,10 @@ não bloquear evolução depois.
 
 ### 1.2. Tronco do Miro → áreas formais
 
-O Miro tem 4 troncos de Onboarding/governança originais. Mapeamento:
+> ⚠️ **Lista incompleta.** O handoff de extração do Miro
+> (`docs/handoff/2026-05-11-miro-onboarding-extraction.md`) registrou só
+> 4 troncos porque a sessão de captura travou (board não expôs texto
+> via API pública). Olavo vai enviar lista completa pra atualizar.
 
 | Tronco Miro | Nome formal | Status no projeto |
 |---|---|---|
@@ -50,6 +53,7 @@ O Miro tem 4 troncos de Onboarding/governança originais. Mapeamento:
 | Tronco 2 — Procedimentos da Área de Operações | Onboarding · Execução de Demandas · Priorização · Comercial | Onboarding em produção; outras em design |
 | Tronco 3 — Integração Entre Áreas | (cross-cutting) | Implícito nas áreas; sem âncora |
 | Tronco 4 — Documentação e Ferramentas | Documentação e Ferramentas | **Aberto formalmente em 2026-06-04** (esta entrega) |
+| *Demais troncos* | *[PENDENTE — Olavo enviar lista]* | *[PENDENTE]* |
 
 ---
 
@@ -132,9 +136,10 @@ Estados: `Backlog` · `Em design` · `Em execução` · `Em smoke` ·
 
 | Lote | Status |
 |---|---|
-| Lote 0 (este doc + nomenclatura + glossário) | **Em execução (2026-06-04)** |
-| Lote 1 (âncora Notion + espelho do doc + Aprendizado #16) | Backlog (próximo) |
-| Lote 2+ (sync git↔Notion automatizado) | Backlog (fase 2, via Curador) |
+| Lote 0 (este doc + nomenclatura + glossário) | **Concluído (2026-06-04)** |
+| Lote 1 (âncora Notion + Aprendizado #16 + 1ª ME dogfood) | **Concluído (2026-06-04)** — âncora [HANDOFF] Doc&Ferramentas + Aprendizado #16 (bus factor) + ME-20260604-reposicionar-curador |
+| Lote 2 (ADR-012 + workflow Telegram digest semanal de checkpoint) | Backlog |
+| Lote 3+ (sync git↔Notion automatizado via Curador) | Backlog (fase 2) |
 
 ---
 
@@ -185,7 +190,8 @@ Estados: `Backlog` · `Em design` · `Em execução` · `Em smoke` ·
 | 2026-06-04 | ADR-012 (Git × Notion canônico) | Rascunhar | Endurece governança de doc. |
 | 2026-06-04 | Lote paralelo "Telemetria Mínima da Operação Interna" | Decidir se entra agora | Sem visibilidade do que rodou no Onboarding desde 2026-05-29 |
 | 2026-06-04 | v0.3 Execução + abertura SOP/DB Notion canônico | Aguarda OK do Olavo | Lote 1 Execução |
-| 2026-06-04 | Mudança de Escopo PLANEJADA: reposicionar Curador de "Procedimentos da Operação" → "Documentação e Ferramentas" | Abrir 1ª Mudança de Escopo (dogfood) | — |
+| 2026-06-04 | Mudança de Escopo PLANEJADA: reposicionar Curador → Documentação e Ferramentas | **ME criada como dogfood ([ME-20260604-reposicionar-curador](https://www.notion.so/375b65e5c72b8121834fd65d5395b481))** — aprovação pendente | — |
+| 2026-06-04 | Lista completa de troncos do Miro (§1.2) | Olavo enviar lista; atualizar §1.2 | Não bloqueia |
 
 ---
 
@@ -204,7 +210,7 @@ Compilação das tensões espalhadas pelos strawmans + novas.
 | T7 | ADR-001 (Supabase) × "BQ base de verdade" (docs estratégicos) | Conversa atual | Média | ADR-010 resolve |
 | T8 | Sync git ↔ Notion: divergência potencial | Conversa atual | Média | ADR-012 endurece |
 | T9 | Proliferação de agentes sem mapa consolidado (6 hoje, ~10 em 3 meses) | Conversa atual | Média | Mapa de agentes (§9) deste doc |
-| T10 | Curador posicionado em "Procedimentos da Operação", mas faz mais sentido em "Documentação e Ferramentas" (Tronco 4) | Conversa atual | Baixa | 1ª Mudança de Escopo PLANEJADA (dogfood) |
+| T10 | Curador posicionado em "Procedimentos da Operação", mas faz mais sentido em "Documentação e Ferramentas" (Tronco 4) | Conversa atual | Baixa | **ME criada como dogfood 2026-06-04** ([ME-20260604](https://www.notion.so/375b65e5c72b8121834fd65d5395b481)) — `Estado=Diff proposto`, `Aprovação=Pendente`. ESTADO-DO-PROJETO já reflete reposicionamento preventivamente (única antecipação). |
 
 ---
 
@@ -375,3 +381,4 @@ Escopo Retroativa automaticamente.
 | Versão | Data | Mudança |
 |---|---|---|
 | v0.1 | 2026-06-04 | Criação. Inclui nomenclatura D1-D6 travada, glossário, mapa de agentes, protocolo de checkpoint, abertura formal da área Documentação e Ferramentas (Tronco 4 Miro). |
+| v0.1.1 | 2026-06-04 | Atualização in-place pós-OK P1.5 + T10. Adicionados: URLs reais da âncora Doc&Ferramentas + Aprendizado #16 + ME-20260604 dogfood. §1.2 marcado pendente (Olavo enviar lista completa de troncos do Miro). §3.7 reflete Lote 0 e Lote 1 concluídos. §6 T10 atualizada com ME criada. Nenhuma mudança estrutural. |
