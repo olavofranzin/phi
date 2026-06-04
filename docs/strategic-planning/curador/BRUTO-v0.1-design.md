@@ -388,50 +388,71 @@ documentando rigorosamente cada passo (vira input de treino do Curador).
 
 ---
 
-## 14. Próximos passos — ações canônicas (pedem OK explícito do Olavo)
+## 14. Status das ações canônicas (autorizadas + executadas 2026-06-04)
 
-⚠️ **Bloco abaixo toca Notion canônico.** Preciso de OK explícito antes
-de executar — `OK 14.1` aprova passo 1 só, `OK 14.1-14.3` aprova bloco
-inteiro, etc.
+Olavo autorizou `OK 14.1-14.4` em 2026-06-04. Execução:
 
-### 14.1 — Abrir DB `PHI - Mudanças de Escopo` no Notion
-- Localização: sob "Central de Operações — Agência" (mesmo nível dos
-  outros DBs operacionais)
-- Schema: §6 deste doc
-- Single-tenant default (`tenant_id` populado mas só 1 valor)
+### ✅ 14.1 — DB `PHI - Mudanças de Escopo`
+- **Concluído.** Sob "Gerenciamento de Documentos" (não "Central de Operações"
+  — corrigido por inspeção: lá moram os outros DBs canônicos PHI -*).
+- URL: https://www.notion.so/507d18009622435ba3f17b24d191762d
+- data_source_id: `bb56ddca-dfad-4aa5-9227-3cf86207bc40`
+- Schema fechado: 15 campos (§6).
 
-### 14.2 — Abrir DB `PHI - Catálogo de Artefatos Operacionais` no Notion
-- Localização: sob "Central de Operações — Agência"
-- Schema: §7 deste doc
-- Vazio inicialmente — populado pelo Lote 0 (passo 14.4)
+### ✅ 14.2 — DB `PHI - Catálogo de Artefatos Operacionais`
+- **Concluído.** Sob "Gerenciamento de Documentos".
+- URL: https://www.notion.so/bd8df5b982ad4f00a8ae56d687db819e
+- data_source_id: `07623177-4d75-4870-bdc0-4ecd365392a7`
+- Schema: 13 campos (§7) — incluindo self-relation `Depende de`/`Dependentes`
+  + relation reversa `Mudanças que me afetaram` ligada ao DB 14.1.
+- **Nota técnica:** primeira tentativa de self-relation criou 4 colunas
+  (dobrei o DUAL); corrigido com DROP + ADD single. Lição: pra self-relation
+  via `update_data_source`, passar APENAS um lado — DUAL auto-cria reverso.
 
-### 14.3 — Criar âncora da área "Curador" no Notion
-- Localização: sob "Gerenciamento de Documentos / Curador" (espelha
-  estrutura de Priorização e Onboarding)
-- Conteúdo: ponteiros pros 2 DBs acima, pro strawman aqui, pros
-  agentes peer (Orquestrador/Padronizador), pros ADRs aplicáveis,
-  pros padrões inegociáveis herdados do Lote 1 Onboarding
+### ✅ 14.3 — Âncora `[HANDOFF] Curador — Âncora da Área`
+- **Concluído.** Sob "Gerenciamento de Documentos" (irmã da Priorização).
+- URL: https://www.notion.so/375b65e5c72b810f8f4be50873daedbe
+- Conteúdo: 9 seções espelhando padrão da Priorização (propósito,
+  posicionamento, governança, decisões travadas, padrões inegociáveis
+  herdados, plano de lotes, artefatos canônicos, refs cruzadas,
+  checkpoints).
 
-### 14.4 — Lote 0: descoberta inicial do Catálogo (leitura intensiva)
-- Varro repo (`docs/`, `onboarding/`, root) + Notion (Painel de
-  Entregas, Decisões ADR, Aprendizados, Hub de SOPs, Central de
-  Operações, etc.)
-- Registro ~50-100 artefatos vivos no DB Catálogo
-- Saídas: Catálogo populado + relatório de cobertura (quais áreas
-  estão bem documentadas, quais têm gaps)
-- Double-duty: além de destravar o Curador, me dá mapa pra eu mesmo
-  navegar melhor o chassi nas próximas conversas
+### ✅ 14.4 — Lote 0: descoberta inicial do Catálogo
+- **Concluído.** 39 artefatos vivos registrados (estimativa original era
+  50-100 — escopo enxuto porque tirei workflows do produto PHI/Decision
+  Engine do escopo, conforme §1 do design).
 
-### 14.5 — Rascunhar ADR-011 provisório
-- Cobre: Curador (papel + tier) + Mudanças de Escopo (entidade) +
-  Catálogo (entidade)
-- Vai pro DB de Decisões (ADR) no Notion como `Em planejamento`
-- Aprovação por Olavo fecha pra `Aceito`
+**Distribuição por área:**
+| Área | Artefatos | Status |
+|---|---|---|
+| Onboarding | 16 | Denso, área madura (Lote 1 em produção) |
+| Procedimentos cross | 13 | Denso (DBs canônicos PHI + 6 ADRs) |
+| Priorização | 4 | Esparso (em estruturação) |
+| Curador | 4 | Recém-nascido (este mesmo) |
+| Execução | 1 | Em design (só o strawman) |
+| Comercial | 1 | Vestigial (só Deduplicar Leads HubSpot) |
 
-### 14.6 — Codex pro Lote 1 do Curador (engine mínimo)
-- Só **depois** que Lote 1 da Execução estiver em produção (respeita
-  §15 da Execução)
-- Briefing aciona padrão inegociável do Lote 1 Onboarding
+**Gaps identificados (relatório de cobertura):**
+1. **Nenhum SLA versionado registrado.** Tipo existe no schema, mas zero
+   instâncias. Lote 1 Execução deveria criar o 1º (SLAs do §7 da Execução).
+2. **Nenhum Template DoD registrado.** Mesma situação. Lote 2 Execução
+   (Padronizador/quality-gate) deveria criar os primeiros.
+3. **ADRs faltando:** 006 (Log de Otimizações), 007 (Onboarding), 008
+   (CPA-only vs polimórfico), 010 (Divisão BQ ↔ Supabase — sugerido na
+   conversa do dashboard), 011 (Curador — em rascunho).
+4. **ADR-001 marcado `Em revisão`** porque colide com "BigQuery base de
+   verdade" do contexto estratégico — pendente esclarecimento via ADR-010.
+5. **Comercial vestigial:** quando a área Comercial for desenhada formalmente,
+   precisa de SOP + DB + âncora + workflows. Demanda "Prospecção"
+   (registrada na Execução §4) migrará pra cá.
+6. **Execução em design:** quando Lote 1 entregar, surgem ~7 artefatos novos
+   (SOP, DB Demandas, 2 prompts, 1 workflow, 1 SLA, 1 ADR).
+
+### 14.5 — ADR-011 provisório (PENDENTE — não foi autorizado neste bloco)
+- Cobre: Curador (papel + tier) + Mudanças de Escopo + Catálogo
+- Entra como `Em planejamento` no DB PHI™ — Decisões (ADR)
+
+### 14.6 — Codex pro Lote 1 (PENDENTE — engatilhado depois do Lote 1 Execução)
 
 ---
 

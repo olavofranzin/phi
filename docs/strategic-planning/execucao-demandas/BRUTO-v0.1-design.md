@@ -293,17 +293,19 @@ meta-agente do pilar Procedimentos. Definição dele em scoping separado.
 
 1. ✅ v0.2 da Execução incorporada.
 2. ✅ Curador escopado (§16) — strawman v0.1 em `docs/strategic-planning/curador/`.
-3. **Sem 1-2:** v0.3 Execução (campo `versao_sop_aplicada` na Demanda pra
-   plugar no Curador) → SOP + DB `PHI - Demandas` + âncora no Notion canônico
-   + ADRs + brief Codex pro Lote 1.
-4. **Sem 2-4:** Lote 1 Execução roda (engine mínimo, 1 tipo recorrente
-   ponta a ponta) **+** Lote 0 Curador em paralelo (Catálogo de Artefatos
-   Operacionais — descoberta + DB Notion).
-5. **Sem 4-6:** Lote 1 Curador (1 Mudança de Escopo simulada → diff →
+3. ✅ **Lote 0 do Curador concluído** (2026-06-04): DBs `PHI - Mudanças de
+   Escopo` + `PHI - Catálogo de Artefatos Operacionais` abertos + âncora
+   criada + 39 artefatos vivos populados. Catálogo destravado.
+4. **Sem 1-2 (próximo):** v0.3 Execução (campo `versao_sop_aplicada` na
+   Demanda pra plugar no Curador) → SOP + DB `PHI - Demandas` + âncora
+   no Notion canônico + ADRs + brief Codex pro Lote 1.
+5. **Sem 2-4:** Lote 1 Execução roda (engine mínimo, 1 tipo recorrente
+   ponta a ponta).
+6. **Sem 4-6:** Lote 1 Curador (1 Mudança de Escopo simulada → diff →
    aplicação manual).
-6. **Sem 6-8:** Lote 2 Curador (aplicação via Codex) + Lote 3 (aplicação
+7. **Sem 6-8:** Lote 2 Curador (aplicação via Codex) + Lote 3 (aplicação
    via MCP Notion).
-7. **Fallback honesto:** se Sites/IA entrarem antes do Curador estar
+8. **Fallback honesto:** se Sites/IA entrarem antes do Curador estar
    pronto, Olavo + Claude fazem a 1ª reorganização **manualmente** mas
    com rigor de documentação — vira input de treino do Curador depois.
 
