@@ -1,6 +1,8 @@
-# [BRUTO v0.1] Curador — Meta-agente do pilar Procedimentos da Operação
+# [BRUTO v0.2] Curador — Meta-agente do pilar Procedimentos da Operação
 
-> **STATUS:** Strawman v0.1. Aguardando red-line do Olavo.
+> **STATUS:** Strawman v0.2. v0.1 red-lined por Olavo em 2026-06-03;
+> §8 (formato A+B híbrido) e §13 (status) atualizados.
+> Pronto pra Lote 0 após OK do Olavo nas ações canônicas em §14.
 > Nada aqui tocou Notion canônico nem código (Codex). Doc é artefato de
 > revisão. Cada premissa de domínio marcada `[PRESUMIDO]` — risque,
 > corrija ou confirme.
@@ -196,61 +198,107 @@ existe hoje no chassi? Falta algum (ex: `Webhook secret`, `Credential`,
 
 ---
 
-## 8. Diff renderizado — formato do output `[PRESUMIDO]`
+## 8. Diff renderizado — formato A+B híbrido (red-line Olavo)
 
-Subpágina da Mudança de Escopo, formato Markdown legível:
+Subpágina da Mudança de Escopo. Estrutura: **tabela overview** (Notion-table
+block) no topo + **toggles colapsados** (Notion-toggle block) abaixo,
+um por artefato. Diff dentro do toggle usa code block com syntax `diff`
+pra coloração git-style.
+
+### Estrutura visual (renderizada via MCP Notion API)
 
 ```
-# DIFF PROPOSTO — Mudança de Escopo #ID
+╔═══════════════════════════════════════════════════════════════╗
+║ DIFF PROPOSTO #ID — "Adicionar serviço Sites"                 ║
+║ Modo: ANTES · Áreas: Onboarding · Execução · Procedimentos    ║
+║ Resumo: 3 mudanças (2 edições + 1 criação · 0 deprecações)    ║
+╚═══════════════════════════════════════════════════════════════╝
 
-## Resumo executivo
-[1-2 parágrafos do impacto geral]
+┌──── OVERVIEW (Notion table block) ────────────────────────────┐
+│ # │ Artefato                       │ Ação   │ Tipo   │ Canal      │ Impacto │
+│ 1 │ SOP Execução de Demandas v1.3  │ EDITAR │ SOP    │ MCP Notion │ médio   │
+│ 2 │ DB PHI - Demandas v1.0         │ EDITAR │ DB     │ MCP Notion │ baixo   │
+│ 3 │ Prompt Diagnóstico Site        │ CRIAR  │ Prompt │ MCP Notion │ alto    │
+└────────────────────────────────────────────────────────────────┘
 
-## Áreas afetadas
-- Onboarding: 2 artefatos
-- Execução: 4 artefatos
-- Comercial: 0 artefatos
+──── DETALHE (Notion toggles, colapsados por padrão) ────────────
 
-## Artefatos modificados
+▸ 🔵 [EDITAR] SOP Execução v1.3 → v1.4 — impacto médio
+   │ LOCALIZAÇÃO: Notion (page_id: ...) + docs/.../SOP.md (espelho)
+   │ JUSTIFICATIVA: novo serviço; tipo "Site" cabe em ad-hoc
+   │ CANAL: MCP Notion (update-page) + Codex PR (espelho repo)
+   │ DEPENDÊNCIAS DE APLICAÇÃO: #2 (DB) deve aplicar antes
+   │
+   │ ```diff
+   │   ### Ad-hoc
+   │     - Ajuste de verba/orçamento
+   │     - Subir ou pausar criativo
+   │ + - Criação de site (NOVO — serviço adicionado 2026-06-03)
+   │     - Investigar anomalia de métrica
+   │ ```
 
-### 1. [SOP Execução de Demandas v1.3 → v1.4]
-LOCALIZAÇÃO: Notion / docs/strategic-planning/execucao-demandas/SOP.md
-AÇÃO: editar §4 — adicionar tipo "Criação de site"
-JUSTIFICATIVA: novo serviço; demanda Site cabe em ad-hoc
-CANAL DE APLICAÇÃO: MCP Notion + Codex (espelho)
+▸ 🔵 [EDITAR] DB PHI - Demandas v1.0 → v1.1 — impacto baixo
+   │ LOCALIZAÇÃO: Notion DB (data_source: ...)
+   │ JUSTIFICATIVA: select `tipo` precisa nova opção "Site"
+   │ CANAL: MCP Notion (update-data-source)
+   │
+   │ ```diff
+   │   tipo (select):
+   │     - Ajuste de verba/orçamento
+   │     - Subir ou pausar criativo
+   │ +   - Criação de site
+   │     - Investigar anomalia de métrica
+   │ ```
 
-ANTES:
-  [bloco atual]
-DEPOIS:
-  [bloco proposto]
+▸ 🟢 [CRIAR] Prompt Diagnóstico Site — impacto alto
+   │ LOCALIZAÇÃO: Notion (página nova sob "Prompts dos Agentes")
+   │ JUSTIFICATIVA: novo agente requisitado pelo serviço Site
+   │ CANAL: MCP Notion (create-pages)
+   │
+   │ ```text
+   │ [conteúdo proposto do prompt, ~30 linhas]
+   │ ```
 
-### 2. [DB PHI - Demandas v1.0 → v1.1]
-LOCALIZAÇÃO: Notion DB
-AÇÃO: adicionar opção "Site" no select `tipo`
-CANAL: MCP Notion (update_data_source)
-...
+──── Q&A COM HUMANO (Notion toggle, histórico) ─────────────────
 
-## Artefatos NOVOS a criar
-### A. [Prompt do Agente de Diagnóstico de Site]
-LOCALIZAÇÃO: Notion (página)
-JUSTIFICATIVA: novo agente exigido pelo serviço
-CONTEÚDO PROPOSTO:
-  [bloco]
+▸ 🗨️  Histórico de perguntas — 2 rodadas
+   │ P1 (Curador): "Site vira tipo da Execução ou nova área?"
+   │ R1 (Olavo via Telegram, 13:42): "Tipo da Execução por enquanto."
+   │ P2 (Curador): "Agente de diagnóstico é Pro ou Flash?"
+   │ R2 (Olavo via Telegram, 13:51): "Flash."
 
-## Perguntas pendentes (Q&A com humano)
-- [resolvidas na thread Telegram]
+──── ROADMAP (Notion callout, só em modo ANTES) ────────────────
 
-## Roadmap de aplicação (modo ANTES)
-- Sem 1: aprovar artefatos universais (SOP + DB)
-- Sem 2: registrar 1ª demanda piloto do tipo Site
-- Sem 3+: rolar pra produção
+📅 Roadmap de aplicação:
+  · Sem 1: aprovar artefatos universais (SOP + DB)
+  · Sem 2: registrar 1ª demanda piloto do tipo Site
+  · Sem 3+: rolar pra produção
 
-## Ordem de aplicação (resolução de dependências)
-1. Criar Prompt do Agente de Diagnóstico de Site
-2. Atualizar DB PHI - Demandas (novo tipo)
-3. Atualizar SOP Execução (referência ao tipo)
-4. ...
+──── ORDEM DE APLICAÇÃO (Notion numbered list) ─────────────────
+
+1. Criar Prompt Diagnóstico Site (#3 — não tem dependência)
+2. Atualizar DB PHI - Demandas (#2 — bloqueia SOP)
+3. Atualizar SOP Execução (#1 — referencia tipo do DB)
 ```
+
+### Por que A+B híbrido
+
+- **Tabela (A)** = scan em 5 segundos do "o quê" e "quanto" — você decide
+  se vale revisar a fundo.
+- **Toggles (B)** = você abre só o que importa, evita rolagem linear quando
+  há muitos artefatos.
+- **Diff git-style** dentro dos toggles = padrão visual familiar; Notion
+  renderiza code blocks com sintaxe `diff` (verde/vermelho).
+- **Q&A histórico em toggle separado** = auditoria sem poluir a leitura
+  principal.
+- **Roadmap aparece só em modo ANTES** (planejamento). Modo DEPOIS pula
+  esse bloco.
+
+### Fallback se Mudança virar grande (10+ artefatos)
+
+Engatilha **Opção C (kanban)** como view alternativa do mesmo conteúdo.
+DB views do Notion permitem isso sem reescrita — cada toggle vira card,
+agrupado por `Ação` (CRIAR/EDITAR/DEPRECAR) ou por `Impacto`.
 
 ---
 
@@ -319,43 +367,71 @@ documentando rigorosamente cada passo (vira input de treino do Curador).
 
 ---
 
-## 13. Red-line — o que preciso que confirme/corrija
+## 13. Status do red-line v0.1 → v0.2 (resolvido 2026-06-03)
 
-1. **Modelo da Mudança de Escopo (§6)** — campos batem? Falta algum
-   tipo no select `tipo_mudanca`?
-2. **Catálogo de Artefatos (§7)** — os 8 tipos cobrem o que existe
-   hoje? Falta algum? Algum sobra?
-3. **Diff renderizado (§8)** — o formato apresentado é bom pra você
-   revisar e aprovar? Ou prefere algo mais visual (tabela? diff colorido?
-   resumo em bullets?)
-4. **Canais de aplicação (§9)** — Codex + MCP Notion cobrem tudo? E a
-   decisão de **não** atualizar workflows n8n em produção
-   automaticamente faz sentido?
-5. **Limite de Q&A (§5)** — propus 3 rodadas máximo. OK? Maior/menor?
-6. **Sequência de lotes (§12)** — janela 1-2 meses bate com sua
-   urgência? Algum lote deveria adiantar/atrasar?
-7. **Métricas (§10)** — as 5 métricas propostas cobrem o que você
-   quer medir sobre o próprio Curador?
+| # | Item | Status |
+|---|---|---|
+| 1 | Modelo Mudança de Escopo (§6) | ⚠️ Default assumido — Olavo não red-lined explicitamente. Corrigir em v0.3 se preciso. |
+| 2 | Catálogo (§7) — 8 tipos | ✅ Cobrem o chassi (red-line Olavo). |
+| 3 | Diff renderizado (§8) | ✅ Formato A+B híbrido (tabela overview + toggles com diff git-style). |
+| 4 | Canais de aplicação (§9) | ✅ Codex + MCP cobrem tudo; decisão de **não** mexer em workflow produção automático faz sentido. |
+| 5 | Limite Q&A (§5) — 3 rodadas | ⚠️ Default assumido. |
+| 6 | Sequência de lotes (§12) | ⚠️ Default assumido — janela 1-2 meses. |
+| 7 | 5 métricas (§10) | ⚠️ Default assumido. |
+
+**Notas sobre os defaults (⚠️):**
+- Itens #1, #5, #6, #7 não foram red-lined explicitamente — segui as
+  propostas da v0.1 como aprovadas. Reversíveis: corrigir em v0.3 se
+  Olavo discordar quando o Curador estiver vivo.
+- Não bloqueia início do Lote 0 (descoberta do Catálogo) — esse trabalho
+  independe desses 4 defaults.
 
 ---
 
-## 14. Próximos passos
+## 14. Próximos passos — ações canônicas (pedem OK explícito do Olavo)
 
-1. Você red-line a v0.1.
-2. Incorporo correções → v0.2.
-3. Em paralelo à v0.3 da Execução, abro:
-   - DB `PHI - Mudanças de Escopo` no Notion canônico
-   - DB `PHI - Catálogo de Artefatos Operacionais` no Notion canônico
-   - Âncora da área Curador no Notion (espelhando Priorização e Execução)
-4. **Lote 0 do Curador:** descoberta inicial do Catálogo — varro repo +
-   Notion e registro os artefatos vivos. Esse trabalho serve double-duty:
-   (a) destrava o Curador, (b) me dá mapa pra eu mesmo navegar melhor o
-   chassi nas próximas conversas.
-5. ADR — Curador / Mudanças de Escopo / Catálogo (entra como ADR-011
-   provisório, com 3 itens consolidados).
-6. Brifo Codex pro Lote 1 do Curador (engine mínimo) só depois que
-   Lote 1 da Execução estiver em produção, pra evitar paralelismo
-   demais e respeitar o sequenciamento de §15 da Execução.
+⚠️ **Bloco abaixo toca Notion canônico.** Preciso de OK explícito antes
+de executar — `OK 14.1` aprova passo 1 só, `OK 14.1-14.3` aprova bloco
+inteiro, etc.
+
+### 14.1 — Abrir DB `PHI - Mudanças de Escopo` no Notion
+- Localização: sob "Central de Operações — Agência" (mesmo nível dos
+  outros DBs operacionais)
+- Schema: §6 deste doc
+- Single-tenant default (`tenant_id` populado mas só 1 valor)
+
+### 14.2 — Abrir DB `PHI - Catálogo de Artefatos Operacionais` no Notion
+- Localização: sob "Central de Operações — Agência"
+- Schema: §7 deste doc
+- Vazio inicialmente — populado pelo Lote 0 (passo 14.4)
+
+### 14.3 — Criar âncora da área "Curador" no Notion
+- Localização: sob "Gerenciamento de Documentos / Curador" (espelha
+  estrutura de Priorização e Onboarding)
+- Conteúdo: ponteiros pros 2 DBs acima, pro strawman aqui, pros
+  agentes peer (Orquestrador/Padronizador), pros ADRs aplicáveis,
+  pros padrões inegociáveis herdados do Lote 1 Onboarding
+
+### 14.4 — Lote 0: descoberta inicial do Catálogo (leitura intensiva)
+- Varro repo (`docs/`, `onboarding/`, root) + Notion (Painel de
+  Entregas, Decisões ADR, Aprendizados, Hub de SOPs, Central de
+  Operações, etc.)
+- Registro ~50-100 artefatos vivos no DB Catálogo
+- Saídas: Catálogo populado + relatório de cobertura (quais áreas
+  estão bem documentadas, quais têm gaps)
+- Double-duty: além de destravar o Curador, me dá mapa pra eu mesmo
+  navegar melhor o chassi nas próximas conversas
+
+### 14.5 — Rascunhar ADR-011 provisório
+- Cobre: Curador (papel + tier) + Mudanças de Escopo (entidade) +
+  Catálogo (entidade)
+- Vai pro DB de Decisões (ADR) no Notion como `Em planejamento`
+- Aprovação por Olavo fecha pra `Aceito`
+
+### 14.6 — Codex pro Lote 1 do Curador (engine mínimo)
+- Só **depois** que Lote 1 da Execução estiver em produção (respeita
+  §15 da Execução)
+- Briefing aciona padrão inegociável do Lote 1 Onboarding
 
 ---
 
