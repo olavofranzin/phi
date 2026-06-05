@@ -216,7 +216,7 @@ Estados: `Backlog` · `Em design` · `Em execução` · `Em smoke` ·
 | 2026-06-04 | ADR-012 (Git × Notion canônico) | Rascunhar | Endurece governança de doc. |
 | 2026-06-04 | Telemetria Mínima Lote 1 | ✅ Brief Codex entregue (`docs/handoff/2026-06-04-telemetria-lote1-codex-brief.md`); DB Snapshots criado no Notion | Codex executa, depois smoke E2E |
 | 2026-06-04 | v0.3 Execução + abertura SOP/DB Notion canônico | Aguarda OK do Olavo | Lote 1 Execução |
-| 2026-06-04 | Mudança de Escopo PLANEJADA: reposicionar Curador → Documentação e Ferramentas | **ME criada como dogfood ([ME-20260604-reposicionar-curador](https://www.notion.so/375b65e5c72b8121834fd65d5395b481))** — aprovação pendente | — |
+| 2026-06-04 | Mudança de Escopo PLANEJADA: reposicionar Curador → Documentação e Ferramentas | ✅ **APROVADA E APLICADA 2026-06-04** — 4 registros do Catálogo + âncora Curador (Notion) + 2 strawmans (git) + ESTADO já alinhado. Estado da ME: `Aplicada`. Serve de input de treino pro Lote 1 do Curador. | Resolvido |
 | 2026-06-04 | Lista completa de troncos do Miro (§1.2) | ✅ Recebida 2026-06-04 — 10 troncos mapeados. 2 áreas operacionais + 8 transversais. Releitura registrada (transversais NÃO viram âncoras separadas). | Resolvido |
 
 ---
@@ -236,7 +236,7 @@ Compilação das tensões espalhadas pelos strawmans + novas.
 | T7 | ADR-001 (Supabase) × "BQ base de verdade" (docs estratégicos) | Conversa atual | Média | ADR-010 resolve |
 | T8 | Sync git ↔ Notion: divergência potencial | Conversa atual | Média | ADR-012 endurece |
 | T9 | Proliferação de agentes sem mapa consolidado (6 hoje, ~10 em 3 meses) | Conversa atual | Média | Mapa de agentes (§9) deste doc |
-| T10 | Curador posicionado em "Procedimentos da Operação", mas faz mais sentido em "Documentação e Ferramentas" (Tronco 4) | Conversa atual | Baixa | **ME criada como dogfood 2026-06-04** ([ME-20260604](https://www.notion.so/375b65e5c72b8121834fd65d5395b481)) — `Estado=Diff proposto`, `Aprovação=Pendente`. ESTADO-DO-PROJETO já reflete reposicionamento preventivamente (única antecipação). |
+| T10 | ~~Curador posicionado em "Procedimentos da Operação", mas faz mais sentido em "Documentação e Ferramentas"~~ | Conversa 2026-06-04 | ✅ Resolvido | **ME-20260604 aprovada e aplicada 2026-06-04** ([link](https://www.notion.so/375b65e5c72b8121834fd65d5395b481)). 1ª Mudança de Escopo completa do projeto — dogfood do Curador (Claude no papel de surrogate). Vira input de treino. |
 
 ---
 
@@ -417,3 +417,4 @@ Escopo Retroativa automaticamente.
 | v0.1.1 | 2026-06-04 | Atualização in-place pós-OK P1.5 + T10. Adicionados: URLs reais da âncora Doc&Ferramentas + Aprendizado #16 + ME-20260604 dogfood. §1.2 marcado pendente (Olavo enviar lista completa de troncos do Miro). §3.7 reflete Lote 0 e Lote 1 concluídos. §6 T10 atualizada com ME criada. Nenhuma mudança estrutural. |
 | v0.1.2 | 2026-06-04 | Lista completa dos 10 troncos do Miro recebida e incorporada (§1.2). Releitura registrada: 2 áreas operacionais + 8 dimensões transversais. Troncos transversais 5-10 adicionados ao glossário (§7). §5 pendência de troncos marcada como resolvida. Nenhuma mudança estrutural — confirma que estamos no caminho certo: já tocamos 8 dos 10 troncos implicitamente. |
 | v0.1.3 | 2026-06-04 | Telemetria Mínima Lote 0 concluído. §3.7 ganha sub-entrega Telemetria. §5 pendência Telemetria reclassificada como "Brief Codex entregue, aguardando execução". §6 T6 reclassificada como "Em mitigação" (severidade Alta → status atualizado). Pacote em commit único: DB Snapshots criado no Notion + 2 artefatos no Catálogo (DB + strawman v0.2) + brief Codex em handoff. |
+| v0.1.4 | 2026-06-04 | ME-20260604 (1ª Mudança de Escopo do projeto — dogfood) aprovada e aplicada. Curador reposicionado: Procedimentos da Operação → Documentação e Ferramentas (Tronco 4). 4 registros do Catálogo atualizados (Área) + âncora Curador editada (Notion §1, §2, §4 D4) + strawman Curador (§0 D4, §1) + strawman Execução (§16 título, D3 Planejado/Retroativo, D4 Mora) + ESTADO já alinhado preventivamente. §5 pendência ME e §6 T10 marcadas Resolvidas. Serve de input de treino pro Lote 1 do Curador. |

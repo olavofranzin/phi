@@ -311,7 +311,7 @@ meta-agente do pilar Procedimentos. Definição dele em scoping separado.
 
 ---
 
-## 16. Curador — meta-agente do pilar Procedimentos (decisões travadas)
+## 16. Curador — meta-agente de Documentação e Ferramentas (decisões travadas)
 
 **Origem:** red-line Olavo 2026-06-03. Pediu agente que entenda mudanças de
 escopo da agência (entrada de Sites/Agentes IA além de tráfego pago) e
@@ -324,8 +324,8 @@ retrabalho manual.
 |---|---|
 | D1 — Aplica vs Propõe | **Propõe.** Nunca aplica direto. Gera diff legível → Olavo aprova → aciona Codex/MCP Notion. |
 | D2 — Disparo | **Trigger explícito.** Olavo abre registro "Mudança de Escopo" no Notion. (Drift detection automática fica pra fase 2.) |
-| D3 — Timing | **Ambos modos.** ANTES (planejamento, hipotético) + DEPOIS (retroativo, já aconteceu). Sempre propondo. |
-| D4 — Mora | **(B) Procedimentos da Operação.** Cobre Onboarding + Execução + futura Comercial. NÃO é 3º agente da Execução. |
+| D3 — Timing | **Ambos modos.** Planejado (hipotético) + Retroativo (já aconteceu). Sempre propondo. |
+| D4 — Mora | **Documentação e Ferramentas** (Tronco 4 Miro). *(Reposicionado de "Procedimentos da Operação" via ME-20260604 aplicada 2026-06-04.)* Cobre artefatos de Onboarding + Execução + Priorização + Comercial futura + Documentação e Ferramentas. NÃO é 3º agente da Execução. |
 | Nome | **Curador.** |
 | Tier | Gemini Pro (denso, raciocínio caro multi-artefato). |
 | Janela | **1-2 meses** (Sites/IA). |

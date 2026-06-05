@@ -24,7 +24,7 @@ Conversa Olavo ↔ Claude em 2026-06-03:
 | D1 — Aplica vs Propõe | **Propõe.** Nunca aplica direto. |
 | D2 — Disparo | **Trigger explícito.** Olavo abre "Mudança de Escopo" no Notion. |
 | D3 — Timing | **Ambos modos.** ANTES (hipotético) + DEPOIS (retroativo). |
-| D4 — Mora | **(B) Procedimentos da Operação.** |
+| D4 — Mora | **Documentação e Ferramentas** (Tronco 4 Miro). *(Reposicionado de "Procedimentos da Operação" via ME-20260604 aplicada 2026-06-04.)* |
 | Nome | **Curador.** |
 | Tier | Gemini Pro. |
 | Janela | 1-2 meses (entrada de Sites/Agentes IA). |
@@ -33,13 +33,22 @@ Conversa Olavo ↔ Claude em 2026-06-03:
 
 ## 1. Posicionamento
 
-**Curador = meta-agente do pilar Procedimentos da Operação.**
+**Curador = meta-agente da área Documentação e Ferramentas (Tronco 4 do
+Miro), operando sobre artefatos das demais áreas operacionais.**
 
-Escopo coberto:
+*Reposicionado de "Procedimentos da Operação" para "Documentação e
+Ferramentas" via ME-20260604 aprovada e aplicada 2026-06-04.*
+
+**Função primária:** governança de documentação + padronização (SOPs,
+DBs, prompts, ADRs, SLAs, templates DoD, páginas âncora) — não
+procedimento operacional em si.
+
+Escopo coberto (artefatos a vigiar):
 - ✅ Onboarding (SOPs, DBs, prompts, ADRs, SLAs)
 - ✅ Execução de Demandas (idem)
 - ✅ Priorização (idem)
 - ✅ Área Comercial futura (idem)
+- ✅ Documentação e Ferramentas (meta-artefatos da própria área)
 
 Escopo NÃO coberto:
 - ❌ PHI Score / Decision Engine / lógica de cálculo do produto
