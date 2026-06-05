@@ -157,6 +157,16 @@ Estados: `Backlog` · `Em design` · `Em execução` · `Em smoke` ·
 | Lote 2 (ADR-012 + workflow Telegram digest semanal de checkpoint) | Backlog |
 | Lote 3+ (sync git↔Notion automatizado via Curador) | Backlog (fase 2) |
 
+**Sub-entrega: Telemetria Mínima** (cross-cutting, cobre Tronco 6 Indicadores de Sucesso)
+
+| Lote | Status |
+|---|---|
+| Lote 0 (strawman v0.2 + DB Snapshots no Notion + brief Codex) | **Concluído (2026-06-04)** — 16 métricas, modelo chave-valor, DB preparado pra 7 áreas |
+| Lote 1 (workflow WF-DOC-Telemetria-Diaria — Onboarding+Curador+Global) | **Brief entregue ao Codex (2026-06-04)** — `docs/handoff/2026-06-04-telemetria-lote1-codex-brief.md` |
+| Lote 2 (expansão Execução quando entrar em prod) | Backlog |
+| Lote 3 (Flash summarize tendências) | Backlog |
+| Lote 4 (sink BigQuery — após ADR-010) | Backlog |
+
 ---
 
 ## 4. Decisões travadas (links + datas)
@@ -204,7 +214,7 @@ Estados: `Backlog` · `Em design` · `Em execução` · `Em smoke` ·
 | 2026-06-04 | ADR-010 (BQ × Supabase) | Rascunhar | Destravar ADR-001 (`Em revisão`) |
 | 2026-06-03 | ADR-011 (Curador) | Rascunhar | Formaliza Curador |
 | 2026-06-04 | ADR-012 (Git × Notion canônico) | Rascunhar | Endurece governança de doc. |
-| 2026-06-04 | Lote paralelo "Telemetria Mínima da Operação Interna" | Decidir se entra agora | Sem visibilidade do que rodou no Onboarding desde 2026-05-29 |
+| 2026-06-04 | Telemetria Mínima Lote 1 | ✅ Brief Codex entregue (`docs/handoff/2026-06-04-telemetria-lote1-codex-brief.md`); DB Snapshots criado no Notion | Codex executa, depois smoke E2E |
 | 2026-06-04 | v0.3 Execução + abertura SOP/DB Notion canônico | Aguarda OK do Olavo | Lote 1 Execução |
 | 2026-06-04 | Mudança de Escopo PLANEJADA: reposicionar Curador → Documentação e Ferramentas | **ME criada como dogfood ([ME-20260604-reposicionar-curador](https://www.notion.so/375b65e5c72b8121834fd65d5395b481))** — aprovação pendente | — |
 | 2026-06-04 | Lista completa de troncos do Miro (§1.2) | ✅ Recebida 2026-06-04 — 10 troncos mapeados. 2 áreas operacionais + 8 transversais. Releitura registrada (transversais NÃO viram âncoras separadas). | Resolvido |
@@ -222,7 +232,7 @@ Compilação das tensões espalhadas pelos strawmans + novas.
 | T3 | Mudança de Escopo grande × ADR novo: quando virar ADR junto do diff? | Curador §15 | Média | Decidir junto do ADR-011 |
 | T4 | "Prospecção" e "Reunião resultados" semanticamente Comerciais | Execução §4 | Baixa | Re-examinar quando Comercial existir formalmente |
 | T5 | Dashboard × Notion: duas superfícies de visualização | Conversa Dashboard | Baixa | Cada um pro seu uso (produto vs operação) |
-| T6 | **Métricas operacionais não rastreadas** — Onboarding em prod há 9 dias, zero visibilidade | Conversa atual | **Alta** | Lote paralelo "Telemetria Mínima" |
+| T6 | **Métricas operacionais não rastreadas** — Onboarding em prod há 9 dias, zero visibilidade | Conversa atual | **Alta → Em mitigação** | ✅ Telemetria Mínima Lote 0 concluído 2026-06-04 (DB Snapshots + brief Codex). Aguarda Codex executar Lote 1 + smoke E2E pra fechar. |
 | T7 | ADR-001 (Supabase) × "BQ base de verdade" (docs estratégicos) | Conversa atual | Média | ADR-010 resolve |
 | T8 | Sync git ↔ Notion: divergência potencial | Conversa atual | Média | ADR-012 endurece |
 | T9 | Proliferação de agentes sem mapa consolidado (6 hoje, ~10 em 3 meses) | Conversa atual | Média | Mapa de agentes (§9) deste doc |
@@ -406,3 +416,4 @@ Escopo Retroativa automaticamente.
 | v0.1 | 2026-06-04 | Criação. Inclui nomenclatura D1-D6 travada, glossário, mapa de agentes, protocolo de checkpoint, abertura formal da área Documentação e Ferramentas (Tronco 4 Miro). |
 | v0.1.1 | 2026-06-04 | Atualização in-place pós-OK P1.5 + T10. Adicionados: URLs reais da âncora Doc&Ferramentas + Aprendizado #16 + ME-20260604 dogfood. §1.2 marcado pendente (Olavo enviar lista completa de troncos do Miro). §3.7 reflete Lote 0 e Lote 1 concluídos. §6 T10 atualizada com ME criada. Nenhuma mudança estrutural. |
 | v0.1.2 | 2026-06-04 | Lista completa dos 10 troncos do Miro recebida e incorporada (§1.2). Releitura registrada: 2 áreas operacionais + 8 dimensões transversais. Troncos transversais 5-10 adicionados ao glossário (§7). §5 pendência de troncos marcada como resolvida. Nenhuma mudança estrutural — confirma que estamos no caminho certo: já tocamos 8 dos 10 troncos implicitamente. |
+| v0.1.3 | 2026-06-04 | Telemetria Mínima Lote 0 concluído. §3.7 ganha sub-entrega Telemetria. §5 pendência Telemetria reclassificada como "Brief Codex entregue, aguardando execução". §6 T6 reclassificada como "Em mitigação" (severidade Alta → status atualizado). Pacote em commit único: DB Snapshots criado no Notion + 2 artefatos no Catálogo (DB + strawman v0.2) + brief Codex em handoff. |

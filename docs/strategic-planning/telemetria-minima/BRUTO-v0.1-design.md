@@ -1,8 +1,9 @@
-# [BRUTO v0.1] Telemetria Mínima da Operação Interna
+# [BRUTO v0.2] Telemetria Mínima da Operação Interna
 
-> **STATUS:** Strawman v0.1. Aguardando red-line do Olavo.
-> Nada aqui tocou Notion canônico nem código (Codex). Este doc é o
-> artefato de revisão.
+> **STATUS:** Strawman v0.2. v0.1 red-lined por Olavo em 2026-06-04;
+> #1 resolvido (15 originais + B = 16 métricas), #3 chave-valor, #4
+> preparar campos. #2/5/6/7 marcados defaults. DB Snapshots já criado
+> no Notion canônico.
 >
 > **FONTE DE VERDADE:** Notion (estado), BigQuery (sink futuro).
 >
@@ -83,6 +84,7 @@ Aplicados sem exceção:
 | O5 | Falhas Telegram (`Observações contains "Status telegram: falhou"`) | D-7 | DB Etapas |
 | O6 | Falhas Evolution | D-7 | DB Etapas |
 | O7 | Gate A2.10 PASS vs FAIL | D-7, D-30 | DB Clientes (campo Gate) |
+| **O8** | **Tempo médio A2.1 cliente criado → A2.10 gate concluído (onboarding ponta a ponta)** | **D-30** | **DB Clientes (data_criacao + data_gate)** |
 
 ### 4.2. Curador
 | # | Métrica | Janelas | Fonte |
@@ -100,17 +102,26 @@ Aplicados sem exceção:
 | G3 | # Aprendizados por status (Aplicado/Em análise/Novo) | Snapshot | DB Aprendizados |
 | G4 | # workflows n8n ativos por área | Snapshot | DB Catálogo (Tipo=Workflow n8n) |
 
-**Total v0.1: 15 métricas.** Cobre Tronco 6 (Indicadores de Sucesso)
-sem inflar. Expansão (Execução, Priorização, Comercial) vem quando
-elas entrarem em produção.
+**Total v0.2: 16 métricas** (15 originais + O8). Cobre Tronco 6
+(Indicadores de Sucesso) sem inflar.
+
+**DB Snapshots já preparado pra Execução, Priorização, Comercial,
+Documentação e Ferramentas** (opções select adicionadas). Workflow
+Lote 1 popula só Onboarding+Curador+Global. Codex adiciona as outras
+quando entrarem em produção (Lote 2+) sem precisar mudar schema do DB.
 
 ---
 
-## 5. Modelo de dados — DB `PHI - Snapshots de Telemetria` `[PRESUMIDO]`
+## 5. Modelo de dados — DB `PHI - Snapshots de Telemetria` ✅
 
-**Decisão:** modelo chave-valor (1 linha por métrica por dia).
-Alternativa colunar (1 coluna por métrica) exige ALTER quando métrica
-nova entra — pior pro Curador automatizar depois.
+**Decisão travada (red-line #3):** modelo chave-valor (1 linha por
+métrica por dia).
+
+**DB criado em 2026-06-04:**
+- URL: https://www.notion.so/0e1cffdef0654580828d5f1478c50077
+- data_source_id: `32404398-6751-4bbd-be28-4ad591e22bf7`
+- 11 campos
+- Select `Área` preparado pra todas as 7 áreas (red-line #4)
 
 | Campo | Tipo | Nota |
 |---|---|---|
@@ -205,36 +216,34 @@ Snapshot: <a href="https://notion.so/.../snapshots">DB</a>
 
 ---
 
-## 9. Red-line — confirme/corrija
+## 9. Status do red-line v0.1 → v0.2 (resolvido 2026-06-04)
 
-1. **Métricas escolhidas (§4)** — 15 métricas v0.1. Falta alguma quente?
-   Sobra alguma?
-2. **Horário do digest (§6)** — 08:30 BR (30min antes do A2.7). OK ou
-   prefere outro?
-3. **Modelo chave-valor vs colunar (§5)** — recomendo chave-valor pela
-   flexibilidade. OK?
-4. **Escopo v0.1 (§1)** — só Onboarding + Curador + Global em v0.1
-   (sem Execução/Priorização). OK ou prefere já preparar campos vazios?
-5. **Chat Telegram (§6)** — mesmo do A2.7 (operador Olavo 930549271)?
-6. **Flash summarize (§8 Lote 3)** — fica pra depois ou prefere já no
-   Lote 1?
-7. **Nome do workflow (§6)** — `WF-DOC-Telemetria-Diaria` segue D5
-   (prefixo de tipo). OK?
+| # | Item | Status |
+|---|---|---|
+| 1 | Métricas (§4) | ✅ 15 originais + B (O8 tempo total onboarding) = 16 métricas |
+| 2 | Horário 08:30 BR (§6) | ⚠️ Default assumido |
+| 3 | Chave-valor (§5) | ✅ Confirmado |
+| 4 | Preparar campos para outras áreas (§1, §5) | ✅ DB criado com select Área incluindo todas as 7 áreas |
+| 5 | Chat Telegram = A2.7 (`930549271`) | ⚠️ Default assumido |
+| 6 | Flash summarize no Lote 3 (§8) | ⚠️ Default assumido |
+| 7 | Nome `WF-DOC-Telemetria-Diaria` (§6) | ⚠️ Default assumido |
+
+**Defaults (⚠️):** podem ser corrigidos sem reescrita (são parâmetros
+de configuração ou nomenclatura, não estrutura).
 
 ---
 
-## 10. Próximos passos
+## 10. Status das ações canônicas (2026-06-04)
 
-Após teu red-line:
-1. Incorporo correções → v0.2
-2. Abro **DB `PHI - Snapshots de Telemetria`** no Notion canônico
-   (sob "Gerenciamento de Documentos", padrão dos outros DBs PHI)
-3. Atualizo Catálogo com 1 artefato novo (este DB)
-4. Brifo Codex pro Lote 1 (workflow), seguindo padrões inegociáveis
-   do Lote 1 Onboarding
-5. Atualizo ESTADO-DO-PROJETO.md com URLs reais + status
-
-**Tudo no mesmo bloco — pede um único OK depois do red-line.**
+| # | Ação | Status |
+|---|---|---|
+| 10.1 | DB `PHI - Snapshots de Telemetria` no Notion | ✅ Criado |
+| 10.2 | Catálogo atualizado (2 artefatos novos: DB + strawman v0.2) | ✅ Concluído |
+| 10.3 | Brief Codex pro Lote 1 do workflow | ✅ Criado em `docs/handoff/2026-06-04-telemetria-lote1-codex-brief.md` |
+| 10.4 | ESTADO-DO-PROJETO.md atualizado (§3.7, §5, §13) | ✅ Concluído |
+| 10.5 | Codex executa Lote 1 (implementação do workflow) | ⏸ Aguardando Codex |
+| 10.6 | Smoke test do workflow Lote 1 | ⏸ Após 10.5 |
+| 10.7 | Cleanup + atualização do Registro Notion + Aprendizado se houver | ⏸ Após 10.6 |
 
 ---
 
