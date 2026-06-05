@@ -191,7 +191,7 @@ Estados: `Backlog` · `Em design` · `Em execução` · `Em smoke` ·
 - **ADR-011 — Curador + Mudanças de Escopo + Catálogo:** rascunho
   pendente. Curador formaliza.
 - **ADR-012 — Git canônico para design, Notion canônico para estado
-  operacional, sync manual via PR:** rascunho pendente.
+  operacional, sync via processo:** ✅ **Rascunhado 2026-06-04, Status `Proposto`.** [Notion](https://www.notion.so/376b65e5c72b818a87e8d491f98be1fb). Resolve tensão T8. Aguarda aprovação do Olavo.
 
 ### 4.3. Decisões fora de ADR (registradas em strawmans e nesta conversa)
 
@@ -213,7 +213,7 @@ Estados: `Backlog` · `Em design` · `Em execução` · `Em smoke` ·
 | 2026-06-04 | Acesso ao protótipo `phi-dashboard-b3d8f919` | Olavo escolhe caminho: drag-drop / branch espelho / autorizar repo / prints | Decisão final do papel do Dashboard |
 | 2026-06-04 | ADR-010 (BQ × Supabase) | Rascunhar | Destravar ADR-001 (`Em revisão`) |
 | 2026-06-03 | ADR-011 (Curador) | Rascunhar | Formaliza Curador |
-| 2026-06-04 | ADR-012 (Git × Notion canônico) | Rascunhar | Endurece governança de doc. |
+| 2026-06-04 | ADR-012 (Git × Notion canônico) | ✅ **Rascunhado 2026-06-04, Status `Proposto`.** [Notion](https://www.notion.so/376b65e5c72b818a87e8d491f98be1fb). Aguarda aprovação do Olavo. | Resolvido (rascunho) |
 | 2026-06-04 | Telemetria Mínima Lote 1 | ✅ Brief Codex entregue (`docs/handoff/2026-06-04-telemetria-lote1-codex-brief.md`); DB Snapshots criado no Notion | Codex executa, depois smoke E2E |
 | 2026-06-04 | v0.3 Execução + abertura SOP/DB Notion canônico | Aguarda OK do Olavo | Lote 1 Execução |
 | 2026-06-04 | Mudança de Escopo PLANEJADA: reposicionar Curador → Documentação e Ferramentas | ✅ **APROVADA E APLICADA 2026-06-04** — 4 registros do Catálogo + âncora Curador (Notion) + 2 strawmans (git) + ESTADO já alinhado. Estado da ME: `Aplicada`. Serve de input de treino pro Lote 1 do Curador. | Resolvido |
@@ -234,7 +234,7 @@ Compilação das tensões espalhadas pelos strawmans + novas.
 | T5 | Dashboard × Notion: duas superfícies de visualização | Conversa Dashboard | Baixa | Cada um pro seu uso (produto vs operação) |
 | T6 | **Métricas operacionais não rastreadas** — Onboarding em prod há 9 dias, zero visibilidade | Conversa atual | **Alta → Em mitigação** | ✅ Telemetria Mínima Lote 0 concluído 2026-06-04 (DB Snapshots + brief Codex). Aguarda Codex executar Lote 1 + smoke E2E pra fechar. |
 | T7 | ADR-001 (Supabase) × "BQ base de verdade" (docs estratégicos) | Conversa atual | Média | ADR-010 resolve |
-| T8 | Sync git ↔ Notion: divergência potencial | Conversa atual | Média | ADR-012 endurece |
+| T8 | Sync git ↔ Notion: divergência potencial | Conversa 2026-06-04 | Média → **Em mitigação** | ✅ ADR-012 rascunhado 2026-06-04 ([link](https://www.notion.so/376b65e5c72b818a87e8d491f98be1fb)) — cristaliza regra híbrida (Git design + Notion estado, sync via processo manual hoje + Curador Lote 2/3 automatiza). Aguarda aprovação. |
 | T9 | Proliferação de agentes sem mapa consolidado (6 hoje, ~10 em 3 meses) | Conversa atual | Média | Mapa de agentes (§9) deste doc |
 | T10 | ~~Curador posicionado em "Procedimentos da Operação", mas faz mais sentido em "Documentação e Ferramentas"~~ | Conversa 2026-06-04 | ✅ Resolvido | **ME-20260604 aprovada e aplicada 2026-06-04** ([link](https://www.notion.so/375b65e5c72b8121834fd65d5395b481)). 1ª Mudança de Escopo completa do projeto — dogfood do Curador (Claude no papel de surrogate). Vira input de treino. |
 
@@ -418,3 +418,4 @@ Escopo Retroativa automaticamente.
 | v0.1.2 | 2026-06-04 | Lista completa dos 10 troncos do Miro recebida e incorporada (§1.2). Releitura registrada: 2 áreas operacionais + 8 dimensões transversais. Troncos transversais 5-10 adicionados ao glossário (§7). §5 pendência de troncos marcada como resolvida. Nenhuma mudança estrutural — confirma que estamos no caminho certo: já tocamos 8 dos 10 troncos implicitamente. |
 | v0.1.3 | 2026-06-04 | Telemetria Mínima Lote 0 concluído. §3.7 ganha sub-entrega Telemetria. §5 pendência Telemetria reclassificada como "Brief Codex entregue, aguardando execução". §6 T6 reclassificada como "Em mitigação" (severidade Alta → status atualizado). Pacote em commit único: DB Snapshots criado no Notion + 2 artefatos no Catálogo (DB + strawman v0.2) + brief Codex em handoff. |
 | v0.1.4 | 2026-06-04 | ME-20260604 (1ª Mudança de Escopo do projeto — dogfood) aprovada e aplicada. Curador reposicionado: Procedimentos da Operação → Documentação e Ferramentas (Tronco 4). 4 registros do Catálogo atualizados (Área) + âncora Curador editada (Notion §1, §2, §4 D4) + strawman Curador (§0 D4, §1) + strawman Execução (§16 título, D3 Planejado/Retroativo, D4 Mora) + ESTADO já alinhado preventivamente. §5 pendência ME e §6 T10 marcadas Resolvidas. Serve de input de treino pro Lote 1 do Curador. |
+| v0.1.5 | 2026-06-04 | ADR-012 rascunhado (Status `Proposto`) + Aprendizados #17 e #18 criados. ADR-012 cristaliza regra híbrida Git ↔ Notion (resolve T8). #17 = dogfood manual de Mudança de Escopo antes do Curador estar vivo. #18 = fragilidade do MCP Notion `update_content` com tabelas/callouts (insumo pro Curador Lote 3). Catálogo +1 (ADR-012). §4.2, §5 pendência ADR-012, §6 T8 atualizadas. Aprendizados não vão pro Catálogo (não estão nos 8 tipos do §7 strawman Curador). |
