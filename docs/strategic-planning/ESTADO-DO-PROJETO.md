@@ -162,10 +162,10 @@ Estados: `Backlog` · `Em design` · `Em execução` · `Em smoke` ·
 | Lote | Status |
 |---|---|
 | Lote 0 (strawman v0.2 + DB Snapshots no Notion + brief Codex) | **Concluído (2026-06-04)** — 16 métricas, modelo chave-valor, DB preparado pra 7 áreas |
-| Lote 1 (workflow WF-DOC-Telemetria-Diaria — Onboarding+Curador+Global) | **Brief entregue ao Codex (2026-06-04)** — `docs/handoff/2026-06-04-telemetria-lote1-codex-brief.md` |
-| Lote 2 (expansão Execução quando entrar em prod) | Backlog |
+| Lote 1 (workflow WF-DOC-Telemetria-Diaria — Onboarding+Curador+Global) | **Codex entregou `a01` 2026-06-05** — 14 nodes, suíte ps1, sandbox. `active=false`. Pré-revisão minha: 1 bug corrigido (linha residual no digest), 2 gaps registrados pra Lote 2. Aguarda Antigravity + smoke E2E. |
+| Lote 2 (expansão Execução + filtro de data no Buscar Snapshots Existentes + campo Data de aplicação no DB Mudanças) | Backlog |
 | Lote 3 (Flash summarize tendências) | Backlog |
-| Lote 4 (sink BigQuery — após ADR-010) | Backlog |
+| Lote 4 (sink BigQuery — ADR-010) | Backlog |
 
 ---
 
@@ -214,7 +214,7 @@ Estados: `Backlog` · `Em design` · `Em execução` · `Em smoke` ·
 | 2026-06-04 | ADR-010 (BQ × Supabase) | ✅ **Aprovado 2026-06-04, `Aceito`.** [Notion](https://www.notion.so/376b65e5c72b814a81fac10aaf50befc). ADR-001 esclarecido como complementar. | Resolvido |
 | 2026-06-03 | ADR-011 (Curador) | Rascunhar | Formaliza Curador |
 | 2026-06-04 | ADR-012 (Git × Notion canônico) | ✅ **Aprovado 2026-06-04, `Aceito`.** [Notion](https://www.notion.so/376b65e5c72b818a87e8d491f98be1fb). | Resolvido |
-| 2026-06-04 | Telemetria Mínima Lote 1 | ✅ Brief Codex entregue (`docs/handoff/2026-06-04-telemetria-lote1-codex-brief.md`); DB Snapshots criado no Notion | Codex executa, depois smoke E2E |
+| 2026-06-05 | Telemetria Mínima Lote 1 | ✅ Codex entregou `a01` (commit `b15e8dd`, 1792 linhas — workflow + sandbox + suíte ps1 + generator). Pré-revisão Claude: 1 bug corrigido (G1 — linha residual no digest), 2 gaps documentados pra Lote 2 (G2 escala query Snapshots, G3 falta campo Data de aplicação no DB Mudanças). | Antigravity revisa + smoke E2E pra fechar T6 |
 | 2026-06-04 | v0.3 Execução + abertura SOP/DB Notion canônico | Aguarda OK do Olavo | Lote 1 Execução |
 | 2026-06-04 | Mudança de Escopo PLANEJADA: reposicionar Curador → Documentação e Ferramentas | ✅ **APROVADA E APLICADA 2026-06-04** — 4 registros do Catálogo + âncora Curador (Notion) + 2 strawmans (git) + ESTADO já alinhado. Estado da ME: `Aplicada`. Serve de input de treino pro Lote 1 do Curador. | Resolvido |
 | 2026-06-04 | Lista completa de troncos do Miro (§1.2) | ✅ Recebida 2026-06-04 — 10 troncos mapeados. 2 áreas operacionais + 8 transversais. Releitura registrada (transversais NÃO viram âncoras separadas). | Resolvido |
@@ -232,7 +232,7 @@ Compilação das tensões espalhadas pelos strawmans + novas.
 | T3 | Mudança de Escopo grande × ADR novo: quando virar ADR junto do diff? | Curador §15 | Média | Decidir junto do ADR-011 |
 | T4 | "Prospecção" e "Reunião resultados" semanticamente Comerciais | Execução §4 | Baixa | Re-examinar quando Comercial existir formalmente |
 | T5 | Dashboard × Notion: duas superfícies de visualização | Conversa Dashboard | Baixa | Cada um pro seu uso (produto vs operação) |
-| T6 | **Métricas operacionais não rastreadas** — Onboarding em prod há 9 dias, zero visibilidade | Conversa atual | **Alta → Em mitigação** | ✅ Telemetria Mínima Lote 0 concluído 2026-06-04 (DB Snapshots + brief Codex). Aguarda Codex executar Lote 1 + smoke E2E pra fechar. |
+| T6 | **Métricas operacionais não rastreadas** — Onboarding em prod há 9 dias, zero visibilidade | Conversa 2026-06-04 | Alta → **Em mitigação avançada** | ✅ Telemetria Mínima Lote 0 concluído 2026-06-04. ✅ Codex entregou Lote 1 `a01` 2026-06-05 (14 nodes, suíte ps1 + sandbox). ✅ Pré-revisão Claude 2026-06-05 (1 bug corrigido + 2 gaps registrados pra Lote 2). Aguarda Antigravity + smoke E2E para fechar. |
 | ~~T7~~ | ~~ADR-001 (Supabase) × "BQ base de verdade" (docs estratégicos)~~ | Conversa 2026-06-04 | ✅ **Resolvido** | **ADR-010 Aceito 2026-06-04** ([link](https://www.notion.so/376b65e5c72b814a81fac10aaf50befc)). Divisão BigQuery (analítico) × Supabase (transacional) × Notion (estado operacional). ADR-001 esclarecido como complementar — não conflitante. |
 | ~~T8~~ | ~~Sync git ↔ Notion: divergência potencial~~ | Conversa 2026-06-04 | ✅ **Resolvido** | **ADR-012 Aceito 2026-06-04** ([link](https://www.notion.so/376b65e5c72b818a87e8d491f98be1fb)). Git canônico para design, Notion canônico para estado operacional, sync via processo (manual hoje, Curador Lote 2/3 automatiza). |
 | T9 | Proliferação de agentes sem mapa consolidado (6 hoje, ~10 em 3 meses) | Conversa atual | Média | Mapa de agentes (§9) deste doc |
@@ -420,3 +420,4 @@ Escopo Retroativa automaticamente.
 | v0.1.4 | 2026-06-04 | ME-20260604 (1ª Mudança de Escopo do projeto — dogfood) aprovada e aplicada. Curador reposicionado: Procedimentos da Operação → Documentação e Ferramentas (Tronco 4). 4 registros do Catálogo atualizados (Área) + âncora Curador editada (Notion §1, §2, §4 D4) + strawman Curador (§0 D4, §1) + strawman Execução (§16 título, D3 Planejado/Retroativo, D4 Mora) + ESTADO já alinhado preventivamente. §5 pendência ME e §6 T10 marcadas Resolvidas. Serve de input de treino pro Lote 1 do Curador. |
 | v0.1.5 | 2026-06-04 | ADR-012 rascunhado (Status `Proposto`) + Aprendizados #17 e #18 criados. ADR-012 cristaliza regra híbrida Git ↔ Notion (resolve T8). #17 = dogfood manual de Mudança de Escopo antes do Curador estar vivo. #18 = fragilidade do MCP Notion `update_content` com tabelas/callouts (insumo pro Curador Lote 3). Catálogo +1 (ADR-012). §4.2, §5 pendência ADR-012, §6 T8 atualizadas. Aprendizados não vão pro Catálogo (não estão nos 8 tipos do §7 strawman Curador). |
 | v0.1.6 | 2026-06-04 | ADR-010 e ADR-012 aprovados (Status `Aceito`). ADR-010 rascunhado e aprovado direto (Olavo autorizou junto). ADR-001 esclarecido (não conflita com BQ base de verdade — divisão por natureza). Tensões T7 e T8 marcadas Resolvidas. Catálogo +1 (ADR-010); ADR-001 e ADR-012 saem de "Em revisão" pra "Vivo". §4.1 ADRs vigentes ganha ADR-010 e ADR-012; §4.2 perde ambos (saem do planejamento). §5 pendências ADR-010 e ADR-012 marcadas Resolvidas. Mantém pendente: ADR-011 (Curador). |
+| v0.1.7 | 2026-06-05 | Telemetria Lote 1 Codex entregue (`b15e8dd`, 1792 linhas). Pré-revisão Claude: G1 (linha residual `parse_mode=HTML` no digest jsCode) corrigido inline + regenerado workflow.json e sandbox_export.json + ajustado teste ps1; G2 (Buscar Snapshots Existentes sem filtro de data — escala mal) documentado pra Lote 2; G3 (campo `Data de aplicação` ausente no DB Mudanças — Codex acertou ao reportar) documentado pra ME futura. Catálogo +1 (WF-DOC-Telemetria-Diaria `Em revisão`). T6 severidade Alta → Em mitigação avançada. Aguarda Antigravity + smoke E2E pra fechar. §3.7 Sub-entrega Telemetria atualizada. |

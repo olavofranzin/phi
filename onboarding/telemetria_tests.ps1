@@ -141,7 +141,7 @@ foreach ($required in @('execution_id', 'tenant_id', $versaoConsulta)) {
 }
 
 $digestCode = [string]$nodeMap['[Telemetria] Montar Digest HTML'].parameters.jsCode
-foreach ($snippet in @('&amp;', '&lt;', '&gt;', '<b>PHI Telemetria', 'DB Snapshots', 'parse_mode')) {
+foreach ($snippet in @('&amp;', '&lt;', '&gt;', '<b>PHI Telemetria', 'DB Snapshots')) {
   if (-not $digestCode.Contains($snippet)) {
     throw "Montar Digest HTML code is missing '$snippet'"
   }

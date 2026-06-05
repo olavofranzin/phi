@@ -165,9 +165,7 @@ const linhas = [
   '- Aprendizados: ' + n('glb.aprendizados_aplicados') + ' Aplicados',
   '- Workflows ativos: ' + n('glb.workflows_ativos'),
   '',
-  '<a href="https://www.notion.so/0e1cffdef0654580828d5f1478c50077">DB Snapshots</a>',
-  '',
-  'parse_mode=HTML'
+  '<a href="https://www.notion.so/0e1cffdef0654580828d5f1478c50077">DB Snapshots</a>'
 ];
 return [{ json: { digest_html: linhas.join('\n'), data_snapshot, linhas_novas: first.linhas_novas || metricItems.length } }];`;
 
