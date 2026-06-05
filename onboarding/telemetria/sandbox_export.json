@@ -1,0 +1,620 @@
+{
+  "id": "<workflow_id_pending_review>",
+  "name": "WF-DOC-Telemetria-Diaria",
+  "active": false,
+  "isArchived": false,
+  "tags": [
+    {
+      "name": "phi"
+    },
+    {
+      "name": "documentacao"
+    },
+    {
+      "name": "telemetria"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "telemetria-schedule",
+      "name": "[Telemetria] Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "daysInterval": 1,
+              "triggerAtHour": 8,
+              "triggerAtMinute": 30
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "telemetria-contexto",
+      "name": "[Telemetria] Set Contexto",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        0
+      ],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "execution-id",
+              "name": "execution_id",
+              "type": "string",
+              "value": "={{ 'EXEC-TELEMETRIA-' + $execution.id }}"
+            },
+            {
+              "id": "tenant-id",
+              "name": "tenant_id",
+              "type": "string",
+              "value": "phi-agencia"
+            },
+            {
+              "id": "data-snapshot",
+              "name": "data_snapshot",
+              "type": "string",
+              "value": "={{ $now.toISOString().slice(0,10) }}"
+            },
+            {
+              "id": "versao-consulta",
+              "name": "versao_consulta",
+              "type": "string",
+              "value": "v1.0"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "telemetria-clientes",
+      "name": "[Telemetria] Buscar Clientes",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        448,
+        -360
+      ],
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "04e34a62624b484cbda546604564b88c"
+        },
+        "returnAll": true,
+        "simple": false,
+        "filterType": "none"
+      },
+      "credentials": {
+        "notionApi": {
+          "id": "<credential_id_redacted>",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "id": "telemetria-etapas",
+      "name": "[Telemetria] Buscar Etapas",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        448,
+        -240
+      ],
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "6eb4565b4f1d498c8b2978e0c80880fd"
+        },
+        "returnAll": true,
+        "simple": false,
+        "filterType": "none"
+      },
+      "credentials": {
+        "notionApi": {
+          "id": "<credential_id_redacted>",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "id": "telemetria-mudancas",
+      "name": "[Telemetria] Buscar Mudancas Escopo",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        448,
+        -120
+      ],
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "bb56ddca-dfad-4aa5-9227-3cf86207bc40"
+        },
+        "returnAll": true,
+        "simple": false,
+        "filterType": "none"
+      },
+      "credentials": {
+        "notionApi": {
+          "id": "<credential_id_redacted>",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "id": "telemetria-catalogo",
+      "name": "[Telemetria] Buscar Catalogo",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        448,
+        0
+      ],
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "07623177-4d75-4870-bdc0-4ecd365392a7"
+        },
+        "returnAll": true,
+        "simple": false,
+        "filterType": "none"
+      },
+      "credentials": {
+        "notionApi": {
+          "id": "<credential_id_redacted>",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "id": "telemetria-adrs",
+      "name": "[Telemetria] Buscar Decisoes ADR",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        448,
+        120
+      ],
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "237a5e127f5142eeb9c04ddfb16b6400"
+        },
+        "returnAll": true,
+        "simple": false,
+        "filterType": "none"
+      },
+      "credentials": {
+        "notionApi": {
+          "id": "<credential_id_redacted>",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "id": "telemetria-aprendizados",
+      "name": "[Telemetria] Buscar Aprendizados",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        448,
+        240
+      ],
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "aa5d49b2-c2f6-40bc-b883-5cd350a982c7"
+        },
+        "returnAll": true,
+        "simple": false,
+        "filterType": "none"
+      },
+      "credentials": {
+        "notionApi": {
+          "id": "<credential_id_redacted>",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "id": "telemetria-snapshots-existentes",
+      "name": "[Telemetria] Buscar Snapshots Existentes",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        448,
+        360
+      ],
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "32404398-6751-4bbd-be28-4ad591e22bf7"
+        },
+        "returnAll": true,
+        "simple": false,
+        "filterType": "none"
+      },
+      "credentials": {
+        "notionApi": {
+          "id": "<credential_id_redacted>",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "id": "telemetria-calcular",
+      "name": "[Telemetria] Calcular Metricas",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const ctx = $('[Telemetria] Set Contexto').first().json;\nconst execution_id = ctx.execution_id || ('EXEC-TELEMETRIA-' + $execution.id);\nconst tenant_id = ctx.tenant_id || 'phi-agencia';\nconst data_snapshot = ctx.data_snapshot || new Date().toISOString().slice(0, 10);\nconst versao_consulta = ctx.versao_consulta || 'v1.0';\n\nconst all = (name) => {\n  try { return $(name).all().map((item) => item.json || {}).filter((page) => !page.archived && !page.is_archived); }\n  catch (err) { return []; }\n};\n\nconst clientes = all('[Telemetria] Buscar Clientes');\nconst etapas = all('[Telemetria] Buscar Etapas');\nconst mudancas = all('[Telemetria] Buscar Mudancas Escopo');\nconst catalogo = all('[Telemetria] Buscar Catalogo');\nconst adrs = all('[Telemetria] Buscar Decisoes ADR');\nconst aprendizados = all('[Telemetria] Buscar Aprendizados');\nconst snapshots = all('[Telemetria] Buscar Snapshots Existentes');\n\nconst pickTitle = (page) => {\n  for (const prop of Object.values(page.properties || {})) {\n    if (prop && prop.type === 'title') return (prop.title || []).map((part) => part.plain_text || '').join('').trim();\n  }\n  return '';\n};\nconst pickText = (prop) => (prop && prop.rich_text || []).map((part) => part.plain_text || '').join('').trim();\nconst pickSelect = (prop) => (prop && prop.select && prop.select.name) || (prop && prop.status && prop.status.name) || '';\nconst pickNumber = (prop) => {\n  if (!prop) return null;\n  if (typeof prop.number === 'number') return prop.number;\n  if (typeof prop.rollup?.number === 'number') return prop.rollup.number;\n  if (typeof prop.formula?.number === 'number') return prop.formula.number;\n  return null;\n};\nconst pickDate = (prop) => prop && prop.date && prop.date.start ? String(prop.date.start).slice(0, 10) : '';\nconst daysAgo = (days) => new Date(Date.now() - days * 86400000);\nconst since = (iso, days) => !!iso && new Date(String(iso).slice(0, 10) + 'T00:00:00-03:00') >= daysAgo(days);\nconst avg = (values) => {\n  const nums = values.filter((value) => typeof value === 'number' && !Number.isNaN(value));\n  return nums.length ? Number((nums.reduce((sum, value) => sum + value, 0) / nums.length).toFixed(2)) : 0;\n};\nconst diffDays = (start, end) => {\n  if (!start || !end) return null;\n  return Math.max(0, Math.round((new Date(end + 'T00:00:00-03:00') - new Date(start + 'T00:00:00-03:00')) / 86400000));\n};\nconst hasAny = (page, needles) => {\n  const hay = JSON.stringify(page.properties || {}).toLowerCase();\n  return needles.some((needle) => hay.includes(needle));\n};\n\nconst existingKeys = new Set();\nfor (const page of snapshots) {\n  const props = page.properties || {};\n  const data = pickDate(props.Data);\n  const chave = pickText(props['Chave da m\\u00e9trica']);\n  const janela = pickSelect(props.Janela);\n  if (data && chave && janela) existingKeys.add(data + '|' + chave + '|' + janela);\n}\n\nconst metricas = [];\nconst add = (area, chave, janela, valor_num, valor_txt, fonte) => {\n  metricas.push({\n    area,\n    chave,\n    janela,\n    valor_num: typeof valor_num === 'number' && !Number.isNaN(valor_num) ? valor_num : null,\n    valor_txt: valor_txt == null ? '' : String(valor_txt),\n    fonte,\n    data_snapshot,\n    execution_id,\n    tenant_id,\n    versao_consulta,\n    idempotency_key: data_snapshot + '|' + chave + '|' + janela,\n    titulo: data_snapshot + ' - ' + area + ' - ' + chave,\n  });\n};\n\nconst activeCliente = (page) => pickSelect(page.properties?.Status) !== 'Arquivado' && pickSelect(page.properties?.Status) !== 'Cancelado';\nconst activeEtapa = (page) => pickSelect(page.properties?.Status) !== 'Arquivado' && pickSelect(page.properties?.Status) !== 'Pulado (com justificativa)';\nconst clientesAtivos = clientes.filter(activeCliente);\nconst etapasAtivas = etapas.filter(activeEtapa);\nconst concluidas = etapas.filter((page) => pickSelect(page.properties?.Status) === 'Conclu\\u00eddo');\nconst abertas = etapasAtivas.filter((page) => !['Conclu\\u00eddo', 'Pulado (com justificativa)'].includes(pickSelect(page.properties?.Status)));\nconst atrasadas = abertas.filter((page) => {\n  const due = pickDate(page.properties?.['Data prevista']);\n  return due && due < data_snapshot;\n});\nconst temposOnb = clientesAtivos.map((page) => diffDays(pickDate(page.properties?.['Data de in\\u00edcio']), pickDate(page.properties?.['Data real 1\\u00aa entrega']))).filter((value) => value != null);\nconst telegramFailures = [...clientes, ...etapas].filter((page) => hasAny(page, ['telegram: falhou', 'telegram falhou', 'status telegram: falhou']));\nconst evolutionFailures = [...clientes, ...etapas].filter((page) => hasAny(page, ['evolution: falhou', 'evolution falhou', 'status evolution: falhou']));\nconst gateItems = etapas.filter((page) => /validacao final|valida\\\\u00e7\\\\u00e3o final|pass\\/fail|gate/i.test(pickTitle(page)));\n\nadd('Onboarding', 'onb.briefings_intake', 'D-1', clientes.filter((page) => since(page.created_time || page.createdTime, 1)).length, '', 'DB Clientes (created_time >= D-1)');\nadd('Onboarding', 'onb.classificacao_aprovado', 'D-30', clientes.filter((page) => since(page.created_time || page.createdTime, 30) && ['Aprovado', 'Aprovado com lacunas'].includes(pickSelect(page.properties?.['Classifica\\u00e7\\u00e3o do briefing']))).length, '', 'DB Clientes (Classificacao do briefing, D-30)');\nadd('Onboarding', 'onb.classificacao_rejeitado', 'D-30', clientes.filter((page) => since(page.created_time || page.createdTime, 30) && ['Insuficiente', 'Rejeitado'].includes(pickSelect(page.properties?.['Classifica\\u00e7\\u00e3o do briefing']))).length, '', 'DB Clientes (Classificacao do briefing, D-30)');\nadd('Onboarding', 'onb.etapas_concluidas', 'Snapshot', concluidas.length, '', 'DB Etapas (Status = Concluido)');\nadd('Onboarding', 'onb.etapas_abertas', 'Snapshot', abertas.length, '', 'DB Etapas (Status aberto)');\nadd('Onboarding', 'onb.etapas_atrasadas', 'Snapshot', atrasadas.length, '', 'DB Etapas (Data prevista < hoje e Status aberto)');\nadd('Onboarding', 'onb.falhas_telegram', 'D-7', telegramFailures.filter((page) => since(page.last_edited_time || page.created_time || page.createdTime, 7)).length, '', 'Observacoes/status contendo Telegram falhou, D-7');\nadd('Onboarding', 'onb.falhas_evolution', 'D-7', evolutionFailures.filter((page) => since(page.last_edited_time || page.created_time || page.createdTime, 7)).length, '', 'Observacoes/status contendo Evolution falhou, D-7');\nadd('Onboarding', 'onb.gate_pass', 'D-7', gateItems.filter((page) => since(page.last_edited_time || page.created_time || page.createdTime, 7) && hasAny(page, ['pass'])).length, '', 'Etapas gate PASS, D-7');\nadd('Onboarding', 'onb.gate_fail', 'D-7', gateItems.filter((page) => since(page.last_edited_time || page.created_time || page.createdTime, 7) && hasAny(page, ['fail'])).length, '', 'Etapas gate FAIL, D-7');\nadd('Onboarding', 'onb.tempo_total_onboarding_dias', 'D-30', avg(temposOnb), '', 'DB Clientes (Data de inicio ate Data real 1a entrega)');\n\nadd('Curador', 'cur.mes_abertas', 'Snapshot', mudancas.filter((page) => ['Aberta', 'Em an\\u00e1lise', 'Q&A com humano', 'Diff proposto'].includes(pickSelect(page.properties?.Estado))).length, '', 'DB Mudancas de Escopo (Estado aberto)');\nadd('Curador', 'cur.mes_aprovadas', 'D-30', mudancas.filter((page) => since(page.last_edited_time || page.created_time || page.createdTime, 30) && ['Aprovada', 'Aplicada'].includes(pickSelect(page.properties?.Estado))).length, '', 'DB Mudancas de Escopo (aprovadas D-30)');\nadd('Curador', 'cur.tempo_medio_aplicacao_dias', 'D-30', 0, 'sem campo de data de aplicacao no schema atual', 'DB Mudancas de Escopo (campo ausente no schema)');\nadd('Curador', 'cur.rodadas_qa_medias', 'D-30', avg(mudancas.filter((page) => since(page.last_edited_time || page.created_time || page.createdTime, 30)).map((page) => pickNumber(page.properties?.['Rodadas Q&A']))), '', 'DB Mudancas de Escopo (Rodadas Q&A D-30)');\n\nadd('Global', 'glb.artefatos_vivos', 'Snapshot', catalogo.filter((page) => pickSelect(page.properties?.Estado) === 'Vivo').length, '', 'DB Catalogo (Estado = Vivo)');\nadd('Global', 'glb.adrs_aceitos', 'Snapshot', adrs.filter((page) => pickSelect(page.properties?.Status) === 'Aceito').length, '', 'DB Decisoes/ADR (Status = Aceito)');\nadd('Global', 'glb.aprendizados_aplicados', 'Snapshot', aprendizados.filter((page) => ['Aplicado', 'Aplicados'].includes(pickSelect(page.properties?.Status) || pickSelect(page.properties?.Estado))).length, '', 'DB Aprendizados (Status/Estado aplicado)');\nadd('Global', 'glb.workflows_ativos', 'Snapshot', catalogo.filter((page) => pickSelect(page.properties?.Tipo) === 'Workflow n8n' && pickSelect(page.properties?.Estado) === 'Vivo').length, '', 'DB Catalogo (Tipo Workflow n8n, Estado Vivo)');\n\nconst toCreate = metricas.filter((m) => !existingKeys.has(m.idempotency_key));\nreturn toCreate.map((m) => ({ json: { ...m, metricas_do_dia: metricas, linhas_novas: toCreate.length } }));"
+      }
+    },
+    {
+      "id": "telemetria-criar-snapshot",
+      "name": "[Telemetria] Criar Snapshot",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        944,
+        0
+      ],
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "create",
+        "databaseId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "32404398-6751-4bbd-be28-4ad591e22bf7"
+        },
+        "title": "={{ $json.titulo }}",
+        "simple": false,
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Data|date",
+              "date": "={{ $json.data_snapshot }}"
+            },
+            {
+              "key": "Area|select",
+              "selectValue": "={{ $json.area }}"
+            },
+            {
+              "key": "Chave da metrica|rich_text",
+              "textContent": "={{ $json.chave }}"
+            },
+            {
+              "key": "Janela|select",
+              "selectValue": "={{ $json.janela }}"
+            },
+            {
+              "key": "Valor numero|number",
+              "numberValue": "={{ $json.valor_num }}"
+            },
+            {
+              "key": "Valor texto|rich_text",
+              "textContent": "={{ $json.valor_txt }}"
+            },
+            {
+              "key": "Fonte|rich_text",
+              "textContent": "={{ $json.fonte }}"
+            },
+            {
+              "key": "Versão da consulta|rich_text",
+              "textContent": "={{ $json.versao_consulta }}"
+            },
+            {
+              "key": "execution_id|rich_text",
+              "textContent": "={{ $json.execution_id }}"
+            },
+            {
+              "key": "tenant_id|rich_text",
+              "textContent": "={{ $json.tenant_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "credentials": {
+        "notionApi": {
+          "id": "<credential_id_redacted>",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "id": "telemetria-digest",
+      "name": "[Telemetria] Montar Digest HTML",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1168,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const escapeHtml = (value) => String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');\nconst metricItems = $('[Telemetria] Calcular Metricas').all().map((item) => item.json || {});\nconst first = metricItems[0] || $json || {};\nconst metricas = first.metricas_do_dia || metricItems;\nconst data_snapshot = first.data_snapshot || new Date().toISOString().slice(0, 10);\nconst byKey = new Map(metricas.map((m) => [m.chave, m]));\nconst n = (key) => {\n  const value = byKey.get(key)?.valor_num;\n  return typeof value === 'number' ? value : 0;\n};\nconst txt = (key) => byKey.get(key)?.valor_txt || '';\nconst alert = (value) => value > 0 ? ' ALERTA' : '';\nconst linhas = [\n  '<b>PHI Telemetria - ' + escapeHtml(data_snapshot) + ' 08:30</b>',\n  '',\n  '<b>Onboarding</b> (prod desde 2026-05-29)',\n  '- Briefings: D-1: ' + n('onb.briefings_intake'),\n  '- A2.3 Class.: ' + n('onb.classificacao_aprovado') + ' Aprov | ' + n('onb.classificacao_rejeitado') + ' Rej (D-30)',\n  '- Etapas: ' + n('onb.etapas_concluidas') + ' concl | ' + n('onb.etapas_abertas') + ' abertas | ' + n('onb.etapas_atrasadas') + ' atrasadas',\n  '- Falhas Telegram (D-7): ' + n('onb.falhas_telegram') + alert(n('onb.falhas_telegram')),\n  '- Falhas Evolution (D-7): ' + n('onb.falhas_evolution') + alert(n('onb.falhas_evolution')),\n  '- A2.10 Gate: ' + n('onb.gate_pass') + ' PASS | ' + n('onb.gate_fail') + ' FAIL (D-7)',\n  '- Tempo medio onboarding: ' + n('onb.tempo_total_onboarding_dias') + ' dias (D-30)',\n  '',\n  '<b>Curador</b>',\n  '- MEs: ' + n('cur.mes_abertas') + ' abertas | ' + n('cur.mes_aprovadas') + ' aprovadas (D-30)',\n  '- Tempo medio Aberta -> Aplicada: ' + n('cur.tempo_medio_aplicacao_dias') + ' dias' + (txt('cur.tempo_medio_aplicacao_dias') ? ' (' + escapeHtml(txt('cur.tempo_medio_aplicacao_dias')) + ')' : ''),\n  '- Rodadas Q&A medias: ' + n('cur.rodadas_qa_medias'),\n  '',\n  '<b>Global</b>',\n  '- Catalogo: ' + n('glb.artefatos_vivos') + ' Vivos',\n  '- ADRs: ' + n('glb.adrs_aceitos') + ' Aceitos',\n  '- Aprendizados: ' + n('glb.aprendizados_aplicados') + ' Aplicados',\n  '- Workflows ativos: ' + n('glb.workflows_ativos'),\n  '',\n  '<a href=\"https://www.notion.so/0e1cffdef0654580828d5f1478c50077\">DB Snapshots</a>',\n  '',\n  'parse_mode=HTML'\n];\nreturn [{ json: { digest_html: linhas.join('\\n'), data_snapshot, linhas_novas: first.linhas_novas || metricItems.length } }];"
+      }
+    },
+    {
+      "id": "telemetria-telegram",
+      "name": "[Telemetria] Enviar Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1392,
+        0
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "<TELEGRAM_CHAT_ID_redacted>",
+        "text": "={{ $json.digest_html }}",
+        "additionalFields": {
+          "parse_mode": "HTML",
+          "appendAttribution": false
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "<TELEGRAM_CREDENTIAL_ID_redacted>",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "id": "telemetria-status",
+      "name": "[Telemetria] Set Status Final",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1616,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const ctx = $('[Telemetria] Set Contexto').first().json;\nreturn [{ json: { status: 'ok', execution_id: ctx.execution_id, tenant_id: ctx.tenant_id, data_snapshot: ctx.data_snapshot, versao_consulta: ctx.versao_consulta } }];"
+      }
+    }
+  ],
+  "connections": {
+    "[Telemetria] Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "[Telemetria] Set Contexto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Telemetria] Set Contexto": {
+      "main": [
+        [
+          {
+            "node": "[Telemetria] Buscar Clientes",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "[Telemetria] Buscar Etapas",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "[Telemetria] Buscar Mudancas Escopo",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "[Telemetria] Buscar Catalogo",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "[Telemetria] Buscar Decisoes ADR",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "[Telemetria] Buscar Aprendizados",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "[Telemetria] Buscar Snapshots Existentes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Telemetria] Buscar Clientes": {
+      "main": [
+        [
+          {
+            "node": "[Telemetria] Calcular Metricas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Telemetria] Buscar Etapas": {
+      "main": [
+        [
+          {
+            "node": "[Telemetria] Calcular Metricas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Telemetria] Buscar Mudancas Escopo": {
+      "main": [
+        [
+          {
+            "node": "[Telemetria] Calcular Metricas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Telemetria] Buscar Catalogo": {
+      "main": [
+        [
+          {
+            "node": "[Telemetria] Calcular Metricas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Telemetria] Buscar Decisoes ADR": {
+      "main": [
+        [
+          {
+            "node": "[Telemetria] Calcular Metricas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Telemetria] Buscar Aprendizados": {
+      "main": [
+        [
+          {
+            "node": "[Telemetria] Calcular Metricas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Telemetria] Buscar Snapshots Existentes": {
+      "main": [
+        [
+          {
+            "node": "[Telemetria] Calcular Metricas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Telemetria] Calcular Metricas": {
+      "main": [
+        [
+          {
+            "node": "[Telemetria] Criar Snapshot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Telemetria] Criar Snapshot": {
+      "main": [
+        [
+          {
+            "node": "[Telemetria] Montar Digest HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Telemetria] Montar Digest HTML": {
+      "main": [
+        [
+          {
+            "node": "[Telemetria] Enviar Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Telemetria] Enviar Telegram": {
+      "main": [
+        [
+          {
+            "node": "[Telemetria] Set Status Final",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true,
+    "timezone": "America/Sao_Paulo"
+  },
+  "staticData": {
+    "node:[Telemetria] Schedule Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": null,
+  "pinData": {}
+}
