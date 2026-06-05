@@ -175,23 +175,23 @@ Estados: `Backlog` · `Em design` · `Em execução` · `Em smoke` ·
 
 | # | Título | Status | Link |
 |---|---|---|---|
-| 001 | Supabase como Database Primário | **Em revisão** (colide com "BQ base de verdade" — aguarda ADR-010) | [Notion](https://www.notion.so/357b65e5c72b81779c02f29d091fd924) |
+| 001 | Supabase como Database Primário | Aceito (esclarecido por ADR-010) | [Notion](https://www.notion.so/357b65e5c72b81779c02f29d091fd924) |
 | 002 | Free Tier Intencional Fase 0 | Aceito | [Notion](https://www.notion.so/358b65e5c72b8172ac90daf2a6846976) |
 | 003 | Autoridade única do PHI Score | Aceito | [Notion](https://www.notion.so/359b65e5c72b81068959ce8615009166) |
 | 004 v2 | Fórmula PHI Score (FIS, MAS, TSS, MIV) | Aceito | [Notion](https://www.notion.so/359b65e5c72b819c981cfc1eaf79555f) |
 | 005 | Heterogeneidade Google × Meta | Aceito | [Notion](https://www.notion.so/35ab65e5c72b81d38157c81a9636d51e) |
 | 009 | Semântica execution_id (Opção 2) | Aceito (2026-05-09) | [Notion](https://www.notion.so/35bb65e5c72b81f3a4e0e05ad9a82f04) |
+| **010** | **Divisão BigQuery (analítico) × Supabase (transacional)** | **Aceito (2026-06-04)** | [Notion](https://www.notion.so/376b65e5c72b814a81fac10aaf50befc) |
+| **012** | **Git canônico para design, Notion canônico para estado operacional** | **Aceito (2026-06-04)** | [Notion](https://www.notion.so/376b65e5c72b818a87e8d491f98be1fb) |
 
 ### 4.2. ADRs em planejamento ou rascunho
 
 - ADR-006 (Log de Otimizações), ADR-007 (Onboarding), ADR-008
   (CPA-only vs polimórfico): backlog.
-- **ADR-010 — Divisão BQ ↔ Supabase** (BQ analytics, Supabase
-  transacional): rascunho pendente. Resolve ambiguidade do ADR-001.
+- ~~**ADR-010** — Divisão BQ ↔ Supabase: aprovado 2026-06-04 (ver §4.1).~~
 - **ADR-011 — Curador + Mudanças de Escopo + Catálogo:** rascunho
   pendente. Curador formaliza.
-- **ADR-012 — Git canônico para design, Notion canônico para estado
-  operacional, sync via processo:** ✅ **Rascunhado 2026-06-04, Status `Proposto`.** [Notion](https://www.notion.so/376b65e5c72b818a87e8d491f98be1fb). Resolve tensão T8. Aguarda aprovação do Olavo.
+- ~~**ADR-012** — Git canônico para design, Notion canônico para estado operacional: aprovado 2026-06-04 (ver §4.1).~~
 
 ### 4.3. Decisões fora de ADR (registradas em strawmans e nesta conversa)
 
@@ -211,9 +211,9 @@ Estados: `Backlog` · `Em design` · `Em execução` · `Em smoke` ·
 |---|---|---|---|
 | 2026-06-03 | Re-smoke A2.3 caminho Aprovado | Codex roda quando cota Gemini Pro recuperar | Fechamento do Lote 2 Onboarding |
 | 2026-06-04 | Acesso ao protótipo `phi-dashboard-b3d8f919` | Olavo escolhe caminho: drag-drop / branch espelho / autorizar repo / prints | Decisão final do papel do Dashboard |
-| 2026-06-04 | ADR-010 (BQ × Supabase) | Rascunhar | Destravar ADR-001 (`Em revisão`) |
+| 2026-06-04 | ADR-010 (BQ × Supabase) | ✅ **Aprovado 2026-06-04, `Aceito`.** [Notion](https://www.notion.so/376b65e5c72b814a81fac10aaf50befc). ADR-001 esclarecido como complementar. | Resolvido |
 | 2026-06-03 | ADR-011 (Curador) | Rascunhar | Formaliza Curador |
-| 2026-06-04 | ADR-012 (Git × Notion canônico) | ✅ **Rascunhado 2026-06-04, Status `Proposto`.** [Notion](https://www.notion.so/376b65e5c72b818a87e8d491f98be1fb). Aguarda aprovação do Olavo. | Resolvido (rascunho) |
+| 2026-06-04 | ADR-012 (Git × Notion canônico) | ✅ **Aprovado 2026-06-04, `Aceito`.** [Notion](https://www.notion.so/376b65e5c72b818a87e8d491f98be1fb). | Resolvido |
 | 2026-06-04 | Telemetria Mínima Lote 1 | ✅ Brief Codex entregue (`docs/handoff/2026-06-04-telemetria-lote1-codex-brief.md`); DB Snapshots criado no Notion | Codex executa, depois smoke E2E |
 | 2026-06-04 | v0.3 Execução + abertura SOP/DB Notion canônico | Aguarda OK do Olavo | Lote 1 Execução |
 | 2026-06-04 | Mudança de Escopo PLANEJADA: reposicionar Curador → Documentação e Ferramentas | ✅ **APROVADA E APLICADA 2026-06-04** — 4 registros do Catálogo + âncora Curador (Notion) + 2 strawmans (git) + ESTADO já alinhado. Estado da ME: `Aplicada`. Serve de input de treino pro Lote 1 do Curador. | Resolvido |
@@ -233,8 +233,8 @@ Compilação das tensões espalhadas pelos strawmans + novas.
 | T4 | "Prospecção" e "Reunião resultados" semanticamente Comerciais | Execução §4 | Baixa | Re-examinar quando Comercial existir formalmente |
 | T5 | Dashboard × Notion: duas superfícies de visualização | Conversa Dashboard | Baixa | Cada um pro seu uso (produto vs operação) |
 | T6 | **Métricas operacionais não rastreadas** — Onboarding em prod há 9 dias, zero visibilidade | Conversa atual | **Alta → Em mitigação** | ✅ Telemetria Mínima Lote 0 concluído 2026-06-04 (DB Snapshots + brief Codex). Aguarda Codex executar Lote 1 + smoke E2E pra fechar. |
-| T7 | ADR-001 (Supabase) × "BQ base de verdade" (docs estratégicos) | Conversa atual | Média | ADR-010 resolve |
-| T8 | Sync git ↔ Notion: divergência potencial | Conversa 2026-06-04 | Média → **Em mitigação** | ✅ ADR-012 rascunhado 2026-06-04 ([link](https://www.notion.so/376b65e5c72b818a87e8d491f98be1fb)) — cristaliza regra híbrida (Git design + Notion estado, sync via processo manual hoje + Curador Lote 2/3 automatiza). Aguarda aprovação. |
+| ~~T7~~ | ~~ADR-001 (Supabase) × "BQ base de verdade" (docs estratégicos)~~ | Conversa 2026-06-04 | ✅ **Resolvido** | **ADR-010 Aceito 2026-06-04** ([link](https://www.notion.so/376b65e5c72b814a81fac10aaf50befc)). Divisão BigQuery (analítico) × Supabase (transacional) × Notion (estado operacional). ADR-001 esclarecido como complementar — não conflitante. |
+| ~~T8~~ | ~~Sync git ↔ Notion: divergência potencial~~ | Conversa 2026-06-04 | ✅ **Resolvido** | **ADR-012 Aceito 2026-06-04** ([link](https://www.notion.so/376b65e5c72b818a87e8d491f98be1fb)). Git canônico para design, Notion canônico para estado operacional, sync via processo (manual hoje, Curador Lote 2/3 automatiza). |
 | T9 | Proliferação de agentes sem mapa consolidado (6 hoje, ~10 em 3 meses) | Conversa atual | Média | Mapa de agentes (§9) deste doc |
 | T10 | ~~Curador posicionado em "Procedimentos da Operação", mas faz mais sentido em "Documentação e Ferramentas"~~ | Conversa 2026-06-04 | ✅ Resolvido | **ME-20260604 aprovada e aplicada 2026-06-04** ([link](https://www.notion.so/375b65e5c72b8121834fd65d5395b481)). 1ª Mudança de Escopo completa do projeto — dogfood do Curador (Claude no papel de surrogate). Vira input de treino. |
 
@@ -419,3 +419,4 @@ Escopo Retroativa automaticamente.
 | v0.1.3 | 2026-06-04 | Telemetria Mínima Lote 0 concluído. §3.7 ganha sub-entrega Telemetria. §5 pendência Telemetria reclassificada como "Brief Codex entregue, aguardando execução". §6 T6 reclassificada como "Em mitigação" (severidade Alta → status atualizado). Pacote em commit único: DB Snapshots criado no Notion + 2 artefatos no Catálogo (DB + strawman v0.2) + brief Codex em handoff. |
 | v0.1.4 | 2026-06-04 | ME-20260604 (1ª Mudança de Escopo do projeto — dogfood) aprovada e aplicada. Curador reposicionado: Procedimentos da Operação → Documentação e Ferramentas (Tronco 4). 4 registros do Catálogo atualizados (Área) + âncora Curador editada (Notion §1, §2, §4 D4) + strawman Curador (§0 D4, §1) + strawman Execução (§16 título, D3 Planejado/Retroativo, D4 Mora) + ESTADO já alinhado preventivamente. §5 pendência ME e §6 T10 marcadas Resolvidas. Serve de input de treino pro Lote 1 do Curador. |
 | v0.1.5 | 2026-06-04 | ADR-012 rascunhado (Status `Proposto`) + Aprendizados #17 e #18 criados. ADR-012 cristaliza regra híbrida Git ↔ Notion (resolve T8). #17 = dogfood manual de Mudança de Escopo antes do Curador estar vivo. #18 = fragilidade do MCP Notion `update_content` com tabelas/callouts (insumo pro Curador Lote 3). Catálogo +1 (ADR-012). §4.2, §5 pendência ADR-012, §6 T8 atualizadas. Aprendizados não vão pro Catálogo (não estão nos 8 tipos do §7 strawman Curador). |
+| v0.1.6 | 2026-06-04 | ADR-010 e ADR-012 aprovados (Status `Aceito`). ADR-010 rascunhado e aprovado direto (Olavo autorizou junto). ADR-001 esclarecido (não conflita com BQ base de verdade — divisão por natureza). Tensões T7 e T8 marcadas Resolvidas. Catálogo +1 (ADR-010); ADR-001 e ADR-012 saem de "Em revisão" pra "Vivo". §4.1 ADRs vigentes ganha ADR-010 e ADR-012; §4.2 perde ambos (saem do planejamento). §5 pendências ADR-010 e ADR-012 marcadas Resolvidas. Mantém pendente: ADR-011 (Curador). |
