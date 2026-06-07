@@ -10,6 +10,7 @@
 - **Dados globais (EUA) x Brasil:** as bases públicas mais robustas (WordStream/LocalIQ, Databox, HubSpot) são majoritariamente dos EUA. No Brasil, **CPMs/CPCs em dólar tendem a ser menores**, mas a variação cambial e a concorrência setorial alteram muito o resultado. Sempre que possível, marquei a **região** e a **data** de cada número.
 - **Moeda:** valores em US$ são da fonte original; valores em R$ são referências de mercado brasileiro coletadas em fontes locais (2025–2026).
 - Cada número traz **fonte + data** na própria seção e na lista consolidada de **Referências** ao final.
+- **Reconciliação de variância (importante para automações/agentes de IA):** fontes diferentes medem cohorts diferentes, então os "médios" divergem — ex.: o CPC médio do Google Search aparece como **US$ 5,26** (WordStream 2025) e **US$ 4,22** (PPC Chief 2026); o ROAS médio de e-commerce varia de **2,87x** (Triple Whale/Upcounting) a **3,68x no Google / 1,93x no Meta**. Não trate nenhum número absoluto como verdade única: **prefira múltiplos relativos** ("X% acima/abaixo da média do meu setor") e use os números absolutos apenas como faixa de ancoragem (ver §7.6).
 
 ---
 
@@ -515,6 +516,19 @@ Avalie cada campanha em duas dimensões — **Eficiência (CPA/ROAS vs. meta)** 
 - **Métricas típicas:** CPL alto porém CAC justificado por ticket; foco em **custo por SQL/oportunidade** e pipeline gerado.
 - **Lições:** otimizar por formulário destrói eficiência — otimize por **SQL/pipeline via CRM**; atribuição multi-touch obrigatória; alinhamento marketing↔vendas é o verdadeiro gargalo.
 
+## Casos públicos documentados (referência verificável)
+
+Além dos padrões acima, vale estudar **cases reais publicados** — úteis como prova e como modelo replicável:
+
+| Caso | Segmento | O que comprova | Fonte |
+|---|---|---|---|
+| **BannerBuzz** | E-commerce | Crescimento lucrativo em mercado saturado com estratégia de e-commerce full-funnel no Google | [Think with Google](https://business.google.com/en-all/think/search-and-video/ecommerce-marketing-strategy-case-study/) |
+| **Matt Sleeps** | E-commerce (D2C) | Abordagem **full-funnel** na Black Friday elevando compras vs. ano anterior | [Think with Google](https://business.google.com/en-all/think/consumer-insights/matt-sleeps-black-friday/) |
+| **Materialise (divisão médica)** | B2B / lead gen | Geração de leads B2B qualificados em mercado japonês (funil avançado) | [Humble Bunny](https://www.humblebunny.com/work/materialise-b2b-lead-generation-case-study/) |
+| **HubSpot** | SaaS / dados | Uso de **first-party data** para mensuração e eficiência de aquisição | [Think with Google](https://business.google.com/en-all/think/measurement/hubspot-case-study/) |
+
+> Como usar: extraia destes cases o **padrão de funil + tipo de sinal/dado alimentado nas plataformas**, não os números absolutos (que dependem do contexto da marca).
+
 ---
 
 # 7. Benchmarks de Mercado por Segmento
@@ -582,6 +596,27 @@ Avalie cada campanha em duas dimensões — **Eficiência (CPA/ROAS vs. meta)** 
 | Brasil | aIntegrare, M Cabral, SuperAds, HSG, V4 | 2025–2026 | Brasil |
 | SaaS unit economics | Proven SaaS, Benchmarkit, Optifai | 2025 | Global |
 | Landing page CVR | HubSpot e agregadores | 2025–2026 | Global |
+
+## 7.6 Âncoras numéricas com fonte (2025–2026)
+
+> Complementa as faixas qualitativas acima com **números absolutos citáveis** (úteis para calibrar metas, rotinas de otimização e o treinamento dos agentes). Releia a nota de **reconciliação de variância** no topo: use estes valores como faixa de ancoragem, não como verdade única.
+
+| Métrica / contexto | Valor de referência | Fonte (data) | Região |
+|---|---|---|---|
+| **CPC médio — Google Search (geral)** | US$ 5,26 · (alt.: US$ 4,22) | WordStream 2025 · PPC Chief 2026 | EUA |
+| **CTR médio — Google Search / Display** | 3,17% / 0,46% | StoreGrowers 2026 | Global |
+| **CVR médio — Google Ads** | 7,17%–7,52% | WordStream 2025 / Improvado 2026 | EUA |
+| **Tendência de CPC — Google** | +18% vs. 2024 | Searchlab 2026 | Global |
+| **ROAS médio — e-commerce (geral)** | 2,87x | Triple Whale / Upcounting 2025 | Global |
+| **ROAS médio — e-commerce por canal** | Google 3,68x · Meta 1,93x | eightx / Triple Whale 2026 | Global |
+| **ROAS — exemplo de vertical (Moda)** | ~4,3:1 | Upcounting 2025 | Global |
+| **CPL — faixa multicanal** | US$ 28 – 131 (Google/Meta/LinkedIn) | Flyweel CPL Index 2025 | Global |
+| **Meta — CPA / CPM medianos** | US$ 38,17 / US$ 13,48 | Triple Whale 2026 | Global |
+| **Meta — CTR saudável** | 1,4% – 2,2% | Visible Factors 2026 | Global |
+| **SaaS — CAC mediano** | US$ 2,00 por US$ 1,00 de ARR novo | SaaS Capital 2025 (via Growthspree) | Global |
+| **SaaS — LTV por segmento** | SMB US$ 15–40K → Enterprise US$ 300K–1M+ | Optifai (939 empresas) 2025 | Global |
+| **LTV:CAC — quartis** | Top 25% ≥ 5,0 · mediana 3,0–5,0 | DigitalApplied 2026 | Global |
+| **B2B — taxa de conversão** | 2% – 5% (SaaS/tech na ponta baixa) | SerpSculpt 2025 | Global |
 
 ---
 
@@ -653,9 +688,10 @@ ESPERAR  → respeitar janela estatística antes de julgar (≈ 2–4 sem. / ≥
 | **Profit-based bidding (POAS/MER)** | Otimização migra de receita para lucro | Alimentar plataformas com **margem/valor**, não só receita |
 | **Vídeo curto e UGC dominantes** | Criativo é a principal alavanca de performance | Volume e velocidade de produção criativa |
 | **Atribuição incremental** | Last-click perde credibilidade | Geo-tests, MMM leve, lift studies como padrão |
+| **Mensuração híbrida (triangulação)** | Nenhum método sozinho basta no mundo cookieless | Combinar **GA4 data-driven + MMM (marketing mix modeling) + geo-tests/holdouts + incrementalidade** para validar decisões de verba |
 | **Consolidação de campanhas** | Menos campanhas, mais automação | Estruturas enxutas que alimentam melhor a IA |
 
-*Fonte: Search Engine Land "2026 PPC trends" e "Google AI Max performance tests"; Google Blog (DSA→AI Max), 2026.*
+*Fonte: Search Engine Land "2026 PPC trends" e "Google AI Max performance tests"; Google Blog (DSA→AI Max), 2026; Nielsen — Annual Marketing Report 2025 (mensuração data-driven e MMM).*
 
 ---
 
@@ -695,6 +731,28 @@ ESPERAR  → respeitar janela estatística antes de julgar (≈ 2–4 sem. / ≥
 - Search Engine Land — *2026 PPC trends*: https://searchengineland.com/2026-ppc-trends-466067
 - Search Engine Land — *Google AI Max performance tests*: https://searchengineland.com/google-ai-max-performance-tests-471366
 - Google Blog — *DSA upgrade to AI Max (2026)*: https://blog.google/products/ads-commerce/dsa-upgrade-to-ai-max-2026/
+- Nielsen — *Annual Marketing Report 2025* (mensuração data-driven, MMM): https://www.nielsen.com/insights/2025/maximizing-marketing-effectiveness-data-driven-decisions/
+
+**Âncoras numéricas adicionais (§7.6) e fontes complementares** *(incorporadas do 2º estudo)*
+- StoreGrowers — *27 Google Ads Benchmarks (2026)* (Search CTR 3,17% / Display 0,46%): https://www.storegrowers.com/google-ads-benchmarks/
+- PPC Chief — *PPC Benchmarks by Industry (2026)* (CPC médio US$ 4,22): https://ppcchief.com/ppc-benchmarks-by-industry
+- Searchlab — *Google Ads Statistics 2026* (CPC +18% vs. 2024): https://searchlab.nl/en/statistics/google-ads-statistics-2026
+- Improvado — *PPC Analysis 2026* (CVR ~7,17%): https://improvado.io/blog/ppc-analysis
+- Triple Whale — *Facebook Ad Benchmarks by Industry* (CPA US$ 38,17 / CPM US$ 13,48): https://www.triplewhale.com/blog/facebook-ads-benchmarks
+- Visible Factors — *Facebook Ads Benchmarks (2026)* (CTR 1,4–2,2%): https://visiblefactors.com/facebook-ads-benchmarks/
+- Upcounting — *Average eCommerce ROAS (2,87x)*: https://www.upcounting.com/blog/average-ecommerce-roas
+- eightx — *Average ecommerce ROAS by vertical (Meta 1,93x / Google 3,68x)*: https://eightx.co/blog/average-ecommerce-roas-by-vertical-2026
+- rule1 — *ROAS Benchmarks by Industry (2026)*: https://rule1.ai/articles/roas-benchmarks
+- Flyweel — *Lead Gen CPL & CAC Benchmark Index 2025* (CPL US$ 28–131): https://www.flyweel.co/blog/lead-gen-cpl-cac-benchmark-index-2025
+- Growthspree — *SaaS Google Ads Benchmarks 2026* (CAC SaaS US$ 2,00/US$ 1 ARR, via SaaS Capital): https://www.growthspreeofficial.com/blogs/saas-google-ads-benchmarks-2026-cpc-cpl-ctr-conversion-rate-by-vertical
+- DigitalApplied — *Customer Acquisition Cost Benchmarks 2026* (quartis LTV:CAC): https://www.digitalapplied.com/blog/customer-acquisition-cost-benchmarks-2026-industry
+- SerpSculpt — *B2B Sales Conversion Rate by Industry 2025* (2–5%): https://serpsculpt.com/reports/b2b-sales-conversion-rate-by-industry/
+
+**Casos públicos documentados (§6)**
+- Think with Google — *BannerBuzz* (e-commerce): https://business.google.com/en-all/think/search-and-video/ecommerce-marketing-strategy-case-study/
+- Think with Google — *Matt Sleeps* (Black Friday full-funnel): https://business.google.com/en-all/think/consumer-insights/matt-sleeps-black-friday/
+- Humble Bunny — *Materialise* (lead gen B2B): https://www.humblebunny.com/work/materialise-b2b-lead-generation-case-study/
+- Think with Google — *HubSpot* (first-party data): https://business.google.com/en-all/think/measurement/hubspot-case-study/
 
 ---
 
