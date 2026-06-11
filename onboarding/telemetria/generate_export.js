@@ -128,7 +128,11 @@ add('Global', 'glb.aprendizados_aplicados', 'Snapshot', aprendizados.filter((pag
 add('Global', 'glb.workflows_ativos', 'Snapshot', catalogo.filter((page) => pickSelect(page.properties?.Tipo) === 'Workflow n8n' && pickSelect(page.properties?.Estado) === 'Vivo').length, '', 'DB Catalogo (Tipo Workflow n8n, Estado Vivo)');
 
 const toCreate = metricas.filter((m) => !existingKeys.has(m.idempotency_key));
-return toCreate.map((m) => ({ json: { ...m, metricas_do_dia: metricas, linhas_novas: toCreate.length } }));`;
+const itemsParaCriar = toCreate.map((m) => ({ json: { ...m, metricas_do_dia: metricas, linhas_novas: toCreate.length } }));
+if (itemsParaCriar.length === 0) {
+  itemsParaCriar.push({ json: { sentinel: true, metricas_do_dia: metricas, linhas_novas: 0, data_snapshot, execution_id, tenant_id, versao_consulta } });
+}
+return itemsParaCriar;`;
 
 const digestCode = String.raw`const escapeHtml = (value) => String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 const metricItems = $('[Telemetria] Calcular Metricas').all().map((item) => item.json || {});
@@ -224,6 +228,27 @@ const nodes = [
     parameters: { mode: 'runOnceForAllItems', jsCode: metricCode },
   },
   {
+    id: 'telemetria-if-tem-novas',
+    name: '[Telemetria] IF Tem Novas Linhas',
+    type: 'n8n-nodes-base.if',
+    typeVersion: 2,
+    position: [832, 0],
+    parameters: {
+      conditions: {
+        options: { caseSensitive: true, leftValue: '', typeValidation: 'strict' },
+        conditions: [
+          {
+            id: 'cond-linhas-novas',
+            leftValue: '={{ $json.linhas_novas }}',
+            rightValue: 0,
+            operator: { type: 'number', operation: 'gt' },
+          },
+        ],
+        combinator: 'and',
+      },
+    },
+  },
+  {
     id: 'telemetria-criar-snapshot',
     name: '[Telemetria] Criar Snapshot',
     type: 'n8n-nodes-base.notion',
@@ -239,12 +264,12 @@ const nodes = [
         propertyValues: [
           { key: 'Data|date', date: '={{ $json.data_snapshot }}' },
           { key: 'Area|select', selectValue: '={{ $json.area }}' },
-          { key: 'Chave da metrica|rich_text', textContent: '={{ $json.chave }}' },
+          { key: 'Chave da m\u00e9trica|rich_text', textContent: '={{ $json.chave }}' },
           { key: 'Janela|select', selectValue: '={{ $json.janela }}' },
           { key: 'Valor numero|number', numberValue: '={{ $json.valor_num }}' },
           { key: 'Valor texto|rich_text', textContent: '={{ $json.valor_txt }}' },
           { key: 'Fonte|rich_text', textContent: '={{ $json.fonte }}' },
-          { key: 'Versão da consulta|rich_text', textContent: '={{ $json.versao_consulta }}' },
+          { key: 'Vers\u00e3o da consulta|rich_text', textContent: '={{ $json.versao_consulta }}' },
           { key: 'execution_id|rich_text', textContent: '={{ $json.execution_id }}' },
           { key: 'tenant_id|rich_text', textContent: '={{ $json.tenant_id }}' },
         ],
@@ -252,6 +277,14 @@ const nodes = [
       options: {},
     },
     credentials: { notionApi: creds.notionApi },
+  },
+  {
+    id: 'telemetria-merge-pos-snapshot',
+    name: '[Telemetria] Merge Pos-Snapshot',
+    type: 'n8n-nodes-base.merge',
+    typeVersion: 3,
+    position: [1056, 120],
+    parameters: { mode: 'append' },
   },
   {
     id: 'telemetria-digest',
@@ -320,8 +353,15 @@ const workflow = {
     '[Telemetria] Schedule Trigger': { main: [[{ node: '[Telemetria] Set Contexto', type: 'main', index: 0 }]] },
     '[Telemetria] Set Contexto': { main: [readNames.map((node) => ({ node, type: 'main', index: 0 }))] },
     ...Object.fromEntries(readNames.map((name) => [name, { main: [[{ node: '[Telemetria] Calcular Metricas', type: 'main', index: 0 }]] }])),
-    '[Telemetria] Calcular Metricas': { main: [[{ node: '[Telemetria] Criar Snapshot', type: 'main', index: 0 }]] },
-    '[Telemetria] Criar Snapshot': { main: [[{ node: '[Telemetria] Montar Digest HTML', type: 'main', index: 0 }]] },
+    '[Telemetria] Calcular Metricas': { main: [[{ node: '[Telemetria] IF Tem Novas Linhas', type: 'main', index: 0 }]] },
+    '[Telemetria] IF Tem Novas Linhas': {
+      main: [
+        [{ node: '[Telemetria] Criar Snapshot', type: 'main', index: 0 }],
+        [{ node: '[Telemetria] Merge Pos-Snapshot', type: 'main', index: 1 }],
+      ],
+    },
+    '[Telemetria] Criar Snapshot': { main: [[{ node: '[Telemetria] Merge Pos-Snapshot', type: 'main', index: 0 }]] },
+    '[Telemetria] Merge Pos-Snapshot': { main: [[{ node: '[Telemetria] Montar Digest HTML', type: 'main', index: 0 }]] },
     '[Telemetria] Montar Digest HTML': { main: [[{ node: '[Telemetria] Enviar Telegram', type: 'main', index: 0 }]] },
     '[Telemetria] Enviar Telegram': { main: [[{ node: '[Telemetria] Set Status Final', type: 'main', index: 0 }]] },
   },

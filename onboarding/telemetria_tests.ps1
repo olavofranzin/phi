@@ -1,15 +1,17 @@
 $ErrorActionPreference = 'Stop'
 
-$workflowPath = 'C:\tmp\phi_repo\onboarding\telemetria\workflow.json'
-$sandboxPath = 'C:\tmp\phi_repo\onboarding\telemetria\sandbox_export.json'
+$repoRoot = Split-Path -Parent $PSScriptRoot
+$workflowPath = Join-Path $PSScriptRoot 'telemetria\workflow.json'
+$sandboxPath = Join-Path $PSScriptRoot 'telemetria\sandbox_export.json'
+$generatorPath = Join-Path $PSScriptRoot 'telemetria\generate_export.js'
 
-foreach ($path in @($workflowPath, $sandboxPath)) {
+foreach ($path in @($workflowPath, $sandboxPath, $generatorPath)) {
   if (-not (Test-Path $path)) {
     throw "Missing required file: $path"
   }
 }
 
-foreach ($jsonPath in @($workflowPath, $sandboxPath)) {
+foreach ($jsonPath in @($workflowPath, $sandboxPath, $generatorPath)) {
   $bytes = [System.IO.File]::ReadAllBytes($jsonPath)
   if ($bytes.Length -ge 3 -and $bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF) {
     throw "$jsonPath must be UTF-8 without BOM"
@@ -18,6 +20,7 @@ foreach ($jsonPath in @($workflowPath, $sandboxPath)) {
 
 $workflowRaw = [System.IO.File]::ReadAllText($workflowPath, [System.Text.Encoding]::UTF8)
 $sandboxRaw = [System.IO.File]::ReadAllText($sandboxPath, [System.Text.Encoding]::UTF8)
+$generatorRaw = [System.IO.File]::ReadAllText($generatorPath, [System.Text.Encoding]::UTF8)
 $workflow = $workflowRaw | ConvertFrom-Json
 $sandbox = $sandboxRaw | ConvertFrom-Json
 
@@ -27,8 +30,8 @@ if ($workflow.name -ne 'WF-DOC-Telemetria-Diaria') {
 if ($workflow.active -ne $false) {
   throw 'Workflow export must stay inactive until review and approval'
 }
-if ($workflow.nodes.Count -ne 14) {
-  throw "Workflow must have exactly 14 nodes; found $($workflow.nodes.Count)"
+if ($workflow.nodes.Count -ne 16) {
+  throw "Workflow must have exactly 16 nodes; found $($workflow.nodes.Count)"
 }
 if ($workflow.settings.timezone -ne 'America/Sao_Paulo') {
   throw 'Workflow timezone must be America/Sao_Paulo'
@@ -53,7 +56,9 @@ $requiredNodeNames = @(
   '[Telemetria] Buscar Aprendizados',
   '[Telemetria] Buscar Snapshots Existentes',
   '[Telemetria] Calcular Metricas',
+  '[Telemetria] IF Tem Novas Linhas',
   '[Telemetria] Criar Snapshot',
+  '[Telemetria] Merge Pos-Snapshot',
   '[Telemetria] Montar Digest HTML',
   '[Telemetria] Enviar Telegram',
   '[Telemetria] Set Status Final'
@@ -115,14 +120,28 @@ foreach ($snippet in @(
   'versao_consulta',
   'onb.briefings_intake',
   'glb.workflows_ativos',
-  'return toCreate.map'
+  'sentinel: true',
+  'itemsParaCriar',
+  'return itemsParaCriar'
 )) {
   if (-not $metricCode.Contains($snippet)) {
     throw "Calcular Metricas code is missing '$snippet'"
   }
 }
+if ($metricCode.Contains('return toCreate.map')) {
+  throw 'Calcular Metricas must always emit at least one item, not return toCreate.map directly'
+}
 if ($metricCode -match 'require\(|import ') {
   throw 'Calcular Metricas must not use external libraries'
+}
+
+$ifNovas = $nodeMap['[Telemetria] IF Tem Novas Linhas']
+if ($ifNovas.type -ne 'n8n-nodes-base.if') {
+  throw 'IF Tem Novas Linhas must use n8n IF node'
+}
+$ifCondition = $ifNovas.parameters.conditions.conditions[0]
+if ([string]$ifCondition.leftValue -ne '={{ $json.linhas_novas }}' -or [int]$ifCondition.rightValue -ne 0 -or $ifCondition.operator.operation -ne 'gt') {
+  throw 'IF Tem Novas Linhas must check linhas_novas > 0'
 }
 
 $create = $nodeMap['[Telemetria] Criar Snapshot']
@@ -139,12 +158,27 @@ foreach ($required in @('execution_id', 'tenant_id', $versaoConsulta)) {
     throw "Criar Snapshot is missing property '$required'"
   }
 }
+$chaveDaMetrica = 'Chave da m' + [char]0x00e9 + 'trica'
+if (-not $createJson.Contains($chaveDaMetrica)) {
+  throw "Criar Snapshot is missing property 'Chave da metrica' (with accent)"
+}
+
+$merge = $nodeMap['[Telemetria] Merge Pos-Snapshot']
+if ($merge.type -ne 'n8n-nodes-base.merge') {
+  throw 'Merge Pos-Snapshot must use n8n Merge node'
+}
+if ($merge.parameters.mode -ne 'append') {
+  throw 'Merge Pos-Snapshot must use append mode'
+}
 
 $digestCode = [string]$nodeMap['[Telemetria] Montar Digest HTML'].parameters.jsCode
 foreach ($snippet in @('&amp;', '&lt;', '&gt;', '<b>PHI Telemetria', 'DB Snapshots')) {
   if (-not $digestCode.Contains($snippet)) {
     throw "Montar Digest HTML code is missing '$snippet'"
   }
+}
+if ($digestCode.Contains('parse_mode=HTML')) {
+  throw 'Montar Digest HTML must not include parse_mode=HTML in the Telegram body'
 }
 
 $telegram = $nodeMap['[Telemetria] Enviar Telegram']
@@ -158,14 +192,14 @@ if ($telegram.parameters.text -ne '={{ $json.digest_html }}') {
   throw 'Telegram must send the single digest_html string'
 }
 
-if ($workflowRaw.Contains('930549271') -or $sandboxRaw.Contains('930549271')) {
+if ($workflowRaw.Contains('930549271') -or $sandboxRaw.Contains('930549271') -or $generatorRaw.Contains('930549271')) {
   throw 'Exports must not contain raw Telegram chat_id'
 }
-if ($workflowRaw -match 'AIza|secret|api[_-]?key|token' -or $sandboxRaw -match 'AIza|secret|api[_-]?key|token') {
+if ($workflowRaw -match 'AIza|secret|api[_-]?key|token' -or $sandboxRaw -match 'AIza|secret|api[_-]?key|token' -or $generatorRaw -match 'AIza|secret|api[_-]?key|token') {
   throw 'Exports appear to contain secrets'
 }
-if ($workflowRaw -match 'NÃ|Ã£|Ã§|Ã©|Ã³') {
-  throw 'workflow.json contains mojibake'
+if ($workflowRaw -match 'NÃ|Ã£|Ã§|Ã©|Ã³' -or $sandboxRaw -match 'NÃ|Ã£|Ã§|Ã©|Ã³' -or $generatorRaw -match 'NÃ|Ã£|Ã§|Ã©|Ã³') {
+  throw 'Telemetria files contain mojibake'
 }
 
 function Get-NextNodes([object]$wf, [string]$nodeName, [int]$outputIndex = 0) {
@@ -193,8 +227,9 @@ foreach ($name in $expectedFanOut) {
 
 $expectedLinear = @(
   @('[Telemetria] Schedule Trigger', '[Telemetria] Set Contexto', 0),
-  @('[Telemetria] Calcular Metricas', '[Telemetria] Criar Snapshot', 0),
-  @('[Telemetria] Criar Snapshot', '[Telemetria] Montar Digest HTML', 0),
+  @('[Telemetria] Calcular Metricas', '[Telemetria] IF Tem Novas Linhas', 0),
+  @('[Telemetria] Criar Snapshot', '[Telemetria] Merge Pos-Snapshot', 0),
+  @('[Telemetria] Merge Pos-Snapshot', '[Telemetria] Montar Digest HTML', 0),
   @('[Telemetria] Montar Digest HTML', '[Telemetria] Enviar Telegram', 0),
   @('[Telemetria] Enviar Telegram', '[Telemetria] Set Status Final', 0)
 )
@@ -206,8 +241,22 @@ foreach ($edge in $expectedLinear) {
   }
 }
 
+$ifOutputs = $workflow.connections.'[Telemetria] IF Tem Novas Linhas'.main
+if ($ifOutputs.Count -ne 2) {
+  throw 'IF Tem Novas Linhas must have 2 outputs (true/false)'
+}
+if ($ifOutputs[0][0].node -ne '[Telemetria] Criar Snapshot') {
+  throw 'IF true branch must go to Criar Snapshot'
+}
+if ($ifOutputs[1][0].node -ne '[Telemetria] Merge Pos-Snapshot') {
+  throw 'IF false branch must go to Merge Pos-Snapshot'
+}
+
 if ($sandbox.name -ne $workflow.name -or $sandbox.nodes.Count -ne $workflow.nodes.Count) {
   throw 'sandbox_export.json must mirror workflow.json structurally'
+}
+if ($sandboxRaw -ne $workflowRaw) {
+  throw 'sandbox_export.json must match workflow.json exactly'
 }
 
 Write-Output 'Telemetria workflow structural tests passed.'

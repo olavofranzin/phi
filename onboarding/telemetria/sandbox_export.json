@@ -300,7 +300,38 @@
       ],
       "parameters": {
         "mode": "runOnceForAllItems",
-        "jsCode": "const ctx = $('[Telemetria] Set Contexto').first().json;\nconst execution_id = ctx.execution_id || ('EXEC-TELEMETRIA-' + $execution.id);\nconst tenant_id = ctx.tenant_id || 'phi-agencia';\nconst data_snapshot = ctx.data_snapshot || new Date().toISOString().slice(0, 10);\nconst versao_consulta = ctx.versao_consulta || 'v1.0';\n\nconst all = (name) => {\n  try { return $(name).all().map((item) => item.json || {}).filter((page) => !page.archived && !page.is_archived); }\n  catch (err) { return []; }\n};\n\nconst clientes = all('[Telemetria] Buscar Clientes');\nconst etapas = all('[Telemetria] Buscar Etapas');\nconst mudancas = all('[Telemetria] Buscar Mudancas Escopo');\nconst catalogo = all('[Telemetria] Buscar Catalogo');\nconst adrs = all('[Telemetria] Buscar Decisoes ADR');\nconst aprendizados = all('[Telemetria] Buscar Aprendizados');\nconst snapshots = all('[Telemetria] Buscar Snapshots Existentes');\n\nconst pickTitle = (page) => {\n  for (const prop of Object.values(page.properties || {})) {\n    if (prop && prop.type === 'title') return (prop.title || []).map((part) => part.plain_text || '').join('').trim();\n  }\n  return '';\n};\nconst pickText = (prop) => (prop && prop.rich_text || []).map((part) => part.plain_text || '').join('').trim();\nconst pickSelect = (prop) => (prop && prop.select && prop.select.name) || (prop && prop.status && prop.status.name) || '';\nconst pickNumber = (prop) => {\n  if (!prop) return null;\n  if (typeof prop.number === 'number') return prop.number;\n  if (typeof prop.rollup?.number === 'number') return prop.rollup.number;\n  if (typeof prop.formula?.number === 'number') return prop.formula.number;\n  return null;\n};\nconst pickDate = (prop) => prop && prop.date && prop.date.start ? String(prop.date.start).slice(0, 10) : '';\nconst daysAgo = (days) => new Date(Date.now() - days * 86400000);\nconst since = (iso, days) => !!iso && new Date(String(iso).slice(0, 10) + 'T00:00:00-03:00') >= daysAgo(days);\nconst avg = (values) => {\n  const nums = values.filter((value) => typeof value === 'number' && !Number.isNaN(value));\n  return nums.length ? Number((nums.reduce((sum, value) => sum + value, 0) / nums.length).toFixed(2)) : 0;\n};\nconst diffDays = (start, end) => {\n  if (!start || !end) return null;\n  return Math.max(0, Math.round((new Date(end + 'T00:00:00-03:00') - new Date(start + 'T00:00:00-03:00')) / 86400000));\n};\nconst hasAny = (page, needles) => {\n  const hay = JSON.stringify(page.properties || {}).toLowerCase();\n  return needles.some((needle) => hay.includes(needle));\n};\n\nconst existingKeys = new Set();\nfor (const page of snapshots) {\n  const props = page.properties || {};\n  const data = pickDate(props.Data);\n  const chave = pickText(props['Chave da m\\u00e9trica']);\n  const janela = pickSelect(props.Janela);\n  if (data && chave && janela) existingKeys.add(data + '|' + chave + '|' + janela);\n}\n\nconst metricas = [];\nconst add = (area, chave, janela, valor_num, valor_txt, fonte) => {\n  metricas.push({\n    area,\n    chave,\n    janela,\n    valor_num: typeof valor_num === 'number' && !Number.isNaN(valor_num) ? valor_num : null,\n    valor_txt: valor_txt == null ? '' : String(valor_txt),\n    fonte,\n    data_snapshot,\n    execution_id,\n    tenant_id,\n    versao_consulta,\n    idempotency_key: data_snapshot + '|' + chave + '|' + janela,\n    titulo: data_snapshot + ' - ' + area + ' - ' + chave,\n  });\n};\n\nconst activeCliente = (page) => pickSelect(page.properties?.Status) !== 'Arquivado' && pickSelect(page.properties?.Status) !== 'Cancelado';\nconst activeEtapa = (page) => pickSelect(page.properties?.Status) !== 'Arquivado' && pickSelect(page.properties?.Status) !== 'Pulado (com justificativa)';\nconst clientesAtivos = clientes.filter(activeCliente);\nconst etapasAtivas = etapas.filter(activeEtapa);\nconst concluidas = etapas.filter((page) => pickSelect(page.properties?.Status) === 'Conclu\\u00eddo');\nconst abertas = etapasAtivas.filter((page) => !['Conclu\\u00eddo', 'Pulado (com justificativa)'].includes(pickSelect(page.properties?.Status)));\nconst atrasadas = abertas.filter((page) => {\n  const due = pickDate(page.properties?.['Data prevista']);\n  return due && due < data_snapshot;\n});\nconst temposOnb = clientesAtivos.map((page) => diffDays(pickDate(page.properties?.['Data de in\\u00edcio']), pickDate(page.properties?.['Data real 1\\u00aa entrega']))).filter((value) => value != null);\nconst telegramFailures = [...clientes, ...etapas].filter((page) => hasAny(page, ['telegram: falhou', 'telegram falhou', 'status telegram: falhou']));\nconst evolutionFailures = [...clientes, ...etapas].filter((page) => hasAny(page, ['evolution: falhou', 'evolution falhou', 'status evolution: falhou']));\nconst gateItems = etapas.filter((page) => /validacao final|valida\\\\u00e7\\\\u00e3o final|pass\\/fail|gate/i.test(pickTitle(page)));\n\nadd('Onboarding', 'onb.briefings_intake', 'D-1', clientes.filter((page) => since(page.created_time || page.createdTime, 1)).length, '', 'DB Clientes (created_time >= D-1)');\nadd('Onboarding', 'onb.classificacao_aprovado', 'D-30', clientes.filter((page) => since(page.created_time || page.createdTime, 30) && ['Aprovado', 'Aprovado com lacunas'].includes(pickSelect(page.properties?.['Classifica\\u00e7\\u00e3o do briefing']))).length, '', 'DB Clientes (Classificacao do briefing, D-30)');\nadd('Onboarding', 'onb.classificacao_rejeitado', 'D-30', clientes.filter((page) => since(page.created_time || page.createdTime, 30) && ['Insuficiente', 'Rejeitado'].includes(pickSelect(page.properties?.['Classifica\\u00e7\\u00e3o do briefing']))).length, '', 'DB Clientes (Classificacao do briefing, D-30)');\nadd('Onboarding', 'onb.etapas_concluidas', 'Snapshot', concluidas.length, '', 'DB Etapas (Status = Concluido)');\nadd('Onboarding', 'onb.etapas_abertas', 'Snapshot', abertas.length, '', 'DB Etapas (Status aberto)');\nadd('Onboarding', 'onb.etapas_atrasadas', 'Snapshot', atrasadas.length, '', 'DB Etapas (Data prevista < hoje e Status aberto)');\nadd('Onboarding', 'onb.falhas_telegram', 'D-7', telegramFailures.filter((page) => since(page.last_edited_time || page.created_time || page.createdTime, 7)).length, '', 'Observacoes/status contendo Telegram falhou, D-7');\nadd('Onboarding', 'onb.falhas_evolution', 'D-7', evolutionFailures.filter((page) => since(page.last_edited_time || page.created_time || page.createdTime, 7)).length, '', 'Observacoes/status contendo Evolution falhou, D-7');\nadd('Onboarding', 'onb.gate_pass', 'D-7', gateItems.filter((page) => since(page.last_edited_time || page.created_time || page.createdTime, 7) && hasAny(page, ['pass'])).length, '', 'Etapas gate PASS, D-7');\nadd('Onboarding', 'onb.gate_fail', 'D-7', gateItems.filter((page) => since(page.last_edited_time || page.created_time || page.createdTime, 7) && hasAny(page, ['fail'])).length, '', 'Etapas gate FAIL, D-7');\nadd('Onboarding', 'onb.tempo_total_onboarding_dias', 'D-30', avg(temposOnb), '', 'DB Clientes (Data de inicio ate Data real 1a entrega)');\n\nadd('Curador', 'cur.mes_abertas', 'Snapshot', mudancas.filter((page) => ['Aberta', 'Em an\\u00e1lise', 'Q&A com humano', 'Diff proposto'].includes(pickSelect(page.properties?.Estado))).length, '', 'DB Mudancas de Escopo (Estado aberto)');\nadd('Curador', 'cur.mes_aprovadas', 'D-30', mudancas.filter((page) => since(page.last_edited_time || page.created_time || page.createdTime, 30) && ['Aprovada', 'Aplicada'].includes(pickSelect(page.properties?.Estado))).length, '', 'DB Mudancas de Escopo (aprovadas D-30)');\nadd('Curador', 'cur.tempo_medio_aplicacao_dias', 'D-30', 0, 'sem campo de data de aplicacao no schema atual', 'DB Mudancas de Escopo (campo ausente no schema)');\nadd('Curador', 'cur.rodadas_qa_medias', 'D-30', avg(mudancas.filter((page) => since(page.last_edited_time || page.created_time || page.createdTime, 30)).map((page) => pickNumber(page.properties?.['Rodadas Q&A']))), '', 'DB Mudancas de Escopo (Rodadas Q&A D-30)');\n\nadd('Global', 'glb.artefatos_vivos', 'Snapshot', catalogo.filter((page) => pickSelect(page.properties?.Estado) === 'Vivo').length, '', 'DB Catalogo (Estado = Vivo)');\nadd('Global', 'glb.adrs_aceitos', 'Snapshot', adrs.filter((page) => pickSelect(page.properties?.Status) === 'Aceito').length, '', 'DB Decisoes/ADR (Status = Aceito)');\nadd('Global', 'glb.aprendizados_aplicados', 'Snapshot', aprendizados.filter((page) => ['Aplicado', 'Aplicados'].includes(pickSelect(page.properties?.Status) || pickSelect(page.properties?.Estado))).length, '', 'DB Aprendizados (Status/Estado aplicado)');\nadd('Global', 'glb.workflows_ativos', 'Snapshot', catalogo.filter((page) => pickSelect(page.properties?.Tipo) === 'Workflow n8n' && pickSelect(page.properties?.Estado) === 'Vivo').length, '', 'DB Catalogo (Tipo Workflow n8n, Estado Vivo)');\n\nconst toCreate = metricas.filter((m) => !existingKeys.has(m.idempotency_key));\nreturn toCreate.map((m) => ({ json: { ...m, metricas_do_dia: metricas, linhas_novas: toCreate.length } }));"
+        "jsCode": "const ctx = $('[Telemetria] Set Contexto').first().json;\nconst execution_id = ctx.execution_id || ('EXEC-TELEMETRIA-' + $execution.id);\nconst tenant_id = ctx.tenant_id || 'phi-agencia';\nconst data_snapshot = ctx.data_snapshot || new Date().toISOString().slice(0, 10);\nconst versao_consulta = ctx.versao_consulta || 'v1.0';\n\nconst all = (name) => {\n  try { return $(name).all().map((item) => item.json || {}).filter((page) => !page.archived && !page.is_archived); }\n  catch (err) { return []; }\n};\n\nconst clientes = all('[Telemetria] Buscar Clientes');\nconst etapas = all('[Telemetria] Buscar Etapas');\nconst mudancas = all('[Telemetria] Buscar Mudancas Escopo');\nconst catalogo = all('[Telemetria] Buscar Catalogo');\nconst adrs = all('[Telemetria] Buscar Decisoes ADR');\nconst aprendizados = all('[Telemetria] Buscar Aprendizados');\nconst snapshots = all('[Telemetria] Buscar Snapshots Existentes');\n\nconst pickTitle = (page) => {\n  for (const prop of Object.values(page.properties || {})) {\n    if (prop && prop.type === 'title') return (prop.title || []).map((part) => part.plain_text || '').join('').trim();\n  }\n  return '';\n};\nconst pickText = (prop) => (prop && prop.rich_text || []).map((part) => part.plain_text || '').join('').trim();\nconst pickSelect = (prop) => (prop && prop.select && prop.select.name) || (prop && prop.status && prop.status.name) || '';\nconst pickNumber = (prop) => {\n  if (!prop) return null;\n  if (typeof prop.number === 'number') return prop.number;\n  if (typeof prop.rollup?.number === 'number') return prop.rollup.number;\n  if (typeof prop.formula?.number === 'number') return prop.formula.number;\n  return null;\n};\nconst pickDate = (prop) => prop && prop.date && prop.date.start ? String(prop.date.start).slice(0, 10) : '';\nconst daysAgo = (days) => new Date(Date.now() - days * 86400000);\nconst since = (iso, days) => !!iso && new Date(String(iso).slice(0, 10) + 'T00:00:00-03:00') >= daysAgo(days);\nconst avg = (values) => {\n  const nums = values.filter((value) => typeof value === 'number' && !Number.isNaN(value));\n  return nums.length ? Number((nums.reduce((sum, value) => sum + value, 0) / nums.length).toFixed(2)) : 0;\n};\nconst diffDays = (start, end) => {\n  if (!start || !end) return null;\n  return Math.max(0, Math.round((new Date(end + 'T00:00:00-03:00') - new Date(start + 'T00:00:00-03:00')) / 86400000));\n};\nconst hasAny = (page, needles) => {\n  const hay = JSON.stringify(page.properties || {}).toLowerCase();\n  return needles.some((needle) => hay.includes(needle));\n};\n\nconst existingKeys = new Set();\nfor (const page of snapshots) {\n  const props = page.properties || {};\n  const data = pickDate(props.Data);\n  const chave = pickText(props['Chave da m\\u00e9trica']);\n  const janela = pickSelect(props.Janela);\n  if (data && chave && janela) existingKeys.add(data + '|' + chave + '|' + janela);\n}\n\nconst metricas = [];\nconst add = (area, chave, janela, valor_num, valor_txt, fonte) => {\n  metricas.push({\n    area,\n    chave,\n    janela,\n    valor_num: typeof valor_num === 'number' && !Number.isNaN(valor_num) ? valor_num : null,\n    valor_txt: valor_txt == null ? '' : String(valor_txt),\n    fonte,\n    data_snapshot,\n    execution_id,\n    tenant_id,\n    versao_consulta,\n    idempotency_key: data_snapshot + '|' + chave + '|' + janela,\n    titulo: data_snapshot + ' - ' + area + ' - ' + chave,\n  });\n};\n\nconst activeCliente = (page) => pickSelect(page.properties?.Status) !== 'Arquivado' && pickSelect(page.properties?.Status) !== 'Cancelado';\nconst activeEtapa = (page) => pickSelect(page.properties?.Status) !== 'Arquivado' && pickSelect(page.properties?.Status) !== 'Pulado (com justificativa)';\nconst clientesAtivos = clientes.filter(activeCliente);\nconst etapasAtivas = etapas.filter(activeEtapa);\nconst concluidas = etapas.filter((page) => pickSelect(page.properties?.Status) === 'Conclu\\u00eddo');\nconst abertas = etapasAtivas.filter((page) => !['Conclu\\u00eddo', 'Pulado (com justificativa)'].includes(pickSelect(page.properties?.Status)));\nconst atrasadas = abertas.filter((page) => {\n  const due = pickDate(page.properties?.['Data prevista']);\n  return due && due < data_snapshot;\n});\nconst temposOnb = clientesAtivos.map((page) => diffDays(pickDate(page.properties?.['Data de in\\u00edcio']), pickDate(page.properties?.['Data real 1\\u00aa entrega']))).filter((value) => value != null);\nconst telegramFailures = [...clientes, ...etapas].filter((page) => hasAny(page, ['telegram: falhou', 'telegram falhou', 'status telegram: falhou']));\nconst evolutionFailures = [...clientes, ...etapas].filter((page) => hasAny(page, ['evolution: falhou', 'evolution falhou', 'status evolution: falhou']));\nconst gateItems = etapas.filter((page) => /validacao final|valida\\\\u00e7\\\\u00e3o final|pass\\/fail|gate/i.test(pickTitle(page)));\n\nadd('Onboarding', 'onb.briefings_intake', 'D-1', clientes.filter((page) => since(page.created_time || page.createdTime, 1)).length, '', 'DB Clientes (created_time >= D-1)');\nadd('Onboarding', 'onb.classificacao_aprovado', 'D-30', clientes.filter((page) => since(page.created_time || page.createdTime, 30) && ['Aprovado', 'Aprovado com lacunas'].includes(pickSelect(page.properties?.['Classifica\\u00e7\\u00e3o do briefing']))).length, '', 'DB Clientes (Classificacao do briefing, D-30)');\nadd('Onboarding', 'onb.classificacao_rejeitado', 'D-30', clientes.filter((page) => since(page.created_time || page.createdTime, 30) && ['Insuficiente', 'Rejeitado'].includes(pickSelect(page.properties?.['Classifica\\u00e7\\u00e3o do briefing']))).length, '', 'DB Clientes (Classificacao do briefing, D-30)');\nadd('Onboarding', 'onb.etapas_concluidas', 'Snapshot', concluidas.length, '', 'DB Etapas (Status = Concluido)');\nadd('Onboarding', 'onb.etapas_abertas', 'Snapshot', abertas.length, '', 'DB Etapas (Status aberto)');\nadd('Onboarding', 'onb.etapas_atrasadas', 'Snapshot', atrasadas.length, '', 'DB Etapas (Data prevista < hoje e Status aberto)');\nadd('Onboarding', 'onb.falhas_telegram', 'D-7', telegramFailures.filter((page) => since(page.last_edited_time || page.created_time || page.createdTime, 7)).length, '', 'Observacoes/status contendo Telegram falhou, D-7');\nadd('Onboarding', 'onb.falhas_evolution', 'D-7', evolutionFailures.filter((page) => since(page.last_edited_time || page.created_time || page.createdTime, 7)).length, '', 'Observacoes/status contendo Evolution falhou, D-7');\nadd('Onboarding', 'onb.gate_pass', 'D-7', gateItems.filter((page) => since(page.last_edited_time || page.created_time || page.createdTime, 7) && hasAny(page, ['pass'])).length, '', 'Etapas gate PASS, D-7');\nadd('Onboarding', 'onb.gate_fail', 'D-7', gateItems.filter((page) => since(page.last_edited_time || page.created_time || page.createdTime, 7) && hasAny(page, ['fail'])).length, '', 'Etapas gate FAIL, D-7');\nadd('Onboarding', 'onb.tempo_total_onboarding_dias', 'D-30', avg(temposOnb), '', 'DB Clientes (Data de inicio ate Data real 1a entrega)');\n\nadd('Curador', 'cur.mes_abertas', 'Snapshot', mudancas.filter((page) => ['Aberta', 'Em an\\u00e1lise', 'Q&A com humano', 'Diff proposto'].includes(pickSelect(page.properties?.Estado))).length, '', 'DB Mudancas de Escopo (Estado aberto)');\nadd('Curador', 'cur.mes_aprovadas', 'D-30', mudancas.filter((page) => since(page.last_edited_time || page.created_time || page.createdTime, 30) && ['Aprovada', 'Aplicada'].includes(pickSelect(page.properties?.Estado))).length, '', 'DB Mudancas de Escopo (aprovadas D-30)');\nadd('Curador', 'cur.tempo_medio_aplicacao_dias', 'D-30', 0, 'sem campo de data de aplicacao no schema atual', 'DB Mudancas de Escopo (campo ausente no schema)');\nadd('Curador', 'cur.rodadas_qa_medias', 'D-30', avg(mudancas.filter((page) => since(page.last_edited_time || page.created_time || page.createdTime, 30)).map((page) => pickNumber(page.properties?.['Rodadas Q&A']))), '', 'DB Mudancas de Escopo (Rodadas Q&A D-30)');\n\nadd('Global', 'glb.artefatos_vivos', 'Snapshot', catalogo.filter((page) => pickSelect(page.properties?.Estado) === 'Vivo').length, '', 'DB Catalogo (Estado = Vivo)');\nadd('Global', 'glb.adrs_aceitos', 'Snapshot', adrs.filter((page) => pickSelect(page.properties?.Status) === 'Aceito').length, '', 'DB Decisoes/ADR (Status = Aceito)');\nadd('Global', 'glb.aprendizados_aplicados', 'Snapshot', aprendizados.filter((page) => ['Aplicado', 'Aplicados'].includes(pickSelect(page.properties?.Status) || pickSelect(page.properties?.Estado))).length, '', 'DB Aprendizados (Status/Estado aplicado)');\nadd('Global', 'glb.workflows_ativos', 'Snapshot', catalogo.filter((page) => pickSelect(page.properties?.Tipo) === 'Workflow n8n' && pickSelect(page.properties?.Estado) === 'Vivo').length, '', 'DB Catalogo (Tipo Workflow n8n, Estado Vivo)');\n\nconst toCreate = metricas.filter((m) => !existingKeys.has(m.idempotency_key));\nconst itemsParaCriar = toCreate.map((m) => ({ json: { ...m, metricas_do_dia: metricas, linhas_novas: toCreate.length } }));\nif (itemsParaCriar.length === 0) {\n  itemsParaCriar.push({ json: { sentinel: true, metricas_do_dia: metricas, linhas_novas: 0, data_snapshot, execution_id, tenant_id, versao_consulta } });\n}\nreturn itemsParaCriar;"
+      }
+    },
+    {
+      "id": "telemetria-if-tem-novas",
+      "name": "[Telemetria] IF Tem Novas Linhas",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        832,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-linhas-novas",
+              "leftValue": "={{ $json.linhas_novas }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
       }
     },
     {
@@ -333,7 +364,7 @@
               "selectValue": "={{ $json.area }}"
             },
             {
-              "key": "Chave da metrica|rich_text",
+              "key": "Chave da métrica|rich_text",
               "textContent": "={{ $json.chave }}"
             },
             {
@@ -373,6 +404,19 @@
           "id": "<credential_id_redacted>",
           "name": "Notion account"
         }
+      }
+    },
+    {
+      "id": "telemetria-merge-pos-snapshot",
+      "name": "[Telemetria] Merge Pos-Snapshot",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        1056,
+        120
+      ],
+      "parameters": {
+        "mode": "append"
       }
     },
     {
@@ -564,14 +608,43 @@
       "main": [
         [
           {
-            "node": "[Telemetria] Criar Snapshot",
+            "node": "[Telemetria] IF Tem Novas Linhas",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
+    "[Telemetria] IF Tem Novas Linhas": {
+      "main": [
+        [
+          {
+            "node": "[Telemetria] Criar Snapshot",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "[Telemetria] Merge Pos-Snapshot",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
     "[Telemetria] Criar Snapshot": {
+      "main": [
+        [
+          {
+            "node": "[Telemetria] Merge Pos-Snapshot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Telemetria] Merge Pos-Snapshot": {
       "main": [
         [
           {
