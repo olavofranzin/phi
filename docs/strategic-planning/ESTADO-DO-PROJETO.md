@@ -73,7 +73,7 @@ Lista completa fornecida por Olavo em 2026-06-04.
 
 ---
 
-## 2. Onde estamos AGORA (snapshot 2026-06-04)
+## 2. Onde estamos AGORA (snapshot 2026-06-11)
 
 Resumo de 1 parágrafo: Produto PHI está estável em produção interna
 (últimas correções A.0/A.5/A.7 aprovadas 2026-05-09). Operação Interna:
@@ -82,10 +82,13 @@ Lote 2 entregue 2026-06-03 (A2.3 Classificação + A2.10 Gate) pendente
 re-smoke A2.3 Aprovado. **Execução de Demandas** com strawman v0.2
 fechado, aguardando autorização pra v0.3 + Notion canônico. **Curador**
 com Lote 0 concluído 2026-06-04 (2 DBs + âncora + 39 artefatos
-catalogados). **Priorização** com L1 brief travado, pendente Codex.
-**Comercial** vestigial. **Documentação e Ferramentas** acabou de ser
-aberta (este doc). **Dashboard de produto** (Lovable) em scoping —
-aguardando acesso aos protótipos.
+catalogados). **Priorização** com L1 **ATIVO em produção desde 2026-06-04**
+(n8n `cgw7ozJ7Zk9jBrj1`, E2E validado 2×; brief destravado, Codex/Antigravity
+fecharam ciclo); pendência aberta: timezone do cron (UTC vs BRT). **Comercial**
+vestigial (status pedido em sub-chat 2026-06-11, aguardando report).
+**Telemetria Mínima** Lote 1 em correção `a03` pelo Codex (B3+B4 obrigatórios,
+B2 recomendado). **Documentação e Ferramentas** aberta 2026-06-04 (este doc).
+**Dashboard de produto** (Lovable) em scoping — aguardando acesso aos protótipos.
 
 ---
 
@@ -137,9 +140,11 @@ Estados: `Backlog` · `Em design` · `Em execução` · `Em smoke` ·
 | Lote | Status |
 |---|---|
 | Lote 0 (Framework + Inventário) | Concluído |
-| L1 — Abertura de Projeto Técnico/Setup | Em execução (brief travado 2026-06-02, pendente Codex) |
-| L2 — Passagem de Bastão entre Áreas | Backlog |
-| L3 — Atendimento de Solicitações | Backlog |
+| L1 — Abertura de Projeto Técnico/Setup | **ATIVO em produção (2026-06-04)** — workflow n8n `cgw7ozJ7Zk9jBrj1`, E2E validado 2×. Cria projeto setup + 6 itens de checklist por cliente ATIVO sem setup, com alerta Telegram e log callout Notion, idempotência confirmada. Resíduo: timezone do cron (ver §5). JSONs em branch separada `claude/lucid-tesla-ZWcbr`. |
+| L2 — Passagem de Bastão entre Áreas | Backlog (sem evolução) |
+| L3 — Atendimento de Solicitações | Backlog (sem evolução) |
+
+> **Nota fronteira (T4 revisitada):** L1 é, na prática, tooling executor (cria projeto + checklist + alerta). Mesmo com a fronteira "Execução = consumidora da Priorização" travada (2026-06-03), vale registrar que o L1 implementado tem natureza executora — não produz contrato de handoff, executa abertura. Não invalida a fronteira; é nuance pra revisitar quando L2 (Passagem de Bastão) for desenhado.
 
 ### 3.6. Comercial (Operação Interna)
 
@@ -218,6 +223,11 @@ Estados: `Backlog` · `Em design` · `Em execução` · `Em smoke` ·
 | 2026-06-04 | v0.3 Execução + abertura SOP/DB Notion canônico | Aguarda OK do Olavo | Lote 1 Execução |
 | 2026-06-04 | Mudança de Escopo PLANEJADA: reposicionar Curador → Documentação e Ferramentas | ✅ **APROVADA E APLICADA 2026-06-04** — 4 registros do Catálogo + âncora Curador (Notion) + 2 strawmans (git) + ESTADO já alinhado. Estado da ME: `Aplicada`. Serve de input de treino pro Lote 1 do Curador. | Resolvido |
 | 2026-06-04 | Lista completa de troncos do Miro (§1.2) | ✅ Recebida 2026-06-04 — 10 troncos mapeados. 2 áreas operacionais + 8 transversais. Releitura registrada (transversais NÃO viram âncoras separadas). | Resolvido |
+| 2026-06-04 | L1 Priorização — cron `0 9 * * *` em UTC, dispara 06:00 BRT se instância n8n for UTC (não 09:00 BR) | Olavo decide ajustar pra `TZ=America/Sao_Paulo` no schedule trigger | Não bloqueia; só desloca horário |
+| 2026-06-04 | L1 Priorização — 1ª execução agendada vai processar TODOS os clientes ATIVOS sem setup de uma vez (rajada Telegram esperada) | Monitorar 1ª execução; sem ação preventiva | Não bloqueia; atenção operacional |
+| 2026-06-04 | L1 Priorização — JSONs canônicos em branch `claude/lucid-tesla-ZWcbr`, separada do doc master (`claude/agentic-agency-planning-KwJEw`) | Olavo decide: mergear nas branches ou manter separadas (1 branch por entrega) | Não bloqueia; afeta protocolo de versionamento |
+| 2026-06-11 | Status sub-chat Comercial | Pedido enviado 2026-06-11 (`docs/handoff/2026-06-11-sub-chat-comercial-status-request.md`) | Bloqueia integração §3.6 e Catálogo |
+| 2026-06-04 | Decisão técnica callout→HTTP (L1 Priorização, n8n-Notion v2.2) — candidata a ADR formal | Olavo decide rascunhar ADR formal ou manter como Aprendizado #21 (Notion) + Versão do Catálogo | Não bloqueia |
 
 ---
 
@@ -230,7 +240,7 @@ Compilação das tensões espalhadas pelos strawmans + novas.
 | T1 | Curador × Codex × Antigravity: quem revisa PRs do Curador? | Curador §15 | Média | Decidir junto do ADR-011 |
 | T2 | Catálogo × ADRs vigentes: duplicação? | Curador §15 | Baixa | Convenção v0.1: Catálogo lista ADR como referência (id + url), conteúdo canônico segue na base de ADRs |
 | T3 | Mudança de Escopo grande × ADR novo: quando virar ADR junto do diff? | Curador §15 | Média | Decidir junto do ADR-011 |
-| T4 | "Prospecção" e "Reunião resultados" semanticamente Comerciais | Execução §4 | Baixa | Re-examinar quando Comercial existir formalmente |
+| T4 | "Prospecção" e "Reunião resultados" semanticamente Comerciais + L1 Priorização tem natureza executora apesar da fronteira "Execução=consumidora" | Execução §4 + report sub-chat Priorização 2026-06-11 | Baixa | Re-examinar quando Comercial existir formalmente. Nota nova (2026-06-11): L1 Priorização implementado é tooling executor (cria projeto + checklist + alerta) — não invalida fronteira travada 2026-06-03, mas vale revisitar quando L2 Passagem de Bastão (que deve ser onde a Priorização produz o contrato) for desenhado. |
 | T5 | Dashboard × Notion: duas superfícies de visualização | Conversa Dashboard | Baixa | Cada um pro seu uso (produto vs operação) |
 | T6 | **Métricas operacionais não rastreadas** — Onboarding em prod há 9 dias, zero visibilidade | Conversa 2026-06-04 | **Em mitigação** | ✅ Telemetria Mínima Lote 0 concluído 2026-06-04. ✅ Codex entregou Lote 1 `a01` (`b15e8dd`) 2026-06-05. ✅ Pré-revisão Claude (`327872d`) corrigiu G1. ✅ Brief Antigravity entregue (`ed3d4be`). ❌ Veredito Antigravity REJEITADO. Análise factual 2026-06-11: **B1 (G1) era falso positivo** (já corrigido em `327872d`); **B3** (sentinel) e **B4** (acento Chave da métrica) são bugs reais; **B2** (16 nodes IF+Merge) é sugestão arquitetural. ✅ Brief Codex `a03` criado 2026-06-11 (`docs/handoff/2026-06-05-telemetria-lote1-codex-fix-brief.md`). Aguarda Codex implementar `a03` → Antigravity rodada 2 → smoke E2E. |
 | ~~T7~~ | ~~ADR-001 (Supabase) × "BQ base de verdade" (docs estratégicos)~~ | Conversa 2026-06-04 | ✅ **Resolvido** | **ADR-010 Aceito 2026-06-04** ([link](https://www.notion.so/376b65e5c72b814a81fac10aaf50befc)). Divisão BigQuery (analítico) × Supabase (transacional) × Notion (estado operacional). ADR-001 esclarecido como complementar — não conflitante. |
@@ -423,3 +433,4 @@ Escopo Retroativa automaticamente.
 | v0.1.7 | 2026-06-05 | Telemetria Lote 1 Codex entregue (`b15e8dd`, 1792 linhas). Pré-revisão Claude: G1 (linha residual `parse_mode=HTML` no digest jsCode) corrigido inline + regenerado workflow.json e sandbox_export.json + ajustado teste ps1; G2 (Buscar Snapshots Existentes sem filtro de data — escala mal) documentado pra Lote 2; G3 (campo `Data de aplicação` ausente no DB Mudanças — Codex acertou ao reportar) documentado pra ME futura. Catálogo +1 (WF-DOC-Telemetria-Diaria `Em revisão`). T6 severidade Alta → Em mitigação avançada. Aguarda Antigravity + smoke E2E pra fechar. §3.7 Sub-entrega Telemetria atualizada. |
 | v0.1.8 | 2026-06-05 | Brief Antigravity para Telemetria Lote 1 entregue (`docs/handoff/2026-06-05-telemetria-lote1-antigravity-brief.md`). 10 seções: objetivo, pré-leitura (7 docs), arquivos a revisar (4), recursos Notion (7 DBs), checklist nó-a-nó (12 sub-seções com 50+ itens), gaps documentados (G1 corrigido, G2/G3 informativos), formato de retorno, sequência de smoke E2E em 9 passos, tensões relacionadas, convenções. §5 pendência Telemetria atualizada (Brief Antigravity entregue). |
 | v0.1.9 | 2026-06-11 | **Retificação de Aprendizado #19 + brief Codex correções Telemetria.** Análise factual posterior ao veredito Antigravity REJEITADO mostrou que: (a) commits `327872d` e `ed3d4be` SEMPRE estiveram no remote — confusão anterior sobre "SHAs fantasmas" foi causada por cache de fetch local desatualizado, não por compactação de contexto nem drift de worktree. Aprendizado #19 retificado (título + conteúdo + implicação) — agora foco em "verificação pós-push exige `git fetch` fresh antes". (b) Veredito Antigravity B1 foi **falso positivo** — G1 já estava corrigido em `327872d`. Provavelmente Antigravity revisou estado de `b15e8dd` sem pegar commits posteriores. (c) B3 (sentinel) e B4 (acento Chave da métrica) confirmados como bugs reais via grep. (d) B2 (16 nodes IF+Merge) é sugestão arquitetural pra resolver B3. Brief Codex `a03` consolidado em `docs/handoff/2026-06-05-telemetria-lote1-codex-fix-brief.md` foca em B3+B4 com B2 como recomendado. Catálogo WF Versão atualizada refletindo realidade. §6 T6 atualizada (Em mitigação, não "Em mitigação avançada"). §3.7 sub-entrega Telemetria atualizada. |
+| v0.1.10 | 2026-06-11 | **Integração do report sub-chat Priorização.** L1 Priorização saiu de "Em execução (brief travado)" → **ATIVO em produção 2026-06-04** (n8n `cgw7ozJ7Zk9jBrj1`, E2E 2×). §2 snapshot reescrito refletindo realidade atual. §3.5 atualizada com status real do L1 + nota fronteira T4 revisitada (L1 implementado é tooling executor). §5 ganha 5 pendências novas (timezone cron UTC vs BRT, rajada Telegram na 1ª execução, branch separada `claude/lucid-tesla-ZWcbr`, status sub-chat Comercial pedido 2026-06-11, decisão callout→HTTP candidata a ADR). §6 T4 expandida com nuance Priorização. Catálogo +1 (WF-PRIOR-L1-Abertura-Projeto-Setup, Vivo, Versão completa com IDs n8n + DBs Notion tocados + pendência cron). PHI™ Aprendizados +3 (Aplicados): runOnceForAllItems para Code nodes com filtro, callout→HTTP no n8n-Notion v2.2, share explícito por database. Prompts copy-paste pra Codex `a03` + sub-chats Comercial/Priorização versionados em `docs/handoff/2026-06-11-*` no commit `94a623e`. Sub-chat Comercial ainda não respondeu. |
