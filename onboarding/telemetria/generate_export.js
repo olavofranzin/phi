@@ -220,6 +220,14 @@ const nodes = [
   notionRead('telemetria-aprendizados', '[Telemetria] Buscar Aprendizados', 'aa5d49b2-c2f6-40bc-b883-5cd350a982c7'),
   notionRead('telemetria-snapshots-existentes', '[Telemetria] Buscar Snapshots Existentes', '32404398-6751-4bbd-be28-4ad591e22bf7'),
   {
+    id: 'telemetria-merge-pre-calcular',
+    name: '[Telemetria] Merge Pre-Calcular',
+    type: 'n8n-nodes-base.merge',
+    typeVersion: 3,
+    position: [560, 0],
+    parameters: { mode: 'append' },
+  },
+  {
     id: 'telemetria-calcular',
     name: '[Telemetria] Calcular Metricas',
     type: 'n8n-nodes-base.code',
@@ -352,7 +360,8 @@ const workflow = {
   connections: {
     '[Telemetria] Schedule Trigger': { main: [[{ node: '[Telemetria] Set Contexto', type: 'main', index: 0 }]] },
     '[Telemetria] Set Contexto': { main: [readNames.map((node) => ({ node, type: 'main', index: 0 }))] },
-    ...Object.fromEntries(readNames.map((name) => [name, { main: [[{ node: '[Telemetria] Calcular Metricas', type: 'main', index: 0 }]] }])),
+    ...Object.fromEntries(readNames.map((name, index) => [name, { main: [[{ node: '[Telemetria] Merge Pre-Calcular', type: 'main', index }]] }])),
+    '[Telemetria] Merge Pre-Calcular': { main: [[{ node: '[Telemetria] Calcular Metricas', type: 'main', index: 0 }]] },
     '[Telemetria] Calcular Metricas': { main: [[{ node: '[Telemetria] IF Tem Novas Linhas', type: 'main', index: 0 }]] },
     '[Telemetria] IF Tem Novas Linhas': {
       main: [

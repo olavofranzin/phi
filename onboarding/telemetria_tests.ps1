@@ -30,8 +30,8 @@ if ($workflow.name -ne 'WF-DOC-Telemetria-Diaria') {
 if ($workflow.active -ne $false) {
   throw 'Workflow export must stay inactive until review and approval'
 }
-if ($workflow.nodes.Count -ne 16) {
-  throw "Workflow must have exactly 16 nodes; found $($workflow.nodes.Count)"
+if ($workflow.nodes.Count -ne 17) {
+  throw "Workflow must have exactly 17 nodes; found $($workflow.nodes.Count)"
 }
 if ($workflow.settings.timezone -ne 'America/Sao_Paulo') {
   throw 'Workflow timezone must be America/Sao_Paulo'
@@ -55,6 +55,7 @@ $requiredNodeNames = @(
   '[Telemetria] Buscar Decisoes ADR',
   '[Telemetria] Buscar Aprendizados',
   '[Telemetria] Buscar Snapshots Existentes',
+  '[Telemetria] Merge Pre-Calcular',
   '[Telemetria] Calcular Metricas',
   '[Telemetria] IF Tem Novas Linhas',
   '[Telemetria] Criar Snapshot',
@@ -133,6 +134,14 @@ if ($metricCode.Contains('return toCreate.map')) {
 }
 if ($metricCode -match 'require\(|import ') {
   throw 'Calcular Metricas must not use external libraries'
+}
+
+$mergePre = $nodeMap['[Telemetria] Merge Pre-Calcular']
+if ($mergePre.type -ne 'n8n-nodes-base.merge') {
+  throw 'Merge Pre-Calcular must use n8n Merge node'
+}
+if ($mergePre.parameters.mode -ne 'append') {
+  throw 'Merge Pre-Calcular must use append mode'
 }
 
 $ifNovas = $nodeMap['[Telemetria] IF Tem Novas Linhas']
@@ -220,13 +229,28 @@ foreach ($name in $expectedFanOut) {
 
 foreach ($name in $expectedFanOut) {
   $next = Get-NextNodes $workflow $name
-  if ($next.Count -ne 1 -or $next[0] -ne '[Telemetria] Calcular Metricas') {
-    throw "$name must connect to Calcular Metricas"
+  if ($next.Count -ne 1 -or $next[0] -ne '[Telemetria] Merge Pre-Calcular') {
+    throw "$name must connect to Merge Pre-Calcular"
+  }
+}
+
+$mergePreInputs = @()
+foreach ($name in $expectedFanOut) {
+  $edge = @($workflow.connections.$name.main[0])[0]
+  if ($edge.node -eq '[Telemetria] Merge Pre-Calcular') {
+    $mergePreInputs += [int]$edge.index
+  }
+}
+$expectedMergePreInputs = 0..6
+foreach ($inputIndex in $expectedMergePreInputs) {
+  if ($mergePreInputs -notcontains $inputIndex) {
+    throw "Merge Pre-Calcular must receive input index $inputIndex"
   }
 }
 
 $expectedLinear = @(
   @('[Telemetria] Schedule Trigger', '[Telemetria] Set Contexto', 0),
+  @('[Telemetria] Merge Pre-Calcular', '[Telemetria] Calcular Metricas', 0),
   @('[Telemetria] Calcular Metricas', '[Telemetria] IF Tem Novas Linhas', 0),
   @('[Telemetria] Criar Snapshot', '[Telemetria] Merge Pos-Snapshot', 0),
   @('[Telemetria] Merge Pos-Snapshot', '[Telemetria] Montar Digest HTML', 0),

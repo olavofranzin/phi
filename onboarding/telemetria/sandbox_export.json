@@ -290,6 +290,19 @@
       }
     },
     {
+      "id": "telemetria-merge-pre-calcular",
+      "name": "[Telemetria] Merge Pre-Calcular",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        560,
+        0
+      ],
+      "parameters": {
+        "mode": "append"
+      }
+    },
+    {
       "id": "telemetria-calcular",
       "name": "[Telemetria] Calcular Metricas",
       "type": "n8n-nodes-base.code",
@@ -531,7 +544,7 @@
       "main": [
         [
           {
-            "node": "[Telemetria] Calcular Metricas",
+            "node": "[Telemetria] Merge Pre-Calcular",
             "type": "main",
             "index": 0
           }
@@ -542,9 +555,9 @@
       "main": [
         [
           {
-            "node": "[Telemetria] Calcular Metricas",
+            "node": "[Telemetria] Merge Pre-Calcular",
             "type": "main",
-            "index": 0
+            "index": 1
           }
         ]
       ]
@@ -553,9 +566,9 @@
       "main": [
         [
           {
-            "node": "[Telemetria] Calcular Metricas",
+            "node": "[Telemetria] Merge Pre-Calcular",
             "type": "main",
-            "index": 0
+            "index": 2
           }
         ]
       ]
@@ -564,9 +577,9 @@
       "main": [
         [
           {
-            "node": "[Telemetria] Calcular Metricas",
+            "node": "[Telemetria] Merge Pre-Calcular",
             "type": "main",
-            "index": 0
+            "index": 3
           }
         ]
       ]
@@ -575,9 +588,9 @@
       "main": [
         [
           {
-            "node": "[Telemetria] Calcular Metricas",
+            "node": "[Telemetria] Merge Pre-Calcular",
             "type": "main",
-            "index": 0
+            "index": 4
           }
         ]
       ]
@@ -586,14 +599,25 @@
       "main": [
         [
           {
-            "node": "[Telemetria] Calcular Metricas",
+            "node": "[Telemetria] Merge Pre-Calcular",
             "type": "main",
-            "index": 0
+            "index": 5
           }
         ]
       ]
     },
     "[Telemetria] Buscar Snapshots Existentes": {
+      "main": [
+        [
+          {
+            "node": "[Telemetria] Merge Pre-Calcular",
+            "type": "main",
+            "index": 6
+          }
+        ]
+      ]
+    },
+    "[Telemetria] Merge Pre-Calcular": {
       "main": [
         [
           {
