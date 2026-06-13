@@ -299,7 +299,8 @@
         0
       ],
       "parameters": {
-        "mode": "append"
+        "mode": "append",
+        "numberInputs": 7
       }
     },
     {

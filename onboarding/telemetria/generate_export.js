@@ -225,7 +225,7 @@ const nodes = [
     type: 'n8n-nodes-base.merge',
     typeVersion: 3,
     position: [560, 0],
-    parameters: { mode: 'append' },
+    parameters: { mode: 'append', numberInputs: 7 },
   },
   {
     id: 'telemetria-calcular',

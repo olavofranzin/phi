@@ -143,6 +143,9 @@ if ($mergePre.type -ne 'n8n-nodes-base.merge') {
 if ($mergePre.parameters.mode -ne 'append') {
   throw 'Merge Pre-Calcular must use append mode'
 }
+if ([int]$mergePre.parameters.numberInputs -ne 7) {
+  throw 'Merge Pre-Calcular must declare numberInputs = 7 (waits for all 7 reads)'
+}
 
 $ifNovas = $nodeMap['[Telemetria] IF Tem Novas Linhas']
 if ($ifNovas.type -ne 'n8n-nodes-base.if') {
