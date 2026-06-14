@@ -3,6 +3,8 @@
 Instrucoes para criar o DB Notion `PHI - Eventos` via MCP Notion.
 
 Parent page: `9d6b65e5-c72b-82e7-856d-81bc34933316` (Gerenciamento de Documentos).
+Page: `c64f600e-4f46-4b2b-ac22-c1e425c8966e`.
+Data source ID: `3423df0d-77df-4834-bdda-c08ddbae40ff`.
 
 Schema:
 
@@ -18,7 +20,6 @@ Schema:
 | `tier_agente` | select | `pro` red, `flash` blue, `n/a` gray |
 | `versao_sop_aplicada` | rich_text | ID da entrada Vigente do DB `PHI - SOPs` |
 
-Depois de criado, substituir em `onboarding/execucao/lote1/generate_export.js` o placeholder
-`<PHI_EVENTOS_DATA_SOURCE_ID_pending_creation>` pelo data source ID real e regenerar os exports.
+Observacao: o DB foi criado via MCP Notion durante a pre-revisao do a01. Os workflows usam o data source ID acima para gravar eventos canonicos.
 
-Observacao: esta entrega nao cria o DB diretamente porque a sessao Codex atual nao expoe ferramenta MCP Notion de escrita. Os workflows ja estao estruturados para gravar eventos canonicos assim que o ID real for preenchido.
+Pre-requisito para smoke: configurar no n8n a env var `WEBHOOK_SECRET_EXECUCAO`. O Intake valida esse valor contra o header `x-pacing-secret` antes de processar o payload.

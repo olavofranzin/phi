@@ -99,6 +99,9 @@ function Assert-TelegramHtml($node, $dir) {
 $intake = Read-Workflow 'intake-pacing'
 $orq = Read-Workflow 'orquestrador'
 $qg = Read-Workflow 'qualitygate-pacing'
+$intakeWf = Join-Path $base 'intake-pacing/workflow.json'
+$orqWf = Join-Path $base 'orquestrador/workflow.json'
+$qgWf = Join-Path $base 'qualitygate-pacing/workflow.json'
 
 foreach ($pair in @(@($intake, 'intake-pacing'), @($orq, 'orquestrador'), @($qg, 'qualitygate-pacing'))) {
   Assert-ActiveFalse $pair[0] $pair[1]
@@ -123,6 +126,20 @@ foreach ($required in @(
 if ($intakeMap['[Exec Intake] Webhook Pacing Alert'].parameters.path -ne 'pacing-alert') {
   throw 'Intake webhook path must be pacing-alert'
 }
+$secretCode = [string]$intakeMap['[Exec Intake] Validar Secret'].parameters.jsCode
+foreach ($snippet in @('$env.WEBHOOK_SECRET_EXECUCAO', 'x-pacing-secret', 'X-Pacing-Secret', 'secret_present')) {
+  if (-not $secretCode.Contains($snippet)) { throw "Intake secret guard missing snippet $snippet" }
+}
+$secretOutputs = $intake.connections.'[Exec Intake] Secret Valido?'.main
+if ($secretOutputs.Count -ne 2) {
+  throw 'Intake Secret Valido? must have true/false outputs'
+}
+if ($secretOutputs[0][0].node -ne '[Exec Intake] Validar Payload') {
+  throw 'Intake Secret Valido? true branch must go to Validar Payload'
+}
+if ($secretOutputs[1][0].node -ne '[Exec Intake] Responder 401') {
+  throw 'Intake Secret Valido? false branch must go to Responder 401'
+}
 $intakeCode = [string]$intakeMap['[Exec Intake] Preparar Demanda e Evento'].parameters.jsCode
 foreach ($snippet in @('Pacing/verba', 'Critica', 'v0.3-2026-06-14', '23:59:00-03:00', 'existingKeys', 'versao_sop_aplicada', 'demanda.criada', 'tenant_id', 'client_id', 'execution_id')) {
   if (-not $intakeCode.Contains($snippet)) { throw "Intake code missing snippet $snippet" }
@@ -142,7 +159,7 @@ foreach ($required in @(
   if (-not $orqMap.ContainsKey($required)) { throw "Orquestrador missing node $required" }
 }
 $orqCode = [string]$orqMap['[Exec Orq] Calcular Prioridade Pro'].parameters.jsCode
-foreach ($snippet in @('Critica', '100', 'Recorrente diaria', '50', 'Semanal', '30', 'Ad-hoc', '20', 'prioridade_origem', 'agente', 'demanda.priorizada', 'tier_agente: ''pro''')) {
+foreach ($snippet in @('Critica', '100', 'Recorrente diaria', '50', 'Recorrente semanal', '30', 'Ad-hoc padrao', '20', 'prioridade_origem', 'agente', 'demanda.priorizada', 'tier_agente: ''pro''')) {
   if (-not $orqCode.Contains($snippet)) { throw "Orquestrador code missing snippet $snippet" }
 }
 $geminiPro = $orq.nodes | Where-Object { $_.name -eq '[Exec Orq] Gemini Pro Sequencia do Dia' }
@@ -182,6 +199,34 @@ if (-not (Test-Path $schemaPath)) { throw 'Missing PHI Eventos creation instruct
 $schema = Get-Content -Raw $schemaPath
 foreach ($snippet in @('PHI - Eventos', '9d6b65e5-c72b-82e7-856d-81bc34933316', 'tipo', 'entidade_id', 'payload_json', 'tier_agente', 'versao_sop_aplicada')) {
   if (-not $schema.Contains($snippet)) { throw "PHI Eventos schema instructions missing $snippet" }
+}
+
+foreach ($path in @($intakeWf, $orqWf, $qgWf)) {
+  $raw = [System.IO.File]::ReadAllText($path, [System.Text.Encoding]::UTF8)
+  if ($raw -match 'versao_sop_aplicada"\s*:\s*\{\s*"relation"') {
+    throw "$path uses versao_sop_aplicada as relation; schema is rich_text"
+  }
+}
+
+$orqRaw = [System.IO.File]::ReadAllText($orqWf, [System.Text.Encoding]::UTF8)
+foreach ($snippet in @("classe_sla === 'Critica'", "classe_sla === 'Recorrente diaria'", "classe_sla === 'Recorrente semanal'", "classe_sla === 'Ad-hoc padrao'")) {
+  if (-not $orqRaw.Contains($snippet)) {
+    throw "Orquestrador priorityFor missing snippet: $snippet"
+  }
+}
+if ($orqRaw -match "tipo === 'Recorrente diaria'" -or $orqRaw -match "tipo === 'Semanal'" -or $orqRaw -match "tipo === 'Ad-hoc'") {
+  throw "Orquestrador priorityFor still uses 'tipo' or wrong class names"
+}
+
+$allWfs = @($intakeWf, $orqWf, $qgWf) + @((Join-Path $base 'generate_export.js'))
+foreach ($path in $allWfs) {
+  $raw = [System.IO.File]::ReadAllText($path, [System.Text.Encoding]::UTF8)
+  if ($raw.Contains('PHI_EVENTOS_DATA_SOURCE_ID_pending_creation')) {
+    throw "$path still contains PHI_EVENTOS placeholder"
+  }
+  if (-not $raw.Contains('3423df0d-77df-4834-bdda-c08ddbae40ff')) {
+    throw "$path missing PHI - Eventos data source ID"
+  }
 }
 
 Write-Host 'Execucao Lote 1 workflow structural tests passed.'

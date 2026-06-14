@@ -8,10 +8,9 @@ const creds = {
 };
 
 const CHAT_ID = '<TELEGRAM_CHAT_ID_redacted>';
-const WEBHOOK_KEY = '<EXEC_WEBHOOK_KEY_redacted>';
 const DB_DEMANDAS = 'cd1ab757-e4d1-493f-b1e1-b64a95d33d1b';
 const DB_SOPS = 'bfeb1105-83a6-4e89-8d62-26607ebfcc8c';
-const DB_EVENTOS = '<PHI_EVENTOS_DATA_SOURCE_ID_pending_creation>';
+const DB_EVENTOS = '3423df0d-77df-4834-bdda-c08ddbae40ff';
 
 const notionHeaders = {
   parameters: [
@@ -61,14 +60,11 @@ const eventBody = (event) => ({
   },
 });`;
 
-const intakeValidateKey = String.raw`const EXEC_WEBHOOK_KEY = '${WEBHOOK_KEY}';
-return $input.all().map((item) => {
-  const headers = item.json.headers || {};
-  const lower = {};
-  for (const [key, value] of Object.entries(headers)) lower[String(key).toLowerCase()] = value;
-  const provided = String(lower['x-exec-key'] || '').trim();
-  return { json: { ...item.json, exec_key_valid: provided === EXEC_WEBHOOK_KEY } };
-});`;
+const intakeValidateKey = String.raw`const expected = $env.WEBHOOK_SECRET_EXECUCAO || '';
+const first = $input.first();
+const headers = first?.json?.headers || {};
+const got = headers['x-pacing-secret'] || headers['X-Pacing-Secret'] || '';
+return [{ json: { ...first.json, ok: expected !== '' && got === expected, secret_present: !!got } }];`;
 
 const intakeValidatePayload = String.raw`const out = [];
 for (const item of $input.all()) {
@@ -145,7 +141,7 @@ const demanda_body = {
     prazo: { date: { start: due } },
     sla_version: { rich_text: richText('v0.3-2026-06-14') },
     quality_gate: { select: { name: 'pendente' } },
-    versao_sop_aplicada: { relation: [{ id: ctx.versao_sop_aplicada }] },
+    versao_sop_aplicada: { rich_text: richText(ctx.versao_sop_aplicada) },
     observacoes: { rich_text: richText('idempotency_key=' + idempotencyKey + '; execution_id=' + execution_id + '; fonte=' + ctx.fonte) },
   },
 };
@@ -177,20 +173,20 @@ const sopData = sopFromItems(sop);
 const execution_id = execId('EXEC-EXEC-ORQ');
 const tenant_id = 'phi-agencia';
 const demandaPages = $input.all().map((item) => item.json || {}).filter((page) => !page.archived && !page.is_archived);
-const priorityFor = (classe, tipo) => {
-  if (classe === 'Critica') return 100;
-  if (tipo === 'Recorrente diaria') return 50;
-  if (tipo === 'Semanal') return 30;
-  if (tipo === 'Ad-hoc') return 20;
+const priorityFor = (classe_sla) => {
+  if (classe_sla === 'Critica') return 100;
+  if (classe_sla === 'Recorrente diaria') return 50;
+  if (classe_sla === 'Recorrente semanal') return 30;
+  if (classe_sla === 'Ad-hoc padrao') return 20;
   return 20;
 };
 const out = [];
 for (const page of demandaPages) {
   const props = page.properties || {};
   const tipo = pickSelect(props.tipo);
-  const classe = pickSelect(props.classe_sla);
+  const classe_sla = pickSelect(props.classe_sla);
   const client_id = pickText(props.client_id);
-  const prioridade = priorityFor(classe, tipo);
+  const prioridade = priorityFor(classe_sla);
   const payload = {
     tenant_id,
     client_id,
@@ -198,7 +194,7 @@ for (const page of demandaPages) {
     versao_sop_aplicada: sopData.id,
     demanda_id: page.id,
     tipo,
-    classe_sla: classe,
+    classe_sla,
     prioridade,
     prioridade_origem: 'agente',
     estado: 'Priorizada',
@@ -209,7 +205,7 @@ for (const page of demandaPages) {
       prioridade: { number: prioridade },
       prioridade_origem: { select: { name: 'agente' } },
       estado: { select: { name: 'Priorizada' } },
-      versao_sop_aplicada: { relation: [{ id: sopData.id }] },
+      versao_sop_aplicada: { rich_text: richText(sopData.id) },
     },
   };
   const event = { tipo: 'demanda.priorizada', entidade_id: page.id, timestamp: utcNow(), execution_id, tenant_id, tier_agente: 'pro', versao_sop_aplicada: sopData.id, payload };
@@ -253,10 +249,10 @@ for (const item of $input.all()) {
   const basePayload = { tenant_id, client_id, execution_id, versao_sop_aplicada: sopData.id, demanda_id, tipo, classe_sla, quality_gate, checklist: checks, tier_agente: 'flash' };
   if (quality_gate === 'pass') {
     const event = { tipo: 'demanda.entregue', entidade_id: demanda_id, timestamp: utcNow(), execution_id, tenant_id, tier_agente: 'flash', versao_sop_aplicada: sopData.id, payload: basePayload };
-    out.push({ json: { demanda_id, quality_gate, update_body: { properties: { estado: { select: { name: 'Entregue' } }, quality_gate: { select: { name: 'pass' } }, versao_sop_aplicada: { relation: [{ id: sopData.id }] } } }, event_body: eventBody(event), text: 'PASS demanda ' + demanda_id } });
+    out.push({ json: { demanda_id, quality_gate, update_body: { properties: { estado: { select: { name: 'Entregue' } }, quality_gate: { select: { name: 'pass' } }, versao_sop_aplicada: { rich_text: richText(sopData.id) } } }, event_body: eventBody(event), text: 'PASS demanda ' + demanda_id } });
   } else {
     const event = { tipo: 'demanda.reaberta', entidade_id: demanda_id, timestamp: utcNow(), execution_id, tenant_id, tier_agente: 'flash', versao_sop_aplicada: sopData.id, payload: { ...basePayload, missing } };
-    out.push({ json: { demanda_id, quality_gate, missing, update_body: { properties: { estado: { select: { name: 'Em execucao' } }, quality_gate: { select: { name: 'fail' } }, versao_sop_aplicada: { relation: [{ id: sopData.id }] } } }, event_body: eventBody(event), text: '<b>Quality gate FAIL</b>\nDemanda: ' + demanda_id + '\nFaltam:\n- ' + missing.join('\n- ') } });
+    out.push({ json: { demanda_id, quality_gate, missing, update_body: { properties: { estado: { select: { name: 'Em execucao' } }, quality_gate: { select: { name: 'fail' } }, versao_sop_aplicada: { rich_text: richText(sopData.id) } } }, event_body: eventBody(event), text: '<b>Quality gate FAIL</b>\nDemanda: ' + demanda_id + '\nFaltam:\n- ' + missing.join('\n- ') } });
   }
 }
 return out;`;
@@ -394,7 +390,7 @@ const revisaoFilters = { conditions: [{ key: 'estado', condition: 'equals', sele
 const intakeNodes = [
   { id: 'exec-intake-webhook', name: '[Exec Intake] Webhook Pacing Alert', type: 'n8n-nodes-base.webhook', typeVersion: 2.1, position: [0, 0], parameters: { httpMethod: 'POST', path: 'pacing-alert', responseMode: 'responseNode', options: {} } },
   code('exec-intake-key', '[Exec Intake] Validar Secret', 220, 0, intakeValidateKey),
-  ifNode('exec-intake-if-key', '[Exec Intake] Secret Valido?', 440, 0, '={{ $json.exec_key_valid }}'),
+  ifNode('exec-intake-if-key', '[Exec Intake] Secret Valido?', 440, 0, '={{ $json.ok }}'),
   respond('exec-intake-401', '[Exec Intake] Responder 401', 660, 180, 401, '={{ { ok: false, error: "unauthorized" } }}'),
   code('exec-intake-payload', '[Exec Intake] Validar Payload', 660, -80, intakeValidatePayload),
   ifNode('exec-intake-if-payload', '[Exec Intake] Payload Valido?', 880, -80, '={{ $json.payload_valid }}'),
