@@ -22,4 +22,4 @@ Schema:
 
 Observacao: o DB foi criado via MCP Notion durante a pre-revisao do a01. Os workflows usam o data source ID acima para gravar eventos canonicos.
 
-Pre-requisito para smoke: configurar no n8n a env var `WEBHOOK_SECRET_EXECUCAO`. O Intake valida esse valor contra o header `x-pacing-secret` antes de processar o payload.
+Pre-requisito para smoke: conforme ADR-19, o operador deve rodar o build/deploy com a chave real do webhook antes de importar o workflow ativo. O JSON versionado permanece com `<EXEC_WEBHOOK_KEY_redacted>`; o workflow ativo no n8n recebe o valor literal injetado e valida o header `x-pacing-secret`.

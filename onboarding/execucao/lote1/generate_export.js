@@ -8,6 +8,7 @@ const creds = {
 };
 
 const CHAT_ID = '<TELEGRAM_CHAT_ID_redacted>';
+const EXEC_WEBHOOK_KEY = '<EXEC_WEBHOOK_KEY_redacted>';
 const DB_DEMANDAS = 'cd1ab757-e4d1-493f-b1e1-b64a95d33d1b';
 const DB_SOPS = 'bfeb1105-83a6-4e89-8d62-26607ebfcc8c';
 const DB_EVENTOS = '3423df0d-77df-4834-bdda-c08ddbae40ff';
@@ -60,11 +61,13 @@ const eventBody = (event) => ({
   },
 });`;
 
-const intakeValidateKey = String.raw`const expected = $env.WEBHOOK_SECRET_EXECUCAO || '';
+const intakeValidateKey = String.raw`const EXEC_WEBHOOK_KEY = '${EXEC_WEBHOOK_KEY}';
 const first = $input.first();
 const headers = first?.json?.headers || {};
-const got = headers['x-pacing-secret'] || headers['X-Pacing-Secret'] || '';
-return [{ json: { ...first.json, ok: expected !== '' && got === expected, secret_present: !!got } }];`;
+const lower = {};
+for (const [key, value] of Object.entries(headers)) lower[String(key).toLowerCase()] = value;
+const got = String(lower['x-pacing-secret'] || '').trim();
+return [{ json: { ...first.json, ok: EXEC_WEBHOOK_KEY !== '<EXEC_WEBHOOK_KEY_redacted>' && got === EXEC_WEBHOOK_KEY, secret_present: !!got, ok_pre_inject: got !== '' && EXEC_WEBHOOK_KEY !== '' } }];`;
 
 const intakeValidatePayload = String.raw`const out = [];
 for (const item of $input.all()) {

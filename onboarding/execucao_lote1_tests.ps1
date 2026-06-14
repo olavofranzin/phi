@@ -127,7 +127,7 @@ if ($intakeMap['[Exec Intake] Webhook Pacing Alert'].parameters.path -ne 'pacing
   throw 'Intake webhook path must be pacing-alert'
 }
 $secretCode = [string]$intakeMap['[Exec Intake] Validar Secret'].parameters.jsCode
-foreach ($snippet in @('$env.WEBHOOK_SECRET_EXECUCAO', 'x-pacing-secret', 'X-Pacing-Secret', 'secret_present')) {
+foreach ($snippet in @('<EXEC_WEBHOOK_KEY_redacted>', 'x-pacing-secret', 'secret_present', 'ok_pre_inject')) {
   if (-not $secretCode.Contains($snippet)) { throw "Intake secret guard missing snippet $snippet" }
 }
 $secretOutputs = $intake.connections.'[Exec Intake] Secret Valido?'.main
@@ -203,9 +203,20 @@ foreach ($snippet in @('PHI - Eventos', '9d6b65e5-c72b-82e7-856d-81bc34933316', 
 
 foreach ($path in @($intakeWf, $orqWf, $qgWf)) {
   $raw = [System.IO.File]::ReadAllText($path, [System.Text.Encoding]::UTF8)
+  if ($raw -match '\$env\.') {
+    throw "$path must not use `$env (violates ADR-19; runtime n8n blocks `$env)"
+  }
   if ($raw -match 'versao_sop_aplicada"\s*:\s*\{\s*"relation"') {
     throw "$path uses versao_sop_aplicada as relation; schema is rich_text"
   }
+}
+
+$intakeRaw = [System.IO.File]::ReadAllText($intakeWf, [System.Text.Encoding]::UTF8)
+if (-not $intakeRaw.Contains('<EXEC_WEBHOOK_KEY_redacted>')) {
+  throw 'Intake-Pacing must use <EXEC_WEBHOOK_KEY_redacted> placeholder (ADR-19 build-time injection)'
+}
+if (-not $intakeRaw.Contains('x-pacing-secret')) {
+  throw 'Intake-Pacing must check x-pacing-secret header'
 }
 
 $orqRaw = [System.IO.File]::ReadAllText($orqWf, [System.Text.Encoding]::UTF8)

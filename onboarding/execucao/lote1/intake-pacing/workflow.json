@@ -42,7 +42,7 @@
       ],
       "parameters": {
         "mode": "runOnceForAllItems",
-        "jsCode": "const expected = $env.WEBHOOK_SECRET_EXECUCAO || '';\nconst first = $input.first();\nconst headers = first?.json?.headers || {};\nconst got = headers['x-pacing-secret'] || headers['X-Pacing-Secret'] || '';\nreturn [{ json: { ...first.json, ok: expected !== '' && got === expected, secret_present: !!got } }];"
+        "jsCode": "const EXEC_WEBHOOK_KEY = '<EXEC_WEBHOOK_KEY_redacted>';\nconst first = $input.first();\nconst headers = first?.json?.headers || {};\nconst lower = {};\nfor (const [key, value] of Object.entries(headers)) lower[String(key).toLowerCase()] = value;\nconst got = String(lower['x-pacing-secret'] || '').trim();\nreturn [{ json: { ...first.json, ok: EXEC_WEBHOOK_KEY !== '<EXEC_WEBHOOK_KEY_redacted>' && got === EXEC_WEBHOOK_KEY, secret_present: !!got, ok_pre_inject: got !== '' && EXEC_WEBHOOK_KEY !== '' } }];"
       }
     },
     {
