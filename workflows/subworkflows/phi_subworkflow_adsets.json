@@ -1,0 +1,594 @@
+﻿{
+    "name":  "sw mÃ©tricas conjuntos",
+    "nodes":  [
+                  {
+                      "parameters":  {
+                                         "workflowInputs":  {
+                                                                "values":  [
+                                                                               {
+                                                                                   "name":  "execution_id",
+                                                                                   "type":  "any"
+                                                                               },
+                                                                               {
+                                                                                   "name":  "client_id",
+                                                                                   "type":  "any"
+                                                                               },
+                                                                               {
+                                                                                   "name":  "source_execution_id",
+                                                                                   "type":  "any"
+                                                                               }
+                                                                           ]
+                                                            }
+                                     },
+                      "id":  "5106edf9-08ee-4f89-aebf-98ff46edf012",
+                      "name":  "Start",
+                      "type":  "n8n-nodes-base.executeWorkflowTrigger",
+                      "typeVersion":  1.1,
+                      "position":  [
+                                       280,
+                                       300
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "databaseId":  {
+                                                            "mode":  "list",
+                                                            "__rl":  true,
+                                                            "value":  "19fb65e5-c72b-81e0-a3ad-c8017d4275e5"
+                                                        },
+                                         "resource":  "databasePage",
+                                         "simple":  false,
+                                         "filters":  {
+                                                         "conditions":  [
+                                                                            {
+                                                                                "key":  "Campanha|relation",
+                                                                                "condition":  "is_not_empty"
+                                                                            },
+                                                                            {
+                                                                                "key":  "Arquivar|checkbox",
+                                                                                "condition":  "is_empty"
+                                                                            }
+                                                                        ]
+                                                     },
+                                         "returnAll":  true,
+                                         "options":  {
+
+                                                     },
+                                         "operation":  "getAll",
+                                         "filterType":  "manual"
+                                     },
+                      "id":  "abe6cacf-c17f-4cab-a80a-d4624a213c5e",
+                      "name":  "Get database Conjuntos",
+                      "type":  "n8n-nodes-base.notion",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       520,
+                                       300
+                                   ],
+                      "alwaysOutputData":  true
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const execution_id = $(\"Start\").first().json.execution_id;\nconst source_execution_id = $(\"Start\").first().json.source_execution_id ?? null;\nconst client_id_filter = $(\"Start\").first().json.client_id ?? null;\n\nconst pickPlain = (prop) =\u003e {\n  if (!prop) return null;\n  if (prop.title?.length) return prop.title[0].plain_text?.trim() || null;\n  if (prop.rich_text?.length) return prop.rich_text[0].plain_text?.trim() || null;\n  return null;\n};\n\nconst pickNumber = (prop) =\u003e {\n  const value = prop?.number;\n  return value === null || value === undefined ? null : Number(value);\n};\n\nconst pickScalar = (prop) =\u003e {\n  if (!prop) return null;\n  if (prop.number !== undefined \u0026\u0026 prop.number !== null) return prop.number;\n  if (prop.rich_text?.length) return prop.rich_text[0].plain_text?.trim() || null;\n  if (prop.title?.length) return prop.title[0].plain_text?.trim() || null;\n  if (prop.rollup) {\n    if (prop.rollup.type === \"number\") return prop.rollup.number;\n    if (prop.rollup.type === \"date\") return prop.rollup.date?.start || null;\n    if (prop.rollup.type === \"array\") {\n      const first = prop.rollup.array?.[0];\n      if (!first) return null;\n      if (first.type === \"number\") return first.number;\n      if (first.type === \"rich_text\") return first.rich_text?.[0]?.plain_text?.trim() || null;\n      if (first.type === \"title\") return first.title?.[0]?.plain_text?.trim() || null;\n      if (first.type === \"formula\") {\n        if (first.formula?.type === \"number\") return first.formula.number;\n        if (first.formula?.type === \"string\") return first.formula.string?.trim() || null;\n      }\n    }\n  }\n  if (prop.formula) {\n    if (prop.formula.type === \"number\") return prop.formula.number;\n    if (prop.formula.type === \"string\") return prop.formula.string?.trim() || null;\n  }\n  return null;\n};\n\nconst pickIdString = (prop) =\u003e {\n  const value = pickScalar(prop);\n  if (value === null || value === undefined) return null;\n  const normalized = String(value).trim();\n  if (!normalized) return null;\n  return normalized.replace(/[^\\d]/g, \"\") || normalized;\n};\n\nreturn $input.all().flatMap((item) =\u003e {\n  const props = item.json.properties || {};\n\n  const adset_id_google = pickIdString(props[\"adset_id_google\"]);\n  const adset_id_meta = pickIdString(props[\"adset_id_meta\"]);\n  const customer_id_google = pickIdString(props[\"customer_id_google\"]);\n  const meta_account_id = pickIdString(props[\"meta_account_id\"]);\n  const client_slug = pickPlain(props[\"sigla_cliente\"]);\n\n  if (client_id_filter \u0026\u0026 client_slug \u0026\u0026 client_id_filter !== client_slug) {\n    return [];\n  }\n\n  const platform = adset_id_google ? \"google_ads\" : (adset_id_meta ? \"meta_ads\" : null);\n  if (!platform) return [];\n\n  return [{\n    json: {\n      execution_id,\n      source_execution_id,\n      entity_type: \"adset\",\n      notion_page_id: item.json.id,\n      nome: pickPlain(props[\"Nome\"]),\n      campaign_id: pickPlain(props[\"campaign_id\"]),\n      platform,\n      adset_id_google,\n      adset_id_meta,\n      customer_id_google,\n      meta_account_id\n    }\n  }];\n});"
+                                     },
+                      "id":  "2475ac9f-5037-45e1-8345-4e5bc37f5b94",
+                      "name":  "Code Clean Conjuntos",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       760,
+                                       300
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "ce6122fd-c655-4a05-9c01-232935ee8168",
+                      "name":  "Loop Conjuntos",
+                      "type":  "n8n-nodes-base.splitInBatches",
+                      "typeVersion":  3,
+                      "position":  [
+                                       980,
+                                       300
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "options":  {
+
+                                                     },
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "version":  3,
+                                                                            "typeValidation":  "strict",
+                                                                            "leftValue":  "",
+                                                                            "caseSensitive":  true
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "operator":  {
+                                                                                                    "operation":  "equals",
+                                                                                                    "type":  "string"
+                                                                                                },
+                                                                                   "rightValue":  "google_ads",
+                                                                                   "leftValue":  "={{ $json.platform }}"
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        }
+                                     },
+                      "id":  "67bc3640-6a44-4491-b6f6-5af50ab68d15",
+                      "name":  "If Plataforma",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.3,
+                      "position":  [
+                                       1200,
+                                       240
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "options":  {
+
+                                                     },
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "version":  3,
+                                                                            "typeValidation":  "strict",
+                                                                            "leftValue":  "",
+                                                                            "caseSensitive":  true
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "operator":  {
+                                                                                                    "operation":  "true",
+                                                                                                    "type":  "boolean"
+                                                                                                },
+                                                                                   "rightValue":  true,
+                                                                                   "leftValue":  "={{ !!$json.customer_id_google }}"
+                                                                               },
+                                                                               {
+                                                                                   "operator":  {
+                                                                                                    "operation":  "true",
+                                                                                                    "type":  "boolean"
+                                                                                                },
+                                                                                   "rightValue":  true,
+                                                                                   "leftValue":  "={{ !!$json.adset_id_google }}"
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        }
+                                     },
+                      "id":  "07f44d2b-15f8-4835-a748-91067442b472",
+                      "name":  "If IDs Google",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.3,
+                      "position":  [
+                                       1420,
+                                       160
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "options":  {
+
+                                                     },
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "version":  3,
+                                                                            "typeValidation":  "strict",
+                                                                            "leftValue":  "",
+                                                                            "caseSensitive":  true
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "operator":  {
+                                                                                                    "operation":  "true",
+                                                                                                    "type":  "boolean"
+                                                                                                },
+                                                                                   "rightValue":  true,
+                                                                                   "leftValue":  "={{ !!$json.meta_account_id }}"
+                                                                               },
+                                                                               {
+                                                                                   "operator":  {
+                                                                                                    "operation":  "true",
+                                                                                                    "type":  "boolean"
+                                                                                                },
+                                                                                   "rightValue":  true,
+                                                                                   "leftValue":  "={{ !!$json.adset_id_meta }}"
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        }
+                                     },
+                      "id":  "0e4cc55d-9e34-4660-b88e-c1c508b2fade",
+                      "name":  "If IDs Meta",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.3,
+                      "position":  [
+                                       1420,
+                                       360
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "url":  "=https://googleads.googleapis.com/v22/customers/{{ $json.customer_id_google }}/googleAds:search",
+                                         "options":  {
+
+                                                     },
+                                         "specifyBody":  "json",
+                                         "method":  "POST",
+                                         "nodeCredentialType":  "googleAdsOAuth2Api",
+                                         "sendBody":  true,
+                                         "sendHeaders":  true,
+                                         "jsonBody":  "={\n  \"query\": \"SELECT ad_group.id, ad_group.name, metrics.cost_micros, metrics.conversions, metrics.conversions_value, metrics.clicks, metrics.impressions FROM ad_group WHERE ad_group.id = \u0027{{ $json.adset_id_google }}\u0027 AND segments.date DURING YESTERDAY\"\n}",
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "value":  "o0hGRr2vcX3jGF6aI3a_0w",
+                                                                                         "name":  "developer-token"
+                                                                                     },
+                                                                                     {
+                                                                                         "value":  "7595536100",
+                                                                                         "name":  "login-customer-id"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "authentication":  "predefinedCredentialType"
+                                     },
+                      "id":  "3ebd0253-3394-4a06-b162-0b54f3131dad",
+                      "name":  "HTTP Request Google Adset Metrics",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.3,
+                      "position":  [
+                                       1640,
+                                       120
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "queryParameters":  {
+                                                                 "parameters":  [
+                                                                                    {
+                                                                                        "value":  "adset_id,adset_name,spend,impressions,clicks,actions,action_values,frequency",
+                                                                                        "name":  "fields"
+                                                                                    },
+                                                                                    {
+                                                                                        "value":  "adset",
+                                                                                        "name":  "level"
+                                                                                    },
+                                                                                    {
+                                                                                        "value":  "={\"since\":\"{{ \\.minus({days: 1}).toFormat(\u0027yyyy-MM-dd\u0027) }}\",\"until\":\"{{ \\.minus({days: 1}).toFormat(\u0027yyyy-MM-dd\u0027) }}\"}",
+                                                                                        "name":  "time_range"
+                                                                                    },
+                                                                                    {
+                                                                                        "value":  "=[{\"field\":\"adset.id\",\"operator\":\"EQUAL\",\"value\":\"{{ $json.adset_id_meta }}\"}]",
+                                                                                        "name":  "filtering"
+                                                                                    }
+                                                                                ]
+                                                             },
+                                         "authentication":  "predefinedCredentialType",
+                                         "options":  {
+
+                                                     },
+                                         "sendQuery":  true,
+                                         "url":  "=https://graph.facebook.com/v21.0/{{ $json.meta_account_id }}/insights",
+                                         "nodeCredentialType":  "facebookGraphApi"
+                                     },
+                      "id":  "f883473c-28c4-43b2-bc8d-17af2a32090f",
+                      "name":  "HTTP Request Meta Adset Metrics",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.3,
+                      "position":  [
+                                       1640,
+                                       400
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const source = $input.first().json;\nconst fromGoogle = source.results !== undefined || source.fieldMask !== undefined || source.queryResourceConsumption !== undefined;\n\nlet impressions = 0;\nlet clicks = 0;\nlet cost_brl = 0;\nlet conversions = 0;\nlet revenue = 0;\nlet frequency = null;\n\nif (fromGoogle) {\n  const payload = source;\n  const base = $(\"If IDs Google\").first().json;\n  const metrics = payload.results?.[0]?.metrics || {};\n  impressions = Number(metrics.impressions || 0);\n  clicks = Number(metrics.clicks || 0);\n  cost_brl = Number(metrics.costMicros || 0) / 1000000;\n  conversions = Number(metrics.conversions || 0);\n  revenue = Number(metrics.conversionsValue || 0);\n  return [{\n    json: {\n      ...base,\n      platform: \"google_ads\",\n      metrics: {}\n    }\n  }].map((item) =\u003e {\n    item.json.metrics = {\n      impressions,\n      clicks,\n      cost_brl: Number(cost_brl.toFixed(2)),\n      conversions,\n      revenue: Number(revenue.toFixed(2)),\n      ctr: impressions \u003e 0 ? Number((clicks / impressions).toFixed(6)) : 0,\n      cpc: clicks \u003e 0 ? Number((cost_brl / clicks).toFixed(2)) : 0,\n      cpa: conversions \u003e 0 ? Number((cost_brl / conversions).toFixed(2)) : 0,\n      roas: cost_brl \u003e 0 ? Number((revenue / cost_brl).toFixed(4)) : 0,\n      conversion_rate: clicks \u003e 0 ? Number((conversions / clicks).toFixed(6)) : 0,\n      frequency\n    };\n    return item;\n  });\n}\n\nconst payload = source.data?.[0] || {};\nconst base = $(\"If IDs Meta\").first().json;\nimpressions = Number(payload.impressions || 0);\nclicks = Number(payload.clicks || 0);\ncost_brl = Number(payload.spend || 0);\nfrequency = payload.frequency === undefined ? null : Number(payload.frequency || 0);\n\nconst actionMap = Object.fromEntries((payload.actions || []).map((entry) =\u003e [entry.action_type, Number(entry.value || 0)]));\nconst valueMap = Object.fromEntries((payload.action_values || []).map((entry) =\u003e [entry.action_type, Number(entry.value || 0)]));\nconversions = actionMap[\u0027offsite_conversion.fb_pixel_purchase\u0027] || actionMap[\u0027purchase\u0027] || actionMap[\u0027lead\u0027] || actionMap[\u0027omni_purchase\u0027] || 0;\nrevenue = valueMap[\u0027offsite_conversion.fb_pixel_purchase\u0027] || valueMap[\u0027purchase\u0027] || valueMap[\u0027omni_purchase\u0027] || 0;\n\nreturn [{\n  json: {\n    ...base,\n    platform: \"meta_ads\",\n    metrics: {\n      impressions,\n      clicks,\n      cost_brl: Number(cost_brl.toFixed(2)),\n      conversions,\n      revenue: Number(revenue.toFixed(2)),\n      ctr: impressions \u003e 0 ? Number((clicks / impressions).toFixed(6)) : 0,\n      cpc: clicks \u003e 0 ? Number((cost_brl / clicks).toFixed(2)) : 0,\n      cpa: conversions \u003e 0 ? Number((cost_brl / conversions).toFixed(2)) : 0,\n      roas: cost_brl \u003e 0 ? Number((revenue / cost_brl).toFixed(4)) : 0,\n      conversion_rate: clicks \u003e 0 ? Number((conversions / clicks).toFixed(6)) : 0,\n      frequency\n    }\n  }\n}];"
+                                     },
+                      "id":  "5fde32b3-986b-444a-8072-5e2275132ce1",
+                      "name":  "Code Normalizar Metricas Conjuntos",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       1880,
+                                       260
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "simple":  false,
+                                         "pageId":  "={{ $json.notion_page_id }}",
+                                         "resource":  "databasePage",
+                                         "options":  {
+
+                                                     },
+                                         "operation":  "update",
+                                         "propertiesUi":  {
+                                                              "propertyValues":  [
+                                                                                     {
+                                                                                         "key":  "ImpressÃµes|number",
+                                                                                         "numberValue":  "={{ $json.metrics.impressions }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "Cliques|number",
+                                                                                         "numberValue":  "={{ $json.metrics.clicks }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "CTR|number",
+                                                                                         "numberValue":  "={{ $json.metrics.ctr }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "CPC|number",
+                                                                                         "numberValue":  "={{ $json.metrics.cpc }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "ConversÃµes|number",
+                                                                                         "numberValue":  "={{ $json.metrics.conversions }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "CPA|number",
+                                                                                         "numberValue":  "={{ $json.metrics.cpa }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "Receita|number",
+                                                                                         "numberValue":  "={{ $json.metrics.revenue }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "ROAS|number",
+                                                                                         "numberValue":  "={{ $json.metrics.roas }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "Taxa de ConversÃ£o|number",
+                                                                                         "numberValue":  "={{ $json.metrics.conversion_rate }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "Valor Investido|number",
+                                                                                         "numberValue":  "={{ $json.metrics.cost_brl }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "FrequÃªncia|number",
+                                                                                         "numberValue":  "={{ $json.metrics.frequency }}"
+                                                                                     }
+                                                                                 ]
+                                                          }
+                                     },
+                      "id":  "f6bbdf76-da0b-4cd4-aec5-b0da4b2f60da",
+                      "name":  "Update database page Conjuntos",
+                      "type":  "n8n-nodes-base.notion",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       2140,
+                                       260
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "return [{ json: { ...$json, status: \"missing_id\", message: \"IDs obrigatÃ³rios ausentes\" } }];"
+                                     },
+                      "id":  "92a7bf52-86b6-4cb4-b78e-488d0049e005",
+                      "name":  "Code Missing ID Conjuntos",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       1640,
+                                       560
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "return [{ json: { execution_id: $json.execution_id, entity_type: \"adset\", notion_page_id: $json.notion_page_id, platform: $json.platform, status: $json.status || \"success\", message: $json.message || \"Conjunto atualizado com sucesso\", updated_fields_count: 11 } }];"
+                                     },
+                      "id":  "67443287-2f67-4aeb-80c5-bba0bc77ef13",
+                      "name":  "Code Resultado Final Conjuntos",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       2380,
+                                       260
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+
+                                     },
+                      "id":  "c0fad1b7-1201-4c09-8194-589d612fd388",
+                      "name":  "Fim Subworkflow Conjuntos",
+                      "type":  "n8n-nodes-base.noOp",
+                      "typeVersion":  1,
+                      "position":  [
+                                       2620,
+                                       300
+                                   ]
+                  }
+              ],
+    "connections":  {
+                        "If IDs Google":  {
+                                              "main":  [
+                                                           [
+                                                               {
+                                                                   "node":  "HTTP Request Google Adset Metrics",
+                                                                   "type":  "main",
+                                                                   "index":  0
+                                                               }
+                                                           ],
+                                                           [
+                                                               {
+                                                                   "node":  "Code Missing ID Conjuntos",
+                                                                   "type":  "main",
+                                                                   "index":  0
+                                                               }
+                                                           ]
+                                                       ]
+                                          },
+                        "Start":  {
+                                      "main":  [
+                                                   [
+                                                       {
+                                                           "node":  "Get database Conjuntos",
+                                                           "type":  "main",
+                                                           "index":  0
+                                                       }
+                                                   ]
+                                               ]
+                                  },
+                        "Fim Subworkflow Conjuntos":  {
+                                                          "main":  [
+                                                                       [
+                                                                           {
+                                                                               "node":  "Loop Conjuntos",
+                                                                               "type":  "main",
+                                                                               "index":  0
+                                                                           }
+                                                                       ]
+                                                                   ]
+                                                      },
+                        "If IDs Meta":  {
+                                            "main":  [
+                                                         [
+                                                             {
+                                                                 "node":  "HTTP Request Meta Adset Metrics",
+                                                                 "type":  "main",
+                                                                 "index":  0
+                                                             }
+                                                         ],
+                                                         [
+                                                             {
+                                                                 "node":  "Code Missing ID Conjuntos",
+                                                                 "type":  "main",
+                                                                 "index":  0
+                                                             }
+                                                         ]
+                                                     ]
+                                        },
+                        "Get database Conjuntos":  {
+                                                       "main":  [
+                                                                    [
+                                                                        {
+                                                                            "node":  "Code Clean Conjuntos",
+                                                                            "type":  "main",
+                                                                            "index":  0
+                                                                        }
+                                                                    ]
+                                                                ]
+                                                   },
+                        "HTTP Request Meta Adset Metrics":  {
+                                                                "main":  [
+                                                                             [
+                                                                                 {
+                                                                                     "node":  "Code Normalizar Metricas Conjuntos",
+                                                                                     "type":  "main",
+                                                                                     "index":  0
+                                                                                 }
+                                                                             ]
+                                                                         ]
+                                                            },
+                        "Loop Conjuntos":  {
+                                               "main":  [
+                                                            [
+
+                                                            ],
+                                                            [
+                                                                {
+                                                                    "node":  "If Plataforma",
+                                                                    "type":  "main",
+                                                                    "index":  0
+                                                                }
+                                                            ]
+                                                        ]
+                                           },
+                        "Code Missing ID Conjuntos":  {
+                                                          "main":  [
+                                                                       [
+                                                                           {
+                                                                               "node":  "Fim Subworkflow Conjuntos",
+                                                                               "type":  "main",
+                                                                               "index":  0
+                                                                           }
+                                                                       ]
+                                                                   ]
+                                                      },
+                        "Code Resultado Final Conjuntos":  {
+                                                               "main":  [
+                                                                            [
+                                                                                {
+                                                                                    "node":  "Fim Subworkflow Conjuntos",
+                                                                                    "type":  "main",
+                                                                                    "index":  0
+                                                                                }
+                                                                            ]
+                                                                        ]
+                                                           },
+                        "If Plataforma":  {
+                                              "main":  [
+                                                           [
+                                                               {
+                                                                   "node":  "If IDs Google",
+                                                                   "type":  "main",
+                                                                   "index":  0
+                                                               }
+                                                           ],
+                                                           [
+                                                               {
+                                                                   "node":  "If IDs Meta",
+                                                                   "type":  "main",
+                                                                   "index":  0
+                                                               }
+                                                           ]
+                                                       ]
+                                          },
+                        "Code Normalizar Metricas Conjuntos":  {
+                                                                   "main":  [
+                                                                                [
+                                                                                    {
+                                                                                        "node":  "Update database page Conjuntos",
+                                                                                        "type":  "main",
+                                                                                        "index":  0
+                                                                                    }
+                                                                                ]
+                                                                            ]
+                                                               },
+                        "Update database page Conjuntos":  {
+                                                               "main":  [
+                                                                            [
+                                                                                {
+                                                                                    "node":  "Code Resultado Final Conjuntos",
+                                                                                    "type":  "main",
+                                                                                    "index":  0
+                                                                                }
+                                                                            ]
+                                                                        ]
+                                                           },
+                        "HTTP Request Google Adset Metrics":  {
+                                                                  "main":  [
+                                                                               [
+                                                                                   {
+                                                                                       "node":  "Code Normalizar Metricas Conjuntos",
+                                                                                       "type":  "main",
+                                                                                       "index":  0
+                                                                                   }
+                                                                               ]
+                                                                           ]
+                                                              },
+                        "Code Clean Conjuntos":  {
+                                                     "main":  [
+                                                                  [
+                                                                      {
+                                                                          "node":  "Loop Conjuntos",
+                                                                          "type":  "main",
+                                                                          "index":  0
+                                                                      }
+                                                                  ]
+                                                              ]
+                                                 }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1"
+                 },
+    "id":  "f1432b68-f6d5-4d25-b8e3-58da31c87629"
+}
