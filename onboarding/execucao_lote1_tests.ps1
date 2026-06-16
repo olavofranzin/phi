@@ -194,6 +194,81 @@ if (-not $geminiFlash -or $geminiFlash.parameters.modelId.value -notmatch 'flash
 }
 Assert-TelegramHtml $qgMap['[Exec QG] Telegram Checklist FAIL'] 'qualitygate-pacing'
 
+# a04-qg: QualityGate must use native Notion nodes instead of direct Notion HTTP calls.
+$rawQg = [System.IO.File]::ReadAllText($qgWf, [System.Text.Encoding]::UTF8)
+$wfQg = $rawQg | ConvertFrom-Json
+
+$httpNotion = $wfQg.nodes | Where-Object {
+  $_.type -eq 'n8n-nodes-base.httpRequest' -and
+  $_.parameters.url -is [string] -and
+  $_.parameters.url.Contains('api.notion.com')
+}
+if ($httpNotion) { throw "qualitygate-pacing/workflow.json still has HTTP Request to api.notion.com (a04-qg refactor incomplete)" }
+
+$notionCreate = $wfQg.nodes | Where-Object {
+  $_.type -eq 'n8n-nodes-base.notion' -and $_.parameters.operation -eq 'create'
+}
+foreach ($n in $notionCreate) {
+  $dbVal = $n.parameters.databaseId.value
+  if (-not ($dbVal -match '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$')) {
+    throw "QG Notion node '$($n.name)' databaseId.value not UUID: $dbVal"
+  }
+  if ($dbVal -eq '3423df0d-77df-4834-bdda-c08ddbae40ff') {
+    throw "QG Notion '$($n.name)' uses Eventos data_source_id ($dbVal) instead of page_id (c64f600e-...)"
+  }
+}
+
+$notionUpdate = $wfQg.nodes | Where-Object {
+  $_.type -eq 'n8n-nodes-base.notion' -and $_.parameters.operation -eq 'update'
+}
+foreach ($n in $notionUpdate) {
+  if (-not $n.parameters.pageId) { throw "QG Notion update '$($n.name)' missing pageId" }
+  if ($n.parameters.pageId.mode -ne 'id') { throw "QG Notion update '$($n.name)' pageId.mode != 'id'" }
+}
+
+if ($notionCreate.Count -ne 3) { throw "QG expected 3 Notion create nodes, got $($notionCreate.Count)" }
+if ($notionUpdate.Count -ne 2) { throw "QG expected 2 Notion update nodes, got $($notionUpdate.Count)" }
+
+$preserved = @(
+  '[Exec QG] Schedule 5 min',
+  '[Exec QG] Buscar SOP Vigente',
+  '[Exec QG] Buscar Demandas Em Revisao',
+  '[Exec QG] Montar Evento demanda.em_revisao',
+  '[Exec QG] Gemini Flash DoD Pacing',
+  '[Exec QG] Validar DoD Pacing Flash',
+  '[Exec QG] Restaurar Payload DoD',
+  '[Exec QG] Resultado PASS?',
+  '[Exec QG] Telegram Checklist FAIL'
+)
+foreach ($name in $preserved) {
+  if (-not ($wfQg.nodes | Where-Object { $_.name -eq $name })) {
+    throw "QG missing preserved node: $name"
+  }
+}
+
+if (-not ($wfQg.connections.'[Exec QG] Resultado PASS?'.main[0][0].node -eq '[Exec QG] Marcar Entregue')) {
+  throw "QG PASS branch connection broken"
+}
+if (-not ($wfQg.connections.'[Exec QG] Resultado PASS?'.main[1][0].node -eq '[Exec QG] Reabrir Demanda')) {
+  throw "QG FAIL branch connection broken"
+}
+
+$qgReviewCode = [string]($wfQg.nodes | Where-Object { $_.name -eq '[Exec QG] Montar Evento demanda.em_revisao' }).parameters.jsCode
+foreach ($snippet in @('evento_tipo', 'entidade_id', 'payload_json', 'timestamp', 'execution_id', 'tenant_id', 'tier_agente', 'versao_sop_aplicada')) {
+  if (-not $qgReviewCode.Contains($snippet)) { throw "QG review event code missing field $snippet" }
+}
+if ($qgReviewCode.Contains('event_body') -or $qgReviewCode.Contains('eventBody(')) {
+  throw 'QG review event code still builds event_body'
+}
+
+$qgValidateNativeCode = [string]($wfQg.nodes | Where-Object { $_.name -eq '[Exec QG] Validar DoD Pacing Flash' }).parameters.jsCode
+foreach ($snippet in @('novo_estado', 'payload_json', 'demanda.entregue', 'demanda.reaberta', 'Entregue', 'Em execucao')) {
+  if (-not $qgValidateNativeCode.Contains($snippet)) { throw "QG validate code missing native Notion field $snippet" }
+}
+if ($qgValidateNativeCode.Contains('update_body') -or $qgValidateNativeCode.Contains('event_body') -or $qgValidateNativeCode.Contains('eventBody(')) {
+  throw 'QG validate code still builds update_body/event_body'
+}
+
 $schemaPath = Join-Path $base 'notion_phi_eventos_schema.md'
 if (-not (Test-Path $schemaPath)) { throw 'Missing PHI Eventos creation instructions' }
 $schema = Get-Content -Raw $schemaPath
@@ -229,8 +304,8 @@ if ($orqRaw -match "tipo === 'Recorrente diaria'" -or $orqRaw -match "tipo === '
   throw "Orquestrador priorityFor still uses 'tipo' or wrong class names"
 }
 
-$allWfs = @($intakeWf, $orqWf, $qgWf) + @((Join-Path $base 'generate_export.js'))
-foreach ($path in $allWfs) {
+$legacyEventosPaths = @($intakeWf, $orqWf) + @((Join-Path $base 'generate_export.js'))
+foreach ($path in $legacyEventosPaths) {
   $raw = [System.IO.File]::ReadAllText($path, [System.Text.Encoding]::UTF8)
   if ($raw.Contains('PHI_EVENTOS_DATA_SOURCE_ID_pending_creation')) {
     throw "$path still contains PHI_EVENTOS placeholder"
@@ -238,6 +313,15 @@ foreach ($path in $allWfs) {
   if (-not $raw.Contains('3423df0d-77df-4834-bdda-c08ddbae40ff')) {
     throw "$path missing PHI - Eventos data source ID"
   }
+}
+if ($rawQg.Contains('PHI_EVENTOS_DATA_SOURCE_ID_pending_creation')) {
+  throw "$qgWf still contains PHI_EVENTOS placeholder"
+}
+if ($rawQg.Contains('3423df0d-77df-4834-bdda-c08ddbae40ff')) {
+  throw "$qgWf still uses PHI - Eventos data source ID instead of native page ID"
+}
+if (-not $rawQg.Contains('c64f600e-4f46-4b2b-ac22-c1e425c8966e')) {
+  throw "$qgWf missing PHI - Eventos native page ID"
 }
 
 Write-Host 'Execucao Lote 1 workflow structural tests passed.'

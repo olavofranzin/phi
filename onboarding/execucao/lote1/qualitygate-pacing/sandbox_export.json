@@ -132,49 +132,77 @@
       ],
       "parameters": {
         "mode": "runOnceForAllItems",
-        "jsCode": "const pickTitle = (page) => {\n  for (const prop of Object.values(page.properties || {})) {\n    if (prop?.type === 'title') return (prop.title || []).map((part) => part.plain_text || '').join('').trim();\n  }\n  return '';\n};\nconst pickText = (prop) => (prop?.rich_text || []).map((part) => part.plain_text || '').join('').trim();\nconst pickSelect = (prop) => prop?.select?.name || prop?.status?.name || '';\nconst richText = (text) => [{ type: 'text', text: { content: String(text ?? '').slice(0, 1900) } }];\nconst title = (text) => [{ type: 'text', text: { content: String(text ?? '').slice(0, 1900) } }];\nconst brDate = () => new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });\nconst brDue = () => brDate() + 'T23:59:00-03:00';\nconst utcNow = () => new Date().toISOString();\nconst execId = (prefix) => prefix + '-' + $execution.id;\nconst compactJson = (value) => JSON.stringify(value);\nconst sopFromItems = (items) => {\n  const pages = items.map((item) => item.json || {}).filter((page) => !page.archived && !page.is_archived);\n  const vigente = pages.find((page) => {\n    const props = page.properties || {};\n    return pickSelect(props.area) === 'Execucao' && pickSelect(props.estado) === 'Vigente';\n  });\n  if (!vigente) throw new Error('SOP Vigente de area Execucao nao encontrada');\n  return { id: vigente.id, titulo: pickTitle(vigente), versao: pickText((vigente.properties || {}).versao) || 'v1.0' };\n};\nconst eventBody = (event) => ({\n  parent: { database_id: '3423df0d-77df-4834-bdda-c08ddbae40ff' },\n  properties: {\n    tipo: { title: title(event.tipo) },\n    entidade_id: { rich_text: richText(event.entidade_id) },\n    entidade_area: { select: { name: 'Execucao' } },\n    payload_json: { rich_text: richText(compactJson(event.payload)) },\n    timestamp: { date: { start: event.timestamp } },\n    execution_id: { rich_text: richText(event.execution_id) },\n    tenant_id: { rich_text: richText(event.tenant_id) },\n    tier_agente: { select: { name: event.tier_agente } },\n    versao_sop_aplicada: { rich_text: richText(event.versao_sop_aplicada) },\n  },\n});\nconst sopData = sopFromItems($('[Exec QG] Buscar SOP Vigente').all());\nconst execution_id = execId('EXEC-EXEC-QG');\nconst tenant_id = 'phi-agencia';\nreturn $input.all().map((item) => {\n  const page = item.json || {};\n  const props = page.properties || {};\n  const payload = {\n    tenant_id,\n    client_id: pickText(props.client_id),\n    execution_id,\n    versao_sop_aplicada: sopData.id,\n    demanda_id: page.id,\n    tipo: pickSelect(props.tipo) || 'Pacing/verba',\n    classe_sla: pickSelect(props.classe_sla) || 'Critica',\n    estado: 'Em revisao',\n    tier_agente: 'flash',\n  };\n  const event = { tipo: 'demanda.em_revisao', entidade_id: page.id, timestamp: utcNow(), execution_id, tenant_id, tier_agente: 'flash', versao_sop_aplicada: sopData.id, payload };\n  return { json: { ...page, event_body: eventBody(event) } };\n});"
+        "jsCode": "const pickTitle = (page) => {\n  for (const prop of Object.values(page.properties || {})) {\n    if (prop?.type === 'title') return (prop.title || []).map((part) => part.plain_text || '').join('').trim();\n  }\n  return '';\n};\nconst pickText = (prop) => (prop?.rich_text || []).map((part) => part.plain_text || '').join('').trim();\nconst pickSelect = (prop) => prop?.select?.name || prop?.status?.name || '';\nconst richText = (text) => [{ type: 'text', text: { content: String(text ?? '').slice(0, 1900) } }];\nconst title = (text) => [{ type: 'text', text: { content: String(text ?? '').slice(0, 1900) } }];\nconst brDate = () => new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });\nconst brDue = () => brDate() + 'T23:59:00-03:00';\nconst utcNow = () => new Date().toISOString();\nconst execId = (prefix) => prefix + '-' + $execution.id;\nconst compactJson = (value) => JSON.stringify(value);\nconst sopFromItems = (items) => {\n  const pages = items.map((item) => item.json || {}).filter((page) => !page.archived && !page.is_archived);\n  const vigente = pages.find((page) => {\n    const props = page.properties || {};\n    return pickSelect(props.area) === 'Execucao' && pickSelect(props.estado) === 'Vigente';\n  });\n  if (!vigente) throw new Error('SOP Vigente de area Execucao nao encontrada');\n  return { id: vigente.id, titulo: pickTitle(vigente), versao: pickText((vigente.properties || {}).versao) || 'v1.0' };\n};\n\nconst sopData = sopFromItems($('[Exec QG] Buscar SOP Vigente').all());\nconst execution_id = execId('EXEC-EXEC-QG');\nconst tenant_id = 'phi-agencia';\nreturn $input.all().map((item) => {\n  const page = item.json || {};\n  const props = page.properties || {};\n  const payload = {\n    tenant_id,\n    client_id: pickText(props.client_id),\n    execution_id,\n    versao_sop_aplicada: sopData.id,\n    demanda_id: page.id,\n    tipo: pickSelect(props.tipo) || 'Pacing/verba',\n    classe_sla: pickSelect(props.classe_sla) || 'Critica',\n    estado: 'Em revisao',\n    tier_agente: 'flash',\n  };\n  return { json: { ...page, evento_tipo: 'demanda.em_revisao', entidade_id: page.id, entidade_area: 'Execucao', payload_json: compactJson(payload), timestamp: utcNow(), execution_id, tenant_id, tier_agente: 'flash', versao_sop_aplicada: sopData.id } };\n});"
       }
     },
     {
       "id": "exec-qg-event-revisao",
       "name": "[Exec QG] Criar Evento demanda.em_revisao",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.3,
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
       "position": [
         880,
         0
       ],
       "parameters": {
-        "method": "POST",
-        "url": "https://api.notion.com/v1/pages",
-        "authentication": "predefinedCredentialType",
-        "nodeCredentialType": "notionApi",
-        "sendHeaders": true,
-        "specifyHeaders": "keypair",
-        "headerParameters": {
-          "parameters": [
+        "resource": "databasePage",
+        "operation": "create",
+        "databaseId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "c64f600e-4f46-4b2b-ac22-c1e425c8966e",
+          "cachedResultName": "PHI - Eventos"
+        },
+        "simple": false,
+        "propertiesUi": {
+          "propertyValues": [
             {
-              "name": "Notion-Version",
-              "value": "2022-06-28"
+              "key": "tipo|title",
+              "type": "title",
+              "title": "={{ $json.evento_tipo }}"
             },
             {
-              "name": "Accept",
-              "value": "application/json"
+              "key": "entidade_id|rich_text",
+              "type": "rich_text",
+              "textContent": "={{ $json.entidade_id }}"
+            },
+            {
+              "key": "entidade_area|select",
+              "type": "select",
+              "selectValue": "Execucao"
+            },
+            {
+              "key": "payload_json|rich_text",
+              "type": "rich_text",
+              "textContent": "={{ $json.payload_json }}"
+            },
+            {
+              "key": "timestamp|date",
+              "type": "date",
+              "date": "={{ $json.timestamp }}"
+            },
+            {
+              "key": "execution_id|rich_text",
+              "type": "rich_text",
+              "textContent": "={{ $json.execution_id }}"
+            },
+            {
+              "key": "tenant_id|rich_text",
+              "type": "rich_text",
+              "textContent": "={{ $json.tenant_id }}"
+            },
+            {
+              "key": "tier_agente|select",
+              "type": "select",
+              "selectValue": "={{ $json.tier_agente }}"
+            },
+            {
+              "key": "versao_sop_aplicada|rich_text",
+              "type": "rich_text",
+              "textContent": "={{ $json.versao_sop_aplicada }}"
             }
           ]
-        },
-        "options": {
-          "response": {
-            "response": {
-              "responseFormat": "json",
-              "neverError": false
-            }
-          }
-        },
-        "sendBody": true,
-        "contentType": "json",
-        "specifyBody": "json",
-        "jsonBody": "={{ $json.event_body }}"
+        }
       },
       "credentials": {
         "notionApi": {
@@ -235,7 +263,7 @@
       ],
       "parameters": {
         "mode": "runOnceForAllItems",
-        "jsCode": "const pickTitle = (page) => {\n  for (const prop of Object.values(page.properties || {})) {\n    if (prop?.type === 'title') return (prop.title || []).map((part) => part.plain_text || '').join('').trim();\n  }\n  return '';\n};\nconst pickText = (prop) => (prop?.rich_text || []).map((part) => part.plain_text || '').join('').trim();\nconst pickSelect = (prop) => prop?.select?.name || prop?.status?.name || '';\nconst richText = (text) => [{ type: 'text', text: { content: String(text ?? '').slice(0, 1900) } }];\nconst title = (text) => [{ type: 'text', text: { content: String(text ?? '').slice(0, 1900) } }];\nconst brDate = () => new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });\nconst brDue = () => brDate() + 'T23:59:00-03:00';\nconst utcNow = () => new Date().toISOString();\nconst execId = (prefix) => prefix + '-' + $execution.id;\nconst compactJson = (value) => JSON.stringify(value);\nconst sopFromItems = (items) => {\n  const pages = items.map((item) => item.json || {}).filter((page) => !page.archived && !page.is_archived);\n  const vigente = pages.find((page) => {\n    const props = page.properties || {};\n    return pickSelect(props.area) === 'Execucao' && pickSelect(props.estado) === 'Vigente';\n  });\n  if (!vigente) throw new Error('SOP Vigente de area Execucao nao encontrada');\n  return { id: vigente.id, titulo: pickTitle(vigente), versao: pickText((vigente.properties || {}).versao) || 'v1.0' };\n};\nconst eventBody = (event) => ({\n  parent: { database_id: '3423df0d-77df-4834-bdda-c08ddbae40ff' },\n  properties: {\n    tipo: { title: title(event.tipo) },\n    entidade_id: { rich_text: richText(event.entidade_id) },\n    entidade_area: { select: { name: 'Execucao' } },\n    payload_json: { rich_text: richText(compactJson(event.payload)) },\n    timestamp: { date: { start: event.timestamp } },\n    execution_id: { rich_text: richText(event.execution_id) },\n    tenant_id: { rich_text: richText(event.tenant_id) },\n    tier_agente: { select: { name: event.tier_agente } },\n    versao_sop_aplicada: { rich_text: richText(event.versao_sop_aplicada) },\n  },\n});\nconst sopData = sopFromItems($('[Exec QG] Buscar SOP Vigente').all());\nconst execution_id = execId('EXEC-EXEC-QG');\nconst tenant_id = 'phi-agencia';\nconst checklist = [\n  'Diagnostico da anomalia',\n  'Acao tomada OU justificativa',\n  'Registro de impacto esperado',\n  'Audit (execution_id + fonte)',\n];\nconst out = [];\nfor (const item of $input.all()) {\n  const page = item.json || {};\n  const props = page.properties || {};\n  const obs = (pickText(props.observacoes) || pickText(props.Observacoes) || '').toLowerCase();\n  const hasDiagnostico = /diagnostico|anomalia/.test(obs);\n  const hasAcao = /acao tomada|ajuste|pausad|reduz|aument|justificativa|sem acao necessaria/.test(obs);\n  const hasImpacto = /impacto esperado|impacto/.test(obs);\n  const hasAudit = /execution_id|fonte/.test(obs);\n  const checks = [\n    { item: checklist[0], ok: hasDiagnostico },\n    { item: checklist[1], ok: hasAcao },\n    { item: checklist[2], ok: hasImpacto },\n    { item: checklist[3], ok: hasAudit },\n  ];\n  const missing = checks.filter((check) => !check.ok).map((check) => check.item);\n  const quality_gate = missing.length === 0 ? 'pass' : 'fail';\n  const demanda_id = page.id;\n  const client_id = pickText(props.client_id);\n  const tipo = pickSelect(props.tipo) || 'Pacing/verba';\n  const classe_sla = pickSelect(props.classe_sla) || 'Critica';\n  const basePayload = { tenant_id, client_id, execution_id, versao_sop_aplicada: sopData.id, demanda_id, tipo, classe_sla, quality_gate, checklist: checks, tier_agente: 'flash' };\n  if (quality_gate === 'pass') {\n    const event = { tipo: 'demanda.entregue', entidade_id: demanda_id, timestamp: utcNow(), execution_id, tenant_id, tier_agente: 'flash', versao_sop_aplicada: sopData.id, payload: basePayload };\n    out.push({ json: { demanda_id, quality_gate, update_body: { properties: { estado: { select: { name: 'Entregue' } }, quality_gate: { select: { name: 'pass' } }, versao_sop_aplicada: { rich_text: richText(sopData.id) } } }, event_body: eventBody(event), text: 'PASS demanda ' + demanda_id } });\n  } else {\n    const event = { tipo: 'demanda.reaberta', entidade_id: demanda_id, timestamp: utcNow(), execution_id, tenant_id, tier_agente: 'flash', versao_sop_aplicada: sopData.id, payload: { ...basePayload, missing } };\n    out.push({ json: { demanda_id, quality_gate, missing, update_body: { properties: { estado: { select: { name: 'Em execucao' } }, quality_gate: { select: { name: 'fail' } }, versao_sop_aplicada: { rich_text: richText(sopData.id) } } }, event_body: eventBody(event), text: '<b>Quality gate FAIL</b>\\nDemanda: ' + demanda_id + '\\nFaltam:\\n- ' + missing.join('\\n- ') } });\n  }\n}\nreturn out;"
+        "jsCode": "const pickTitle = (page) => {\n  for (const prop of Object.values(page.properties || {})) {\n    if (prop?.type === 'title') return (prop.title || []).map((part) => part.plain_text || '').join('').trim();\n  }\n  return '';\n};\nconst pickText = (prop) => (prop?.rich_text || []).map((part) => part.plain_text || '').join('').trim();\nconst pickSelect = (prop) => prop?.select?.name || prop?.status?.name || '';\nconst richText = (text) => [{ type: 'text', text: { content: String(text ?? '').slice(0, 1900) } }];\nconst title = (text) => [{ type: 'text', text: { content: String(text ?? '').slice(0, 1900) } }];\nconst brDate = () => new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });\nconst brDue = () => brDate() + 'T23:59:00-03:00';\nconst utcNow = () => new Date().toISOString();\nconst execId = (prefix) => prefix + '-' + $execution.id;\nconst compactJson = (value) => JSON.stringify(value);\nconst sopFromItems = (items) => {\n  const pages = items.map((item) => item.json || {}).filter((page) => !page.archived && !page.is_archived);\n  const vigente = pages.find((page) => {\n    const props = page.properties || {};\n    return pickSelect(props.area) === 'Execucao' && pickSelect(props.estado) === 'Vigente';\n  });\n  if (!vigente) throw new Error('SOP Vigente de area Execucao nao encontrada');\n  return { id: vigente.id, titulo: pickTitle(vigente), versao: pickText((vigente.properties || {}).versao) || 'v1.0' };\n};\n\nconst sopData = sopFromItems($('[Exec QG] Buscar SOP Vigente').all());\nconst execution_id = execId('EXEC-EXEC-QG');\nconst tenant_id = 'phi-agencia';\nconst checklist = [\n  'Diagnostico da anomalia',\n  'Acao tomada OU justificativa',\n  'Registro de impacto esperado',\n  'Audit (execution_id + fonte)',\n];\nconst out = [];\nfor (const item of $input.all()) {\n  const page = item.json || {};\n  const props = page.properties || {};\n  const obs = (pickText(props.observacoes) || pickText(props.Observacoes) || '').toLowerCase();\n  const hasDiagnostico = /diagnostico|anomalia/.test(obs);\n  const hasAcao = /acao tomada|ajuste|pausad|reduz|aument|justificativa|sem acao necessaria/.test(obs);\n  const hasImpacto = /impacto esperado|impacto/.test(obs);\n  const hasAudit = /execution_id|fonte/.test(obs);\n  const checks = [\n    { item: checklist[0], ok: hasDiagnostico },\n    { item: checklist[1], ok: hasAcao },\n    { item: checklist[2], ok: hasImpacto },\n    { item: checklist[3], ok: hasAudit },\n  ];\n  const missing = checks.filter((check) => !check.ok).map((check) => check.item);\n  const quality_gate = missing.length === 0 ? 'pass' : 'fail';\n  const demanda_id = page.id;\n  const client_id = pickText(props.client_id);\n  const tipo = pickSelect(props.tipo) || 'Pacing/verba';\n  const classe_sla = pickSelect(props.classe_sla) || 'Critica';\n  const basePayload = { tenant_id, client_id, execution_id, versao_sop_aplicada: sopData.id, demanda_id, tipo, classe_sla, quality_gate, checklist: checks, tier_agente: 'flash' };\n  if (quality_gate === 'pass') {\n    out.push({ json: { demanda_id, quality_gate, novo_estado: 'Entregue', versao_sop_aplicada: sopData.id, evento_tipo: 'demanda.entregue', entidade_id: demanda_id, entidade_area: 'Execucao', payload_json: compactJson(basePayload), timestamp: utcNow(), execution_id, tenant_id, tier_agente: 'flash', text: 'PASS demanda ' + demanda_id } });\n  } else {\n    out.push({ json: { demanda_id, quality_gate, novo_estado: 'Em execucao', versao_sop_aplicada: sopData.id, evento_tipo: 'demanda.reaberta', entidade_id: demanda_id, entidade_area: 'Execucao', payload_json: compactJson({ ...basePayload, missing }), timestamp: utcNow(), execution_id, tenant_id, tier_agente: 'flash', missing, text: '<b>Quality gate FAIL</b>\\nDemanda: ' + demanda_id + '\\nFaltam:\\n- ' + missing.join('\\n- ') } });\n  }\n}\nreturn out;"
       }
     },
     {
@@ -286,43 +314,40 @@
     {
       "id": "exec-qg-entregue",
       "name": "[Exec QG] Marcar Entregue",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.3,
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
       "position": [
         1760,
         -140
       ],
       "parameters": {
-        "method": "PATCH",
-        "url": "={{ \"https://api.notion.com/v1/pages/\" + $json.demanda_id }}",
-        "authentication": "predefinedCredentialType",
-        "nodeCredentialType": "notionApi",
-        "sendHeaders": true,
-        "specifyHeaders": "keypair",
-        "headerParameters": {
-          "parameters": [
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $json.demanda_id }}"
+        },
+        "simple": false,
+        "propertiesUi": {
+          "propertyValues": [
             {
-              "name": "Notion-Version",
-              "value": "2022-06-28"
+              "key": "estado|select",
+              "type": "select",
+              "selectValue": "={{ $json.novo_estado }}"
             },
             {
-              "name": "Accept",
-              "value": "application/json"
+              "key": "quality_gate|select",
+              "type": "select",
+              "selectValue": "={{ $json.quality_gate }}"
+            },
+            {
+              "key": "versao_sop_aplicada|rich_text",
+              "type": "rich_text",
+              "textContent": "={{ $json.versao_sop_aplicada }}"
             }
           ]
-        },
-        "options": {
-          "response": {
-            "response": {
-              "responseFormat": "json",
-              "neverError": false
-            }
-          }
-        },
-        "sendBody": true,
-        "contentType": "json",
-        "specifyBody": "json",
-        "jsonBody": "={{ $json.update_body }}"
+        }
       },
       "credentials": {
         "notionApi": {
@@ -334,43 +359,71 @@
     {
       "id": "exec-qg-event-entregue",
       "name": "[Exec QG] Criar Evento demanda.entregue",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.3,
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
       "position": [
         1980,
         -140
       ],
       "parameters": {
-        "method": "POST",
-        "url": "https://api.notion.com/v1/pages",
-        "authentication": "predefinedCredentialType",
-        "nodeCredentialType": "notionApi",
-        "sendHeaders": true,
-        "specifyHeaders": "keypair",
-        "headerParameters": {
-          "parameters": [
+        "resource": "databasePage",
+        "operation": "create",
+        "databaseId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "c64f600e-4f46-4b2b-ac22-c1e425c8966e",
+          "cachedResultName": "PHI - Eventos"
+        },
+        "simple": false,
+        "propertiesUi": {
+          "propertyValues": [
             {
-              "name": "Notion-Version",
-              "value": "2022-06-28"
+              "key": "tipo|title",
+              "type": "title",
+              "title": "={{ $json.evento_tipo }}"
             },
             {
-              "name": "Accept",
-              "value": "application/json"
+              "key": "entidade_id|rich_text",
+              "type": "rich_text",
+              "textContent": "={{ $json.entidade_id }}"
+            },
+            {
+              "key": "entidade_area|select",
+              "type": "select",
+              "selectValue": "Execucao"
+            },
+            {
+              "key": "payload_json|rich_text",
+              "type": "rich_text",
+              "textContent": "={{ $json.payload_json }}"
+            },
+            {
+              "key": "timestamp|date",
+              "type": "date",
+              "date": "={{ $json.timestamp }}"
+            },
+            {
+              "key": "execution_id|rich_text",
+              "type": "rich_text",
+              "textContent": "={{ $json.execution_id }}"
+            },
+            {
+              "key": "tenant_id|rich_text",
+              "type": "rich_text",
+              "textContent": "={{ $json.tenant_id }}"
+            },
+            {
+              "key": "tier_agente|select",
+              "type": "select",
+              "selectValue": "={{ $json.tier_agente }}"
+            },
+            {
+              "key": "versao_sop_aplicada|rich_text",
+              "type": "rich_text",
+              "textContent": "={{ $json.versao_sop_aplicada }}"
             }
           ]
-        },
-        "options": {
-          "response": {
-            "response": {
-              "responseFormat": "json",
-              "neverError": false
-            }
-          }
-        },
-        "sendBody": true,
-        "contentType": "json",
-        "specifyBody": "json",
-        "jsonBody": "={{ $json.event_body }}"
+        }
       },
       "credentials": {
         "notionApi": {
@@ -382,43 +435,40 @@
     {
       "id": "exec-qg-reabrir",
       "name": "[Exec QG] Reabrir Demanda",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.3,
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
       "position": [
         1760,
         160
       ],
       "parameters": {
-        "method": "PATCH",
-        "url": "={{ \"https://api.notion.com/v1/pages/\" + $json.demanda_id }}",
-        "authentication": "predefinedCredentialType",
-        "nodeCredentialType": "notionApi",
-        "sendHeaders": true,
-        "specifyHeaders": "keypair",
-        "headerParameters": {
-          "parameters": [
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $json.demanda_id }}"
+        },
+        "simple": false,
+        "propertiesUi": {
+          "propertyValues": [
             {
-              "name": "Notion-Version",
-              "value": "2022-06-28"
+              "key": "estado|select",
+              "type": "select",
+              "selectValue": "={{ $json.novo_estado }}"
             },
             {
-              "name": "Accept",
-              "value": "application/json"
+              "key": "quality_gate|select",
+              "type": "select",
+              "selectValue": "={{ $json.quality_gate }}"
+            },
+            {
+              "key": "versao_sop_aplicada|rich_text",
+              "type": "rich_text",
+              "textContent": "={{ $json.versao_sop_aplicada }}"
             }
           ]
-        },
-        "options": {
-          "response": {
-            "response": {
-              "responseFormat": "json",
-              "neverError": false
-            }
-          }
-        },
-        "sendBody": true,
-        "contentType": "json",
-        "specifyBody": "json",
-        "jsonBody": "={{ $json.update_body }}"
+        }
       },
       "credentials": {
         "notionApi": {
@@ -430,43 +480,71 @@
     {
       "id": "exec-qg-event-reaberta",
       "name": "[Exec QG] Criar Evento demanda.reaberta",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.3,
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
       "position": [
         1980,
         160
       ],
       "parameters": {
-        "method": "POST",
-        "url": "https://api.notion.com/v1/pages",
-        "authentication": "predefinedCredentialType",
-        "nodeCredentialType": "notionApi",
-        "sendHeaders": true,
-        "specifyHeaders": "keypair",
-        "headerParameters": {
-          "parameters": [
+        "resource": "databasePage",
+        "operation": "create",
+        "databaseId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "c64f600e-4f46-4b2b-ac22-c1e425c8966e",
+          "cachedResultName": "PHI - Eventos"
+        },
+        "simple": false,
+        "propertiesUi": {
+          "propertyValues": [
             {
-              "name": "Notion-Version",
-              "value": "2022-06-28"
+              "key": "tipo|title",
+              "type": "title",
+              "title": "={{ $json.evento_tipo }}"
             },
             {
-              "name": "Accept",
-              "value": "application/json"
+              "key": "entidade_id|rich_text",
+              "type": "rich_text",
+              "textContent": "={{ $json.entidade_id }}"
+            },
+            {
+              "key": "entidade_area|select",
+              "type": "select",
+              "selectValue": "Execucao"
+            },
+            {
+              "key": "payload_json|rich_text",
+              "type": "rich_text",
+              "textContent": "={{ $json.payload_json }}"
+            },
+            {
+              "key": "timestamp|date",
+              "type": "date",
+              "date": "={{ $json.timestamp }}"
+            },
+            {
+              "key": "execution_id|rich_text",
+              "type": "rich_text",
+              "textContent": "={{ $json.execution_id }}"
+            },
+            {
+              "key": "tenant_id|rich_text",
+              "type": "rich_text",
+              "textContent": "={{ $json.tenant_id }}"
+            },
+            {
+              "key": "tier_agente|select",
+              "type": "select",
+              "selectValue": "={{ $json.tier_agente }}"
+            },
+            {
+              "key": "versao_sop_aplicada|rich_text",
+              "type": "rich_text",
+              "textContent": "={{ $json.versao_sop_aplicada }}"
             }
           ]
-        },
-        "options": {
-          "response": {
-            "response": {
-              "responseFormat": "json",
-              "neverError": false
-            }
-          }
-        },
-        "sendBody": true,
-        "contentType": "json",
-        "specifyBody": "json",
-        "jsonBody": "={{ $json.event_body }}"
+        }
       },
       "credentials": {
         "notionApi": {

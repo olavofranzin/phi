@@ -12,6 +12,8 @@ const EXEC_WEBHOOK_KEY = '<EXEC_WEBHOOK_KEY_redacted>';
 const DB_DEMANDAS = 'cd1ab757-e4d1-493f-b1e1-b64a95d33d1b';
 const DB_SOPS = 'bfeb1105-83a6-4e89-8d62-26607ebfcc8c';
 const DB_EVENTOS = '3423df0d-77df-4834-bdda-c08ddbae40ff';
+const DB_EVENTOS_PAGE = 'c64f600e-4f46-4b2b-ac22-c1e425c8966e';
+const DB_EVENTOS_NAME = 'PHI - Eventos';
 
 const notionHeaders = {
   parameters: [
@@ -22,7 +24,7 @@ const notionHeaders = {
 
 const htmlEscape = "={{ String($json.text || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }}";
 
-const shared = String.raw`const pickTitle = (page) => {
+const sharedCore = String.raw`const pickTitle = (page) => {
   for (const prop of Object.values(page.properties || {})) {
     if (prop?.type === 'title') return (prop.title || []).map((part) => part.plain_text || '').join('').trim();
   }
@@ -46,7 +48,9 @@ const sopFromItems = (items) => {
   if (!vigente) throw new Error('SOP Vigente de area Execucao nao encontrada');
   return { id: vigente.id, titulo: pickTitle(vigente), versao: pickText((vigente.properties || {}).versao) || 'v1.0' };
 };
-const eventBody = (event) => ({
+`;
+
+const shared = String.raw`${sharedCore}const eventBody = (event) => ({
   parent: { database_id: '${DB_EVENTOS}' },
   properties: {
     tipo: { title: title(event.tipo) },
@@ -218,7 +222,7 @@ return out;`;
 
 const orqRestoreAfterGemini = String.raw`return $('[Exec Orq] Calcular Prioridade Pro').all().map((item) => ({ json: item.json }));`;
 
-const qgValidate = String.raw`${shared}
+const qgValidate = String.raw`${sharedCore}
 const sopData = sopFromItems($('[Exec QG] Buscar SOP Vigente').all());
 const execution_id = execId('EXEC-EXEC-QG');
 const tenant_id = 'phi-agencia';
@@ -251,16 +255,14 @@ for (const item of $input.all()) {
   const classe_sla = pickSelect(props.classe_sla) || 'Critica';
   const basePayload = { tenant_id, client_id, execution_id, versao_sop_aplicada: sopData.id, demanda_id, tipo, classe_sla, quality_gate, checklist: checks, tier_agente: 'flash' };
   if (quality_gate === 'pass') {
-    const event = { tipo: 'demanda.entregue', entidade_id: demanda_id, timestamp: utcNow(), execution_id, tenant_id, tier_agente: 'flash', versao_sop_aplicada: sopData.id, payload: basePayload };
-    out.push({ json: { demanda_id, quality_gate, update_body: { properties: { estado: { select: { name: 'Entregue' } }, quality_gate: { select: { name: 'pass' } }, versao_sop_aplicada: { rich_text: richText(sopData.id) } } }, event_body: eventBody(event), text: 'PASS demanda ' + demanda_id } });
+    out.push({ json: { demanda_id, quality_gate, novo_estado: 'Entregue', versao_sop_aplicada: sopData.id, evento_tipo: 'demanda.entregue', entidade_id: demanda_id, entidade_area: 'Execucao', payload_json: compactJson(basePayload), timestamp: utcNow(), execution_id, tenant_id, tier_agente: 'flash', text: 'PASS demanda ' + demanda_id } });
   } else {
-    const event = { tipo: 'demanda.reaberta', entidade_id: demanda_id, timestamp: utcNow(), execution_id, tenant_id, tier_agente: 'flash', versao_sop_aplicada: sopData.id, payload: { ...basePayload, missing } };
-    out.push({ json: { demanda_id, quality_gate, missing, update_body: { properties: { estado: { select: { name: 'Em execucao' } }, quality_gate: { select: { name: 'fail' } }, versao_sop_aplicada: { rich_text: richText(sopData.id) } } }, event_body: eventBody(event), text: '<b>Quality gate FAIL</b>\nDemanda: ' + demanda_id + '\nFaltam:\n- ' + missing.join('\n- ') } });
+    out.push({ json: { demanda_id, quality_gate, novo_estado: 'Em execucao', versao_sop_aplicada: sopData.id, evento_tipo: 'demanda.reaberta', entidade_id: demanda_id, entidade_area: 'Execucao', payload_json: compactJson({ ...basePayload, missing }), timestamp: utcNow(), execution_id, tenant_id, tier_agente: 'flash', missing, text: '<b>Quality gate FAIL</b>\nDemanda: ' + demanda_id + '\nFaltam:\n- ' + missing.join('\n- ') } });
   }
 }
 return out;`;
 
-const qgReviewEvent = String.raw`${shared}
+const qgReviewEvent = String.raw`${sharedCore}
 const sopData = sopFromItems($('[Exec QG] Buscar SOP Vigente').all());
 const execution_id = execId('EXEC-EXEC-QG');
 const tenant_id = 'phi-agencia';
@@ -278,8 +280,7 @@ return $input.all().map((item) => {
     estado: 'Em revisao',
     tier_agente: 'flash',
   };
-  const event = { tipo: 'demanda.em_revisao', entidade_id: page.id, timestamp: utcNow(), execution_id, tenant_id, tier_agente: 'flash', versao_sop_aplicada: sopData.id, payload };
-  return { json: { ...page, event_body: eventBody(event) } };
+  return { json: { ...page, evento_tipo: 'demanda.em_revisao', entidade_id: page.id, entidade_area: 'Execucao', payload_json: compactJson(payload), timestamp: utcNow(), execution_id, tenant_id, tier_agente: 'flash', versao_sop_aplicada: sopData.id } };
 });`;
 
 const qgRestoreAfterGemini = String.raw`return $('[Exec QG] Validar DoD Pacing Flash').all().map((item) => ({ json: item.json }));`;
@@ -348,6 +349,60 @@ function notionGetAll(id, name, x, y, databaseId, filterType = 'none', filters =
   };
   if (filters) parameters.filters = filters;
   return { id, name, type: 'n8n-nodes-base.notion', typeVersion: 2.2, position: [x, y], parameters, credentials: { notionApi: creds.notionApi }, alwaysOutputData: true };
+}
+
+function notionCreateEvent(id, name, x, y) {
+  return {
+    id,
+    name,
+    type: 'n8n-nodes-base.notion',
+    typeVersion: 2.2,
+    position: [x, y],
+    parameters: {
+      resource: 'databasePage',
+      operation: 'create',
+      databaseId: { __rl: true, mode: 'list', value: DB_EVENTOS_PAGE, cachedResultName: DB_EVENTOS_NAME },
+      simple: false,
+      propertiesUi: {
+        propertyValues: [
+          { key: 'tipo|title', type: 'title', title: '={{ $json.evento_tipo }}' },
+          { key: 'entidade_id|rich_text', type: 'rich_text', textContent: '={{ $json.entidade_id }}' },
+          { key: 'entidade_area|select', type: 'select', selectValue: 'Execucao' },
+          { key: 'payload_json|rich_text', type: 'rich_text', textContent: '={{ $json.payload_json }}' },
+          { key: 'timestamp|date', type: 'date', date: '={{ $json.timestamp }}' },
+          { key: 'execution_id|rich_text', type: 'rich_text', textContent: '={{ $json.execution_id }}' },
+          { key: 'tenant_id|rich_text', type: 'rich_text', textContent: '={{ $json.tenant_id }}' },
+          { key: 'tier_agente|select', type: 'select', selectValue: '={{ $json.tier_agente }}' },
+          { key: 'versao_sop_aplicada|rich_text', type: 'rich_text', textContent: '={{ $json.versao_sop_aplicada }}' },
+        ],
+      },
+    },
+    credentials: { notionApi: creds.notionApi },
+  };
+}
+
+function notionUpdateDemand(id, name, x, y) {
+  return {
+    id,
+    name,
+    type: 'n8n-nodes-base.notion',
+    typeVersion: 2.2,
+    position: [x, y],
+    parameters: {
+      resource: 'databasePage',
+      operation: 'update',
+      pageId: { __rl: true, mode: 'id', value: '={{ $json.demanda_id }}' },
+      simple: false,
+      propertiesUi: {
+        propertyValues: [
+          { key: 'estado|select', type: 'select', selectValue: '={{ $json.novo_estado }}' },
+          { key: 'quality_gate|select', type: 'select', selectValue: '={{ $json.quality_gate }}' },
+          { key: 'versao_sop_aplicada|rich_text', type: 'rich_text', textContent: '={{ $json.versao_sop_aplicada }}' },
+        ],
+      },
+    },
+    credentials: { notionApi: creds.notionApi },
+  };
 }
 
 function gemini(id, name, x, y, model, systemMessage, content) {
@@ -460,15 +515,15 @@ const qgNodes = [
   notionGetAll('exec-qg-sop', '[Exec QG] Buscar SOP Vigente', 220, 0, DB_SOPS, 'manual', sopFilters),
   notionGetAll('exec-qg-revisao', '[Exec QG] Buscar Demandas Em Revisao', 440, 0, DB_DEMANDAS, 'manual', revisaoFilters),
   code('exec-qg-event-revisao-body', '[Exec QG] Montar Evento demanda.em_revisao', 660, 0, qgReviewEvent),
-  http('exec-qg-event-revisao', '[Exec QG] Criar Evento demanda.em_revisao', 880, 0, 'POST', 'https://api.notion.com/v1/pages', '={{ $json.event_body }}'),
+  notionCreateEvent('exec-qg-event-revisao', '[Exec QG] Criar Evento demanda.em_revisao', 880, 0),
   gemini('exec-qg-gemini', '[Exec QG] Gemini Flash DoD Pacing', 1100, 160, 'models/gemini-2.5-flash', 'Voce e o Padronizador Flash. Valide mecanicamente DoD de Pacing/verba.', '={{ JSON.stringify($json) }}'),
   code('exec-qg-validar', '[Exec QG] Validar DoD Pacing Flash', 1100, 0, qgValidate),
   code('exec-qg-restaurar', '[Exec QG] Restaurar Payload DoD', 1320, 0, qgRestoreAfterGemini),
   ifNode('exec-qg-if-pass', '[Exec QG] Resultado PASS?', 1540, 0, '={{ $json.quality_gate }}', 'equals', 'pass', 'string'),
-  http('exec-qg-entregue', '[Exec QG] Marcar Entregue', 1760, -140, 'PATCH', '={{ "https://api.notion.com/v1/pages/" + $json.demanda_id }}', '={{ $json.update_body }}'),
-  http('exec-qg-event-entregue', '[Exec QG] Criar Evento demanda.entregue', 1980, -140, 'POST', 'https://api.notion.com/v1/pages', '={{ $json.event_body }}'),
-  http('exec-qg-reabrir', '[Exec QG] Reabrir Demanda', 1760, 160, 'PATCH', '={{ "https://api.notion.com/v1/pages/" + $json.demanda_id }}', '={{ $json.update_body }}'),
-  http('exec-qg-event-reaberta', '[Exec QG] Criar Evento demanda.reaberta', 1980, 160, 'POST', 'https://api.notion.com/v1/pages', '={{ $json.event_body }}'),
+  notionUpdateDemand('exec-qg-entregue', '[Exec QG] Marcar Entregue', 1760, -140),
+  notionCreateEvent('exec-qg-event-entregue', '[Exec QG] Criar Evento demanda.entregue', 1980, -140),
+  notionUpdateDemand('exec-qg-reabrir', '[Exec QG] Reabrir Demanda', 1760, 160),
+  notionCreateEvent('exec-qg-event-reaberta', '[Exec QG] Criar Evento demanda.reaberta', 1980, 160),
   telegram('exec-qg-telegram-fail', '[Exec QG] Telegram Checklist FAIL', 2200, 160),
 ];
 
