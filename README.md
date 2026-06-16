@@ -18,25 +18,31 @@ operacionais com checklists no Notion.
 
 ## Estrutura do repositório
 
-```
-.agents/skills/      Biblioteca de skills para agentes IA (copywriting, deep-research, n8n, etc.)
-.claude/skills/      Symlinks para .agents/skills consumidos pelo Claude Code
-docs/                Documentação, pesquisa e planejamento estratégico
-  analises/          Análises técnicas (Google Ads)
-  handoff/           Histórico de sessões e briefings (rastreabilidade)
-  strategic-planning/ Doc mestre, ADRs, execução de demandas
-scripts/             Utilitários Python (build/fix pipeline, verificação de métricas)
-workflows/           Workflows n8n e código relacionado
-  main/              Pipeline PHI e subworkflow de campanhas
-  subworkflows/      Subworkflows expandidos (métricas, adsets, ads operacional)
-  integrations/      Integrações (daily entry, Google Ads/Maps, GitHub importer)
-  whatsapp/          Intake via WhatsApp
-  comercial/         Deduplicação de leads HubSpot
-  onboarding/        Módulos de onboarding (a2.x), execução e telemetria
-  setup/             Setup de abertura de projeto técnico (L1)
-archive/             Versões intermediárias preservadas para rollback
-prompts/             Prompts de apoio
-```
+Onde salvar cada tipo de artefato:
+
+| Pasta | O que salvar aqui |
+|-------|-------------------|
+| `CLAUDE.md` (raiz) | Contexto operacional do PHI para agentes (IDs, regras). Editar ao mudar infra/regras. |
+| `.agents/skills/` | Skills de agentes IA — uma pasta por skill, com `SKILL.md`. |
+| `.claude/skills/` | Apenas symlinks para `.agents/skills/` — não criar arquivos reais aqui. |
+| `docs/` | Documentação técnica e de processo (`.md`). |
+| `docs/analises/` | Análises técnicas pontuais (ex.: comparativos de workflow Google Ads). |
+| `docs/handoff/` | Briefings de sessão e handoffs — histórico/rastreabilidade, não apagar. |
+| `docs/strategic-planning/` | Doc mestre, ADRs e execução de demandas (design/governança). |
+| `docs/audits/` | Relatórios de auditoria. |
+| `scripts/` | Utilitários Python de apoio (build/fix/verificação), executados fora do n8n. |
+| `workflows/main/` | Os workflows PHI em produção (pipeline e subworkflow de campanhas). |
+| `workflows/subworkflows/` | Subworkflows chamados pelos principais (métricas, adsets, ads operacional). |
+| `workflows/integrations/` | Workflows que conectam o PHI a serviços externos (Google Ads/Maps, daily entry, GitHub importer). |
+| `workflows/whatsapp/` | Workflows de intake via WhatsApp. |
+| `workflows/comercial/` | Automação comercial (dedup de leads HubSpot). |
+| `workflows/onboarding/` | Módulos de onboarding (a2.x), runs de execução e telemetria. |
+| `workflows/setup/` | Workflows de abertura/setup de projeto técnico (L1). |
+| `archive/` | Versões antigas/intermediárias preservadas só para rollback — não referenciar em produção. |
+| `prompts/` | Prompts de apoio a tarefas com agentes/LLM. |
+
+Convenção de nomes: arquivos em `snake_case`, sem sufixos de versão (`_v2`, `_fixed`,
+`_updated`) — versionamento fica no histórico do git.
 
 ## Stack
 
