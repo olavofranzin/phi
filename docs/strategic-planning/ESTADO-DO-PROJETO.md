@@ -219,7 +219,7 @@ Estados: `Backlog` · `Em design` · `Em execução` · `Em smoke` ·
 - **ADR-011 — Curador + Mudanças de Escopo + Catálogo:** rascunho
   pendente. Curador formaliza.
 - ~~**ADR-012** — Git canônico para design, Notion canônico para estado operacional: aprovado 2026-06-04 (ver §4.1).~~
-- ~~**ADR-rascunho Tiering** + **ADR-rascunho Eventos**~~ → **Aceitos no Notion 2026-06-14** (ver §4.1). Rascunhos em git permanecem como histórico de design.
+- ~~**ADR-rascunho Tiering** + **ADR-rascunho Eventos**~~ → **Aceitos no Notion 2026-06-14** (ver §4.1). Rascunhos removidos do git em 2026-06-16 (convenção: git guarda só rascunhos vivos; ADR aceito vira estado operacional → mora no Notion. Histórico de design via `git log` — commit `c6053c0` preserva o conteúdo original).
 
 ### 4.3. Decisões fora de ADR (registradas em strawmans e nesta conversa)
 
