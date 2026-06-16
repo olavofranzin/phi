@@ -269,6 +269,73 @@ if ($qgValidateNativeCode.Contains('update_body') -or $qgValidateNativeCode.Cont
   throw 'QG validate code still builds update_body/event_body'
 }
 
+# === a04-qg-fix-1 ===
+
+$searchNodes = $wfQg.nodes | Where-Object {
+  $_.type -eq 'n8n-nodes-base.notion' -and $_.parameters.operation -eq 'getAll'
+}
+foreach ($n in $searchNodes) {
+  if ($n.alwaysOutputData -eq $true) {
+    throw "QG node '$($n.name)' has alwaysOutputData=true (a04-qg-fix-1 #7/#8 - remover ou setar false)"
+  }
+}
+
+$validarCode = [string]$qgMap['[Exec QG] Validar DoD Pacing Flash'].parameters.jsCode
+if (-not $validarCode.Contains("`$('[Exec QG] Buscar Demandas Em Revisao').all()")) {
+  throw "QG Validar DoD deve ler de `$('[Exec QG] Buscar Demandas Em Revisao').all() (a04-qg-fix-1 #1)"
+}
+if ($validarCode.Contains('for (const item of $input.all())')) {
+  throw "QG Validar DoD ainda tem 'for (const item of `$input.all())' - fix #1 nao aplicado"
+}
+
+foreach ($nodeName in @('[Exec QG] Validar DoD Pacing Flash', '[Exec QG] Montar Evento demanda.em_revisao')) {
+  $code = [string]$qgMap[$nodeName].parameters.jsCode
+  if (-not $code.Contains(".toISOString().slice(0, 10)")) {
+    throw "QG node '$nodeName' utcNow nao date-only (fix #2/#10)"
+  }
+}
+
+$montarCode = [string]$qgMap['[Exec QG] Montar Evento demanda.em_revisao'].parameters.jsCode
+if (-not $montarCode.Contains("if (!page.id) throw")) {
+  throw "QG Montar Evento sem guard page.id (fix #9)"
+}
+if (-not $validarCode.Contains("if (!demanda_id) throw")) {
+  throw "QG Validar DoD sem guard demanda_id (fix #3)"
+}
+
+if ($montarCode.Contains('...page')) {
+  throw "QG Montar Evento ainda tem ...page no output (fix #9 cleanup)"
+}
+
+$createEntregue = $qgMap['[Exec QG] Criar Evento demanda.entregue']
+$createReaberta = $qgMap['[Exec QG] Criar Evento demanda.reaberta']
+foreach ($n in @($createEntregue, $createReaberta)) {
+  $props = $n.parameters.propertiesUi.propertyValues
+  $dynamicProps = $props | Where-Object { $_.key -ne 'entidade_area|select' }
+  foreach ($p in $dynamicProps) {
+    $val = if ($p.title) { $p.title } elseif ($p.textContent) { $p.textContent } elseif ($p.selectValue) { $p.selectValue } elseif ($p.date) { $p.date } else { '' }
+    if ($val -is [string] -and $val.StartsWith('=')) {
+      if ($val.Contains("`$json.") -and -not $val.Contains("`$('[Exec QG] Restaurar Payload DoD').all().find")) {
+        throw "QG '$($n.name)' property '$($p.key)' ainda usa `$json.<X> (fix #4/#5 - trocar por .all().find)"
+      }
+      if (-not $val.Contains("o.json.demanda_id === `$json.id")) {
+        throw "QG '$($n.name)' property '$($p.key)' nao pareia por demanda_id (fix #4/#5)"
+      }
+    }
+  }
+}
+
+$telegramText = [string]$qgMap['[Exec QG] Telegram Checklist FAIL'].parameters.text
+if (-not $telegramText.Contains("`$('[Exec QG] Restaurar Payload DoD').all().find")) {
+  throw "QG Telegram text nao usa .all().find (fix #6)"
+}
+if (-not $telegramText.Contains("entidade_id.rich_text[0].text.content")) {
+  throw "QG Telegram text nao pareia por entidade_id.rich_text (fix #6)"
+}
+if (-not $telegramText.Contains("'(sem texto)'")) {
+  throw "QG Telegram text sem fallback '(sem texto)' (fix #6)"
+}
+
 $schemaPath = Join-Path $base 'notion_phi_eventos_schema.md'
 if (-not (Test-Path $schemaPath)) { throw 'Missing PHI Eventos creation instructions' }
 $schema = Get-Content -Raw $schemaPath
