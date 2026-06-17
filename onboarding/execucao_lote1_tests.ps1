@@ -167,6 +167,99 @@ if (-not $geminiPro -or $geminiPro.parameters.modelId.value -notmatch 'pro') {
   throw 'Orquestrador must declare Gemini Pro tier node'
 }
 
+# === a04-orq ===
+$orqWf = Join-Path $base 'orquestrador/workflow.json'
+$rawOrq = [System.IO.File]::ReadAllText($orqWf, [System.Text.Encoding]::UTF8)
+$wfOrq = $rawOrq | ConvertFrom-Json
+$orqMap = @{}
+foreach ($n in $wfOrq.nodes) { $orqMap[$n.name] = $n }
+
+# 0 HTTP Request pra api.notion.com no Orq
+$httpNotionOrq = $wfOrq.nodes | Where-Object {
+  $_.type -eq 'n8n-nodes-base.httpRequest' -and
+  $_.parameters.url -is [string] -and
+  $_.parameters.url.Contains('api.notion.com')
+}
+if ($httpNotionOrq) { throw "orquestrador/workflow.json still has HTTP Request to api.notion.com (a04-orq refactor incomplete)" }
+
+# 1 Notion update + 1 Notion create
+$notionUpdate = @($wfOrq.nodes | Where-Object {
+  $_.type -eq 'n8n-nodes-base.notion' -and $_.parameters.operation -eq 'update'
+})
+$notionCreate = @($wfOrq.nodes | Where-Object {
+  $_.type -eq 'n8n-nodes-base.notion' -and $_.parameters.operation -eq 'create'
+})
+if ($notionUpdate.Count -ne 1) { throw "Orq expected 1 Notion update node, got $($notionUpdate.Count)" }
+if ($notionCreate.Count -ne 1) { throw "Orq expected 1 Notion create node, got $($notionCreate.Count)" }
+
+foreach ($n in $notionUpdate) {
+  if (-not $n.parameters.pageId) { throw "Orq Notion update '$($n.name)' missing pageId" }
+  if ($n.parameters.pageId.mode -ne 'id') { throw "Orq Notion update '$($n.name)' pageId.mode != 'id'" }
+}
+foreach ($n in $notionCreate) {
+  $dbVal = $n.parameters.databaseId.value
+  if (-not ($dbVal -match '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$')) {
+    throw "Orq Notion node '$($n.name)' databaseId.value not UUID: $dbVal"
+  }
+  if ($dbVal -eq '3423df0d-77df-4834-bdda-c08ddbae40ff') {
+    throw "Orq Notion '$($n.name)' uses Eventos data_source_id ($dbVal) instead of page_id (c64f600e-...)"
+  }
+}
+
+# alwaysOutputData false/ausente nos 2 search nodes
+$searchOrq = $wfOrq.nodes | Where-Object {
+  $_.type -eq 'n8n-nodes-base.notion' -and $_.parameters.operation -eq 'getAll'
+}
+foreach ($n in $searchOrq) {
+  if ($n.alwaysOutputData -eq $true) {
+    throw "Orq node '$($n.name)' has alwaysOutputData=true (a04-orq fix #1)"
+  }
+}
+
+# Calcular Prioridade Pro: sem update_body, sem event_body, com guards
+$prioridadeCode = [string]$orqMap['[Exec Orq] Calcular Prioridade Pro'].parameters.jsCode
+if ($prioridadeCode.Contains('update_body')) {
+  throw "Orq Calcular Prioridade Pro ainda tem update_body  refactor incompleto"
+}
+if ($prioridadeCode.Contains('event_body')) {
+  throw "Orq Calcular Prioridade Pro ainda tem event_body  refactor incompleto"
+}
+if (-not $prioridadeCode.Contains('if (!demanda_id) throw')) {
+  throw "Orq Calcular Prioridade Pro sem guard demanda_id (fix #4)"
+}
+if (-not $prioridadeCode.Contains('.toISOString().slice(0, 10)')) {
+  throw "Orq Calcular Prioridade Pro utcNow nao date-only (fix #3)"
+}
+if (-not $prioridadeCode.Contains("novo_estado: 'Priorizada'")) {
+  throw "Orq Calcular Prioridade Pro sem novo_estado no top-level"
+}
+
+# Restaurar Payload Priorizacao preservado
+$restaurarCode = [string]$orqMap['[Exec Orq] Restaurar Payload Priorizacao'].parameters.jsCode
+if (-not $restaurarCode.Contains("`$('[Exec Orq] Calcular Prioridade Pro').all().map")) {
+  throw "Orq Restaurar Payload Priorizacao foi alterado (deveria estar intocado)"
+}
+
+# Criar Evento Notion create usa .all().find() pareando por demanda_id
+$createEvent = $orqMap['[Exec Orq] Criar Evento demanda.priorizada']
+$dynamicWithFind = 0
+foreach ($p in $createEvent.parameters.propertiesUi.propertyValues) {
+  if ($p.key -eq 'entidade_area|select') { continue }
+  $val = if ($p.title) { $p.title } elseif ($p.textContent) { $p.textContent } elseif ($p.selectValue) { $p.selectValue } elseif ($p.date) { $p.date } else { '' }
+  if ($val -is [string] -and $val.StartsWith('=')) {
+    if (-not $val.Contains("`$('[Exec Orq] Restaurar Payload Priorizacao').all().find")) {
+      throw "Orq Criar Evento property '$($p.key)' nao usa .all().find (fix #2)"
+    }
+    if (-not $val.Contains("o.json.demanda_id === `$json.id")) {
+      throw "Orq Criar Evento property '$($p.key)' nao pareia por demanda_id (fix #2)"
+    }
+    $dynamicWithFind++
+  }
+}
+if ($dynamicWithFind -ne 8) {
+  throw "Orq Criar Evento esperava 8 expressions dinamicos via .all().find(), got $dynamicWithFind"
+}
+
 $qgMap = Node-Map $qg
 foreach ($required in @(
   '[Exec QG] Schedule 5 min',
@@ -461,7 +554,7 @@ if ($orqRaw -match "tipo === 'Recorrente diaria'" -or $orqRaw -match "tipo === '
   throw "Orquestrador priorityFor still uses 'tipo' or wrong class names"
 }
 
-$legacyEventosPaths = @($intakeWf, $orqWf) + @((Join-Path $base 'generate_export.js'))
+$legacyEventosPaths = @($intakeWf) + @((Join-Path $base 'generate_export.js'))
 foreach ($path in $legacyEventosPaths) {
   $raw = [System.IO.File]::ReadAllText($path, [System.Text.Encoding]::UTF8)
   if ($raw.Contains('PHI_EVENTOS_DATA_SOURCE_ID_pending_creation')) {
@@ -479,6 +572,9 @@ if ($rawQg.Contains('3423df0d-77df-4834-bdda-c08ddbae40ff')) {
 }
 if (-not $rawQg.Contains('c64f600e-4f46-4b2b-ac22-c1e425c8966e')) {
   throw "$qgWf missing PHI - Eventos native page ID"
+}
+if (-not $rawOrq.Contains('c64f600e-4f46-4b2b-ac22-c1e425c8966e')) {
+  throw "$orqWf missing PHI - Eventos native page ID"
 }
 
 Write-Host 'Execucao Lote 1 workflow structural tests passed.'

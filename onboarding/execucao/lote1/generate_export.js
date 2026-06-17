@@ -202,12 +202,38 @@ const orqNormalizeSop = String.raw`${shared}
 const sop = sopFromItems($input.all());
 return [{ json: { sop_vigente: sop, versao_sop_aplicada: sop.id, tenant_id: 'phi-agencia', execution_id: execId('EXEC-EXEC-ORQ') } }];`;
 
-const orqPrioritize = String.raw`${shared}
-const sop = $('[Exec Orq] Buscar SOP Vigente').all();
-const sopData = sopFromItems(sop);
+const orqPrioritize = String.raw`const pickText = (prop) => (prop?.rich_text || []).map((part) => part.plain_text || '').join('').trim();
+const pickSelect = (prop) => prop?.select?.name || prop?.status?.name || '';
+const pickTitle = (page) => {
+  for (const prop of Object.values(page.properties || {})) {
+    if (prop?.type === 'title') return (prop.title || []).map((part) => part.plain_text || '').join('').trim();
+  }
+  return '';
+};
+const utcNow = () => new Date().toISOString().slice(0, 10);
+const execId = (prefix) => prefix + '-' + $execution.id;
+const compactJson = (value) => JSON.stringify(value);
+
+const sopFromItems = (items) => {
+  const pages = items.map((item) => item.json || {}).filter((page) => !page.archived && !page.is_archived);
+  const vigente = pages.find((page) => {
+    const props = page.properties || {};
+    return pickSelect(props.area) === 'Execucao' && pickSelect(props.estado) === 'Vigente';
+  });
+  if (!vigente) throw new Error('SOP Vigente de area Execucao nao encontrada');
+  return { id: vigente.id, titulo: pickTitle(vigente), versao: pickText((vigente.properties || {}).versao) || 'v1.0' };
+};
+
+const sopData = sopFromItems($('[Exec Orq] Buscar SOP Vigente').all());
 const execution_id = execId('EXEC-EXEC-ORQ');
 const tenant_id = 'phi-agencia';
+const ts = utcNow();
+if (!ts || !/^\d{4}-\d{2}-\d{2}$/.test(ts)) {
+  throw new Error('data invalida produzida por utcNow: ' + JSON.stringify(ts));
+}
+
 const demandaPages = $input.all().map((item) => item.json || {}).filter((page) => !page.archived && !page.is_archived);
+
 const priorityFor = (classe_sla) => {
   if (classe_sla === 'Critica') return 100;
   if (classe_sla === 'Recorrente diaria') return 50;
@@ -217,6 +243,8 @@ const priorityFor = (classe_sla) => {
 };
 const out = [];
 for (const page of demandaPages) {
+  const demanda_id = page.id;
+  if (!demanda_id) throw new Error('[Calcular Prioridade Pro] page.id ausente  Buscar Demandas Abertas retornou item sem id (alwaysOutputData removido  checar filtros)');
   const props = page.properties || {};
   const tipo = pickSelect(props.tipo);
   const classe_sla = pickSelect(props.classe_sla);
@@ -227,7 +255,7 @@ for (const page of demandaPages) {
     client_id,
     execution_id,
     versao_sop_aplicada: sopData.id,
-    demanda_id: page.id,
+    demanda_id,
     tipo,
     classe_sla,
     prioridade,
@@ -235,16 +263,23 @@ for (const page of demandaPages) {
     estado: 'Priorizada',
     tier_agente: 'pro',
   };
-  const update_body = {
-    properties: {
-      prioridade: { number: prioridade },
-      prioridade_origem: { select: { name: 'agente' } },
-      estado: { select: { name: 'Priorizada' } },
-      versao_sop_aplicada: { rich_text: richText(sopData.id) },
-    },
-  };
-  const event = { tipo: 'demanda.priorizada', entidade_id: page.id, timestamp: utcNow(), execution_id, tenant_id, tier_agente: 'pro', versao_sop_aplicada: sopData.id, payload };
-  out.push({ json: { demanda_id: page.id, update_body, event_body: eventBody(event), payload, prioridade_origem: 'agente' } });
+  out.push({
+    json: {
+      demanda_id,
+      novo_estado: 'Priorizada',
+      prioridade,
+      prioridade_origem: 'agente',
+      versao_sop_aplicada: sopData.id,
+      evento_tipo: 'demanda.priorizada',
+      entidade_id: demanda_id,
+      entidade_area: 'Execucao',
+      payload_json: compactJson(payload),
+      timestamp: ts,
+      execution_id,
+      tenant_id,
+      tier_agente: 'pro',
+    }
+  });
 }
 return out;`;
 
@@ -456,6 +491,62 @@ function notionCreateEvent(id, name, x, y, pairWithQGRestore = false) {
   };
 }
 
+function notionCreateOrqEvent(id, name, x, y) {
+  const valueFor = (field) => `={{ $('[Exec Orq] Restaurar Payload Priorizacao').all().find(o => o.json.demanda_id === $json.id).json.${field} }}`;
+  return {
+    id,
+    name,
+    type: 'n8n-nodes-base.notion',
+    typeVersion: 2.2,
+    position: [x, y],
+    parameters: {
+      resource: 'databasePage',
+      operation: 'create',
+      databaseId: { __rl: true, mode: 'list', value: DB_EVENTOS_PAGE, cachedResultName: DB_EVENTOS_NAME },
+      simple: false,
+      propertiesUi: {
+        propertyValues: [
+          { key: 'tipo|title', type: 'title', title: valueFor('evento_tipo') },
+          { key: 'entidade_id|rich_text', type: 'rich_text', textContent: valueFor('entidade_id') },
+          { key: 'entidade_area|select', type: 'select', selectValue: 'Execucao' },
+          { key: 'payload_json|rich_text', type: 'rich_text', textContent: valueFor('payload_json') },
+          { key: 'timestamp|date', type: 'date', date: valueFor('timestamp') },
+          { key: 'execution_id|rich_text', type: 'rich_text', textContent: valueFor('execution_id') },
+          { key: 'tenant_id|rich_text', type: 'rich_text', textContent: valueFor('tenant_id') },
+          { key: 'tier_agente|select', type: 'select', selectValue: valueFor('tier_agente') },
+          { key: 'versao_sop_aplicada|rich_text', type: 'rich_text', textContent: valueFor('versao_sop_aplicada') },
+        ],
+      },
+    },
+    credentials: { notionApi: creds.notionApi },
+  };
+}
+
+function notionUpdateOrqDemand(id, name, x, y) {
+  return {
+    id,
+    name,
+    type: 'n8n-nodes-base.notion',
+    typeVersion: 2.2,
+    position: [x, y],
+    parameters: {
+      resource: 'databasePage',
+      operation: 'update',
+      pageId: { __rl: true, mode: 'id', value: '={{ $json.demanda_id }}' },
+      simple: false,
+      propertiesUi: {
+        propertyValues: [
+          { key: 'prioridade|number', type: 'number', numberValue: '={{ $json.prioridade }}' },
+          { key: 'prioridade_origem|select', type: 'select', selectValue: '={{ $json.prioridade_origem }}' },
+          { key: 'estado|select', type: 'select', selectValue: '={{ $json.novo_estado }}' },
+          { key: 'versao_sop_aplicada|rich_text', type: 'rich_text', textContent: '={{ $json.versao_sop_aplicada }}' },
+        ],
+      },
+    },
+    credentials: { notionApi: creds.notionApi },
+  };
+}
+
 function notionUpdateDemand(id, name, x, y) {
   return {
     id,
@@ -562,14 +653,14 @@ const orqNodes = [
   { id: 'exec-orq-schedule', name: '[Exec Orq] Schedule 08 BR', type: 'n8n-nodes-base.scheduleTrigger', typeVersion: 1.3, position: [0, -120], parameters: { rule: { interval: [{ field: 'days', daysInterval: 1, triggerAtHour: 8, triggerAtMinute: 0 }] } } },
   { id: 'exec-orq-manual', name: '[Exec Orq] Manual Trigger', type: 'n8n-nodes-base.manualTrigger', typeVersion: 1, position: [0, 120], parameters: {} },
   { id: 'exec-orq-merge-trigger', name: '[Exec Orq] Merge Triggers', type: 'n8n-nodes-base.merge', typeVersion: 3, position: [220, 0], parameters: { mode: 'append', numberInputs: 2 } },
-  notionGetAll('exec-orq-sop', '[Exec Orq] Buscar SOP Vigente', 440, 0, DB_SOPS, 'manual', sopFilters),
+  notionGetAll('exec-orq-sop', '[Exec Orq] Buscar SOP Vigente', 440, 0, DB_SOPS, 'manual', sopFilters, false),
   code('exec-orq-sop-normalize', '[Exec Orq] Normalizar SOP Vigente', 660, 0, orqNormalizeSop),
-  notionGetAll('exec-orq-open', '[Exec Orq] Buscar Demandas Abertas', 880, 0, DB_DEMANDAS, 'manual', abertasFilters),
+  notionGetAll('exec-orq-open', '[Exec Orq] Buscar Demandas Abertas', 880, 0, DB_DEMANDAS, 'manual', abertasFilters, false),
   gemini('exec-orq-gemini', '[Exec Orq] Gemini Pro Sequencia do Dia', 1100, 160, 'models/gemini-2.5-pro', 'Voce e o Orquestrador da fila operacional PHI. No Lote 1, apenas confirme a ordenacao por prioridade calculada. Responda JSON curto.', '={{ JSON.stringify($json) }}'),
   code('exec-orq-prioridade', '[Exec Orq] Calcular Prioridade Pro', 1100, 0, orqPrioritize),
   code('exec-orq-restaurar', '[Exec Orq] Restaurar Payload Priorizacao', 1320, 0, orqRestoreAfterGemini),
-  http('exec-orq-update', '[Exec Orq] Atualizar Demanda Priorizada', 1540, 0, 'PATCH', '={{ "https://api.notion.com/v1/pages/" + $json.demanda_id }}', '={{ $json.update_body }}'),
-  http('exec-orq-event', '[Exec Orq] Criar Evento demanda.priorizada', 1760, 0, 'POST', 'https://api.notion.com/v1/pages', '={{ $json.event_body }}'),
+  notionUpdateOrqDemand('exec-orq-update', '[Exec Orq] Atualizar Demanda Priorizada', 1540, 0),
+  notionCreateOrqEvent('exec-orq-event', '[Exec Orq] Criar Evento demanda.priorizada', 1760, 0),
 ];
 
 const orqConnections = {
