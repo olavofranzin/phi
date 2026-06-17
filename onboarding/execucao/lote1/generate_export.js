@@ -10,6 +10,8 @@ const creds = {
 const CHAT_ID = '<TELEGRAM_CHAT_ID_redacted>';
 const EXEC_WEBHOOK_KEY = '<EXEC_WEBHOOK_KEY_redacted>';
 const DB_DEMANDAS = 'cd1ab757-e4d1-493f-b1e1-b64a95d33d1b';
+const DB_DEMANDAS_PAGE = 'a5c6b6ae-3e9c-4619-a3c3-48e58c75c25b';
+const DB_DEMANDAS_NAME = 'PHI - Demandas';
 const DB_SOPS = 'bfeb1105-83a6-4e89-8d62-26607ebfcc8c';
 const DB_EVENTOS = '3423df0d-77df-4834-bdda-c08ddbae40ff';
 const DB_EVENTOS_PAGE = 'c64f600e-4f46-4b2b-ac22-c1e425c8966e';
@@ -99,7 +101,18 @@ const sop = sopFromItems($input.all());
 const prev = $('[Exec Intake] Validar Payload').item.json;
 return [{ json: { ...prev, sop_vigente: sop, versao_sop_aplicada: sop.id } }];`;
 
-const prepareDemand = String.raw`${shared}
+const prepareDemand = String.raw`const pickTitle = (page) => {
+  for (const prop of Object.values(page.properties || {})) {
+    if (prop?.type === 'title') return (prop.title || []).map((part) => part.plain_text || '').join('').trim();
+  }
+  return '';
+};
+const pickText = (prop) => (prop?.rich_text || []).map((part) => part.plain_text || '').join('').trim();
+const pickSelect = (prop) => prop?.select?.name || prop?.status?.name || '';
+const brDate = () => new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });
+const brDue = () => brDate() + 'T23:59:00-03:00';
+const execId = (prefix) => prefix + '-' + $execution.id;
+
 const ctx = $('[Exec Intake] Normalizar SOP Vigente').item.json;
 const existing = $input.all().map((item) => item.json || {}).filter((page) => !page.archived && !page.is_archived);
 const demandDate = brDate();
@@ -115,6 +128,7 @@ const execution_id = execId('EXEC-EXEC-INTAKE');
 const tenant_id = 'phi-agencia';
 const tituloDemanda = 'Pacing critico cliente ' + ctx.cliente_nome;
 const due = brDue();
+const observacoes = 'idempotency_key=' + idempotencyKey + '; execution_id=' + execution_id + '; fonte=' + ctx.fonte;
 const payload = {
   tenant_id,
   client_id: ctx.client_id,
@@ -134,41 +148,55 @@ const payload = {
   gasto_atual: ctx.gasto_atual,
   orcamento_planejado: ctx.orcamento_planejado,
 };
-const demanda_body = {
-  parent: { database_id: '${DB_DEMANDAS}' },
-  properties: {
-    titulo: { title: title(tituloDemanda) },
-    tenant_id: { rich_text: richText(tenant_id) },
-    client_id: { rich_text: richText(ctx.client_id) },
-    tipo: { select: { name: 'Pacing/verba' } },
-    classe_sla: { select: { name: 'Critica' } },
-    estado: { select: { name: 'Aberta' } },
-    prioridade: { number: 100 },
-    prioridade_origem: { select: { name: 'agente' } },
-    prazo: { date: { start: due } },
-    sla_version: { rich_text: richText('v0.3-2026-06-14') },
-    quality_gate: { select: { name: 'pendente' } },
-    versao_sop_aplicada: { rich_text: richText(ctx.versao_sop_aplicada) },
-    observacoes: { rich_text: richText('idempotency_key=' + idempotencyKey + '; execution_id=' + execution_id + '; fonte=' + ctx.fonte) },
-  },
-};
-const event = {
-  tipo: 'demanda.criada',
-  entidade_id: '',
-  timestamp: utcNow(),
-  execution_id,
-  tenant_id,
-  tier_agente: 'n/a',
-  versao_sop_aplicada: ctx.versao_sop_aplicada,
-  payload,
-};
-return [{ json: { ...ctx, execution_id, tenant_id, demanda_titulo: tituloDemanda, idempotency_key: idempotencyKey, ja_existe: existingKeys.has(idempotencyKey), demanda_body, event, text: '<b>Execucao critica</b>\nPacing/verba aberto para ' + ctx.cliente_nome + '\nPrazo: hoje 23:59 BRT\nSOP: ' + ctx.versao_sop_aplicada } }];`;
+return [{
+  json: {
+    ...ctx,
+    execution_id,
+    tenant_id,
+    demanda_titulo: tituloDemanda,
+    prioridade: 100,
+    prazo: due,
+    versao_sop_aplicada: ctx.versao_sop_aplicada,
+    observacoes,
+    idempotency_key: idempotencyKey,
+    ja_existe: existingKeys.has(idempotencyKey),
+    cliente_nome: ctx.cliente_nome,
+    payload,
+    text: '<b>Execucao critica</b>\nPacing/verba aberto para ' + ctx.cliente_nome + '\nPrazo: hoje 23:59 BRT\nSOP: ' + ctx.versao_sop_aplicada,
+  }
+}];`;
 
-const intakeEventAfterCreate = String.raw`${shared}
-const prepared = $('[Exec Intake] Preparar Demanda e Evento').item.json;
-const demanda = $json || {};
-const event = { ...prepared.event, entidade_id: demanda.id || '', payload: { ...prepared.event.payload, demanda_id: demanda.id || '' } };
-return [{ json: { ...prepared, demanda_id: demanda.id || '', event_body: eventBody(event), text: prepared.text + '\nDemanda: ' + (demanda.id || '-') } }];`;
+const intakeEventAfterCreate = String.raw`const utcNow = () => new Date().toISOString().slice(0, 10);
+const compactJson = (value) => JSON.stringify(value);
+
+const prepared = $('[Exec Intake] Preparar Demanda e Evento').first().json;
+const demandaPage = $json || {};
+const demanda_id = demandaPage.id;
+if (!demanda_id) throw new Error('[Montar Evento demanda.criada] Demanda page.id ausente  Criar Demanda upstream falhou ou substituiu o item');
+
+const ts = utcNow();
+if (!ts || !/^\d{4}-\d{2}-\d{2}$/.test(ts)) {
+  throw new Error('data invalida produzida por utcNow: ' + JSON.stringify(ts));
+}
+
+const payloadComDemandaId = { ...prepared.payload, demanda_id };
+
+return [{
+  json: {
+    demanda_id,
+    evento_tipo: 'demanda.criada',
+    entidade_id: demanda_id,
+    entidade_area: 'Execucao',
+    payload_json: compactJson(payloadComDemandaId),
+    timestamp: ts,
+    execution_id: prepared.execution_id,
+    tenant_id: prepared.tenant_id,
+    tier_agente: 'n/a',
+    versao_sop_aplicada: prepared.versao_sop_aplicada,
+    text: prepared.text + '\nDemanda: ' + demanda_id,
+    idempotency_key: prepared.idempotency_key,
+  }
+}];`;
 
 const orqNormalizeSop = String.raw`${shared}
 const sop = sopFromItems($input.all());
@@ -222,7 +250,7 @@ return out;`;
 
 const orqRestoreAfterGemini = String.raw`return $('[Exec Orq] Calcular Prioridade Pro').all().map((item) => ({ json: item.json }));`;
 
-const qgValidate = String.raw`${sharedCore}
+const qgValidate = String.raw`${sharedCore.replace('const utcNow = () => new Date().toISOString();', 'const utcNow = () => new Date().toISOString().slice(0, 10);')}
 const sopData = sopFromItems($('[Exec QG] Buscar SOP Vigente').all());
 const execution_id = execId('EXEC-EXEC-QG');
 const tenant_id = 'phi-agencia';
@@ -233,7 +261,7 @@ const checklist = [
   'Audit (execution_id + fonte)',
 ];
 const out = [];
-for (const item of $input.all()) {
+for (const item of $('[Exec QG] Buscar Demandas Em Revisao').all()) {
   const page = item.json || {};
   const props = page.properties || {};
   const obs = (pickText(props.observacoes) || pickText(props.Observacoes) || '').toLowerCase();
@@ -250,24 +278,34 @@ for (const item of $input.all()) {
   const missing = checks.filter((check) => !check.ok).map((check) => check.item);
   const quality_gate = missing.length === 0 ? 'pass' : 'fail';
   const demanda_id = page.id;
+  if (!demanda_id) throw new Error('[Validar DoD] page.id ausente  Buscar Demandas Em Revisao retornou item sem id');
   const client_id = pickText(props.client_id);
   const tipo = pickSelect(props.tipo) || 'Pacing/verba';
   const classe_sla = pickSelect(props.classe_sla) || 'Critica';
   const basePayload = { tenant_id, client_id, execution_id, versao_sop_aplicada: sopData.id, demanda_id, tipo, classe_sla, quality_gate, checklist: checks, tier_agente: 'flash' };
+  const ts = utcNow();
+  if (!ts || !/^\d{4}-\d{2}-\d{2}$/.test(ts)) {
+    throw new Error('data invalida produzida por utcNow: ' + JSON.stringify(ts));
+  }
   if (quality_gate === 'pass') {
-    out.push({ json: { demanda_id, quality_gate, novo_estado: 'Entregue', versao_sop_aplicada: sopData.id, evento_tipo: 'demanda.entregue', entidade_id: demanda_id, entidade_area: 'Execucao', payload_json: compactJson(basePayload), timestamp: utcNow(), execution_id, tenant_id, tier_agente: 'flash', text: 'PASS demanda ' + demanda_id } });
+    out.push({ json: { demanda_id, quality_gate, novo_estado: 'Entregue', versao_sop_aplicada: sopData.id, evento_tipo: 'demanda.entregue', entidade_id: demanda_id, entidade_area: 'Execucao', payload_json: compactJson(basePayload), timestamp: ts, execution_id, tenant_id, tier_agente: 'flash', text: 'PASS demanda ' + demanda_id } });
   } else {
-    out.push({ json: { demanda_id, quality_gate, novo_estado: 'Em execucao', versao_sop_aplicada: sopData.id, evento_tipo: 'demanda.reaberta', entidade_id: demanda_id, entidade_area: 'Execucao', payload_json: compactJson({ ...basePayload, missing }), timestamp: utcNow(), execution_id, tenant_id, tier_agente: 'flash', missing, text: '<b>Quality gate FAIL</b>\nDemanda: ' + demanda_id + '\nFaltam:\n- ' + missing.join('\n- ') } });
+    out.push({ json: { demanda_id, quality_gate, novo_estado: 'Em execucao', versao_sop_aplicada: sopData.id, evento_tipo: 'demanda.reaberta', entidade_id: demanda_id, entidade_area: 'Execucao', payload_json: compactJson({ ...basePayload, missing }), timestamp: ts, execution_id, tenant_id, tier_agente: 'flash', missing, text: '<b>Quality gate FAIL</b>\nDemanda: ' + demanda_id + '\nFaltam:\n- ' + missing.join('\n- ') } });
   }
 }
 return out;`;
 
-const qgReviewEvent = String.raw`${sharedCore}
+const qgReviewEvent = String.raw`${sharedCore.replace('const utcNow = () => new Date().toISOString();', 'const utcNow = () => new Date().toISOString().slice(0, 10);')}
 const sopData = sopFromItems($('[Exec QG] Buscar SOP Vigente').all());
 const execution_id = execId('EXEC-EXEC-QG');
 const tenant_id = 'phi-agencia';
+const ts = utcNow();
+if (!ts || !/^\d{4}-\d{2}-\d{2}$/.test(ts)) {
+  throw new Error('data invalida produzida por utcNow: ' + JSON.stringify(ts));
+}
 return $input.all().map((item) => {
   const page = item.json || {};
+  if (!page.id) throw new Error('[Montar Evento demanda.em_revisao] page.id ausente  Buscar Demandas Em Revisao retornou item sem id (alwaysOutputData removido  checar filtros)');
   const props = page.properties || {};
   const payload = {
     tenant_id,
@@ -280,7 +318,7 @@ return $input.all().map((item) => {
     estado: 'Em revisao',
     tier_agente: 'flash',
   };
-  return { json: { ...page, evento_tipo: 'demanda.em_revisao', entidade_id: page.id, entidade_area: 'Execucao', payload_json: compactJson(payload), timestamp: utcNow(), execution_id, tenant_id, tier_agente: 'flash', versao_sop_aplicada: sopData.id } };
+  return { json: { demanda_id: page.id, evento_tipo: 'demanda.em_revisao', entidade_id: page.id, entidade_area: 'Execucao', payload_json: compactJson(payload), timestamp: ts, execution_id, tenant_id, tier_agente: 'flash', versao_sop_aplicada: sopData.id } };
 });`;
 
 const qgRestoreAfterGemini = String.raw`return $('[Exec QG] Validar DoD Pacing Flash').all().map((item) => ({ json: item.json }));`;
@@ -321,14 +359,14 @@ function http(id, name, x, y, method, url, jsonBody) {
   return { id, name, type: 'n8n-nodes-base.httpRequest', typeVersion: 4.3, position: [x, y], parameters, credentials: { notionApi: creds.notionApi } };
 }
 
-function telegram(id, name, x, y) {
+function telegram(id, name, x, y, text = htmlEscape) {
   return {
     id,
     name,
     type: 'n8n-nodes-base.telegram',
     typeVersion: 1.2,
     position: [x, y],
-    parameters: { resource: 'message', operation: 'sendMessage', chatId: CHAT_ID, text: htmlEscape, additionalFields: { parse_mode: 'HTML', appendAttribution: false } },
+    parameters: { resource: 'message', operation: 'sendMessage', chatId: CHAT_ID, text, additionalFields: { parse_mode: 'HTML', appendAttribution: false } },
     credentials: { telegramApi: creds.telegramApi },
     continueOnFail: true,
   };
@@ -338,7 +376,7 @@ function respond(id, name, x, y, responseCode, body) {
   return { id, name, type: 'n8n-nodes-base.respondToWebhook', typeVersion: 1.5, position: [x, y], parameters: { respondWith: 'json', responseBody: body, options: { responseCode } } };
 }
 
-function notionGetAll(id, name, x, y, databaseId, filterType = 'none', filters = undefined) {
+function notionGetAll(id, name, x, y, databaseId, filterType = 'none', filters = undefined, alwaysOutputData = true) {
   const parameters = {
     resource: 'databasePage',
     operation: 'getAll',
@@ -348,10 +386,47 @@ function notionGetAll(id, name, x, y, databaseId, filterType = 'none', filters =
     filterType,
   };
   if (filters) parameters.filters = filters;
-  return { id, name, type: 'n8n-nodes-base.notion', typeVersion: 2.2, position: [x, y], parameters, credentials: { notionApi: creds.notionApi }, alwaysOutputData: true };
+  return { id, name, type: 'n8n-nodes-base.notion', typeVersion: 2.2, position: [x, y], parameters, credentials: { notionApi: creds.notionApi }, alwaysOutputData };
 }
 
-function notionCreateEvent(id, name, x, y) {
+function notionCreateDemand(id, name, x, y) {
+  return {
+    id,
+    name,
+    type: 'n8n-nodes-base.notion',
+    typeVersion: 2.2,
+    position: [x, y],
+    parameters: {
+      resource: 'databasePage',
+      operation: 'create',
+      databaseId: { __rl: true, mode: 'list', value: DB_DEMANDAS_PAGE, cachedResultName: DB_DEMANDAS_NAME },
+      simple: false,
+      propertiesUi: {
+        propertyValues: [
+          { key: 'titulo|title', type: 'title', title: '={{ $json.demanda_titulo }}' },
+          { key: 'tenant_id|rich_text', type: 'rich_text', textContent: '={{ $json.tenant_id }}' },
+          { key: 'client_id|rich_text', type: 'rich_text', textContent: '={{ $json.client_id }}' },
+          { key: 'tipo|select', type: 'select', selectValue: 'Pacing/verba' },
+          { key: 'classe_sla|select', type: 'select', selectValue: 'Critica' },
+          { key: 'estado|select', type: 'select', selectValue: 'Aberta' },
+          { key: 'prioridade|number', type: 'number', numberValue: '={{ $json.prioridade }}' },
+          { key: 'prioridade_origem|select', type: 'select', selectValue: 'agente' },
+          { key: 'prazo|date', type: 'date', date: '={{ $json.prazo }}' },
+          { key: 'sla_version|rich_text', type: 'rich_text', textContent: 'v0.3-2026-06-14' },
+          { key: 'quality_gate|select', type: 'select', selectValue: 'pendente' },
+          { key: 'versao_sop_aplicada|rich_text', type: 'rich_text', textContent: '={{ $json.versao_sop_aplicada }}' },
+          { key: 'observacoes|rich_text', type: 'rich_text', textContent: '={{ $json.observacoes }}' },
+        ],
+      },
+    },
+    credentials: { notionApi: creds.notionApi },
+  };
+}
+
+function notionCreateEvent(id, name, x, y, pairWithQGRestore = false) {
+  const valueFor = (field) => pairWithQGRestore
+    ? `={{ $('[Exec QG] Restaurar Payload DoD').all().find(o => o.json.demanda_id === $json.id).json.${field} }}`
+    : `={{ $json.${field} }}`;
   return {
     id,
     name,
@@ -365,15 +440,15 @@ function notionCreateEvent(id, name, x, y) {
       simple: false,
       propertiesUi: {
         propertyValues: [
-          { key: 'tipo|title', type: 'title', title: '={{ $json.evento_tipo }}' },
-          { key: 'entidade_id|rich_text', type: 'rich_text', textContent: '={{ $json.entidade_id }}' },
+          { key: 'tipo|title', type: 'title', title: valueFor('evento_tipo') },
+          { key: 'entidade_id|rich_text', type: 'rich_text', textContent: valueFor('entidade_id') },
           { key: 'entidade_area|select', type: 'select', selectValue: 'Execucao' },
-          { key: 'payload_json|rich_text', type: 'rich_text', textContent: '={{ $json.payload_json }}' },
-          { key: 'timestamp|date', type: 'date', date: '={{ $json.timestamp }}' },
-          { key: 'execution_id|rich_text', type: 'rich_text', textContent: '={{ $json.execution_id }}' },
-          { key: 'tenant_id|rich_text', type: 'rich_text', textContent: '={{ $json.tenant_id }}' },
-          { key: 'tier_agente|select', type: 'select', selectValue: '={{ $json.tier_agente }}' },
-          { key: 'versao_sop_aplicada|rich_text', type: 'rich_text', textContent: '={{ $json.versao_sop_aplicada }}' },
+          { key: 'payload_json|rich_text', type: 'rich_text', textContent: valueFor('payload_json') },
+          { key: 'timestamp|date', type: 'date', date: valueFor('timestamp') },
+          { key: 'execution_id|rich_text', type: 'rich_text', textContent: valueFor('execution_id') },
+          { key: 'tenant_id|rich_text', type: 'rich_text', textContent: valueFor('tenant_id') },
+          { key: 'tier_agente|select', type: 'select', selectValue: valueFor('tier_agente') },
+          { key: 'versao_sop_aplicada|rich_text', type: 'rich_text', textContent: valueFor('versao_sop_aplicada') },
         ],
       },
     },
@@ -453,17 +528,17 @@ const intakeNodes = [
   code('exec-intake-payload', '[Exec Intake] Validar Payload', 660, -80, intakeValidatePayload),
   ifNode('exec-intake-if-payload', '[Exec Intake] Payload Valido?', 880, -80, '={{ $json.payload_valid }}'),
   respond('exec-intake-400', '[Exec Intake] Responder 400', 1100, 120, 400, '={{ { ok: false, error: "invalid_payload", details: $json.payload_errors } }}'),
-  notionGetAll('exec-intake-sop', '[Exec Intake] Buscar SOP Vigente', 1100, -160, DB_SOPS, 'manual', sopFilters),
+  notionGetAll('exec-intake-sop', '[Exec Intake] Buscar SOP Vigente', 1100, -160, DB_SOPS, 'manual', sopFilters, false),
   code('exec-intake-sop-normalize', '[Exec Intake] Normalizar SOP Vigente', 1320, -160, normalizeSop),
-  notionGetAll('exec-intake-existing', '[Exec Intake] Buscar Demandas Existentes', 1540, -160, DB_DEMANDAS),
+  notionGetAll('exec-intake-existing', '[Exec Intake] Buscar Demandas Existentes', 1540, -160, DB_DEMANDAS, 'none', undefined, false),
   code('exec-intake-prepare', '[Exec Intake] Preparar Demanda e Evento', 1760, -160, prepareDemand),
   ifNode('exec-intake-if-exists', '[Exec Intake] Demanda Ja Existe?', 1980, -160, '={{ $json.ja_existe }}'),
   respond('exec-intake-idempotent', '[Exec Intake] Responder Idempotente', 2200, -20, 200, '={{ { ok: true, idempotent: true, idempotency_key: $json.idempotency_key } }}'),
-  http('exec-intake-create-demanda', '[Exec Intake] Criar Demanda', 2200, -260, 'POST', 'https://api.notion.com/v1/pages', '={{ $json.demanda_body }}'),
+  notionCreateDemand('exec-intake-create-demanda', '[Exec Intake] Criar Demanda', 2200, -260),
   code('exec-intake-event-body', '[Exec Intake] Montar Evento demanda.criada', 2420, -260, intakeEventAfterCreate),
-  http('exec-intake-create-event', '[Exec Intake] Criar Evento demanda.criada', 2640, -260, 'POST', 'https://api.notion.com/v1/pages', '={{ $json.event_body }}'),
-  telegram('exec-intake-telegram', '[Exec Intake] Enviar Telegram Critico', 2860, -260),
-  respond('exec-intake-201', '[Exec Intake] Responder 201', 3080, -260, 201, '={{ { ok: true, demanda_id: $json.demanda_id, event: "demanda.criada" } }}'),
+  notionCreateEvent('exec-intake-create-event', '[Exec Intake] Criar Evento demanda.criada', 2640, -260),
+  telegram('exec-intake-telegram', '[Exec Intake] Enviar Telegram Critico', 2860, -260, "={{ String(($('[Exec Intake] Montar Evento demanda.criada').first()?.json?.text) || '(sem texto)').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }}"),
+  respond('exec-intake-201', '[Exec Intake] Responder 201', 3080, -260, 201, '={{ { ok: true, demanda_id: $(\'[Exec Intake] Montar Evento demanda.criada\').first().json.demanda_id, event: "demanda.criada" } }}'),
 ];
 
 const intakeConnections = {
@@ -512,8 +587,8 @@ const orqConnections = {
 
 const qgNodes = [
   { id: 'exec-qg-schedule', name: '[Exec QG] Schedule 5 min', type: 'n8n-nodes-base.scheduleTrigger', typeVersion: 1.3, position: [0, 0], parameters: { rule: { interval: [{ field: 'minutes', minutesInterval: 5 }] } } },
-  notionGetAll('exec-qg-sop', '[Exec QG] Buscar SOP Vigente', 220, 0, DB_SOPS, 'manual', sopFilters),
-  notionGetAll('exec-qg-revisao', '[Exec QG] Buscar Demandas Em Revisao', 440, 0, DB_DEMANDAS, 'manual', revisaoFilters),
+  notionGetAll('exec-qg-sop', '[Exec QG] Buscar SOP Vigente', 220, 0, DB_SOPS, 'manual', sopFilters, false),
+  notionGetAll('exec-qg-revisao', '[Exec QG] Buscar Demandas Em Revisao', 440, 0, DB_DEMANDAS, 'manual', revisaoFilters, false),
   code('exec-qg-event-revisao-body', '[Exec QG] Montar Evento demanda.em_revisao', 660, 0, qgReviewEvent),
   notionCreateEvent('exec-qg-event-revisao', '[Exec QG] Criar Evento demanda.em_revisao', 880, 0),
   gemini('exec-qg-gemini', '[Exec QG] Gemini Flash DoD Pacing', 1100, 160, 'models/gemini-2.5-flash', 'Voce e o Padronizador Flash. Valide mecanicamente DoD de Pacing/verba.', '={{ JSON.stringify($json) }}'),
@@ -521,10 +596,10 @@ const qgNodes = [
   code('exec-qg-restaurar', '[Exec QG] Restaurar Payload DoD', 1320, 0, qgRestoreAfterGemini),
   ifNode('exec-qg-if-pass', '[Exec QG] Resultado PASS?', 1540, 0, '={{ $json.quality_gate }}', 'equals', 'pass', 'string'),
   notionUpdateDemand('exec-qg-entregue', '[Exec QG] Marcar Entregue', 1760, -140),
-  notionCreateEvent('exec-qg-event-entregue', '[Exec QG] Criar Evento demanda.entregue', 1980, -140),
+  notionCreateEvent('exec-qg-event-entregue', '[Exec QG] Criar Evento demanda.entregue', 1980, -140, true),
   notionUpdateDemand('exec-qg-reabrir', '[Exec QG] Reabrir Demanda', 1760, 160),
-  notionCreateEvent('exec-qg-event-reaberta', '[Exec QG] Criar Evento demanda.reaberta', 1980, 160),
-  telegram('exec-qg-telegram-fail', '[Exec QG] Telegram Checklist FAIL', 2200, 160),
+  notionCreateEvent('exec-qg-event-reaberta', '[Exec QG] Criar Evento demanda.reaberta', 1980, 160, true),
+  telegram('exec-qg-telegram-fail', '[Exec QG] Telegram Checklist FAIL', 2200, 160, "={{ String(($('[Exec QG] Restaurar Payload DoD').all().find(o => o.json.demanda_id === $json.properties.entidade_id.rich_text[0].text.content) || {json:{}}).json.text || '(sem texto)').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }}"),
 ];
 
 const qgConnections = {
@@ -548,10 +623,18 @@ const workflows = [
   ['qualitygate-pacing', workflow('<workflow_id_pending_review_qualitygate>', 'WF-EXEC-QualityGate-Pacing', qgNodes, qgConnections, ['phi', 'execucao', 'lote1'])],
 ];
 
+function writeIfChanged(filePath, content) {
+  if (fs.existsSync(filePath)) {
+    const existing = fs.readFileSync(filePath, 'utf8');
+    if (existing === content || existing.replace(/\r\n/g, '\n') === content) return;
+  }
+  fs.writeFileSync(filePath, content, 'utf8');
+}
+
 for (const [dirName, data] of workflows) {
   const outDir = path.join(__dirname, dirName);
   fs.mkdirSync(outDir, { recursive: true });
   const json = JSON.stringify(data, null, 2) + '\n';
-  fs.writeFileSync(path.join(outDir, 'workflow.json'), json, 'utf8');
-  fs.writeFileSync(path.join(outDir, 'sandbox_export.json'), json, 'utf8');
+  writeIfChanged(path.join(outDir, 'workflow.json'), json);
+  writeIfChanged(path.join(outDir, 'sandbox_export.json'), json);
 }

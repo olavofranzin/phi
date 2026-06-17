@@ -141,7 +141,7 @@ if ($secretOutputs[1][0].node -ne '[Exec Intake] Responder 401') {
   throw 'Intake Secret Valido? false branch must go to Responder 401'
 }
 $intakeCode = [string]$intakeMap['[Exec Intake] Preparar Demanda e Evento'].parameters.jsCode
-foreach ($snippet in @('Pacing/verba', 'Critica', 'v0.3-2026-06-14', '23:59:00-03:00', 'existingKeys', 'versao_sop_aplicada', 'demanda.criada', 'tenant_id', 'client_id', 'execution_id')) {
+foreach ($snippet in @('Pacing/verba', 'Critica', 'v0.3-2026-06-14', '23:59:00-03:00', 'existingKeys', 'versao_sop_aplicada', 'tenant_id', 'client_id', 'execution_id')) {
   if (-not $intakeCode.Contains($snippet)) { throw "Intake code missing snippet $snippet" }
 }
 Assert-TelegramHtml $intakeMap['[Exec Intake] Enviar Telegram Critico'] 'intake-pacing'
@@ -193,6 +193,96 @@ if (-not $geminiFlash -or $geminiFlash.parameters.modelId.value -notmatch 'flash
   throw 'QualityGate must declare Gemini Flash tier node'
 }
 Assert-TelegramHtml $qgMap['[Exec QG] Telegram Checklist FAIL'] 'qualitygate-pacing'
+
+# === a04-intake ===
+$intakeWf = Join-Path $base 'intake-pacing/workflow.json'
+$rawIntake = [System.IO.File]::ReadAllText($intakeWf, [System.Text.Encoding]::UTF8)
+$wfIntake = $rawIntake | ConvertFrom-Json
+$intakeMap = @{}
+foreach ($n in $wfIntake.nodes) { $intakeMap[$n.name] = $n }
+
+# 0 HTTP Request pra api.notion.com no Intake
+$httpNotionIntake = $wfIntake.nodes | Where-Object {
+  $_.type -eq 'n8n-nodes-base.httpRequest' -and
+  $_.parameters.url -is [string] -and
+  $_.parameters.url.Contains('api.notion.com')
+}
+if ($httpNotionIntake) { throw "intake-pacing/workflow.json still has HTTP Request to api.notion.com (a04-intake refactor incomplete)" }
+
+# 2 Notion novos (1 create Demandas + 1 create Eventos) + 2 search preservados (getAll)
+$notionCreate = $wfIntake.nodes | Where-Object {
+  $_.type -eq 'n8n-nodes-base.notion' -and $_.parameters.operation -eq 'create'
+}
+if ($notionCreate.Count -ne 2) { throw "Intake expected 2 Notion create nodes, got $($notionCreate.Count)" }
+
+foreach ($n in $notionCreate) {
+  $dbVal = $n.parameters.databaseId.value
+  if (-not ($dbVal -match '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$')) {
+    throw "Intake Notion node '$($n.name)' databaseId.value not UUID: $dbVal"
+  }
+  if ($dbVal -eq '3423df0d-77df-4834-bdda-c08ddbae40ff') {
+    throw "Intake Notion '$($n.name)' uses Eventos data_source_id ($dbVal) instead of page_id (c64f600e-...)"
+  }
+}
+
+# alwaysOutputData false/ausente nos 2 search nodes
+$searchIntake = $wfIntake.nodes | Where-Object {
+  $_.type -eq 'n8n-nodes-base.notion' -and $_.parameters.operation -eq 'getAll'
+}
+foreach ($n in $searchIntake) {
+  if ($n.alwaysOutputData -eq $true) {
+    throw "Intake node '$($n.name)' has alwaysOutputData=true (a04-intake fix #1)"
+  }
+}
+
+# Preparar Demanda e Evento: sem demanda_body, sem event aninhado
+$prepCode = [string]$intakeMap['[Exec Intake] Preparar Demanda e Evento'].parameters.jsCode
+if ($prepCode.Contains('demanda_body')) {
+  throw "Intake Preparar Demanda e Evento ainda tem demanda_body  refactor incompleto"
+}
+if (-not $prepCode.Contains('demanda_titulo')) {
+  throw "Intake Preparar Demanda e Evento sem demanda_titulo no top-level"
+}
+if (-not $prepCode.Contains('prioridade: 100')) {
+  throw "Intake Preparar Demanda e Evento sem prioridade no top-level"
+}
+
+# Montar Evento demanda.criada: sem event_body, com guard page.id, utcNow date-only
+$montarCode = [string]$intakeMap['[Exec Intake] Montar Evento demanda.criada'].parameters.jsCode
+if ($montarCode.Contains('event_body')) {
+  throw "Intake Montar Evento ainda tem event_body  refactor incompleto"
+}
+if (-not $montarCode.Contains('if (!demanda_id) throw')) {
+  throw "Intake Montar Evento sem guard demanda_id (fix #4)"
+}
+if (-not $montarCode.Contains('.toISOString().slice(0, 10)')) {
+  throw "Intake Montar Evento utcNow nao date-only (fix #3)"
+}
+
+# Telegram com fallback (sem texto) + lookup via Montar Evento
+$telegramText = [string]$intakeMap['[Exec Intake] Enviar Telegram Critico'].parameters.text
+if (-not $telegramText.Contains("`$('[Exec Intake] Montar Evento demanda.criada').first()")) {
+  throw "Intake Telegram nao referencia Montar Evento via .first() (fix #2)"
+}
+if (-not $telegramText.Contains("'(sem texto)'")) {
+  throw "Intake Telegram sem fallback '(sem texto)' (fix #5)"
+}
+
+# Responder 201 usa lookup ao Montar Evento
+$resp201 = [string]$intakeMap['[Exec Intake] Responder 201'].parameters.responseBody
+if (-not $resp201.Contains("`$('[Exec Intake] Montar Evento demanda.criada').first().json.demanda_id")) {
+  throw "Intake Responder 201 ainda usa `$json.demanda_id direto  Notion native substituiu o item upstream"
+}
+
+# generate_export.js: DB_DEMANDAS_PAGE/DB_DEMANDAS_NAME presentes
+$generatorPath = Join-Path $base 'generate_export.js'
+$generator = [System.IO.File]::ReadAllText($generatorPath, [System.Text.Encoding]::UTF8)
+if (-not $generator.Contains("DB_DEMANDAS_PAGE = 'a5c6b6ae-3e9c-4619-a3c3-48e58c75c25b'")) {
+  throw "generate_export.js sem DB_DEMANDAS_PAGE"
+}
+if (-not $generator.Contains("DB_DEMANDAS_NAME = 'PHI - Demandas'")) {
+  throw "generate_export.js sem DB_DEMANDAS_NAME"
+}
 
 # a04-qg: QualityGate must use native Notion nodes instead of direct Notion HTTP calls.
 $rawQg = [System.IO.File]::ReadAllText($qgWf, [System.Text.Encoding]::UTF8)
