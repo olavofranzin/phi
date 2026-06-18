@@ -5,3 +5,13 @@
 
 # Workflow exports temporários do n8n
 *.local.json
+
+# ADR-19 build-time injection: workflow_live.json é gerado com env vars reais
+# (operador roda generate_export.js com .env exportado → importa no n8n → deleta)
+workflow_live.json
+**/workflow_live.json
+
+# Artefato de compilação SDK n8n gerado pelo generate_export.js de A2.7
+# (re-criado a cada run; pode conter valores injetados)
+workflow_sdk_compiled.js
+**/workflow_sdk_compiled.js

@@ -1,14 +1,25 @@
 const fs = require('fs');
 const path = require('path');
 
-const creds = {
-  notionApi: { id: '<credential_id_redacted>', name: 'Notion account' },
-  telegramApi: { id: '<TELEGRAM_CREDENTIAL_ID_redacted>', name: 'Telegram account' },
-  googlePalmApi: { id: '<GEMINI_CREDENTIAL_ID_redacted>', name: 'Google Gemini(PaLM) Api account' },
+// === ADR-19 build-time injection ===
+// Constantes sensíveis lêem de process.env quando disponíveis; senão caem em
+// placeholder redacted. Operação:
+//   - Sem env vars (default git/CI): JSONs gerados ficam sanitizados (commit-safe).
+//   - Com env vars exportadas: JSONs ganham valores reais (import direto no n8n).
+// Ver .env.example pra lista de vars; .env real fica em .gitignore.
+const fromEnvOrRedacted = (envName, redacted) => {
+  const value = process.env[envName];
+  return (typeof value === 'string' && value.length > 0) ? value : redacted;
 };
 
-const CHAT_ID = '<TELEGRAM_CHAT_ID_redacted>';
-const EXEC_WEBHOOK_KEY = '<EXEC_WEBHOOK_KEY_redacted>';
+const creds = {
+  notionApi: { id: fromEnvOrRedacted('NOTION_CRED_ID', '<credential_id_redacted>'), name: 'Notion account' },
+  telegramApi: { id: fromEnvOrRedacted('TELEGRAM_CRED_ID', '<TELEGRAM_CREDENTIAL_ID_redacted>'), name: 'Telegram account' },
+  googlePalmApi: { id: fromEnvOrRedacted('GEMINI_CRED_ID', '<GEMINI_CREDENTIAL_ID_redacted>'), name: 'Google Gemini(PaLM) Api account' },
+};
+
+const CHAT_ID = fromEnvOrRedacted('TELEGRAM_CHAT_ID', '<TELEGRAM_CHAT_ID_redacted>');
+const EXEC_WEBHOOK_KEY = fromEnvOrRedacted('EXEC_WEBHOOK_KEY', '<EXEC_WEBHOOK_KEY_redacted>');
 const DB_DEMANDAS = 'cd1ab757-e4d1-493f-b1e1-b64a95d33d1b';
 const DB_DEMANDAS_PAGE = 'a5c6b6ae-3e9c-4619-a3c3-48e58c75c25b';
 const DB_DEMANDAS_NAME = 'PHI - Demandas';

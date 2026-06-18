@@ -1,19 +1,21 @@
 const fs = require('fs');
 const path = require('path');
 
-const LIVE = process.argv.includes('--live');
-const liveSecret = process.env.ONB_WEBHOOK_SECRET || '';
-if (LIVE && !liveSecret) {
-  throw new Error('ONB_WEBHOOK_SECRET is required when generating live export');
-}
+// === ADR-19 build-time injection ===
+// Substitui o flag --live legado. Sem env vars: JSON gerado sanitizado (commit-safe).
+// Com env vars exportadas: workflow_live.json (DO NOT COMMIT — import e delete).
+const fromEnvOrRedacted = (envName, redacted) => {
+  const value = process.env[envName];
+  return (typeof value === 'string' && value.length > 0) ? value : redacted;
+};
 
 const cred = {
-  notionApi: LIVE ? { id: 'KpPCTsYPAvGXGfp2', name: 'Notion account' } : { id: '<credential_id_redacted>', name: 'Notion account' },
-  telegramApi: LIVE ? { id: 'pHCHzZTP2yReQXb6', name: 'Telegram account' } : { id: '<TELEGRAM_CREDENTIAL_ID_redacted>', name: 'Telegram account' },
-  googlePalmApi: LIVE ? { id: 'cZNPIzF5ZCMrpnDr', name: 'Google Gemini(PaLM) Api account' } : { id: '<GEMINI_CREDENTIAL_ID_redacted>', name: 'Google Gemini(PaLM) Api account' },
+  notionApi: { id: fromEnvOrRedacted('NOTION_CRED_ID', '<credential_id_redacted>'), name: 'Notion account' },
+  telegramApi: { id: fromEnvOrRedacted('TELEGRAM_CRED_ID', '<TELEGRAM_CREDENTIAL_ID_redacted>'), name: 'Telegram account' },
+  googlePalmApi: { id: fromEnvOrRedacted('GEMINI_CRED_ID', '<GEMINI_CREDENTIAL_ID_redacted>'), name: 'Google Gemini(PaLM) Api account' },
 };
-const chatId = LIVE ? '930549271' : '<TELEGRAM_CHAT_ID_redacted>';
-const onbSecret = LIVE ? liveSecret : '<ONB_WEBHOOK_SECRET_redacted>';
+const chatId = fromEnvOrRedacted('TELEGRAM_CHAT_ID', '<TELEGRAM_CHAT_ID_redacted>');
+const onbSecret = fromEnvOrRedacted('ONB_WEBHOOK_SECRET', '<ONB_WEBHOOK_SECRET_redacted>');
 
 const CLIENTES_DB = '04e34a62624b484cbda546604564b88c';
 const ETAPAS_DB = '6eb4565b4f1d498c8b2978e0c80880fd';
@@ -276,7 +278,10 @@ const workflow = {
   pinData: {},
 };
 
-if (LIVE) {
+// ADR-19: presença de env vars sensíveis → gera workflow_live.json (NÃO comitar).
+// Ausência → gera workflow.json + sandbox_export.json sanitizados (commit-safe).
+const HAS_REAL_VALUES = !!process.env.NOTION_CRED_ID || !!process.env.TELEGRAM_CRED_ID || !!process.env.GEMINI_CRED_ID || !!process.env.TELEGRAM_CHAT_ID || !!process.env.ONB_WEBHOOK_SECRET;
+if (HAS_REAL_VALUES) {
   delete workflow.id;
   delete workflow.active;
   delete workflow.isArchived;
@@ -287,8 +292,9 @@ if (LIVE) {
 
 const outDir = __dirname;
 const json = JSON.stringify(workflow, null, 2) + '\n';
-if (LIVE) {
+if (HAS_REAL_VALUES) {
   fs.writeFileSync(path.join(outDir, 'workflow_live.json'), json, 'utf8');
+  console.log('Generated workflow_live.json (DO NOT COMMIT — import no n8n e delete)');
 } else {
   fs.writeFileSync(path.join(outDir, 'workflow.json'), json, 'utf8');
   fs.writeFileSync(path.join(outDir, 'sandbox_export.json'), json, 'utf8');

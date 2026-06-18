@@ -96,10 +96,19 @@ return out;`;
 
 const systemPrompt = 'Voce e o assistente operacional da agencia. Gere digest diario CURTO e OBJETIVO em portugues brasileiro, formato Telegram. Use bullets simples (-). Nao use markdown pesado, asteriscos, negrito, titulos com **, nem links inline. Emojis sobrios e poucos (alerta e ok). Estrutura fixa: 1) Resumo numerico, 2) Clientes com etapas atrasadas (so se houver), 3) Bloqueios ativos (so se houver), 4) Acao recomendada do dia (uma frase). Se nao houver onboarding ativo, diga apenas isso. NUNCA invente dados que nao estao no payload.';
 
+// === ADR-19 build-time injection ===
+// Sem env vars: JSON gerado sanitizado (commit-safe). Com env vars: valores reais (deploy n8n).
+const fromEnvOrRedacted = (envName, redacted) => {
+  const value = process.env[envName];
+  return (typeof value === 'string' && value.length > 0) ? value : redacted;
+};
+
+const chatId = fromEnvOrRedacted('TELEGRAM_CHAT_ID', '<TELEGRAM_CHAT_ID_redacted>');
+
 const nodeBase = {
-  notionApi: { id: '<credential_id_redacted>', name: 'Notion account' },
-  telegramApi: { id: '<TELEGRAM_CREDENTIAL_ID_redacted>', name: 'Telegram account' },
-  googlePalmApi: { id: 'cZNPIzF5ZCMrpnDr', name: 'Google Gemini(PaLM) Api account' },
+  notionApi: { id: fromEnvOrRedacted('NOTION_CRED_ID', '<credential_id_redacted>'), name: 'Notion account' },
+  telegramApi: { id: fromEnvOrRedacted('TELEGRAM_CRED_ID', '<TELEGRAM_CREDENTIAL_ID_redacted>'), name: 'Telegram account' },
+  googlePalmApi: { id: fromEnvOrRedacted('GEMINI_CRED_ID', '<GEMINI_CREDENTIAL_ID_redacted>'), name: 'Google Gemini(PaLM) Api account' },
 };
 
 const workflow = {
@@ -116,7 +125,7 @@ const workflow = {
     { id: 'a27-normalizar-gemini', name: '[Onb A2.7] Normalizar Digest', type: 'n8n-nodes-base.code', typeVersion: 2, position: [1008, 0], parameters: { mode: 'runOnceForAllItems', jsCode: normalizeCode } },
     { id: 'a27-if', name: '[Onb A2.7] Tem Resposta?', type: 'n8n-nodes-base.if', typeVersion: 2.3, position: [1120, 0], parameters: { conditions: { options: { caseSensitive: true, leftValue: '', typeValidation: 'loose', version: 2 }, conditions: [{ leftValue: '={{ String($json.text || \"\").trim() }}', operator: { type: 'string', operation: 'notEmpty' }, rightValue: '' }], combinator: 'and' } } },
     { id: 'a27-fallback', name: '[Onb A2.7] Montar Fallback', type: 'n8n-nodes-base.code', typeVersion: 2, position: [1344, 160], parameters: { mode: 'runOnceForAllItems', jsCode: fallbackCode } },
-    { id: 'a27-telegram', name: '[Onb A2.7] Enviar Telegram Olavo', type: 'n8n-nodes-base.telegram', typeVersion: 1.2, position: [1568, 0], parameters: { resource: 'message', operation: 'sendMessage', chatId: '<TELEGRAM_CHAT_ID_redacted>', text: "={{ String($json.text || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }}", additionalFields: { parse_mode: 'HTML', appendAttribution: false } }, credentials: { telegramApi: nodeBase.telegramApi }, continueOnFail: true },
+    { id: 'a27-telegram', name: '[Onb A2.7] Enviar Telegram Olavo', type: 'n8n-nodes-base.telegram', typeVersion: 1.2, position: [1568, 0], parameters: { resource: 'message', operation: 'sendMessage', chatId, text: "={{ String($json.text || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }}", additionalFields: { parse_mode: 'HTML', appendAttribution: false } }, credentials: { telegramApi: nodeBase.telegramApi }, continueOnFail: true },
   ],
   connections: {
     '[Onb A2.7] Schedule Trigger': { main: [[{ node: '[Onb A2.7] Buscar Clientes Ativos', type: 'main', index: 0 }]] },
@@ -149,10 +158,10 @@ const scheduleTrigger = trigger({ type: 'n8n-nodes-base.scheduleTrigger', versio
 const buscarClientes = node({ type: 'n8n-nodes-base.notion', version: 2.2, config: { name: '[Onb A2.7] Buscar Clientes Ativos', position: [224, 0], parameters: { resource: 'databasePage', operation: 'getAll', databaseId: { __rl: true, mode: 'list', value: '04e34a62624b484cbda546604564b88c' }, returnAll: true, simple: false, filterType: 'none' }, credentials: { notionApi: newCredential('Notion account') } }, output: [{ id: 'cliente-page-id', properties: {}, archived: false }] });
 const buscarEtapas = node({ type: 'n8n-nodes-base.notion', version: 2.2, config: { name: '[Onb A2.7] Buscar Etapas', position: [448, 0], executeOnce: true, parameters: { resource: 'databasePage', operation: 'getAll', databaseId: { __rl: true, mode: 'list', value: '6eb4565b4f1d498c8b2978e0c80880fd' }, returnAll: true, simple: false, filterType: 'none' }, credentials: { notionApi: newCredential('Notion account') } }, output: [{ id: 'etapa-page-id', properties: {}, archived: false }] });
 const filtrarAgregar = node({ type: 'n8n-nodes-base.code', version: 2, config: { name: '[Onb A2.7] Filtrar e Agregar', position: [672, 0], parameters: { mode: 'runOnceForAllItems', jsCode: aggregateCode } }, output: [{ payload: { gerado_em: '2026-06-01T09:00:00-03:00', contagens: { clientes_ativos: 0, etapas_atrasadas: 0, bloqueios: 0 }, clientes_ativos: [], etapas_atrasadas: [], bloqueios: [] } }] });
-const gerarGemini = node({ type: '@n8n/n8n-nodes-langchain.googleGemini', version: 1.2, config: { name: '[Onb A2.7] Gerar Digest Gemini', position: [896, 0], continueOnFail: true, parameters: { resource: 'text', operation: 'message', modelId: { __rl: true, mode: 'list', value: 'models/gemini-2.5-flash' }, messages: { values: [{ role: 'user', content: expr('{{ JSON.stringify($json.payload) }}') }] }, simplify: true, options: { includeMergedResponse: true, systemMessage: systemPrompt, temperature: 0.2, maxOutputTokens: 1024 } }, credentials: { googlePalmApi: { id: 'cZNPIzF5ZCMrpnDr', name: 'Google Gemini(PaLM) Api account' } } }, output: [{ text: 'Digest gerado' }] });
+const gerarGemini = node({ type: '@n8n/n8n-nodes-langchain.googleGemini', version: 1.2, config: { name: '[Onb A2.7] Gerar Digest Gemini', position: [896, 0], continueOnFail: true, parameters: { resource: 'text', operation: 'message', modelId: { __rl: true, mode: 'list', value: 'models/gemini-2.5-flash' }, messages: { values: [{ role: 'user', content: expr('{{ JSON.stringify($json.payload) }}') }] }, simplify: true, options: { includeMergedResponse: true, systemMessage: systemPrompt, temperature: 0.2, maxOutputTokens: 1024 } }, credentials: { googlePalmApi: { id: ${JSON.stringify(nodeBase.googlePalmApi.id)}, name: 'Google Gemini(PaLM) Api account' } } }, output: [{ text: 'Digest gerado' }] });
 const temResposta = ifElse({ version: 2.3, config: { name: '[Onb A2.7] Tem Resposta?', position: [1120, 0], parameters: { conditions: { options: { caseSensitive: true, leftValue: '', typeValidation: 'loose', version: 2 }, conditions: [{ leftValue: expr('{{ (($json.text || $json.content || "") + "").trim() }}'), operator: { type: 'string', operation: 'notEmpty' }, rightValue: '' }], combinator: 'and' } } }, output: [{ text: 'Digest gerado' }] });
 const montarFallback = node({ type: 'n8n-nodes-base.code', version: 2, config: { name: '[Onb A2.7] Montar Fallback', position: [1344, 160], parameters: { mode: 'runOnceForAllItems', jsCode: fallbackCode } }, output: [{ text: '[Digest A2.7 - Gemini indisponivel]\\nClientes ativos: 0\\nEtapas atrasadas: 0\\nBloqueios: 0\\nDetalhe: sem detalhes criticos' }] });
-const enviarTelegram = node({ type: 'n8n-nodes-base.telegram', version: 1.2, config: { name: '[Onb A2.7] Enviar Telegram Olavo', position: [1568, 0], parameters: { resource: 'message', operation: 'sendMessage', chatId: '930549271', text: expr("{{ String($json.text || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }}"), additionalFields: { parse_mode: 'HTML' } }, credentials: { telegramApi: newCredential('Telegram account') }, continueOnFail: true }, output: [{ ok: true, result: { message_id: 1, text: 'Digest gerado' } }] });
+const enviarTelegram = node({ type: 'n8n-nodes-base.telegram', version: 1.2, config: { name: '[Onb A2.7] Enviar Telegram Olavo', position: [1568, 0], parameters: { resource: 'message', operation: 'sendMessage', chatId: ${JSON.stringify(chatId)}, text: expr("{{ String($json.text || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }}"), additionalFields: { parse_mode: 'HTML' } }, credentials: { telegramApi: newCredential('Telegram account') }, continueOnFail: true }, output: [{ ok: true, result: { message_id: 1, text: 'Digest gerado' } }] });
 
 export default workflow('onb-a2-7-digest-diario', 'Onb - Digest Diario Onboarding').add(scheduleTrigger).to(buscarClientes).to(buscarEtapas).to(filtrarAgregar).to(gerarGemini).to(temResposta.onTrue(enviarTelegram).onFalse(montarFallback.to(enviarTelegram)));
 `;

@@ -1,14 +1,20 @@
 const fs = require('fs');
 const path = require('path');
 
-const LIVE = process.argv.includes('--live');
+// === ADR-19 build-time injection ===
+// Substitui o flag --live legado. Sem env vars: JSON gerado sanitizado (commit-safe).
+// Com env vars exportadas: valores reais (deploy n8n). Ver .env.example.
+const fromEnvOrRedacted = (envName, redacted) => {
+  const value = process.env[envName];
+  return (typeof value === 'string' && value.length > 0) ? value : redacted;
+};
 
 const cred = {
-  notionApi: LIVE ? { id: 'KpPCTsYPAvGXGfp2', name: 'Notion account' } : { id: '<credential_id_redacted>', name: 'Notion account' },
-  telegramApi: LIVE ? { id: 'pHCHzZTP2yReQXb6', name: 'Telegram account' } : { id: '<TELEGRAM_CREDENTIAL_ID_redacted>', name: 'Telegram account' },
-  googlePalmApi: { id: 'cZNPIzF5ZCMrpnDr', name: 'Google Gemini(PaLM) Api account' },
+  notionApi: { id: fromEnvOrRedacted('NOTION_CRED_ID', '<credential_id_redacted>'), name: 'Notion account' },
+  telegramApi: { id: fromEnvOrRedacted('TELEGRAM_CRED_ID', '<TELEGRAM_CREDENTIAL_ID_redacted>'), name: 'Telegram account' },
+  googlePalmApi: { id: fromEnvOrRedacted('GEMINI_CRED_ID', '<GEMINI_CREDENTIAL_ID_redacted>'), name: 'Google Gemini(PaLM) Api account' },
 };
-const chatId = LIVE ? '930549271' : '<TELEGRAM_CHAT_ID_redacted>';
+const chatId = fromEnvOrRedacted('TELEGRAM_CHAT_ID', '<TELEGRAM_CHAT_ID_redacted>');
 
 const activeStatuses = "['Em andamento', 'N\\u00e3o iniciado', 'Bloqueado']";
 const htmlEscape = "={{ String($json.text || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }}";
@@ -283,7 +289,10 @@ const workflow = {
 };
 
 const outDir = __dirname;
-if (LIVE) {
+// ADR-19: presença de env vars sensíveis → gera workflow_live.json (NÃO comitar).
+// Ausência → gera workflow.json + sandbox_export.json sanitizados (commit-safe).
+const HAS_REAL_VALUES = !!process.env.NOTION_CRED_ID || !!process.env.TELEGRAM_CRED_ID || !!process.env.GEMINI_CRED_ID || !!process.env.TELEGRAM_CHAT_ID;
+if (HAS_REAL_VALUES) {
   delete workflow.id;
   delete workflow.active;
   delete workflow.isArchived;
@@ -292,8 +301,9 @@ if (LIVE) {
   delete workflow.pinData;
 }
 const json = JSON.stringify(workflow, null, 2) + '\n';
-if (LIVE) {
+if (HAS_REAL_VALUES) {
   fs.writeFileSync(path.join(outDir, 'workflow_live.json'), json, 'utf8');
+  console.log('Generated workflow_live.json (DO NOT COMMIT — import no n8n e delete)');
 } else {
   fs.writeFileSync(path.join(outDir, 'workflow.json'), json, 'utf8');
   fs.writeFileSync(path.join(outDir, 'sandbox_export.json'), json, 'utf8');

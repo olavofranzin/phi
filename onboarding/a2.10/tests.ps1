@@ -95,8 +95,8 @@ if ($gemini.parameters.modelId.value -ne 'models/gemini-2.5-flash') {
 if (-not $gemini.continueOnFail -or -not $gemini.retryOnFail -or [int]$gemini.waitBetweenTries -ne 2000) {
   throw 'Gemini must continueOnFail, retryOnFail and waitBetweenTries=2000'
 }
-if ($gemini.credentials.googlePalmApi.id -ne 'cZNPIzF5ZCMrpnDr') {
-  throw 'Gemini must reference credential id cZNPIzF5ZCMrpnDr'
+if ($gemini.credentials.googlePalmApi.id -ne '<GEMINI_CREDENTIAL_ID_redacted>') {
+  throw 'Gemini must reference placeholder <GEMINI_CREDENTIAL_ID_redacted> (ADR-19 build-time injection)'
 }
 
 $normalizar = [string]$nodeMap['[Onb A2.10] Normalizar Decisao'].parameters.jsCode

@@ -1,9 +1,18 @@
 const fs = require('fs');
 const path = require('path');
 
+// === ADR-19 build-time injection ===
+// Sem env vars: JSON gerado sanitizado (commit-safe). Com env vars: valores reais (deploy n8n).
+const fromEnvOrRedacted = (envName, redacted) => {
+  const value = process.env[envName];
+  return (typeof value === 'string' && value.length > 0) ? value : redacted;
+};
+
+const chatId = fromEnvOrRedacted('TELEGRAM_CHAT_ID', '<TELEGRAM_CHAT_ID_redacted>');
+
 const creds = {
-  notionApi: { id: '<credential_id_redacted>', name: 'Notion account' },
-  telegramApi: { id: '<TELEGRAM_CREDENTIAL_ID_redacted>', name: 'Telegram account' },
+  notionApi: { id: fromEnvOrRedacted('NOTION_CRED_ID', '<credential_id_redacted>'), name: 'Notion account' },
+  telegramApi: { id: fromEnvOrRedacted('TELEGRAM_CRED_ID', '<TELEGRAM_CREDENTIAL_ID_redacted>'), name: 'Telegram account' },
 };
 
 const contextAssignments = [
@@ -311,7 +320,7 @@ const nodes = [
     parameters: {
       resource: 'message',
       operation: 'sendMessage',
-      chatId: '<TELEGRAM_CHAT_ID_redacted>',
+      chatId,
       text: '={{ $json.digest_html }}',
       additionalFields: { parse_mode: 'HTML', appendAttribution: false },
     },

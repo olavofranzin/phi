@@ -134,7 +134,7 @@
       },
       "credentials": {
         "googlePalmApi": {
-          "id": "cZNPIzF5ZCMrpnDr",
+          "id": "<GEMINI_CREDENTIAL_ID_redacted>",
           "name": "Google Gemini(PaLM) Api account"
         }
       },

@@ -97,8 +97,8 @@ if ($gemini.parameters.modelId.value -ne 'models/gemini-2.5-flash') {
 if (-not $gemini.continueOnFail) {
   throw 'Gerar Digest Gemini must continueOnFail'
 }
-if ($gemini.credentials.googlePalmApi.id -ne 'cZNPIzF5ZCMrpnDr') {
-  throw 'Gerar Digest Gemini must reference credential id cZNPIzF5ZCMrpnDr'
+if ($gemini.credentials.googlePalmApi.id -ne '<GEMINI_CREDENTIAL_ID_redacted>') {
+  throw 'Gerar Digest Gemini must reference placeholder <GEMINI_CREDENTIAL_ID_redacted> (ADR-19 build-time injection)'
 }
 
 $normalizeCode = [string]$nodeMap['[Onb A2.7] Normalizar Digest'].parameters.jsCode
