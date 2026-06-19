@@ -141,3 +141,19 @@ Gravar o registro normalizado **onde os agentes leem**, não em Sheets/Slack:
 - **Níveis:** verificar que existem registros `level: "adset"` e `level: "ad"`, não só `campaign`.
 - **Contexto:** `metrica_mae`, `margem_contribuicao` e `meta_cpa/meta_roas` presentes (vindos do Notion).
 - **Destino:** confirmar gravação em BigQuery/Notion e ausência de escrita em Sheets/Slack.
+
+## 9. Status dos TODOs (atualizado)
+| TODO | Status | Resolução |
+|---|---|---|
+| `margem_contribuicao` / `ticket_ltv` ausentes | ✅ resolvido | Campos criados na base **Clientes** (`Margem de Contribuição` percent, `Ticket/LTV` real); adaptador lê de `Get database clientes`. Habilita break-even ROAS = 1/margem. |
+| Mapas Notion da Meta | ✅ resolvido | Adaptador constrói mapas por `adset_id_meta` / `ad_id_meta` (além dos por id Google). |
+| Normalização do GA4 | ✅ resolvido | `ga4Norm()` soma o runReport; `ga4` agora é `{ organic, paid }` com `{sessions,users,conversions(keyEvents),engagement_rate,revenue:null}`. Refinamento do §3 (antes era flat). |
+| camelCase do GAQL | ⏳ confirmar em execução real | Fallback snake_case já incluso no adaptador. |
+| CAC / LTV:CAC | ⏳ por design | Ficam `null` até `custos_aquisicao_extra` ser modelado (não conflar CPA com CAC). Margem/ticket já disponíveis. |
+
+> **Decisão registrada:** `margem`/`ticket_ltv` vivem em **Clientes** (economia por cliente). Se variarem por
+> oferta/campanha, mover para a base Campanhas e ajustar o `pNum(cliProps...)` → `pNum(campProps...)`.
+>
+> **Inserção concluída:** nós `Adaptador Input T28` e `Normalizador T28` já estão no workflow
+> `4sdG2UKMCBuFq8xn` (ramo paralelo a partir de `Merge1`), inativos. Saída do Normalizador ainda não
+> roteada (Notion/BigQuery — decisão pendente).
