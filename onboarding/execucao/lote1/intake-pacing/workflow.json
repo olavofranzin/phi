@@ -380,9 +380,11 @@
               "selectValue": "pendente"
             },
             {
-              "key": "versao_sop_aplicada|rich_text",
-              "type": "rich_text",
-              "textContent": "={{ $json.versao_sop_aplicada }}"
+              "key": "versao_sop_aplicada|relation",
+              "type": "relation",
+              "relationValue": [
+                "={{ $json.versao_sop_aplicada }}"
+              ]
             },
             {
               "key": "observacoes|rich_text",

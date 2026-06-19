@@ -577,4 +577,52 @@ if (-not $rawOrq.Contains('c64f600e-4f46-4b2b-ac22-c1e425c8966e')) {
   throw "$orqWf missing PHI - Eventos native page ID"
 }
 
+# === a05-relations ===
+# versao_sop_aplicada é relation nos 4 nodes do DB Demandas
+$relationNodes = @{
+  'intake' = '[Exec Intake] Criar Demanda'
+  'orq' = '[Exec Orq] Atualizar Demanda Priorizada'
+  'qg_entregue' = '[Exec QG] Marcar Entregue'
+  'qg_reabrir' = '[Exec QG] Reabrir Demanda'
+}
+
+foreach ($key in $relationNodes.Keys) {
+  $nodeName = $relationNodes[$key]
+  if ($key -eq 'intake') { $wf = $wfIntake }
+  elseif ($key -eq 'orq') { $wf = $wfOrq }
+  else { $wf = $wfQg }
+  $node = $wf.nodes | Where-Object { $_.name -eq $nodeName }
+  if (-not $node) { throw "Node $nodeName not found" }
+  $prop = $node.parameters.propertiesUi.propertyValues | Where-Object { $_.key -like 'versao_sop_aplicada*' }
+  if (-not $prop) { throw "${nodeName}: missing versao_sop_aplicada propertyValue" }
+  if ($prop.key -ne 'versao_sop_aplicada|relation') {
+    throw "${nodeName}: versao_sop_aplicada key not 'relation' (got '$($prop.key)')"
+  }
+  if ($prop.type -ne 'relation') {
+    throw "${nodeName}: versao_sop_aplicada type not 'relation' (got '$($prop.type)')"
+  }
+}
+
+# versao_sop_aplicada nos eventos continua rich_text
+$eventNodes = @(
+  '[Exec Intake] Criar Evento demanda.criada',
+  '[Exec Orq] Criar Evento demanda.priorizada',
+  '[Exec QG] Criar Evento demanda.em_revisao',
+  '[Exec QG] Criar Evento demanda.entregue',
+  '[Exec QG] Criar Evento demanda.reaberta'
+)
+foreach ($evName in $eventNodes) {
+  $node = $null
+  foreach ($wfTmp in @($wfIntake, $wfOrq, $wfQg)) {
+    $found = $wfTmp.nodes | Where-Object { $_.name -eq $evName }
+    if ($found) { $node = $found; break }
+  }
+  if (-not $node) { throw "Event node $evName not found" }
+  $prop = $node.parameters.propertiesUi.propertyValues | Where-Object { $_.key -like 'versao_sop_aplicada*' }
+  if (-not $prop) { throw "${evName}: missing versao_sop_aplicada propertyValue" }
+  if ($prop.key -ne 'versao_sop_aplicada|rich_text') {
+    throw "${evName}: versao_sop_aplicada in events must stay rich_text (got '$($prop.key)')"
+  }
+}
+
 Write-Host 'Execucao Lote 1 workflow structural tests passed.'
