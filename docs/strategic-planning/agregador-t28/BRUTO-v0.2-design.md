@@ -1,7 +1,6 @@
 # [BRUTO v0.2] Agregador T28 — delta v0.1→v0.2 (decisões 2026-06-21)
 
-> **STATUS:** v0.2 travada 2026-06-21. 4 decisões confirmadas + 1 nova (Search Terms).
-> Delta sobre v0.1 (`BRUTO-v0.1-design.md`); pré-leitura obrigatória.
+> **STATUS:** v0.2 APROVADA 2026-06-21. 5 decisões cristalizadas em **ADR Aceito** (`386b65e5...59aa`) + **SOP Vigente** (`386b65e5...9438`) + **DDL script** em `ddl/phi_dev_t28_tables.sql`. Delta sobre v0.1 (`BRUTO-v0.1-design.md`); pré-leitura obrigatória.
 >
 > **FONTE DE VERDADE:** BigQuery (per ADR-010 — analítico canônico). Notion = cadastro
 > de contexto. Git canônico para design (ADR-012).
