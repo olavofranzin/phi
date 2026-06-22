@@ -189,6 +189,26 @@ Estados: `Backlog` · `Em design` · `Em execução` · `Em smoke` ·
 | Lote 3 (Flash summarize tendências) | Backlog |
 | Lote 4 (sink BigQuery — ADR-010) | Backlog |
 
+### 3.8. Saúde Digital / Agregador T28 (Produto PHI)
+
+Frente aberta 2026-06-21 (contract T28 do WF `PHI — Agregador de Métricas
+Multi-fonte`, n8n `4sdG2UKMCBuFq8xn`). Visão arquitetural de **4 camadas**
+aprovada 2026-06-22 (D11-D15): Agregador (ETL) -> Orquestrador (Análise
+LLM bottom-up) -> Entrega (Notion + alertas) -> Error Handler (global).
+Design em `docs/strategic-planning/saude-digital/BRUTO-v0.1-arquitetura-saude-digital.md`
++ 5 ADRs rascunho em `saude-digital/adr-rascunhos/` (ADR-23 a ADR-27).
+
+| Lote | Status | Notas |
+|---|---|---|
+| Lote 0 (ADR T28 + SOP volume_suficiente + DDL 6 tabelas phi_dev) | **Concluído (2026-06-21)** | ADR `Aceito` (`386b65e5...59aa`) + SOP `Vigente` (`386b65e5...9438`) + DDL aplicado em phi_dev (6 tabelas + 6 VIEWs). |
+| Lote 1 (Refactor Agregador: ler raw_campaign_data + escrever t28_*; T28 fora do Loop) | **Em smoke (2026-06-22)** | Codex `62ca43a6` aplicou 6 mudanças. Smoke revelou + corrigiu: schema mismatch BQ Read (`business_date`->`date`, `conv_value`->`revenue`), env var bloqueada no self-hosted (hardcode `phi_dev`), nó órfão removido, **duplicação por T28 dentro do Loop** (itera por anúncio). Refactor cirúrgico M3 em curso: tirar T28 do Loop (output 0/done). |
+| Lote 1.5 (Promoção phi_dev -> phi_prod) | Backlog | Após smoke verde. Trocar `phi_dev`->`phi_prod` nos 6 BQ Inserts. |
+| Lote 2 (Error Handler global — ADR-26) | Backlog (próximo pós-L1.5, D14) | onError + sub-WF `[Global] Error Handler` + DDL `t28_errors`. Substituir `safe()` silencioso por log+propagação. |
+| Lote 3 (Orquestrador Análises + SUB-WFs Ad/Adset/Campaign + DB Análises PHI — ADR-23/24/27) | Backlog | Bottom-up rollup. Trigger do Orquestrador entra aqui (não no L1). |
+| Lote 3.5 (Entrega: DB Otimizações + Telegram + update properties DBs) | Backlog | |
+| Lote 4 (Análise Saúde Cliente + t28_social_* + APIs sociais) | Backlog | |
+| Lote 5 (Reuso prospecção: SUB-WFs Social/GBP com `tipo_alvo` — ADR-25) | Backlog | Coordenar com área Comercial. |
+
 ---
 
 ## 4. Decisões travadas (links + datas)
@@ -217,6 +237,15 @@ Estados: `Backlog` · `Em design` · `Em execução` · `Em smoke` ·
   pendente. Curador formaliza.
 - ~~**ADR-012** — Git canônico para design, Notion canônico para estado operacional: aprovado 2026-06-04 (ver §4.1).~~
 - ~~**ADR-rascunho Tiering** + **ADR-rascunho Eventos**~~ → **Aceitos no Notion 2026-06-14** (ver §4.1). Rascunhos removidos do git em 2026-06-16 (convenção: git guarda só rascunhos vivos; ADR aceito vira estado operacional → mora no Notion. Histórico de design via `git log` — commit `c6053c0` preserva o conteúdo original).
+- **ADR-23 a ADR-27 (Saúde Digital):** rascunhos vivos em
+  `docs/strategic-planning/saude-digital/adr-rascunhos/`. Aprovados em
+  princípio 2026-06-22 (D11/D12), **não publicados no Notion** — viram
+  `Aceito` conforme cada lote chega (D12). ADR-23 (separação
+  Agregador/Orquestrador, L3) · ADR-24 (granularidade + bottom-up rollup,
+  L3) · ADR-25 (sub-WFs Social/GBP cliente↔prospecto, L4/L5) · ADR-26
+  (Error Handler global, **L2 — próximo**) · ADR-27 (entrega DB Análises
+  PHI, L3.5). Numeração 23-27 é provisória de rascunho — o `Número ADR`
+  real é atribuído no momento da publicação no Notion (auto-increment).
 
 ### 4.3. Decisões fora de ADR (registradas em strawmans e nesta conversa)
 
@@ -234,6 +263,11 @@ Estados: `Backlog` · `Em design` · `Em execução` · `Em smoke` ·
 
 | Origem | Pendência | Próxima ação | Bloqueia? |
 |---|---|---|---|
+| 2026-06-22 | **Refactor cirúrgico L1 Agregador T28 — tirar T28 de dentro do Loop (M3)** | Smoke revelou T28 conectado ao Loop output 1 (next iter) -> itera por anúncio -> duplica t28_* (2 anúncios = 24 rows em vez de 12). `executeOnce` não resolve (Loop reinicia estado por iteração). Fix: reconectar `[T28] BQ Read raw_campaign_data` ao Loop **output 0 (done)**; desconectar Adaptador do Merge1; ligar BQ Read -> Adaptador direto. Aplicar via MCP `update_workflow` ou manual no n8n UI. | Smoke verde L1 |
+| 2026-06-22 | **Limpeza phi_dev pós-streaming buffer** | Smokes 2/3 (EXEC-T28-9912, EXEC-T28-9916, 24 rows cada) ficaram em streaming buffer do BQ (DELETE bloqueado ~90min). Rodar DELETEs por execution_id após consolidação, OU deixar (sandbox tolera lixo). | Não bloqueia |
+| 2026-06-22 | **Search Terms features zeradas (pct_*=0)** | Listas brand/competitor/excluded nunca preenchidas no WF (placeholders literais `INSERT YOUR BRAND TERM HERE`). LLM classifica sem contexto -> features 0. Não é bug T28. Resolver L3+: (a) preencher 3 propriedades no DB Clientes Notion, OU (b) ler `top_search_terms` da raw + classificar por keywords. Registrado como TS2/ADR-26-anti-pattern. | Não bloqueia L1 (decisão C3) |
+| 2026-06-22 | **source_execution_id usa prefixo FALLBACK-** | Daily Entry grava `execution_id` na raw, mas com formato `FALLBACK-YYYYMMDD-uuid` (gap pré-existente do Daily Entry). T28 propaga corretamente. Coordenar com A.6 (Produto PHI backlog) — não bloqueia T28. | Não bloqueia |
+| 2026-06-22 | **Visão Saúde Digital 4 camadas — ADRs 23-27 viram Aceito conforme lotes** | Rascunhos em git (`saude-digital/`). ADR-26 (Error Handler) publica no L2; ADR-23/24/27 no L3/L3.5; ADR-25 no L4/L5. Olavo aprova publicação no Notion no momento de cada lote. | Não bloqueia; governança |
 | 2026-06-03 | Re-smoke A2.3 caminho Aprovado | Codex roda quando cota Gemini Pro recuperar | Fechamento do Lote 2 Onboarding |
 | 2026-06-04 | Acesso ao protótipo `phi-dashboard-b3d8f919` | Olavo escolhe caminho: drag-drop / branch espelho / autorizar repo / prints | Decisão final do papel do Dashboard |
 | 2026-06-04 | ADR-010 (BQ × Supabase) | ✅ **Aprovado 2026-06-04, `Aceito`.** [Notion](https://www.notion.so/376b65e5c72b814a81fac10aaf50befc). ADR-001 esclarecido como complementar. | Resolvido |
@@ -473,6 +507,7 @@ Escopo Retroativa automaticamente.
 
 | Versão | Data | Mudança |
 |---|---|---|
+| v0.1.37 | 2026-06-22 | **Visão arquitetural Saúde Digital (4 camadas) aprovada + 5 ADRs rascunho + smoke L1 Agregador T28 em curso.** Durante o smoke do Agregador T28, Olavo levantou 6 pontos estratégicos abertos (análise pós-`[T28] BQ` via agentes; loop bottom-up ad->adset->campaign; saúde digital com perfis sociais; reuso social/GBP em prospecção; alertas de erro; definição de entrega). Resposta: **arquitetura de 4 camadas desacopladas** (Agregador ETL -> Orquestrador Análises LLM bottom-up -> Entrega Notion+alertas -> Error Handler global), encadeadas via Execute Workflow Trigger (aplica ADR-012). **5 decisões aprovadas (D11-D15):** D11 arquitetura 4 camadas; D12 abrir ADRs 23-27 como rascunho git (publica Notion conforme lote); D13 L1 fecha nos 6 BQ Inserts (sem placeholder); D14 próximo lote pós-L1.5 = L2 Error Handler (antes do Orquestrador); D15 granularidade ad-level diferida p/ L3 (default `criativos_json`). Artefatos git: `saude-digital/BRUTO-v0.1-arquitetura-saude-digital.md` (strawman mestre) + 5 ADRs rascunho (`adr-rascunhos/ADR-23..27`). §3 ganha subseção **3.8 Saúde Digital / Agregador T28** com sequenciamento L0-L5. §4.2 lista ADRs 23-27 rascunho. §5 +5 pendências (refactor M3 tirar T28 do Loop; limpeza streaming buffer; Search Terms zerados; source_execution_id FALLBACK; governança ADRs). **Smoke L1 (em curso):** revelou e corrigiu (a) schema mismatch BQ Read (`business_date`->`date AS business_date`, `conv_value`->`revenue AS conv_value`; coluna real confirmada via INFORMATION_SCHEMA); (b) env var bloqueada no n8n self-hosted (`N8N_BLOCK_ENV_ACCESS_IN_NODE` + `$vars` indisponível em Community) -> hardcode `phi_dev` nos 6 BQ Inserts; (c) nó órfão `Transforming It It To Be Ready For AI Agent` removido; (d) **duplicação descoberta**: T28 estava plugado no Loop output 1 (next iter), iterando por anúncio -> 2 anúncios CLI-4 (PMAX) = 24 rows em vez de 12; `executeOnce` não resolve. Fix M3 (tirar T28 do Loop, reconectar output 0/done) é a pendência ativa. Decisões cirúrgicas do Olavo no smoke: NÃO remover Meta Ads, NÃO consolidar anúncios (Loop preservado p/ granularidade futura), manter cadeia LLM Search Terms. Anti-pattern registrado: `safe()` silencioso no Adaptador mascarou o bug de schema -> ADR-26 prevê substituir por log+propagação. |
 | v0.1 | 2026-06-04 | Criação. Inclui nomenclatura D1-D6 travada, glossário, mapa de agentes, protocolo de checkpoint, abertura formal da área Documentação e Ferramentas (Tronco 4 Miro). |
 | v0.1.1 | 2026-06-04 | Atualização in-place pós-OK P1.5 + T10. Adicionados: URLs reais da âncora Doc&Ferramentas + Aprendizado #16 + ME-20260604 dogfood. §1.2 marcado pendente (Olavo enviar lista completa de troncos do Miro). §3.7 reflete Lote 0 e Lote 1 concluídos. §6 T10 atualizada com ME criada. Nenhuma mudança estrutural. |
 | v0.1.2 | 2026-06-04 | Lista completa dos 10 troncos do Miro recebida e incorporada (§1.2). Releitura registrada: 2 áreas operacionais + 8 dimensões transversais. Troncos transversais 5-10 adicionados ao glossário (§7). §5 pendência de troncos marcada como resolvida. Nenhuma mudança estrutural — confirma que estamos no caminho certo: já tocamos 8 dos 10 troncos implicitamente. |
