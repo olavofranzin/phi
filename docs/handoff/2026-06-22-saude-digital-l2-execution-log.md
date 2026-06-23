@@ -39,6 +39,7 @@ documentado no historico do projeto. O valor nao foi regravado neste log.
 - Workflow alvo: `4sdG2UKMCBuFq8xn`
 - Draft versionId pos-edit F3: `7cb1aa76-53e0-47fe-9a2d-443008ff7712`
 - Draft versionId pos-edit F4: `ae0e79af-753f-452c-9b05-c7866dbd7197`
+- Draft versionId pos-edit A02: `a35e1d56-046c-4d31-b61b-f4e0fadedb49`
 - activeVersionId permanece: `66997885-de29-4761-8e46-c034475ad321`
 - Nodes adicionados:
   - `[Err] Roteador Payload`
@@ -64,6 +65,10 @@ documentado no historico do projeto. O valor nao foi regravado neste log.
   - `readOrThrow` aplicado nas fontes estruturais: `Set dados`, `Get database campanhas`, `Get database clientes`, `Code prepara datas para extracao`, `[T28] BQ Read raw_campaign_data`, `HTTP Request GA4 Organico`, `HTTP Request GA4 Pago (LPs)`, `HTTP Request GBP`, `HTTP Request Clarity`.
   - `safeOptional` aplicado nas fontes opcionais: `Get database conjuntos`, `Get database anuncios`, `Google Ads Conjuntos (GAQL)`, `Google Ads Anuncios (GAQL)`, `Fetch Meta Ads`, `[T28] Search Terms Features`.
   - Topologia preservada: `nodeCount=62`, `connections` inalteradas, unico node alterado = `Adaptador Input T28`.
+- A02 aplicado no `[Err] Roteador Payload`:
+  - Adicionado `safeGetNodeJson(name)` para evitar excecao `NodeNotExecuted` ao ler `Set dados` / `Code prepara datas para extracao`.
+  - `sourceFor(nodeName)` passa a testar `bq` antes de `ga4`, evitando classificar `[T28] BQ Insert t28_ga4_landing` como `ga4`.
+  - Topologia preservada: `nodeCount=62`, `connections` inalteradas, unico node alterado = `[Err] Roteador Payload`.
 
 ## Validacoes executadas
 
@@ -80,12 +85,22 @@ documentado no historico do projeto. O valor nao foi regravado neste log.
   - `safe(` ausente no jsCode.
   - `readOrThrow` e `safeOptional` presentes antes das leituras do adaptador.
   - `update_workflow` aplicou 1 operacao (`updateNodeParameters`) e manteve `nodeCount=62`.
+- `validate_node_config` no `[Err] Roteador Payload` modificado: PASS.
+- Teste local A02 do roteador:
+  - RED antes do fix: `NodeNotExecuted: Set dados`.
+  - GREEN depois do fix: `A02_ROUTER_TEST_PASS`.
+  - Cenario coberto: `[T28] BQ Insert t28_ga4_landing` retorna `source='bq'` e `client_id/business_date=null` quando os nodes de contexto nao foram executados.
+- Check pos-A02 no workflow vivo:
+  - `safeGetNodeJson` presente.
+  - `bq` avaliado antes de `ga4`.
+  - `update_workflow` aplicou 1 operacao (`updateNodeParameters`) e manteve `nodeCount=62`.
+  - `get_workflow_details` confirmou `connections` inalteradas e unico node alterado = `[Err] Roteador Payload`.
 
 ## Warnings / pendencias
 
 1. DDL `t28_errors` foi versionado, mas nao foi aplicado diretamente no BigQuery por este agente.
 2. Smoke real feliz/triste nao foi executado; apenas teste pinado sem side effects reais.
-3. O roteador unico depende de o error output do n8n carregar `error.node.name`, `node.name`, `nodeName` ou `node_name`. Se o smoke mostrar `node_name=unknown`, substituir por Set/Code por fonte ou enriquecer payload antes do roteador.
+3. O roteador unico ainda depende de o error output do n8n carregar `error.node.name`, `node.name`, `nodeName` ou `node_name` para preencher `node_name`; A02 removeu a excecao `NodeNotExecuted`, mas o smoke triste real ainda precisa confirmar que `node_name` nao chega `unknown`.
 4. Warnings de validacao do agregador pos-edit:
    - `HTTP Request Clarity` tem header `Authorization` hardcoded (preexistente).
    - `Loop` batchSize reportado como nao expressao (preexistente).
