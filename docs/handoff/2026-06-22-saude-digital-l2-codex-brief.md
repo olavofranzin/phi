@@ -360,6 +360,10 @@ do F3 (reuso).
 
 ## 7. Smoke L2 (validação real)
 
+> **Pré-requisito:** smoke real **só dispara após Antigravity rodada 1
+> verde (§11)**. Codex implementa, Claude pré-revisa (§10), Antigravity
+> revisa independente (§11), só então Olavo executa o smoke.
+
 ### 7.1. Smoke "feliz"
 
 Disparar `Execute Workflow` manual no Agregador T28 com CLI-4 piloto.
@@ -482,12 +486,49 @@ da dívida arquitetural Merge1->cadeia morta fica para L2.5 separado
 | 11 | Smoke real verde nos 2 cenários (feliz + triste) com counts esperados | SQL queries do §7.3 |
 | 12 | Cliente piloto CLI-4 sem regressão no L1.5 (12/0/2/1/1/0) | mesma query do L1.5 |
 
-Após pré-revisão verde, eu publico o sub-WF (`publish_workflow`) e
-ativo o `4sdG2UKMCBuFq8xn` em prod com o Error Handler ligado.
+Após pré-revisão verde, **disparar brief Antigravity rodada 1** (§11)
+antes do smoke real.
 
 ---
 
-## 11. Decisões pendentes para o Codex (resolver durante o trabalho)
+## 11. Antigravity — rodada 1 (3ª revisão independente)
+
+L2 é o **maior escopo** desde o Telemetria Lote 1 (`a01`→`a05`). Retomamos
+o padrão Telemetria: Codex implementa → pré-revisão Claude → **Antigravity
+rodada 1** (par independente) → smoke real.
+
+**O que Antigravity deve validar (independente do checklist Claude):**
+
+1. **Coerência semântica do schema `t28_errors`** — nomes vs uso real
+   nas queries do §7.3. Severity está acoplado ao ENUM correto?
+   Granularidade `error_id` UUID vs `EXEC-ERRHDL-{exec}-{i}` (ambíguo?).
+2. **Risco de race condition no [Err] Roteador Payload** — 13 nodes
+   podendo emitir error output simultaneamente. O Code resolve N inputs
+   numa execução? Ou precisa de Merge antes (padrão multi-fan-in
+   inegociável do Telemetria Lote 1)?
+3. **Payload do Execute Workflow** — `$('Set dados').first()` está
+   acessível pós-Loop done? E se o erro for ANTES do Set dados rodar
+   (ex: Schedule Trigger falha)?
+4. **Refactor `readOrThrow`** — algum estrutural vai falhar no cliente
+   piloto CLI-4 (ex: GA4 Pago zerado historicamente)? Compensação via
+   onError do Adaptador é suficiente?
+5. **Smoke triste com mutação intencional** — risco de Codex esquecer
+   reverter o sqlQuery do BQ Read. Há check no execution log?
+6. **Telegram credencial** — `fromEnvOrRedacted` exporta para
+   workflow.json sanitizado? Não vaza?
+7. **Notion Demandas** — schema lido em runtime vs hardcoded. Drift
+   silencioso possível?
+8. **Sub-WF active=false no commit** — confirmado que não publica sem
+   pré-revisão verde?
+
+**Critério Antigravity:** aprovação macro + 8 itens acima validados +
+qualquer ponto novo que Antigravity descobrir. Se REJEITAR, gerar brief
+Codex de fix (`a02`) seguindo padrão do Telemetria. Se APROVAR, libera
+smoke real.
+
+---
+
+## 12. Decisões pendentes para o Codex (resolver durante o trabalho)
 
 | # | Decisão | Default |
 |---|---|---|
@@ -502,7 +543,7 @@ execution log** em vez de decidir sozinho.
 
 ---
 
-## 12. O que NÃO está no escopo (e o que será L2.5)
+## 13. O que NÃO está no escopo (e o que será L2.5)
 
 - ❌ Deletar cadeia morta `Merge1 → Calculate KPIs (off) → AI Agent (off) → Prepare Report Data2 (off) → Switch (off)` → **L2.5**
 - ❌ Refactor Adaptador para consumir Merge1 via conexão explícita (em vez de `$('node').first()`) → **L2.5**
