@@ -37,7 +37,8 @@ documentado no historico do projeto. O valor nao foi regravado neste log.
 ## Agregador T28
 
 - Workflow alvo: `4sdG2UKMCBuFq8xn`
-- Draft versionId pos-edit: `7cb1aa76-53e0-47fe-9a2d-443008ff7712`
+- Draft versionId pos-edit F3: `7cb1aa76-53e0-47fe-9a2d-443008ff7712`
+- Draft versionId pos-edit F4: `ae0e79af-753f-452c-9b05-c7866dbd7197`
 - activeVersionId permanece: `66997885-de29-4761-8e46-c034475ad321`
 - Nodes adicionados:
   - `[Err] Roteador Payload`
@@ -58,6 +59,11 @@ documentado no historico do projeto. O valor nao foi regravado neste log.
   - `Google Ads Anúncios (GAQL)`
   - `Adaptador Input T28`
   - `Normalizador T28`
+- F4 concluido no `Adaptador Input T28`:
+  - `safe()` removido do jsCode.
+  - `readOrThrow` aplicado nas fontes estruturais: `Set dados`, `Get database campanhas`, `Get database clientes`, `Code prepara datas para extracao`, `[T28] BQ Read raw_campaign_data`, `HTTP Request GA4 Organico`, `HTTP Request GA4 Pago (LPs)`, `HTTP Request GBP`, `HTTP Request Clarity`.
+  - `safeOptional` aplicado nas fontes opcionais: `Get database conjuntos`, `Get database anuncios`, `Google Ads Conjuntos (GAQL)`, `Google Ads Anuncios (GAQL)`, `Fetch Meta Ads`, `[T28] Search Terms Features`.
+  - Topologia preservada: `nodeCount=62`, `connections` inalteradas, unico node alterado = `Adaptador Input T28`.
 
 ## Validacoes executadas
 
@@ -69,14 +75,18 @@ documentado no historico do projeto. O valor nao foi regravado neste log.
 - `test_workflow` pinado do sub-WF:
   - A chamada MCP retornou timeout, mas a execucao n8n `10147` foi registrada como `success`.
   - Nodes executados com pin data: Trigger -> Set Contexto -> BQ Insert pinado + Notion pinado -> Telegram pinado.
+- `validate_node_config` no `Adaptador Input T28` modificado: PASS.
+- Check pos-F4 no workflow vivo:
+  - `safe(` ausente no jsCode.
+  - `readOrThrow` e `safeOptional` presentes antes das leituras do adaptador.
+  - `update_workflow` aplicou 1 operacao (`updateNodeParameters`) e manteve `nodeCount=62`.
 
 ## Warnings / pendencias
 
 1. DDL `t28_errors` foi versionado, mas nao foi aplicado diretamente no BigQuery por este agente.
 2. Smoke real feliz/triste nao foi executado; apenas teste pinado sem side effects reais.
-3. Refactor completo do `safe()` no `Adaptador Input T28` ainda nao foi aplicado. Foi adicionado `onError` e conexao de error output ao roteador.
-4. O roteador unico depende de o error output do n8n carregar `error.node.name`, `node.name`, `nodeName` ou `node_name`. Se o smoke mostrar `node_name=unknown`, substituir por Set/Code por fonte ou enriquecer payload antes do roteador.
-5. Warnings de validacao do agregador pos-edit:
+3. O roteador unico depende de o error output do n8n carregar `error.node.name`, `node.name`, `nodeName` ou `node_name`. Se o smoke mostrar `node_name=unknown`, substituir por Set/Code por fonte ou enriquecer payload antes do roteador.
+4. Warnings de validacao do agregador pos-edit:
    - `HTTP Request Clarity` tem header `Authorization` hardcoded (preexistente).
    - `Loop` batchSize reportado como nao expressao (preexistente).
    - filtros Notion em `Get database anuncios` / `Get database conjuntos` reportados como invalidos (preexistente).
@@ -86,6 +96,5 @@ documentado no historico do projeto. O valor nao foi regravado neste log.
 ## Proximo passo recomendado
 
 1. Aplicar DDL `phi_prod_t28_errors.sql` no BigQuery.
-2. Completar F4 no `Adaptador Input T28` com `readOrThrow` / `safeOptional`.
-3. Rodar smoke triste controlado no BQ Read e verificar se `node_name` chega preenchido.
-4. Depois da pre-revisao, publicar `WF-T28-Error-Handler` e publicar a draft do agregador.
+2. Rodar smoke triste controlado no BQ Read e verificar se `node_name` chega preenchido.
+3. Depois da pre-revisao, publicar `WF-T28-Error-Handler` e publicar a draft do agregador.
