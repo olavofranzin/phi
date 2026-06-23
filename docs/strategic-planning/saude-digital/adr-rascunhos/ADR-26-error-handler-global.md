@@ -1,7 +1,10 @@
-# [RASCUNHO] ADR-26 — Error Handler global (onError + sub-WF + t28_errors)
+# ADR-26 — Error Handler global (onError + sub-WF + t28_errors)
 
-> **STATUS:** RASCUNHO (git, ADR-012). Vira `Aceito` no Lote 2 (próximo
-> pós-L1.5, per D14). Aprovado em princípio por Olavo 2026-06-22 (D11/D14).
+> **STATUS:** ✅ **PUBLICADO como `Aceito` no Notion 2026-06-22** (page
+> `388b65e5-c72b-8186-aed5-c5fafd65b5f8`,
+> [link](https://app.notion.com/p/388b65e5c72b8186aed5c5fafd65b5f8)).
+> Este rascunho permanece em git como histórico de design (ADR-012).
+> Aprovado por Olavo 2026-06-22 (D11/D14/D18).
 
 ## Contexto
 
