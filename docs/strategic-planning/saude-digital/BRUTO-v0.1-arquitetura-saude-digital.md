@@ -36,6 +36,28 @@ Este doc responde aos 6 com uma arquitetura de **4 camadas desacopladas**.
 
 ---
 
+## 0.1. Nota de escopo — Saúde Digital é incremental
+
+"Saúde Digital" é o **índice** final consolidado por cliente. A
+**arquitetura** que o produz é incremental — cada lote amplia o escopo
+de dados cobertos. Não confundir o nome do índice agregado com o nome
+dos lotes que o constroem.
+
+| Componente da Saúde Digital | Lote(s) que adiciona |
+|---|---|
+| Mídia paga (Google Ads + Meta) | **L0/L1/L1.5** (camada 1) + **L3** (camada 2) |
+| Site / UX (GA4 + Clarity) | **L0/L1/L1.5** (camada 1) + **L3** (camada 2) |
+| Visibilidade local (GBP) | **L0/L1/L1.5** (camada 1) + **L3** (camada 2) |
+| Redes sociais (Instagram / Facebook / LinkedIn) | **L4** (camada 1 + camada 2) |
+| Reuso para prospecção | **L5** |
+
+Por isso os lotes abaixo (§8) têm nomes precisos do escopo que cobrem,
+não do índice final. O L0/L1 fechados **não** significam "Saúde Digital
+completa" — significam **"camada 1 do Agregador com escopo de mídia paga
++ GA4 + GBP + Clarity"**.
+
+---
+
 ## 1. Princípio: separar ETL de Análise de Entrega
 
 Hoje o WF "PHI — Agregador de Métricas Multi-fonte" (`4sdG2UKMCBuFq8xn`)
@@ -192,17 +214,18 @@ t28_meta_campaign=0 (Meta disabled / sem dado).
 
 ---
 
-## 8. Sequenciamento de lotes (Saúde Digital)
+## 8. Sequenciamento de lotes (nomes precisos do escopo coberto)
 
 | Lote | Escopo | Critério done |
 |---|---|---|
-| **L1** (em curso) | Refactor cirúrgico Agregador: T28 fora do Loop. Termina nos 6 BQ Inserts. | Smoke verde: 12/0/2/1/1/0 rows por execução. |
-| **L1.5** | Promoção phi_dev -> phi_prod | t28_* gravando em phi_prod. |
-| **L2** | Error Handler global + DDL t28_errors + onError em nodes críticos | 1 erro proposital -> tarefa DB Demandas + Telegram. |
-| **L3** | Orquestrador Análises + SUB-WFs (Ad/Adset/Campaign) + DB Análises PHI | 1 execução E2E gera análise multi-nível, escreve Notion. |
-| **L3.5** | Entrega: DB Otimizações + Telegram resumo + update properties DBs | Análise cria log + atualiza scores. |
-| **L4** | Análise Saúde Cliente + tabelas t28_social_* + ingestão APIs sociais | Cliente recebe PHI Saúde Digital consolidado. |
-| **L5** | Reuso prospecção: SUB-WFs Social/GBP recebem `tipo_alvo` | WF prospecção piloto chama sub-WF Social, recebe features compatíveis. |
+| **L0 Agregador T28 — fundação** | ADR T28 + SOP volume_suficiente + DDL phi_dev (6 tabelas + 6 VIEWs) | ✅ Concluído 2026-06-21. |
+| **L1 Agregador T28 — refactor cirúrgico** | T28 fora do Loop; lê raw_campaign_data; escreve t28_* em phi_dev. Termina nos 6 BQ Inserts. | ✅ Concluído 2026-06-22. Smoke 4 verde: 12/0/2/1/1/0. |
+| **L1.5 Agregador T28 — promoção phi_dev -> phi_prod** | Trocar dataset nos 6 BQ Inserts + re-smoke real em prod | t28_* gravando em phi_prod com counts esperados. |
+| **L2 Error Handler global + saneamento dívida arquitetural** | Sub-WF `[Global] Error Handler` + DDL `t28_errors` + onError em nodes críticos + deletar cadeia morta Merge1->Calculate KPIs(off) + refatorar Adaptador para conexão explícita | 1 erro proposital -> tarefa DB Demandas + Telegram; canvas sem caminho morto. |
+| **L3 Orquestrador Análises (mídia paga + GA4 + GBP + Clarity)** | Orquestrador + SUB-WFs Ad/Adset/Campaign + DB Análises PHI | 1 execução E2E gera análise multi-nível, escreve Notion. |
+| **L3.5 Entrega análises** | DB Otimizações + Telegram resumo + update properties DBs Campanhas/Anúncios | Análise cria log + atualiza scores. |
+| **L4 Expansão Saúde Digital — redes sociais** | tabelas t28_social_* + ingestão APIs Instagram/Facebook/LinkedIn + sub-WF Análise Social na camada 2 | Cliente recebe PHI Saúde Digital consolidado (mídia paga + UX + GBP + Clarity + social). |
+| **L5 Reuso prospecção** | SUB-WFs Social/GBP recebem parâmetro `tipo_alvo` (cliente \| prospecto). Contrato ADR-25 estabilizado. | WF prospecção piloto chama sub-WF Social, recebe features compatíveis. |
 
 ---
 
