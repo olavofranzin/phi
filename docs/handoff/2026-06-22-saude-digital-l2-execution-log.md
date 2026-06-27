@@ -145,6 +145,50 @@ Warnings preexistentes retornados pelo `update_workflow` do agregador:
 - filtros Notion em `Get database anuncios` / `Get database conjuntos` reportados como invalidos.
 - `AI Agent` disabled sem subnodes.
 - `[T28] BQ Read raw_campaign_data` warning `sqlQuery` vs displayOptions.
+
+## a04 - deduplicacao cadeia de erro
+
+Data: 2026-06-27
+
+Contexto: pre-revisao apos a03 identificou duas cadeias paralelas de error handling
+no Agregador. A cadeia canonica tinha o Roteador a03, mas 8 nodes criticos ainda
+apontavam para `[Err] Roteador Payload1` + `[Err] Call Handler1` com contrato a02.
+Tambem havia mapping/schema antigo no `[Err] Call Handler` canonico para
+`error_details`.
+
+Alteracoes aplicadas no n8n:
+
+- Agregador T28 (`4sdG2UKMCBuFq8xn`):
+  - Draft versionId pos-edit a04: `ae1b3964-e49f-42d4-becc-50b83b2e7671`
+  - activeVersionId permanece: `66997885-de29-4761-8e46-c034475ad321`
+  - Rewire dos 8 nodes para `[Err] Roteador Payload`: `Adaptador Input T28`, `Normalizador T28`, `[T28] BQ Insert t28_campaign`, `[T28] BQ Insert t28_adset`, `[T28] BQ Insert t28_ga4_landing`, `[T28] BQ Insert t28_gbp_daily`, `[T28] BQ Insert t28_clarity_daily`, `[T28] BQ Insert t28_meta_campaign`.
+  - Removidos os duplicados `[Err] Roteador Payload1` e `[Err] Call Handler1`.
+  - `[Err] Call Handler`: mapping corrigido para `error_details = ={{ $json.error_details }}`.
+  - `[Err] Call Handler`: schema `error_details` corrigido para `type: string`.
+  - Node count pos-edit: `62`.
+- Sub-WF `WF-T28-Error-Handler` (`rTS5pE34eElfuMPl`):
+  - Publicado o draft a03/a04-compatible.
+  - Novo activeVersionId: `31307f4d-843d-4f96-ab75-f9d552bc2e40`.
+
+Validacoes a04 executadas:
+
+- `validate_node_config` do `[Err] Call Handler` corrigido: PASS.
+- `update_workflow` do Agregador: PASS, 11 operacoes aplicadas.
+- `publish_workflow` do sub-WF: PASS, activeVersionId `31307f4d-843d-4f96-ab75-f9d552bc2e40`.
+- `get_workflow_details` pos-edit confirmou:
+  - apenas 1 conexao canonica `[Err] Roteador Payload` -> `[Err] Call Handler`;
+  - 15 error outputs apontando para `[Err] Roteador Payload`: `HTTP Request GBP`, `HTTP Request GA4 Organico`, `HTTP Request GA4 Pago (LPs)`, `HTTP Request Clarity`, `Google Ads Conjuntos (GAQL)`, `Google Ads Anuncios (GAQL)`, `[T28] BQ Read raw_campaign_data`, `Adaptador Input T28`, `Normalizador T28`, `[T28] BQ Insert t28_campaign`, `[T28] BQ Insert t28_adset`, `[T28] BQ Insert t28_ga4_landing`, `[T28] BQ Insert t28_gbp_daily`, `[T28] BQ Insert t28_clarity_daily`, `[T28] BQ Insert t28_meta_campaign`;
+  - sub-WF com `activeVersionId` igual a versao cujo trigger usa `error_details` type `string`;
+  - sem publicacao do Agregador nesta rodada.
+
+Warnings preexistentes retornados pelo `update_workflow` do Agregador:
+
+- `HTTP Request Clarity` com header `Authorization` hardcoded.
+- `Loop` batchSize reportado como nao expressao.
+- filtros Notion em `Get database anuncios` / `Get database conjuntos` reportados como invalidos.
+- `AI Agent` disabled sem subnodes.
+- `[T28] BQ Read raw_campaign_data` warning `sqlQuery` vs displayOptions.
+
 ## Warnings / pendencias
 
 1. DDL `t28_errors` foi versionado, mas nao foi aplicado diretamente no BigQuery por este agente.
@@ -162,3 +206,4 @@ Warnings preexistentes retornados pelo `update_workflow` do agregador:
 1. Aplicar DDL `phi_prod_t28_errors.sql` no BigQuery.
 2. Rodar smoke triste controlado no BQ Read e verificar se `node_name` chega preenchido.
 3. Depois da pre-revisao, publicar `WF-T28-Error-Handler` e publicar a draft do agregador.
+
