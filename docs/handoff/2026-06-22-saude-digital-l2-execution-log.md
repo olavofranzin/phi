@@ -292,3 +292,69 @@ Versionid pos-fix:
 
 Proximo passo: smoke a05 no DRAFT (Execute Workflow manual). Se verde ->
 publish do Agregador -> L2 fecha.
+
+## l2cirurgico - Adaptador resiliente (2026-06-27)
+
+Contexto: execucao real `11655` terminou `success` no n8n, mas o node
+`Adaptador Input T28` saiu pelo error output com `Cannot read properties of
+undefined (reading 'json') [line 81]`. O brief executado foi
+`docs/handoff/2026-06-27-saude-digital-l2-codex-l2cirurgico-brief.md`.
+
+Alteracoes aplicadas no Agregador T28 (`4sdG2UKMCBuFq8xn`):
+
+- `Adaptador Input T28`:
+  - adicionados helpers `nodeFirst`, `nodeAll` e `optionalSource`;
+  - removidos acessos `.item.json` e `.first().json`;
+  - mantidas como fatais apenas as fontes core: `Set dados`, `Get database campanhas`,
+    `Get database clientes`, `Code prepara datas para extracao` e
+    `[T28] BQ Read raw_campaign_data`;
+  - `HTTP Request GA4 Organico`, `HTTP Request GA4 Pago (LPs)`, `HTTP Request GBP`,
+    `HTTP Request Clarity`, GAQL/Meta/Search Terms passam por `optionalSource`;
+  - output passa a incluir `source_status`.
+- `Normalizador T28`:
+  - `source_status` do Adaptador passa a ser considerado na coluna JSON;
+  - fonte ausente/erro em `gbp` -> zero linhas em `t28_gbp_daily`;
+  - fonte ausente/erro em `clarity` -> zero linhas em `t28_clarity_daily`;
+  - fonte ausente/erro em `ga4_organic` ou `ga4_paid` -> zero linhas daquele canal em
+    `t28_ga4_landing`.
+
+Aplicacao:
+
+- Tentativa preferida via MCP `update_workflow` foi evitada para nao colar 20KB de
+  jsCode pelo chat e reintroduzir risco de encoding.
+- API publica n8n `PATCH` nao existe (`405 Method Not Allowed`).
+- API publica n8n `PUT` foi testada com no-op antes da escrita real; body valido:
+  `name`, `nodes`, `connections`, `settings: {}`.
+- Escrita real aplicada via `PUT /api/v1/workflows/4sdG2UKMCBuFq8xn`, alterando
+  somente `parameters.jsCode` dos nodes `Adaptador Input T28` e `Normalizador T28`.
+- Observacao importante: embora nao tenha sido chamado `publish_workflow`, o PUT da
+  API publica atualizou `versionId` e `activeVersionId` juntos. Portanto a alteracao
+  esta ativa no workflow.
+
+VersionIds pos-edit:
+
+- Agregador `versionId`: `412d874b-875c-450e-9792-cf728e95a4a1`
+- Agregador `activeVersionId`: `412d874b-875c-450e-9792-cf728e95a4a1`
+- Sub-WF Error Handler nao alterado: `rTS5pE34eElfuMPl`
+
+Validacoes executadas:
+
+- Reexport live salvo em `tmp/agregador_after_l2cirurgico.json`.
+- `node --check` PASS no jsCode live reexportado do `Adaptador Input T28`.
+- `node --check` PASS no jsCode live reexportado do `Normalizador T28`.
+- Verificacao estrutural live:
+  - `Adaptador Input T28`: `.item.json=0`, `.first().json=0`;
+  - helpers `nodeFirst`, `nodeAll`, `optionalSource` presentes;
+  - `source_status` presente no output;
+  - `readOrThrow('HTTP Request GA4...')`, `readOrThrow('HTTP Request GBP')` e
+    `readOrThrow('HTTP Request Clarity')` ausentes;
+  - zero U+00C3 e zero U+FFFD no jsCode live.
+- `Normalizador T28`: `sourceAvailable` presente, `source_status` presente, zero
+  U+00C3 e zero U+FFFD no jsCode live.
+- `get_workflow_details` pos-edit confirmou `nodeCount=62`, `settings` preservado
+  como `executionOrder=v1`, `availableInMCP=true`, `binaryMode=separate`.
+
+Nao executado:
+
+- Smoke manual feliz/triste. Proximo passo continua sendo executar o workflow e
+  conferir counts esperados + comportamento com GBP/Clarity/GA4 ausente.
