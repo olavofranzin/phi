@@ -96,6 +96,55 @@ documentado no historico do projeto. O valor nao foi regravado neste log.
   - `update_workflow` aplicou 1 operacao (`updateNodeParameters`) e manteve `nodeCount=62`.
   - `get_workflow_details` confirmou `connections` inalteradas e unico node alterado = `[Err] Roteador Payload`.
 
+## a03 - fix smoke triste
+
+Data: 2026-06-27
+
+Contexto: smoke triste real das execucoes `11372` (Agregador `4sdG2UKMCBuFq8xn`)
+e `11373` (sub-WF `rTS5pE34eElfuMPl`) mostrou 429 do GBP exercitando o
+Error Handler end-to-end, mas com `node_name='unknown'`, `source='other'`
+e falha posterior de tipo em `error_details` quando o erro nasceu de Code node.
+
+Alteracoes aplicadas no n8n:
+
+- Sub-WF `WF-T28-Error-Handler` (`rTS5pE34eElfuMPl`):
+  - Draft versionId pos-edit a03: `31307f4d-843d-4f96-ab75-f9d552bc2e40`
+  - activeVersionId permanece: `81f56a35-022a-43a6-9026-f2bd5cc04728`
+  - `[ErrHdl] Execute Workflow Trigger`: input `error_details` alterado de `object` para `string`.
+  - `[ErrHdl] Set Contexto`: `detailsStr` evita double-stringify quando `error_details` ja chega como string JSON; `payload.error_details` e `demanda_observacoes` usam `detailsStr`.
+- Agregador T28 (`4sdG2UKMCBuFq8xn`):
+  - Draft versionId pos-edit a03: `fe173cdd-b7bc-4d11-aee2-5221eb780519`
+  - activeVersionId permanece: `66997885-de29-4761-8e46-c034475ad321`
+  - `[Err] Roteador Payload`: adiciona `$prevNode?.name` como fallback de `node_name`.
+  - `[Err] Roteador Payload`: `source` passa a derivar de `sourceFromName(nodeName) || sourceFromError(j)`.
+  - `[Err] Roteador Payload`: `error_details` agora trafega como `JSON.stringify(j)`.
+  - Retry 3x/2s aplicado nos 6 HTTP estruturais: `HTTP Request GA4 Organico`, `HTTP Request GA4 Pago (LPs)`, `HTTP Request GBP`, `HTTP Request Clarity`, `Google Ads Conjuntos (GAQL)`, `Google Ads Anuncios (GAQL)`.
+  - `onError: continueErrorOutput` preservado nesses 6 nodes.
+
+Validacoes a03 executadas:
+
+- `get_node_types` consultado para `executeWorkflowTrigger`, `httpRequest` e `code` modo `runOnceForAllItems`.
+- `validate_node_config` nos 3 nodes alterados: PASS.
+- `update_workflow` sub-WF: PASS, 2 operacoes aplicadas, sem warnings.
+- `update_workflow` agregador: PASS, 7 operacoes aplicadas.
+- Teste local RED antes do fix: roteador antigo retornava `source='other'` para erro GBP quando `nodeName='unknown'`.
+- Teste local GREEN apos fix: `A03_LOCAL_GREEN_PASS` para fallback GBP por description e ausencia de double-stringify.
+- `get_workflow_details` pos-edit confirmou:
+  - trigger do sub-WF com `error_details` type `string`;
+  - Set Contexto usando `detailsStr`;
+  - novos versionIds de draft;
+  - sem publicacao nesta rodada.
+
+Nota: `$prevNode` segue experimental neste fan-in de error output. O smoke a03 deve
+confirmar se resolve `node_name`; se ainda vier `unknown`, a04 deve avaliar stamps por node.
+
+Warnings preexistentes retornados pelo `update_workflow` do agregador:
+
+- `HTTP Request Clarity` com header `Authorization` hardcoded.
+- `Loop` batchSize reportado como nao expressao.
+- filtros Notion em `Get database anuncios` / `Get database conjuntos` reportados como invalidos.
+- `AI Agent` disabled sem subnodes.
+- `[T28] BQ Read raw_campaign_data` warning `sqlQuery` vs displayOptions.
 ## Warnings / pendencias
 
 1. DDL `t28_errors` foi versionado, mas nao foi aplicado diretamente no BigQuery por este agente.
