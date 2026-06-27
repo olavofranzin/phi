@@ -189,6 +189,52 @@ Warnings preexistentes retornados pelo `update_workflow` do Agregador:
 - `AI Agent` disabled sem subnodes.
 - `[T28] BQ Read raw_campaign_data` warning `sqlQuery` vs displayOptions.
 
+## a05 - truncar Notion + Call Handler best-effort + errMessage string
+
+Data: 2026-06-27
+
+Contexto: revisao pos-a04 identificou tres ajustes residuais no fluxo global de erro:
+risco de body Notion acima do limite de 2000 caracteres, propagacao de erro caso o
+sub-WF falhe dentro do `[Err] Call Handler`, e perda de mensagem quando `j.error`
+chega como string no `[Err] Roteador Payload`.
+
+Alteracoes aplicadas no n8n:
+
+- Sub-WF `WF-T28-Error-Handler` (`rTS5pE34eElfuMPl`):
+  - `[ErrHdl] Set Contexto`: adiciona `error_details_block = detailsStr.slice(0, 1800)`.
+  - `[ErrHdl] Notion Criar Tarefa Demanda`: bloco JSON passa a usar `$json.error_details_block`.
+  - Sub-WF publicado apos o fix.
+  - Novo activeVersionId: `5ce0bf17-f176-40cb-9814-12473d43064c`.
+- Agregador T28 (`4sdG2UKMCBuFq8xn`):
+  - Draft versionId pos-edit a05: `c2da5d62-b7b2-4107-8468-dc9585a18297`.
+  - activeVersionId permanece: `66997885-de29-4761-8e46-c034475ad321`.
+  - `[Err] Call Handler`: `onError` ajustado para `continueRegularOutput`.
+  - `[Err] Roteador Payload`: `errMessage` passa a preservar `j.error` quando vier como string.
+  - `[Err] Roteador Payload`: mantido texto UTF-8 real em `Code prepara datas para extração`.
+  - `Adaptador Input T28` nao foi alterado nesta rodada.
+
+Validacoes a05 executadas:
+
+- Teste local RED/GREEN:
+  - RED: implementacao antiga retornava `unknown` para `{ error: "Adaptador Input T28: fonte estrutural ausente" }`.
+  - GREEN: implementacao nova preserva a mensagem string.
+  - RED: bloco Notion antigo com `error_details` de 3296 caracteres gerava 3304 caracteres.
+  - GREEN: bloco Notion novo com `error_details_block` gera 1808 caracteres.
+- `validate_node_config` no `[ErrHdl] Set Contexto` modificado: PASS.
+- `validate_node_config` no `[Err] Roteador Payload` modificado: PASS.
+- `update_workflow` do sub-WF: PASS, 2 operacoes aplicadas.
+- `update_workflow` do Agregador: PASS, 2 operacoes aplicadas.
+- `publish_workflow` do sub-WF: PASS, activeVersionId `5ce0bf17-f176-40cb-9814-12473d43064c`.
+- Check de mojibake no Roteador pos-edit: zero ocorrencias do marcador de mojibake proibido; texto alvo preservado como `Code prepara datas para extração`.
+
+Warnings preexistentes retornados pelo `update_workflow` do Agregador:
+
+- `HTTP Request Clarity` com header `Authorization` hardcoded.
+- `Loop` batchSize reportado como nao expressao.
+- filtros Notion em `Get database anuncios` / `Get database conjuntos` reportados como invalidos.
+- `AI Agent` disabled sem subnodes.
+- `[T28] BQ Read raw_campaign_data` warning `sqlQuery` vs displayOptions.
+
 ## Warnings / pendencias
 
 1. DDL `t28_errors` foi versionado, mas nao foi aplicado diretamente no BigQuery por este agente.
