@@ -253,3 +253,42 @@ Warnings preexistentes retornados pelo `update_workflow` do Agregador:
 2. Rodar smoke triste controlado no BQ Read e verificar se `node_name` chega preenchido.
 3. Depois da pre-revisao, publicar `WF-T28-Error-Handler` e publicar a draft do agregador.
 
+
+## a05 + hotfix rename (2026-06-27)
+
+Estado encontrado: o a05 (P1 errMessage string, R1 Call Handler `onError:
+continueRegularOutput`, B1 truncar corpo Notion) ja estava implementado E
+PUBLICADO no Agregador (`4sdG2UKMCBuFq8xn`) e no sub-WF `rTS5pE34eElfuMPl`.
+
+Smoke do Adaptador falhou: `Referenced node doesn't exist [line 81]`.
+Causa-raiz: NAO era mojibake (`Ã`) — era o acento ACHATADO para ASCII na
+referencia `$('Code prepara datas para extracao')` (linha 97) enquanto o node
+se chamava `Code prepara datas para extração` (com ç/ã). A linha 48 do
+Adaptador tambem tinha mojibake `'Data de InÃ­cio'`.
+
+Correcao do Adaptador (Olavo, manual no editor n8n): renomeou o node
+`Code prepara datas para extração` -> `Code prepara datas para extracao`
+(ASCII, sem ç/ã) e corrigiu a linha 48 -> `Data de Início`. O rename do n8n
+auto-propagou a nova referencia para 8 nodes (`Adaptador Input T28`,
+`[T28] BQ Read raw_campaign_data`, `HTTP Request GBP`, `HTTP Request GA4 Pago (LPs)`,
+`Google Ads Conjuntos (GAQL)`, `Google Ads Anúncios (GAQL)`,
+`HTTP Request GA4 Orgânico`, `Fetch Meta Ads`).
+
+Orfao remanescente (corrigido por Claude via `update_workflow`): o
+`[Err] Roteador Payload` referenciava o nome ANTIGO acentuado dentro de
+`safeGetNodeJson('Code prepara datas para extração')` (linha 48). O renomeador
+do n8n nao detecta refs indiretas (string passada para funcao custom), entao
+ficou orfa -> retornava `null` em `business_date` (nao-fatal, mas perde a data
+nos logs de `t28_errors`). Fix: jsCode do Roteador setado com a ref em ASCII
+`'Code prepara datas para extracao'`. Pos-edit verificado: ZERO bytes
+nao-ASCII no Roteador; nenhuma ref ao nome antigo no workflow (so sobra o
+comentario `// Janelas de extração` dentro do proprio node de datas).
+
+Versionid pos-fix:
+- Agregador DRAFT: `276e7e22-7b3b-4b55-840e-dfbb5d8e7c6b` (Adaptador rename +
+  a05 + Roteador orfao corrigido — limpo).
+- Agregador ACTIVE: `fad66104-45c4-4a11-8991-9dcd20892209` (mesma coisa, mas
+  ainda com o orfao do Roteador — nao-fatal; sera substituido no publish pos-smoke).
+
+Proximo passo: smoke a05 no DRAFT (Execute Workflow manual). Se verde ->
+publish do Agregador -> L2 fecha.
