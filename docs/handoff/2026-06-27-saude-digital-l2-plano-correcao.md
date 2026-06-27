@@ -802,3 +802,135 @@ Mojibake check: zero matches
 - Whether to implement BigQuery MERGE inside n8n BigQuery nodes directly or via staging/query nodes depends on current node schema validation.
 - Whether hardcoded Google/Clarity tokens can be moved immediately depends on available n8n credentials in the project.
 - Whether disabled AI/Meta legacy nodes should be removed now or preserved until L3 needs explicit confirmation if they are still connected to future work.
+
+---
+
+# Anexo — Análise Estratégica e Contribuições (Claude, 2026-06-27)
+
+> Revisão do plano acima contra o estado **live** do workflow e o schema real.
+> Veredito: **plano válido na premissa e no fix central (Task 2), mas com erros
+> concretos, escopo inflado e uma lacuna arquitetural.** Recomendo reestruturar
+> antes de executar.
+
+## 1. Correção factual de base — a premissa do plano está CERTA (e eu estava errado)
+
+Confirmei a execução `11655` via `get_execution` (includeData):
+
+- `Adaptador Input T28`: `executionStatus: success`, mas **emitiu pelo error
+  output** — `main[0]` (sucesso) = `[]` vazio; `main[1]` (erro) =
+  `{"error":"Cannot read properties of undefined (reading 'json') [line 81]"}`.
+- Fontes estruturais estavam OK: BQ Read trouxe linhas reais, `Set dados` e
+  `Code prepara datas para extracao` com 2 itens cada.
+- `lastNodeExecuted: [Err] Call Handler` → Error Handler capturou; n8n marcou a
+  run inteira como `success`.
+
+**Conclusão:** o rename (`extração`→`extracao`) resolveu o `Referenced node
+doesn't exist`, mas **destravou um segundo bug** — leitura `.item.json` /
+`.first().json` resolvendo `undefined`. **`t28_*` NÃO foi escrito em 11655.**
+A run estava **degradada disfarçada de verde**. Minha leitura anterior
+("pronto pro smoke / L2 fecha") estava incorreta — a Task 2 do plano ataca o
+bug real.
+
+## 2. O que o plano ACERTA (manter)
+
+- **Task 2** — trocar `.item.json`/`.first().json`/`.all().map(i=>i.json)` por
+  helpers sobre `.all()[0].json`. É o fix do bug live de 11655. Direção correta:
+  `.all()` não depende da resolução de paired-item que está quebrando na
+  topologia BQ Read→Adaptador.
+- **Princípio ETL-puro da Camada 1** (Notion=contexto, raw_campaign_data
+  preservado por Daily Entry/ADR-010, t28_* destino canônico) — alinhado com
+  ADR-23 e a visão 4-camadas.
+- **Respeita restrições do projeto**: não persistir Search Terms (D5), não
+  ativar LLM/Orquestrador, não remover Loop legado, não trocar credencial sem
+  pedido. ✅
+- **Task 4 (sinal de execução degradada)** — ideia forte: ataca exatamente a
+  armadilha de 11655 ("n8n success ≠ ETL success"). Vale manter (mesmo que
+  simplificada).
+
+## 3. ERROS CONCRETOS a corrigir no plano antes de executar
+
+1. **Task 5 (MERGE) — schema incorreto.** O DDL de `t28_campaign` **não tem
+   coluna `updated_at`** (o bloco audit usa `ingested_at TIMESTAMP`). E a
+   cláusula `ON ... AND versao_contract_aplicada = S.versao_contract_aplicada`
+   está **errada**: a chave de negócio é `(client_id, campaign_id,
+   business_date, janela)` — exatamente o `PARTITION BY business_date CLUSTER BY
+   client_id, janela`. Pôr `versao_contract_aplicada` na chave faz uma mudança
+   de contrato gerar linha nova em vez de atualizar. Cada tabela T28 tem chave
+   de negócio própria (ex.: `t28_gbp_daily` = `client_id, business_date,
+   janela`, sem `campaign_id`).
+2. **Task 2 Step 5 — JSON Pointer inválido.** `"path": "jsCode"` falha no
+   `update_workflow`; o schema exige Pointer começando com `/` → **`"/jsCode"`**.
+3. **Task 6 (volume_suficiente) — thresholds inventados.** O plano hardcoda
+   `conversions >= 50 && ageDays <= 14`. O valor canônico é a **SOP
+   "Critério Estatístico volume_suficiente v1.0" (Vigente)** — ler a SOP e
+   espelhar, não chutar. Persistir `versao_sop_aplicada='volume_suficiente_v1.0'`
+   (coluna já existe no DDL: `versao_sop_aplicada STRING NOT NULL`).
+4. **Task 4 Step 4 já está feito.** `[Err] Call Handler` já tem
+   `onError: continueRegularOutput` (fix R1/a05). Não é trabalho novo —
+   é verificação.
+5. **Ambiente/paths do plano não batem com este repo.** O plano assume Windows
+   (`C:\tmp\phi_repo_audit`), scripts próprios (`fetch_workflow.py`,
+   `extract_node_code.js`) e grava em `docs/superpowers/plans/...`. Aqui o
+   ambiente é Linux remoto; usar as MCP tools n8n direto
+   (`get_workflow_details`/`update_workflow`) e a convenção `docs/handoff/`.
+
+## 4. LACUNA arquitetural — o plano trata sintoma, não a causa
+
+A causa real de 11655 não é só "leitura insegura": é **granularidade de falha
+all-or-nothing**. Hoje GBP/Clarity/GA4 são lidos via `readOrThrow` (estrutural
+= fatal). Se o **GBP toma 429**, o `readOrThrow` derruba o Adaptador **inteiro**
+→ nenhum `t28_*` é escrito, mesmo com BQ Read, GA4 e GAQL tendo retornado OK.
+Uma fonte secundária flaky mata a agregação inteira da campanha.
+
+**Reclassificação correta das fontes** (proposta):
+
+| Fonte | Hoje | Deveria ser | Racional |
+|---|---|---|---|
+| `Set dados`, `Get database campanhas/clientes`, `Code ... extracao`, `[T28] BQ Read raw_campaign_data` | readOrThrow | **readOrThrow (fatal)** | Sem isso não existe `t28_campaign`. Correto. |
+| `HTTP Request GBP` → `t28_gbp_daily` | readOrThrow | **safeOptional + status por fonte** | 429 transitório não deve matar `t28_campaign`. Degrada só `t28_gbp_daily`. |
+| `HTTP Request Clarity` → `t28_clarity_daily` | readOrThrow | **safeOptional + status** | idem |
+| `HTTP Request GA4 Org/Pago` → `t28_ga4_landing` | readOrThrow | **safeOptional + status** | idem |
+
+Modelo-alvo: **cada fonte alimenta t28_* específicos; falha de fonte degrada só
+os seus outputs + grava status por fonte em `source_status` (coluna JSON já
+existe) e dispara o Error Handler como warn** — em vez de abortar tudo. Isso
+torna a Task 4 (sinal degradado) consequência natural do design, não um node
+extra solto. **Esta é a contribuição mais importante**: sem ela, a Task 2
+sozinha só troca um "crash" por um "crash mais limpo" — a run ainda morre quando
+o GBP espirra.
+
+## 5. Reordenação de ESCOPO — 1 fix urgente, não 10 tasks
+
+O plano mistura 1 correção bloqueante com um backlog de lotes distintos.
+Proposta de fatiamento:
+
+| Bloco | Tasks do plano | Lote | Prioridade |
+|---|---|---|---|
+| **Adaptador robusto + granularidade de falha** (Task 2 + §4 acima + Task 4 simplificado) | 2, 4 | **L2 (fecha aqui)** | 🔴 bloqueante — produção degradada hoje |
+| **Idempotência BQ (MERGE/staging)** | 5 | **lote novo (L1.6)** | 🟠 alta — Schedule Triggers ativos = duplicação a cada run |
+| **Contrato multi-campanha / campaign_id em adset** | 3 | lote novo | 🟡 média — plausível mas **não verificado** (t28_adset=0 nos smokes; PMAX). Precisa cliente com adset real. |
+| **volume_suficiente vs SOP** | 6 | L2.5 | 🟡 média |
+| **Credenciais expostas** | 7 | segurança (separado) | 🟠 — `google_developer_token` aparece **em claro** no `Set dados` (confirmado no dump de 11655); casa com o backlog de rotação já conhecido. Rotação precisa de você. |
+| **Limpeza de canvas** (cadeia morta Merge1→Calculate KPIs) | 8 | L2.5 | 🟢 baixa |
+
+**Por que `MERGE` vira urgente:** com L1.5 ativo, os Schedule Triggers
+Semanal/Mensal disparam sozinhos. Inserts são append-only → cada run reescreve
+as mesmas `(client_id, campaign_id, business_date, janela)` **duplicando**.
+Os smokes contaram 12 mas nunca testaram **re-run idempotente**. Isso vai
+inflar `t28_*` em produção. Vale tratar logo depois do L2.
+
+## 6. Próximo passo recomendado
+
+1. **Re-confirmar versionId live** antes de qualquer edit (11655 rodou no draft;
+   o estado active/draft precisa ser relido).
+2. **L2 cirúrgico**: aplicar Task 2 **junto com** a reclassificação de fontes
+   (§4) — GBP/Clarity/GA4 viram `safeOptional` com status por fonte; só as 4
+   fontes core ficam `readOrThrow`. Smoke deve voltar 12/0/2/1/1/0 e **sobreviver
+   a um GBP 429** (degrada só `t28_gbp_daily`).
+3. **Adiar** Tasks 3/5/6/7/8 para os lotes da tabela §5, cada um com seu brief.
+4. **Não** executar o MERGE (Task 5) com o template atual — corrigir schema
+   (`ingested_at`, chave sem `versao_contract`) primeiro.
+
+> Resumo: o plano é um bom **backlog de hardening**, mas como "plano de correção
+> do L2" ele precisa encolher para o bloco 🔴 + a granularidade de falha. O
+> resto são lotes próprios.
