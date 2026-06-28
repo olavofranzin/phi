@@ -358,3 +358,50 @@ Nao executado:
 
 - Smoke manual feliz/triste. Proximo passo continua sendo executar o workflow e
   conferir counts esperados + comportamento com GBP/Clarity/GA4 ausente.
+
+## Smoke l2cirurgico - exec 11755 PASS (2026-06-28)
+
+Smoke do L2 cirurgico na versao ativa `412d874b`. Mode manual, status `success`.
+
+Resultado (contagem real do Normalizador, sem truncamento):
+- t28_campaign = 12 (2 campanhas GADS-21149189736 + GADS-21116045403 x 6 datas)
+- t28_adset = 0 (PMAX, esperado)
+- t28_ga4_landing = 2 (organic + paid)
+- t28_gbp_daily = 0  <- GBP falhou de verdade nesta run
+- t28_clarity_daily = 0  <- Clarity falhou de verdade nesta run
+- t28_meta_campaign = 0 (sem campanha Meta)
+
+source_status emitido pelo Adaptador (gravado em cada linha, coluna JSON):
+`{"gaql_adsets":"ok","gaql_ads":"ok","meta":"ok","ga4_organic":"ok",
+"ga4_paid":"ok","gbp":"missing","clarity":"missing","search_terms":"error"}`
+
+Veredito: PASS — e a resiliencia foi provada ORGANICAMENTE (nao precisou
+forcar erro: GBP e Clarity cairam sozinhos). Comportamento exatamente como
+projetado:
+- Adaptador concluiu `success` SEM error output (main[1] vazio) -> o crash de
+  11655 esta morto;
+- GBP+Clarity caindo degradaram SO `t28_gbp_daily`/`t28_clarity_daily` para 0;
+  `t28_campaign`=12 e `t28_ga4_landing`=2 escritos normalmente (um 429 nao
+  derruba mais a agregacao inteira);
+- cadeia de erro (`[Err] Roteador` + `[Err] Call Handler`) executou logando os
+  erros; Call Handler best-effort nao cascateou; run final `success`;
+- KPIs coerentes (ex.: GADS-21116045403 22/06: imp 1605, clk 43, cost 44.52,
+  conv 9, CPA 4.95, ROAS 0.1123).
+
+Pre-revisao Claude independente (pre-smoke) deu PASS: zero `.item.json`/
+`.first().json`; helpers presentes; so 5 fontes core em readOrThrow; GBP/
+Clarity/GA4 em optionalSource; refs acentuados preservados (`GA4 Organico`,
+`Anuncios`); zero mojibake; fix do Roteador (ref ASCII) e cadeia a04/a05
+sobreviveram ao PUT da API publica.
+
+Observacoes (deferidas, nao bloqueiam L2):
+- GBP+Clarity caindo: STAND-BY (decisao Olavo 2026-06-28). Se persistir,
+  investigar causa. Ate la, as 2 tabelas ficam vazias.
+- search_terms=error: item GAQL "Bad request" ja conhecido/deferido.
+- campaign_name=null (property Notion nao lida) + landing_page da campanha 1
+  aplicado a campanha 2 (mis-atribuicao multi-campanha = Task 3 deferida;
+  campaign_id por linha esta CORRETO).
+- Idempotencia: inserts append-only -> este smoke gravou +12 t28_campaign;
+  re-runs duplicam (lote L1.6).
+
+L2 fechado. ESTADO §3.8 -> Concluido; §5 +2 pendencias; §13 v0.1.42.
