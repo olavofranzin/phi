@@ -100,3 +100,19 @@ aceito). Gerado `phi_dev_t28_dedup_oneshot.sql` para a validacao.
 
 Proximo: dedup phi_dev + 1 run (confirmacao) -> flip DATASET phi_dev->phi_prod
 nos 6 builders -> smoke phi_prod -> dedup phi_prod -> L1.6 fecha.
+
+## Fechamento L1.6 (2026-06-28)
+
+- Flip `DATASET phi_dev -> phi_prod` aplicado nos 6 builders (UI, draft).
+- Smoke phi_prod: `HAVING c>1` retornou so 2 chaves (06-21) com c=2 = duplicatas
+  HISTORICAS (06-21 caiu na janela D-7 de 2 runs streaming antigas); demais
+  chaves c=1. Como o MERGE escreveu 12 chaves e so 2 (historicas) ficaram
+  duplicadas, confirma que o MERGE NAO cria duplicata (atualiza on match).
+- Dedup `phi_prod_t28_dedup_oneshot.sql` rodado -> `HAVING c>1` vazio (Olavo
+  confirmou).
+- PUBLICADO: activeVersionId = `a46d5a6a-e5bc-4dee-babe-a002872277bd`
+  (versionId == activeVersionId, active=true). Confirmado via get_workflow_details:
+  6 builders com DATASET='phi_prod', 6 BQ Merge (executeQuery), zero Strip/Insert
+  streaming, zero mojibake. Schedule Triggers agora escrevem via MERGE.
+
+L1.6 FECHADO. ESTADO §3.8 +L1.6 Concluido; §5 L1.6 Resolvido; §13 v0.1.43.
