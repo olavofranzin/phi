@@ -66,3 +66,37 @@ Criado `docs/strategic-planning/agregador-t28/ddl/phi_prod_t28_dedup_oneshot.sql
 ## Smoke pendente
 
 Nao executei smoke manual. Proximo passo: Olavo rodar 2x em `phi_dev`, verificar contagens estaveis e unicidade por chave; depois trocar builders para `phi_prod`, rodar smoke prod, e aplicar o dedup one-shot.
+
+## Pre-revisao Claude + smoke phi_dev (2026-06-28)
+
+Pre-revisao independente (live, draft 14457c88, active 412d874b preservado):
+- Topologia: 6x Filter -> Build MERGE -> BQ Merge; ZERO Strip/Insert streaming
+  remanescente; nodeCount 62; conexoes corretas sem cross-wiring.
+- 6 builders: KEY_COLUMNS corretas por tabela (campaign/adset/ga4_landing[canal,
+  landing_page]/gbp/clarity/meta[campaign_id_meta]); DATASET='phi_dev'; guarda
+  0-row -> []; CAST por tipo; PARSE_JSON nos JSON; DATE()/TIMESTAMP(); NULL
+  tipado; escaping '->''; zero mojibake.
+- SCHEMA de cada builder IDENTICO ao DDL coluna-a-coluna (38/26/22/18/17/30) ->
+  sem coluna NOT NULL omitida.
+- 6 BQ Merge: operation=executeQuery, useLegacySql=false, sqlQuery={{_merge_sql}}.
+Veredito pre-revisao: APROVADO.
+
+Smoke phi_dev (Olavo, 2 runs manuais):
+- `GROUP BY (client_id, campaign_id, business_date, janela) HAVING COUNT(*)>1`:
+  run 1 e run 2 retornaram as MESMAS 12 chaves com c=5 cada.
+- Leitura: a contagem NAO cresceu entre run 1 e run 2 (5 -> 5, nao 5 -> 6) ->
+  MERGE fez WHEN MATCHED UPDATE (idempotente). Se inserisse, run 2 viraria c=6.
+- O c=5 e duplicata LEGADA do phi_dev (smokes antigos do L1 em streaming-insert);
+  o MERGE faz upsert, nao colapsa duplicata pre-existente -> e o que o dedup
+  one-shot resolve.
+Veredito smoke: idempotencia PROVADA (zero crescimento). Pendente confirmacao
+textbook: rodar dedup phi_dev -> 1 run -> esperar HAVING c>1 vazio.
+
+Correcao aplicada nos dedup one-shot (Claude): o CREATE OR REPLACE TABLE AS
+SELECT perdia PARTITION BY / CLUSTER BY. Adicionado
+`PARTITION BY business_date CLUSTER BY client_id, janela` em todas as 6 CTAS
+(phi_prod e phi_dev). NOT NULL/OPTIONS nao preservados pelo CTAS (tradeoff
+aceito). Gerado `phi_dev_t28_dedup_oneshot.sql` para a validacao.
+
+Proximo: dedup phi_dev + 1 run (confirmacao) -> flip DATASET phi_dev->phi_prod
+nos 6 builders -> smoke phi_prod -> dedup phi_prod -> L1.6 fecha.

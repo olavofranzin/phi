@@ -1,15 +1,13 @@
 -- ============================================================================
--- Dedup one-shot para phi_prod.t28_* apos L1.6 MERGE idempotente
+-- Dedup one-shot para phi_dev.t28_* (validacao do L1.6 antes do phi_prod)
 -- ============================================================================
--- Rodar uma vez no BigQuery Console apos smoke phi_prod verde.
+-- Limpa as duplicatas legadas dos smokes antigos (era streaming-insert).
+-- Rodar UMA vez no BigQuery Console; depois rodar o workflow 1x e confirmar
+-- que `GROUP BY chave HAVING COUNT(*) > 1` vem VAZIO (MERGE mantem 1 por chave).
 -- Mantem a linha mais recente por chave de negocio usando ingested_at DESC.
---
--- IMPORTANTE: o CREATE OR REPLACE TABLE ... AS SELECT preserva PARTITION BY /
--- CLUSTER BY (declarados abaixo, identicos ao DDL original) para nao degradar
--- custo/performance. NOT NULL e OPTIONS(description) NAO sao preservados pelo
--- CTAS (tradeoff aceito; dados ja limpos, MERGE/VIEWs nao dependem de NOT NULL).
+-- Preserva PARTITION BY / CLUSTER BY (identicos ao DDL).
 
-CREATE OR REPLACE TABLE `phi_prod.t28_campaign`
+CREATE OR REPLACE TABLE `phi_dev.t28_campaign`
 PARTITION BY business_date
 CLUSTER BY client_id, janela
 AS
@@ -18,11 +16,11 @@ SELECT * EXCEPT(_rn) FROM (
     PARTITION BY client_id, campaign_id, business_date, janela
     ORDER BY ingested_at DESC
   ) AS _rn
-  FROM `phi_prod.t28_campaign`
+  FROM `phi_dev.t28_campaign`
 )
 WHERE _rn = 1;
 
-CREATE OR REPLACE TABLE `phi_prod.t28_adset`
+CREATE OR REPLACE TABLE `phi_dev.t28_adset`
 PARTITION BY business_date
 CLUSTER BY client_id, janela
 AS
@@ -31,11 +29,11 @@ SELECT * EXCEPT(_rn) FROM (
     PARTITION BY client_id, campaign_id, adset_id, business_date, janela
     ORDER BY ingested_at DESC
   ) AS _rn
-  FROM `phi_prod.t28_adset`
+  FROM `phi_dev.t28_adset`
 )
 WHERE _rn = 1;
 
-CREATE OR REPLACE TABLE `phi_prod.t28_ga4_landing`
+CREATE OR REPLACE TABLE `phi_dev.t28_ga4_landing`
 PARTITION BY business_date
 CLUSTER BY client_id, janela
 AS
@@ -44,11 +42,11 @@ SELECT * EXCEPT(_rn) FROM (
     PARTITION BY client_id, business_date, janela, canal, landing_page
     ORDER BY ingested_at DESC
   ) AS _rn
-  FROM `phi_prod.t28_ga4_landing`
+  FROM `phi_dev.t28_ga4_landing`
 )
 WHERE _rn = 1;
 
-CREATE OR REPLACE TABLE `phi_prod.t28_gbp_daily`
+CREATE OR REPLACE TABLE `phi_dev.t28_gbp_daily`
 PARTITION BY business_date
 CLUSTER BY client_id, janela
 AS
@@ -57,11 +55,11 @@ SELECT * EXCEPT(_rn) FROM (
     PARTITION BY client_id, business_date, janela
     ORDER BY ingested_at DESC
   ) AS _rn
-  FROM `phi_prod.t28_gbp_daily`
+  FROM `phi_dev.t28_gbp_daily`
 )
 WHERE _rn = 1;
 
-CREATE OR REPLACE TABLE `phi_prod.t28_clarity_daily`
+CREATE OR REPLACE TABLE `phi_dev.t28_clarity_daily`
 PARTITION BY business_date
 CLUSTER BY client_id, janela
 AS
@@ -70,11 +68,11 @@ SELECT * EXCEPT(_rn) FROM (
     PARTITION BY client_id, business_date, janela
     ORDER BY ingested_at DESC
   ) AS _rn
-  FROM `phi_prod.t28_clarity_daily`
+  FROM `phi_dev.t28_clarity_daily`
 )
 WHERE _rn = 1;
 
-CREATE OR REPLACE TABLE `phi_prod.t28_meta_campaign`
+CREATE OR REPLACE TABLE `phi_dev.t28_meta_campaign`
 PARTITION BY business_date
 CLUSTER BY client_id, janela
 AS
@@ -83,6 +81,6 @@ SELECT * EXCEPT(_rn) FROM (
     PARTITION BY client_id, campaign_id_meta, business_date, janela
     ORDER BY ingested_at DESC
   ) AS _rn
-  FROM `phi_prod.t28_meta_campaign`
+  FROM `phi_dev.t28_meta_campaign`
 )
 WHERE _rn = 1;
