@@ -139,3 +139,49 @@ Avisos conhecidos:
 - O orquestrador referencia o subworkflow por id `fhYmJH0o9BW1IO4i`.
 - Lookup de cliente pode retornar vazio por diferenca de formato entre `t28.client_id` e o schema real da base de clientes; isso degrada para relation vazia e flag `cliente_nao_resolvido`.
 - Se o smoke revelar que o titulo real da base `PHI - ANALISES` nao e exposto pelo n8n como `Name|title`, ajustar o key do update de titulo antes de publicar.
+
+---
+
+## Pre-revisao Claude + fixes aplicados (2026-06-30)
+
+Pre-revisao do JSON real dos dois workflows (nao so do log). Arquitetura/encanamento
+aprovados: loop splitInBatches bem cabeado, refs `.all()[0].json`, `executeOnce`,
+draft, nomes ASCII, `onError:continue` nos lookups do orquestrador, BQ read-only +
+JOIN cross-dataset, regras deterministicas de flags conferem com o brief.
+
+### Blockers encontrados (todos no sub-WF WF-T28-Analise-Campaign) e CORRIGIDOS
+Aplicados via `update_workflow` (setNodeParameter, mantem DRAFT). Novo
+versionId: `5f63c883-c59a-4d19-9398-d46a3d6c48b3`. active=false preservado.
+
+1. `Create Analysis Page` / `Update Analysis Page` — chaves de propriedade com
+   tipo/nome errado (o DB real tem `cliente`/`campanha` minusculo, `janela`/`leitura`
+   sao SELECT):
+   - `Cliente|relation` -> `cliente|relation`
+   - `Campanha|relation` -> `campanha|relation`
+   - `janela|rich_text` -> `janela|select`
+   - `leitura|rich_text` -> `leitura|select`
+2. `Update Analysis Page` — titulo: `Name|title` -> `titulo|title`.
+3. `Lookup Existing Analysis`:
+   - `matchType` ausente => default `anyFilter` (OR) => upsert casava pagina errada
+     (quebra idempotencia). Setado `allFilters` (AND).
+   - filtro `janela|rich_text` -> `janela|select`.
+4. `Build Notion Page` (qualidade): `phi_midia_score` agora vai `null` quando nao ha
+   score (era `0`, parecia score real); `leitura` vai `null` quando sem
+   classification (guard p/ select vazio).
+
+### Follow-ups conhecidos (nao bloqueiam — confirmar no smoke)
+- Resolucao de relations provavelmente volta vazia: `Resolve Client Relation` filtra
+  `client_id|rich_text` em Clientes Database onde `client_id` e auto_increment; e ha
+  duvida de formato `t28.campaign_id` vs `Campanhas.campaign_id`. Degrada (relation
+  vazia + flag), por design. Confirmar formatos reais no smoke e ajustar o match.
+- `leitura|select` com `|| null`: depende do nó Notion omitir select vazio. Em
+  campanha com score (esperado no smoke) leitura vem preenchida.
+- Filtro `business_date|date equals` na idempotencia: risco menor de timezone;
+  validar no re-run.
+
+### Avisos benignos do validador
+`relationValue`/`multiSelectValue` "expected array, got string" — expressoes que
+resolvem array em runtime (mesmo aviso do build original; aceito).
+
+### Estado
+Pronto para smoke real em phi_dev (Olavo). Criterios de aceite no brief §7.
