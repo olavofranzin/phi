@@ -240,6 +240,36 @@ consome. O fan-out a partir de `Code Cálcula Métricas` preserva os dois ramos.
 - Ganho: se a cadeia Notion falhar (ex.: a ref quebrada `Code prepara contexto para observação` no `Create Observation`), a ingestão BQ **já rodou** — deixa de ser bloqueada.
 - Pós-edição: conferir 0 mojibake nos nomes dos nós e que o `Loop Over Items` recebe retorno só de `Update a database page`.
 
+## Expressões Notion (nó Update) — vazio quando 7d = 0
+
+Campos **rich_text** do nó de update. Padrão: o campo monta a string completa
+(`7d (30d)` com a unidade correta) ou retorna `''` (vazio) quando o valor 7d é
+`0`/`null`/`undefined`/`NaN`. `Number(...)` força *falsy* no zero; `?? 0` protege
+o 30d. Para o texto literal "vazio", trocar o `: ''` final por `: 'vazio'`.
+
+**Monetárias — `R$ X (R$ Y)`:**
+```
+CPC:  ={{ Number($('Code classificar status').item.json.cpc_7d) ? 'R$ ' + $('Code classificar status').item.json.cpc_7d + ' (R$ ' + ($('Code classificar status').item.json.cpc_30d ?? 0) + ')' : '' }}
+CPA:  ={{ Number($('Code classificar status').item.json.cpa_7d) ? 'R$ ' + $('Code classificar status').item.json.cpa_7d + ' (R$ ' + ($('Code classificar status').item.json.cpa_30d ?? 0) + ')' : '' }}
+CPL:  ={{ Number($('Code classificar status').item.json.cpl_7d) ? 'R$ ' + $('Code classificar status').item.json.cpl_7d + ' (R$ ' + ($('Code classificar status').item.json.cpl_30d ?? 0) + ')' : '' }}
+CPM:  ={{ Number($('Code classificar status').item.json.cpm_7d) ? 'R$ ' + $('Code classificar status').item.json.cpm_7d + ' (R$ ' + ($('Code classificar status').item.json.cpm_30d ?? 0) + ')' : '' }}
+```
+
+**Percentuais — `X% (Y%)`:**
+```
+CTR:               ={{ Number($('Code classificar status').item.json.ctr_7d) ? $('Code classificar status').item.json.ctr_7d + '% (' + ($('Code classificar status').item.json.ctr_30d ?? 0) + '%)' : '' }}
+Taxa de Conversão: ={{ Number($('Code classificar status').item.json.taxa_conversao_7d) ? $('Code classificar status').item.json.taxa_conversao_7d + '% (' + ($('Code classificar status').item.json.taxa_conversao_30d ?? 0) + '%)' : '' }}
+```
+
+**Contagem — `X (Y)`:**
+```
+Impressões: ={{ Number($('Code classificar status').item.json.impressions_7d) ? $('Code classificar status').item.json.impressions_7d + ' (' + ($('Code classificar status').item.json.impressions_30d ?? 0) + ')' : '' }}
+```
+
+> Os campos existem em `Code classificar status` porque o nó propaga o json de
+> `Code Cálcula Métricas` via spread. Formato percentual usa `%)` (canônico dos
+> demais nós), não `)%`.
+
 ## Fora de escopo (backlog)
 
 Tendência ad-level; `impression_share` por adset (query `FROM ad_group` separada); batelada GAQL por campanha; rotação do `google_developer_token`.
