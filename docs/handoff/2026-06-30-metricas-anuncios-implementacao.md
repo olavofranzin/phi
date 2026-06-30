@@ -193,6 +193,53 @@ return {
 1. **`searchStream`:** o jsCode assume que o n8n quebra o array de lotes em itens (`.first()` = lote 0). Se a V2 voltar tudo zerado, o n8n manteve o array inteiro → trocar `firstResult` para desempacotar `json[0].results[0]`.
 2. **Ramo de observação/tendências inalterado:** segue grão de campanha lendo `phi_prod.raw_campaign_data` (nó `BigQuery Série Diária`). Funciona como antes; tendência ad-level não foi adicionada (decisão ad-only).
 
+## Reorganização do grafo (aplicar na UI — guard de mojibake §6)
+
+Aprovado por Olavo 2026-06-30. **Dois objetivos:** (1) tornar a ingestão BQ
+independente do Notion (deixa de ser refém da cadeia de observação) e
+(2) remover o nó no-op `Code Debug` (só `console.log` + passthrough).
+
+**Por que fan-out e não inserção em série:** o nó `Execute SQL inserir daily entry`
+(googleBigQuery) retorna o resultado da query (metadados do MERGE), **não** o item
+de entrada. Splicá-lo no meio da cadeia descartaria o json rico que a observação
+consome. O fan-out a partir de `Code Cálcula Métricas` preserva os dois ramos.
+
+### Mudança de conexões
+
+**Remover:**
+- `Update a database page` → `Code Montar SQL`
+- `Execute SQL inserir daily entry` → `Loop Over Items`
+- `Code Preparar Payload de Observação` → `Code Debug`
+- `Code Debug` → `Create a database page Create Observation`
+
+**Adicionar:**
+- `Code Cálcula Métricas` → `Code Montar SQL`  (novo fan-out; **mantém** também `Code Cálcula Métricas` → `Code Recupera Metas p Comparação`)
+- `Update a database page` → `Loop Over Items`  (novo retorno do loop / splitInBatches)
+- `Code Preparar Payload de Observação` → `Create a database page Create Observation`
+
+**Deletar nó:** `Code Debug`.
+
+**Inalterado:**
+- `Code Cálcula Métricas` → `Code Recupera Metas p Comparação`
+- `Code Montar SQL` → `Execute SQL inserir daily entry`  (agora um ramo-folha)
+
+### Resultado (ordem)
+
+```
+... → Code Cálcula Métricas ─┬─> Code Montar SQL → Execute SQL inserir daily entry   (ingestão, folha)
+                             └─> Code Recupera Metas → Code Prep Tendência → BigQuery Série Diária
+                                 → Code Tendência Real → Code calculo desvio meta → Code classificar status
+                                 → Code Preparar Payload de Observação → Create Observation
+                                 → Update a database page → Loop Over Items   (fecha a iteração)
+```
+
+### Notas de segurança
+
+- **Aplicar na UI** (arrastar conexões), não via MCP — re-serializar nomes acentuados gera mojibake nos outros 36 nós.
+- `Code Montar SQL` passa a receber input de `Code Cálcula Métricas` (json mais rico); como ele lê nós nomeados (`Code clean propriedades`, `Code Valida Dados`, HTTP D1/D3/D7), independe de qual é o nó de entrada direto.
+- Ganho: se a cadeia Notion falhar (ex.: a ref quebrada `Code prepara contexto para observação` no `Create Observation`), a ingestão BQ **já rodou** — deixa de ser bloqueada.
+- Pós-edição: conferir 0 mojibake nos nomes dos nós e que o `Loop Over Items` recebe retorno só de `Update a database page`.
+
 ## Fora de escopo (backlog)
 
 Tendência ad-level; `impression_share` por adset (query `FROM ad_group` separada); batelada GAQL por campanha; rotação do `google_developer_token`.
