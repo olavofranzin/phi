@@ -45,7 +45,7 @@ escreve page real em `PHI - Análises` com `execution_id` = `EXEC-ORQ-SMOKE-*`.
 
 | Dep | Estado | Nota |
 |---|---|---|
-| DB `PHI - Análises` criado (Notion) | **PENDENTE** (gate MCP) | Olavo cria (spec no §6) ou via reload. **Necessário o data source id** antes do smoke. |
+| DB `PHI - Análises` criado (Notion) | **✓ CRIADO** (2026-06-30) | `PHI - ANÁLISES`. databaseId `38fb65e5-c72b-80db-a425-e5939fc35c7a`. Schema conferido = bate com a spec. |
 | Credencial **BigQuery** no n8n | OK | Reusar a do Agregador/Pipeline_v2. |
 | Credencial **Notion** no n8n | OK | Reusar a do Agregador. |
 | Credencial **Claude/Anthropic** | **NÃO** bloqueante | Só quando o sub-chat entregar o framework. Plumbing usa placeholder. |
@@ -53,9 +53,19 @@ escreve page real em `PHI - Análises` com `execution_id` = `EXEC-ORQ-SMOKE-*`.
 
 **Config centralizada:** primeiro nó `Set config` (Set, `executeOnce: true`) com:
 `BQ_DATASET` (= `phi_dev` no smoke; `phi_prod` em prod), `SCORE_DATASET` (= `phi_prod`
-sempre — score é canônico de prod), `ANALISES_DS_ID` (data source id de PHI - Análises,
-preencher após criação), `CLIENTES_DS_ID`, `CAMPANHAS_DS_ID`, `tenant_id` (`phi-agencia`),
-`janela` (`D-7`), `business_date` (override opcional; default = calculado).
+sempre — score é canônico de prod), `tenant_id` (`phi-agencia`), `janela` (`D-7`),
+`business_date` (override opcional; default = calculado).
+
+**IDs concretos (database ids para os nós Notion do n8n — já resolvidos):**
+| Uso | databaseId |
+|---|---|
+| Escrita/leitura da análise (`PHI - Análises`) | `38fb65e5-c72b-80db-a425-e5939fc35c7a` |
+| Lookup da relation `campanha` (`Campanhas`, filtro `campaign_id`) | `19fb65e5-c72b-8043-a82d-f47ede397928` |
+| Lookup da relation `cliente` (`Clientes Database`, filtro `client_id`) | `19fb65e5-c72b-8147-8aa3-c63aa273d205` |
+> O nó Notion do n8n usa o **databaseId** (acima). A relation é setada com o
+> **page_id** da linha resolvida no lookup — não precisa do collection id em runtime.
+> (Data source/collection id de `PHI - Análises`, se precisar p/ query MCP:
+> `38fb65e5-c72b-80ff-9543-000b9a7468af`.)
 
 ---
 
@@ -265,18 +275,18 @@ Evidências (lista das métricas-chave: cpa/roas vs meta, impression_share, budg
 
 ---
 
-## 6. Schema do `PHI - Análises` (referência — DB criado à parte)
-Parent: `Central de Operações — Agência › Gerenciamento de Documentos`
-(`9d6b65e5-c72b-82e7-856d-81bc34933316`). Convenção **snake_case sem acento**
-(o n8n escreve este DB). 18 props — ver tabela no design doc §5. Após criação,
-preencher `ANALISES_DS_ID` no `Set config`.
+## 6. Schema do `PHI - Análises` (✓ CRIADO 2026-06-30)
+`PHI - ANÁLISES`, databaseId `38fb65e5-c72b-80db-a425-e5939fc35c7a`. 18 props
+snake_case, **conferido = bate com a spec** (relations `cliente`→Clientes Database,
+`campanha`→Campanhas, one-way; enums `nivel`/`janela`/`leitura`/`severidade`/`flags_ativas`
+todos presentes). Ver tabela no design doc §5.
 
 ---
 
 ## 7. Smoke (phi_dev) — critérios de aceite
 1. `Set config` com `BQ_DATASET=phi_dev`, `SCORE_DATASET=phi_prod`, `business_date`
-   = uma data com `phi_dev.t28_campaign` populado (ex.: `2026-06-21`, janela `D-7`),
-   `ANALISES_DS_ID`/`CLIENTES_DS_ID`/`CAMPANHAS_DS_ID` preenchidos.
+   = uma data com `phi_dev.t28_campaign` populado (ex.: `2026-06-21`, janela `D-7`).
+   Os databaseIds Notion já estão fixos nos nós (§2 IDs concretos).
 2. Disparar Manual Trigger.
 3. **Esperado:** 1+ page em `PHI - Análises` com — `nivel=campaign`;
    `client_id`/`campaign_id` corretos; `janela=D-7`; `business_date` certo;
