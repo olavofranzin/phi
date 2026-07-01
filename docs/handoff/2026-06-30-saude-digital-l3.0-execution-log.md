@@ -230,3 +230,28 @@ duplicar. Count=2.
 **Veredito: plumbing L3.0 VALIDADO.** Pipeline `t28 → score canônico →
 relations → fan-out → sub-WF → page idempotente` funciona E2E em phi_dev.
 Execuções sub-WF: `13047/13048` (run 2), `13055/13056` (run 3).
+
+---
+
+## Follow-up `cliente` relation — RESOLVIDO (2026-07-01)
+
+Fonte autoritativa: o **Agregador**. `Set dados` monta `id_client =
+{{ properties.id_client.formula.string }}`; `Adaptador` faz `ctx.client_id =
+ids.id_client`; e o `Get database clientes` filtra por `id_client|formula`. Logo
+`t28.client_id` = a formula **`id_client`** do Clientes Database = `"CLI-4"`.
+(Confirmado numa linha real: `Sigla Cliente`=`KIL`; `client_id` é `unique_id`
+prefix CLI number 4 — não filtrável como text; `id_client` formula = `"CLI-4"` é
+o correto.)
+
+**Fix:** `Resolve Client Relation` — filtro `client_id|rich_text` →
+`id_client|formula` equals (returnType text), espelhando o `Get database clientes`
+do Agregador (padrão provado em produção). Aplicado via `update_workflow` (draft).
+
+**Re-smoke `13060` SUCCESS:** `cliente` resolveu (page
+`19fb65e5-c72b-81dd-b7a0-f295fe304d60` = KILDARE & BRUNA BECKER) nas 2 análises;
+flag `cliente_nao_resolvido` sumiu; page IDs iguais → idempotência mantida.
+Sub-WF: `13061`/`13062`.
+
+**Plumbing L3.0: 100% — ambas as relations (`cliente`+`campanha`) resolvem.**
+Resta só o bug cosmético do placeholder (`numeric(null)→0` → `impression_share_baixo`
+espúrio), que será reescrito no sub-chat do framework §4.
