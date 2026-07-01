@@ -37,7 +37,7 @@
 
 > **Guard de mojibake (§6):** colar pela UI do n8n (não via MCP) para não corromper os acentos dos outros 36 nós. Após colar, conferir que nomes de nós com acento seguem íntegros.
 
-## jsCode — nó `Code Montar SQL` (alvo phi_dev; para prod, trocar a 1 linha do MERGE)
+## jsCode — nó `Code Montar SQL` (com guard PMAX; alvo phi_dev, para prod trocar a 1 linha do MERGE)
 
 ```javascript
 const input = $input.first().json;
@@ -83,14 +83,29 @@ const googleCampaignId = rD1.campaign?.id || clean.clean_id_google_camp || '';
 const googleAdsetId     = rD1.adGroup?.id || clean.clean_id_google_adset || '';
 const googleAdId        = rD1.adGroupAd?.ad?.id || clean.clean_id_google_ad || '';
 
-const executionId = clean.source_execution_id || input.source_execution_id ||
-  `EXEC-DE-${new Date().toISOString().replace(/[-:TZ.]/g, '').slice(0, 14)}`;
 const clientId   = clean.clean_client_slug || input.client_id || '';
 const campaignId = googleCampaignId ? `GADS-${googleCampaignId}` : '';
 const adsetId    = String(googleAdsetId || '');
 const adId       = String(googleAdId || '');
-const adName     = rD1.adGroupAd?.ad?.name || clean.clean_nome_anuncio || '';
-const adStatus   = rD1.adGroupAd?.status || '';
+
+// ===== GUARD PMAX / sem ad-grain =====
+// PMAX não tem ad_group_ad → GAQL vazia → sem ad_id. Não gerar SQL; o nó IF a
+// jusante pula o insert. Comportamento esperado (ADR-24), não é erro.
+if (!adId || !campaignId) {
+  return {
+    json: {
+      ...input,
+      _bq_sql: '',
+      _skip_ingestion: true,
+      _skip_reason: !adId ? 'sem_ad_id (PMAX ou GAQL vazia)' : 'sem_campaign_id'
+    }
+  };
+}
+
+const executionId = clean.source_execution_id || input.source_execution_id ||
+  `EXEC-DE-${new Date().toISOString().replace(/[-:TZ.]/g, '').slice(0, 14)}`;
+const adName   = rD1.adGroupAd?.ad?.name || clean.clean_nome_anuncio || '';
+const adStatus = rD1.adGroupAd?.status || '';
 
 // ---- Métricas por janela (FLOAT64 conversions/conv_value p/ ROAS) ----
 const cost  = num(mD1.costMicros) / 1000000;
@@ -183,10 +198,28 @@ WHEN NOT MATCHED THEN INSERT (
 return {
   json: {
     ...input,
-    _bq_sql: sql
+    _bq_sql: sql,
+    _skip_ingestion: false
   }
 };
 ```
+
+## Nó `IF` — gate PMAX antes do insert
+
+Adicionar um nó **IF** entre `Code Montar SQL` e `Execute SQL inserir daily entry`,
+para não gravar quando o `Code Montar SQL` sinaliza skip (PMAX / sem ad_id):
+
+- **Value 1:** `={{ $json._bq_sql }}`
+- **Operation:** `is not empty` (string)
+- **IF › true** → `Execute SQL inserir daily entry`
+- **IF › false** → (ponta solta — item PMAX não é inserido)
+
+> Alternativa booleana equivalente: Value 1 `={{ $json._skip_ingestion }}`, operation `is false`.
+
+Comportamento: anúncio Google normal → `_bq_sql` preenchido → insere (MERGE
+idempotente). PMAX/sem `ad_group_ad` → `_bq_sql=''` + `_skip_ingestion=true` →
+**0 linhas** (correto, ADR-24); `_skip_reason` fica no item para log. Elimina o
+lixo de chave vazia que causou a #12769.
 
 ## Alertas para o smoke
 
