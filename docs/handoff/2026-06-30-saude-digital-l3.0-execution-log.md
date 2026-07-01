@@ -185,3 +185,48 @@ resolvem array em runtime (mesmo aviso do build original; aceito).
 
 ### Estado
 Pronto para smoke real em phi_dev (Olavo). Criterios de aceite no brief §7.
+
+---
+
+## Smoke real phi_dev (2026-07-01) — PASS + idempotência provada
+
+Disparado por Claude via MCP `execute_workflow` (executionMode `manual` — WFs em draft).
+
+**Fix pré-smoke (bug pego pelo smoke):** run `13044` falhou no `BQ Read T28 Score`
+com `invalid syntax`. Causa: `sqlQuery` estava como expressão n8n estilo
+`={{ const c = ...; return "SELECT..." }}` — o motor de **expressão** do n8n não
+aceita statements (`const`/`return`) no topo, só uma expressão. Corrigido via
+`update_workflow` para template `=SELECT ... FROM \`{{ $('Calc Window Dates').all()[0].json.BQ_DATASET }}.t28_campaign\` ... WHERE business_date = DATE('{{ ...business_date }}') AND janela = '{{ ...janela }}'`
+(interpolações `{{ }}` diretas). Também removido um assignment vazio do `Set config`.
+
+**Run `13046` SUCCESS (~11.5s):**
+- BQ Read: 2 campanhas (CLI-4 / `GADS-21116045403`, `GADS-21149189736`), D-7, 2026-06-21.
+- **Score JOIN OK:** `phi_value=50.0`, `phi_classification=WARNING`,
+  `calculated_date=2026-06-30`, componentes + `business_model=VAREJO_LOCAL`,
+  `model_version=v1.1` vindos de `phi_prod.phi_score_current` (LEFT JOIN por
+  client_id+campaign_id).
+- **Relations:** `campanha` **RESOLVEU** (`29db65e5...`, `2a1b65e5...`); `cliente`
+  vazio + flag `cliente_nao_resolvido` (esperado).
+- **2 pages criadas** em `PHI - ANÁLISES` (`390b65e5...d28f`, `390b65e5...5553`) com
+  todas as props (score 50, leitura WARNING, severidade atenção/crítico, flags,
+  execution_id, tenant, campanha relacionada).
+
+**Run `13054` SUCCESS — idempotência PROVADA:** mesmos 2 page IDs; `criado_em`
+preservado (16:58, não 17:18); `execution_id` atualizado. Upsert por chave de
+negócio (`matchType=allFilters` + `business_date|date equals`) casou → UPDATE, sem
+duplicar. Count=2.
+
+**Follow-ups (não bloqueiam o plumbing):**
+1. **cliente relation:** `t28.client_id="CLI-4"` é sigla; `Clientes Database.client_id`
+   é auto_increment INT → não casa. Filtrar por `Sigla Cliente`/`id_client` (a
+   property que contém "CLI-4"). Confirmar a property numa linha real e ajustar o
+   `Resolve Client Relation`.
+2. **Bug no placeholder de flags:** helper `numeric(null)` retorna `0` (pois
+   `Number(null)===0` é finito) → gera `impression_share_baixo` espúrio quando
+   `impression_share=null`. Lógica de flags é placeholder (será reescrita no
+   sub-chat do framework §4); guardar guard `value==null → null`.
+3. `campaign_name` null no t28 → título usa `campaign_id` (Agregador não popula).
+
+**Veredito: plumbing L3.0 VALIDADO.** Pipeline `t28 → score canônico →
+relations → fan-out → sub-WF → page idempotente` funciona E2E em phi_dev.
+Execuções sub-WF: `13047/13048` (run 2), `13055/13056` (run 3).
