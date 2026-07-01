@@ -114,3 +114,52 @@ Pendencias para smoke:
 - Nenhuma troca de `phi_dev` para `phi_prod`.
 - Nenhuma ativacao/publicacao.
 - Nenhuma mudanca de credencial.
+
+## Smoke complementar apos DDL
+
+Executado por Codex apos Olavo confirmar que `phi_dev_raw_ad_data.sql` foi rodado.
+
+### Tentativa 1
+
+- Orquestrador: `operador unico metricas` (`cLcimNoefTOnVVbd`)
+- ExecutionId orquestrador: `12812`
+- ExecutionId anuncios: `12815`
+- Status anuncios: `error`
+- Causa: `Code Montar SQL` estava em `runOnceForEachItem`, mas o codigo usava `$input.first()`.
+- Correcao aplicada: `Code Montar SQL.parameters.mode = runOnceForAllItems`.
+
+### Tentativa 2
+
+- ExecutionId orquestrador: `12817`
+- ExecutionId campanhas: `12818` (`success`)
+- ExecutionId conjuntos: `12819` (`success`)
+- ExecutionId anuncios: `12820` (`success`)
+- Observacao: o workflow processou 2 anuncios PMAX unicos, sem multiplicacao.
+- Falha funcional detectada: `Code Montar SQL` gerou `_bq_sql` para 2 anuncios PMAX porque usava fallback de ids do Notion quando a GAQL vinha vazia.
+- Impacto: `Execute SQL inserir daily entry` executou 2 MERGEs em `phi_dev.raw_ad_data`.
+- Correcao aplicada: `Code Montar SQL` passou a exigir ids vindos da GAQL (`campaign.id`, `ad_group.id`, `ad_group_ad.ad.id`) antes de gerar SQL. Se ausentes, retorna `_bq_sql=''` e `_skip_ingestion=true`.
+
+Limpeza necessaria em `phi_dev` antes do smoke SQL V1-V5:
+
+```sql
+DELETE FROM `project-0e7c58d4-656f-49e8-807.phi_dev.raw_ad_data`
+WHERE execution_id IN ('EXEC-DE-20260701020621', 'EXEC-DE-20260701020634')
+  AND date = DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 1 DAY);
+```
+
+### Tentativa 3
+
+- ExecutionId orquestrador: `12821`
+- ExecutionId campanhas: `12822` (`success`)
+- ExecutionId conjuntos: `12823` (`success`)
+- ExecutionId anuncios: `12824` (`success`)
+- `Code Montar SQL`: 2 runs, ambos com `_bq_sql=''`, `_skip_ingestion=true`, `_skip_reason='sem_ad_id (PMAX ou GAQL vazia)'`.
+- `IF Gate PMAX`: 2 runs, output true vazio e output false com 1 item em cada run.
+- `Execute SQL inserir daily entry`: nao executou na `12824`.
+- Resultado PMAX: 0 MERGEs novos na execucao final, sem erro.
+
+Pendencias para smoke BQ:
+
+- Olavo rodar o DELETE de limpeza acima, porque a tentativa `12820` contaminou `phi_dev.raw_ad_data` com 2 linhas PMAX antes da correcao final.
+- Olavo rodar `docs/strategic-planning/agregador-t28/ddl/phi_dev_raw_ad_data_smoke.sql`.
+- Cliente/anuncio Google nao-PMAX nao foi encontrado nesta execucao; os anuncios `Iniciado` observados eram PMAX. Portanto V1-V4/V2 com dados reais nao foram comprovados por Codex, apenas o caminho PMAX/skip e a deduplicacao operacional.
