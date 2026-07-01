@@ -6,6 +6,11 @@
 > de prioridade. Codex pega **um por vez**, na ordem.
 > **Frente:** Saúde Digital · **Branch:** `claude/agentic-agency-planning-KwJEw`
 > **Data:** 2026-07-01 · **Fonte de estado:** `ESTADO-DO-PROJETO.md` §3.8/§5, ADRs 21/23/24/26/27, ADR-003/004/010.
+>
+> **⛔ GATE deste ciclo (decisão do Olavo):** rodar **P1 → P2** e então **parar
+> p/ o Olavo avaliar se o método está atendendo a expectativa** antes de liberar
+> P3+ (ver "Sequência de execução" no fim). Antes de tudo, **Passo 0**: organizar
+> os workflows em **pastas por objeto** (§2.5).
 
 ---
 
@@ -16,9 +21,15 @@
   `phi_classification=WARNING`. Componentes todos idênticos a 50 é assinatura de
   **valor default/fallback**, não de cálculo. Se confirmado, o score que a Camada 2
   consome não tem sinal → **toda a análise fica cega**. Prioridade máxima de verificação.
-- **🚩 `Daily Entry` está `active:false` (P6/dependency).** É o escritor canônico
-  do `raw_campaign_data` (ADR-010), input do Pipeline_v2 **e** do Agregador. Se está
-  desligado, confirmar quem popula `raw_campaign_data` hoje e se não está velho.
+- **⚠️ Writer do `raw_campaign_data` foi renomeado/substituído (rebaixado de red flag).**
+  O antigo `Daily Entry` (`zGgIqiLlo5iAn8ud`, `active:false`) foi **sucedido por
+  `sw metricas campanhas` (`W571K320aqIHsdtH`, `active:true`)** — este tem o nó
+  `Execute SQL inserir daily entry` (BigQuery) e escreve `raw_campaign_data` (ADR-010),
+  input do Pipeline_v2 e do Agregador. Ou seja, o writer **não está desligado**.
+  Atenção: `sw metricas campanhas` é **sub-workflow** (trigger `executeWorkflowTrigger`,
+  `triggerCount:0`) → roda só quando um pai o chama. **Verificar (na revisão P2):**
+  (a) quem o agenda/chama e com que frequência; (b) `raw_campaign_data` está fresco?;
+  (c) se sim, o score-50 (red flag #1) é problema de **cálculo** (P2), não de raw velho.
 
 ## 1. Priorização
 
@@ -32,9 +43,9 @@
 | **P5a** | PHI - Loop Alerta Fase 1 | `JqPwFD9udCq2hRPw` | active | 3 (entrega) | Loop ADR-22 (score→alerta→Tarefa→Log→Telegram). Alinhar ao T28/score canônico. |
 | **P5b** | PHI - Fechar Otimização | `83vfKD8XMYmjZjFQ` | active | 3 | Fecha otimização no loop. Verificar acoplamento. |
 | **P5c** | PHI - Alerta de Erro (Telegram) | `Oj1RbA0laZTzJZPx` | inactive | 4 | Overlap com WF-T28-Error-Handler? É o "Error Workflow nativo" do L2.5? |
-| **P6** | Legacy PHI + Daily Entry (bloco) | vários | mistos | — | Confirmar superseded → arquivar; Daily Entry (dependency) verificar. |
+| **P6** | Legacy PHI + Daily Entry (bloco) | vários | mistos | — | Confirmar superseded → arquivar. Daily Entry **sucedido por `sw metricas campanhas`** (ativo, folder `Métricas`) — validar. |
 
-**Legacy no bloco P6:** `PHI - Pipeline` (`nFJpI3zYsk0Wst5O`, off), `PHI - Fase 2 Cálculo Score` (`X1eI3_aZ32EE3owgeDi_r`, off), `PHI - Fase 3 Operacional` (`LIaXSq-WoaF1yj3gF30Rj`, off), `phi-production` (`NXWQ9WBk5-G08X-46VPKO`, off), `sw phi pipeline_v2` (`MOGG0bI51pNHevEJ`, off), `PHI - Subworkflow Campanhas` (`b1pbn8qmzCNTufTp`, **active**), `Daily Entry` (`zGgIqiLlo5iAn8ud`, off). *(Nota: existe uma cópia `Daily Entry` id `demo` — ignorar/arquivar.)*
+**Legacy no bloco P6:** `PHI - Pipeline` (`nFJpI3zYsk0Wst5O`, off), `PHI - Fase 2 Cálculo Score` (`X1eI3_aZ32EE3owgeDi_r`, off), `PHI - Fase 3 Operacional` (`LIaXSq-WoaF1yj3gF30Rj`, off), `phi-production` (`NXWQ9WBk5-G08X-46VPKO`, off), `sw phi pipeline_v2` (`MOGG0bI51pNHevEJ`, off), `PHI - Subworkflow Campanhas` (`b1pbn8qmzCNTufTp`, **active**), `Daily Entry` (`zGgIqiLlo5iAn8ud`, off — **superseded por `sw metricas campanhas`**). *(Cópias a arquivar: `Daily Entry` id `demo`; `sw metricas campanhas copia seg` `ffEyTUED2p4Rq2Iw`, off.)*
 
 > **Não é workflow ainda:** métricas de anúncios (`raw_ad_data`) está em DDL/planejamento (sub-chat paralelo); sem workflow n8n vivo. Fora deste ciclo de revisão.
 
@@ -65,6 +76,40 @@
 
 ---
 
+## 2.5 Passo 0 — Organização por objeto no n8n (housekeeping, antes do P1)
+
+**Convenção (padrão da casa, decisão do Olavo):** todo workflow mora numa **pasta
+nomeada pelo objeto/domínio** que ele trata (ex.: workflows de onboarding → pasta
+`Onboarding`). Vale daqui pra frente + uma limpeza única agora.
+
+**Pastas já existentes** (projeto pessoal `QAumYwlPGm37G3p1` — *reusar, não duplicar;
+só criar nova se o objeto não tiver nenhuma*): `Onboarding` (`FUp9zF7jYfKtfdEi`),
+`Métricas` (`Pfzn3nPPhG5ynIVe`), `phi_production` (`bJAxGvpLOx8TbMs6`), `Execução de
+Demandas` (`jvfwLbfLPKKgYVVC`), `Relatórios` (`VfQtkqDABbQWZhvY`), `Prospecção`
+(`7sA9HT5TB1YHClCw`), `Cópias de Segurança` (`Frc3wzav5tZlIFtn`).
+
+**Fazer (Codex):**
+1. Enumerar todos os workflows (`search_workflows`) e agrupá-los por objeto.
+2. Mover cada um pra pasta do seu objeto. **Mover é seguro** — não ativa/publica
+   (scope `workflow:move`; via `update_workflow` setando `parentFolderId`, ou a UI).
+3. **Mapa-alvo dos WFs Saúde Digital** (confirmar com Olavo se ambíguo):
+   - **`phi_production`** — Agregador (`4sdG2UKMCBuFq8xn`), Pipeline_v2
+     (`ITWG3Ge0asXtUM8U`), Orquestrador (`8Q5ofmAZju0hTN08`), Analise-Campaign
+     (`fhYmJH0o9BW1IO4i`), Error-Handler (`rTS5pE34eElfuMPl`), Loop Alerta
+     (`JqPwFD9udCq2hRPw`), Fechar Otimização (`83vfKD8XMYmjZjFQ`), Alerta Erro
+     Telegram (`Oj1RbA0laZTzJZPx`), PHI - Subworkflow Campanhas (`b1pbn8qmzCNTufTp`).
+   - **`Métricas`** — `sw metricas campanhas` (`W571K320aqIHsdtH`, writer do raw)
+     e a cópia `copia seg` (`ffEyTUED2p4Rq2Iw`).
+   - **`Cópias de Segurança`** — cópias/`demo`/`copia` e backups.
+   - **Legacy PHI** comprovadamente órfão → `archive_workflow` (P6, reversível);
+     em dúvida → `Cópias de Segurança`.
+4. Reportar o antes/depois (workflow → pasta) no report do P1.
+
+> **Nota de segurança:** foldering/mover **não** publica nem ativa (draft-safe).
+> `archive_workflow` **é** mudança de estado → só p/ órfão comprovado, com OK (P6).
+
+---
+
 ## P1 — PHI — Agregador de Métricas Multi-fonte (`4sdG2UKMCBuFq8xn`) · active · Camada 1
 
 **Papel planejado:** ETL semanal/mensal. Percorre Clientes/Campanhas/Conjuntos/Anúncios (Notion), extrai métricas multi-fonte (Google Ads GAQL 3 níveis, GA4 org/pago, GBP, Clarity, Search Terms, Meta), normaliza no **contract T28** e escreve `t28_*` via **MERGE idempotente** (L1.6). Ref: ESTADO §3.8 (L0/L1/L1.5/L2/L1.6), ADR-23/24, página Notion `386b65e5...9614`.
@@ -90,7 +135,7 @@
 
 **Estado conhecido:** ATIVO. A.7b adicionou `source_execution_id`. Roda em modo **FALLBACK-*** (`execution_id`), A.6 (parar de usar FALLBACK) pendente.
 
-**🚩 Defeito prioritário a investigar:** no smoke L3.0, `phi_score_current` de CLI-4 (ambas campanhas) veio com **`phi_value=50` e `mas=tss=fis=es=rs=os=50.0`, `phi_classification=WARNING`, `business_model=VAREJO_LOCAL`, `model_version=v1.1`, `calculated_date=2026-06-30`.** Todos os componentes idênticos a 50 → forte suspeita de **fallback/default** (o pipeline não conseguiu calcular e devolveu 50 em tudo). **Verificar:** (a) o cálculo real está rodando ou caindo em fallback? (b) `execution_id` dessas linhas é `FALLBACK-*`? (c) `raw_campaign_data` tem dado fresco pra CLI-4? (d) por que `business_model=VAREJO_LOCAL` no score mas `modelo_negocio=Lead Gen` no t28 (fonte da divergência)?
+**🚩 Defeito prioritário a investigar:** no smoke L3.0, `phi_score_current` de CLI-4 (ambas campanhas) veio com **`phi_value=50` e `mas=tss=fis=es=rs=os=50.0`, `phi_classification=WARNING`, `business_model=VAREJO_LOCAL`, `model_version=v1.1`, `calculated_date=2026-06-30`.** Todos os componentes idênticos a 50 → forte suspeita de **fallback/default** (o pipeline não conseguiu calcular e devolveu 50 em tudo). **Verificar:** (a) o cálculo real está rodando ou caindo em fallback? (b) `execution_id` dessas linhas é `FALLBACK-*`? (c) `raw_campaign_data` tem dado fresco pra CLI-4 — **e o writer `sw metricas campanhas` (`W571K320aqIHsdtH`, active, sub-WF `triggerCount:0`) está sendo chamado por um pai** (quem agenda?)? Se o raw está fresco, o score-50 é bug de **cálculo**, não de raw velho. (d) por que `business_model=VAREJO_LOCAL` no score mas `modelo_negocio=Lead Gen` no t28 (fonte da divergência)?
 
 **Defeitos conhecidos:** `execution_id=FALLBACK-*` (A.6); `source_execution_id` NULL retroativo (por decisão). Consumidores lêem por colunas nomeadas (A.7b auditou — sem `SELECT *` frágil).
 
@@ -176,10 +221,23 @@
 2. Os que forem **órfãos comprovados** → recomendar **arquivar** (`archive_workflow`, reversível) — não deletar. Documentar no report.
 3. `Daily Entry` cópia `demo` → arquivar.
 
-**🚩 Daily Entry (`zGgIqiLlo5iAn8ud`) — dependency crítica, `active:false`:**
-Escritor canônico do `raw_campaign_data` (ADR-010) — input do Pipeline_v2 e do Agregador. **Está desligado.** Investigar com urgência: (a) `raw_campaign_data` ainda recebe dado fresco? por qual mecanismo? (b) se Daily Entry é a fonte e está off, o score-50 (P2) pode ser consequência de raw velho/vazio. (c) reportar se precisa reativar ou se foi substituído. **Não reativar sem OK** (pode ter sido desligado de propósito).
+**Daily Entry (`zGgIqiLlo5iAn8ud`, `active:false`) — legado, SUPERSEDED:**
+Foi o escritor canônico do `raw_campaign_data` (ADR-010); **foi substituído por
+`sw metricas campanhas` (`W571K320aqIHsdtH`, `active:true`, folder `Métricas`)** —
+que tem o nó `Execute SQL inserir daily entry` e escreve o raw hoje. Logo o Daily
+Entry off **não** é buraco de dados (isso já foi tratado no red flag rebaixado §0 +
+investigação P2). **Fazer aqui:** confirmar que `sw metricas campanhas` cobre 100%
+do papel do Daily Entry (nenhuma feature/coluna ficou pra trás); se sim, **arquivar
+o Daily Entry** (`zGgIqiLlo5iAn8ud`) + a cópia `demo` + `sw metricas campanhas copia
+seg` (`ffEyTUED2p4Rq2Iw`). Reversível; com OK do Olavo.
 
 ---
 
-## Sequência sugerida de execução
-P1 → P2 (os dois red flags primeiro: raw/score é onde a Camada 2 ganha ou perde sinal) → P3a/P3b (leve, quase fechados) → P4 → P5a/b/c → P6. Cada um: revisar → corrigir baixo-risco em draft → reportar planejado-vs-real → pré-revisão Claude → OK do Olavo p/ publicar/arquivar.
+## Sequência de execução (com GATE)
+**Passo 0** (organização de pastas, §2.5) → **P1** → **P2** → **⛔ GATE: parar e
+avaliar** se o método (brief → Codex revisa/corrige em draft → pré-revisão Claude →
+OK Olavo) está atendendo a expectativa **antes de liberar o P3**. Só depois do OK
+do Olavo: **P3a/P3b** (leve, quase fechados) → **P4** → **P5a/b/c** → **P6**.
+
+Cada workflow: revisar → corrigir baixo-risco em draft → reportar planejado-vs-real
+→ pré-revisão Claude → OK do Olavo p/ publicar/arquivar. **Um por vez, na ordem.**
