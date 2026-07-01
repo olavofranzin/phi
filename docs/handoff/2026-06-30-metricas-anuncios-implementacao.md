@@ -270,6 +270,64 @@ Impressões: ={{ Number($('Code classificar status').item.json.impressions_7d) ?
 > `Code Cálcula Métricas` via spread. Formato percentual usa `%)` (canônico dos
 > demais nós), não `)%`.
 
+## Pós-mortem — execução #12769 (8 registros em vez de 2)
+
+**Sintoma:** a execução #12769 do `sw metricas anuncios copy` gravou 8 registros; o esperado era 2.
+
+**Causa-raiz:** o sub-workflow foi chamado pelo orquestrador com **4 itens** no
+trigger (`[{source_execution_id:null}, {}, {source_execution_id:null}, {}]`). O nó
+`Get database anuncios` (Notion `getAll`) **executa uma vez por item de entrada** →
+4 passadas × 2 anúncios `Iniciado` = **8 itens** (2 anúncios únicos ×4, mesmo `page_id`:
+`AD01-PMAX_BARBEARIA` e `AD01-PMAX_CORTE.CABELO`). O loop processou os 8 → 8 inserts.
+**Não é bug do BigQuery/MERGE** — é multiplicação na origem.
+
+**Achados adicionais da execução:**
+- O `Code Montar SQL` ainda era o **antigo** (`target=phi_prod.raw_campaign_data`), gravando `client_id=''`/`campaign_id=''` → lixo de chave vazia na tabela de campanha (**viola ADR-010**).
+- Ambos os anúncios são **PMAX** → sem `ad_group_ad`, GAQL vazia → o resultado ad-level correto é **0 linhas** (ADR-24), não 2.
+
+### Correções (aplicar na UI — guard mojibake §6)
+
+**1. Normalizar o trigger para 1 item (corrige a causa).** Novo nó Code entre
+`Schedule Trigger` e `Get database anuncios`:
+```js
+// Colapsa múltiplos itens do trigger em 1 (o fetch de anúncios deve rodar uma vez).
+const items = $input.all();
+const ctx = items.find(i => i.json && i.json.source_execution_id) || items[0] || { json: {} };
+return [ctx];
+```
+Rewire: remover `Schedule Trigger` → `Get database anuncios`; adicionar
+`Schedule Trigger` → **Normalizar Trigger** → `Get database anuncios`.
+
+**2. Dedup por `page_id` (defesa em profundidade).** Novo nó Code entre
+`Get database anuncios` e `Loop Over Items`:
+```js
+const seen = new Set();
+return $input.all().filter(it => {
+  const id = it.json.id;
+  if (!id || seen.has(id)) return false;
+  seen.add(id);
+  return true;
+});
+```
+Rewire: remover `Get database anuncios` → `Loop Over Items`; adicionar
+`Get database anuncios` → **Dedup page_id** → `Loop Over Items`.
+
+> A correção 1 sozinha já resolve (getAll roda 1×). A 2 é rede de segurança contra
+> qualquer duplicata futura. Aplicar as duas é o mais robusto.
+
+**3. Idempotência no destino:** a nova `Code Montar SQL` ad-grain (chave do MERGE
+com `ad_id`) faz UPSERT — mesmo que uma duplicata escape, não gera linha duplicada.
+
+**4. Guard PMAX:** quando a GAQL volta vazia (sem `ad_id`), pular o insert. No
+`Code Montar SQL`, quando `adId === ''`, retornar `_bq_sql: ''`; e colocar um nó
+`IF {{ $json._bq_sql }}` (não-vazio) antes de `Execute SQL inserir daily entry`.
+
+### Limpeza dos dados gravados por engano
+
+A #12769 inseriu linhas de chave vazia em `phi_prod.raw_campaign_data`. Rodar o
+preview + DELETE de `docs/strategic-planning/agregador-t28/ddl/phi_prod_raw_campaign_data_cleanup_chaves_vazias.sql`
+(`WHERE client_id='' OR campaign_id=''`).
+
 ## Fora de escopo (backlog)
 
 Tendência ad-level; `impression_share` por adset (query `FROM ad_group` separada); batelada GAQL por campanha; rotação do `google_developer_token`.
