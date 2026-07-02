@@ -1,0 +1,4 @@
+interface:
+  display_name: "n8n API Workflow Review"
+  short_description: "Review n8n nodes, APIs, GAQL, and BigQuery"
+  default_prompt: "Use $n8n-api-workflow-review to review an n8n workflow, its node JSON, API requests, GAQL, and BigQuery SQL."

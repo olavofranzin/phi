@@ -1,11 +1,18 @@
 ---
 name: n8n-node-configuration
 description: Operation-aware node configuration guidance. Use when configuring nodes, understanding property dependencies, determining required fields, choosing between get_node detail levels, or learning common configuration patterns by node type.
+risk: unknown
+source: community
 ---
 
 # n8n Node Configuration
 
 Expert guidance for operation-aware node configuration with property dependencies.
+
+## When to Use
+- You need to configure an n8n node correctly for a specific resource and operation.
+- The task involves required fields, property dependencies, or choosing the right `get_node` detail level.
+- You are troubleshooting node setup rather than overall workflow architecture.
 
 ---
 
@@ -700,34 +707,9 @@ get_node({
 
 ---
 
-## Surgical Field Edits with patchNodeField
-
-When you need to edit a specific string inside a node field — rather than replacing the whole field — use `patchNodeField` in `n8n_update_partial_workflow`. This is especially useful for:
-
-- Editing code inside Code nodes without re-transmitting the full code block
-- Updating URLs or text in large HTML email templates
-- Fixing typos in JSON bodies or long text fields
-
-```javascript
-// Instead of replacing the entire jsCode field:
-n8n_update_partial_workflow({
-  id: "wf-123",
-  operations: [{
-    type: "patchNodeField",
-    nodeName: "Code",
-    fieldPath: "parameters.jsCode",
-    patches: [{find: "const limit = 10;", replace: "const limit = 50;"}]
-  }]
-})
-```
-
-`patchNodeField` is strict — it errors if the find string isn't found or matches multiple times (unless `replaceAll: true`). This prevents accidental silent failures during configuration updates. See the n8n MCP Tools Expert skill for full syntax and examples.
-
----
-
 ## Best Practices
 
-### Do
+### ✅ Do
 
 1. **Start with get_node (standard detail)**
    - ~1-2K tokens response
@@ -782,8 +764,8 @@ n8n_update_partial_workflow({
 
 For comprehensive guides on specific topics:
 
-- **[DEPENDENCIES.md](DEPENDENCIES.md)** - Deep dive into property dependencies and displayOptions
-- **[OPERATION_PATTERNS.md](OPERATION_PATTERNS.md)** - Common configuration patterns by node type
+- **DEPENDENCIES.md** - Deep dive into property dependencies and displayOptions
+- **OPERATION_PATTERNS.md** - Common configuration patterns by node type
 
 ---
 
@@ -808,3 +790,8 @@ For comprehensive guides on specific topics:
 - **n8n Validation Expert** - Interpret validation errors
 - **n8n Expression Syntax** - Configure expression fields
 - **n8n Workflow Patterns** - Apply patterns with proper configuration
+
+## Limitations
+- Use this skill only when the task clearly matches the scope described above.
+- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
+- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.
