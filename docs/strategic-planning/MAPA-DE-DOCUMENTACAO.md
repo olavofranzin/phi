@@ -113,16 +113,58 @@ plano de lotes e padrões inegociáveis:
 | Curador | [\[HANDOFF\] Curador — Âncora da Área](https://app.notion.com/p/375b65e5c72b810f8f4be50873daedbe) |
 | Documentação e Ferramentas | [\[HANDOFF\] Documentação e Ferramentas — Âncora da Área](https://app.notion.com/p/375b65e5c72b8108a4a9db18d2fd8c6b) |
 
-## 7. Documentação técnica do Produto PHI (métricas/score/campanhas)
+## 7. Documentação estruturada — PHI·Mídia e Saúde Digital
 
+> **Hierarquia (ADR-21):** **PHI (IDS — Índice de Saúde Digital)** = índice do
+> **cliente**, 0–100, **6 pilares** (Mídia Paga 35%, Funil 20%, …). **PHI·Mídia**
+> = o **pilar de mídia paga** = o **score de campanha** (ex-"PHI Score"), calculado
+> pelo `Pipeline_v2`. Hoje só o pilar Mídia tem cálculo; os outros 5 pilares e os
+> componentes `es/rs/os` do PHI·Mídia são placeholders (mesma lacuna estrutural).
+> Lista **exaustiva** de artefatos = **Catálogo** (§2). Aqui ficam só os **ponteiros
+> canônicos por tema** (IDs Notion / paths git). Manter enxuto (ver §9).
+
+### 7.1 PHI·Mídia — o score de campanha (o que incide no cálculo)
+| Tema | Documento canônico |
+|---|---|
+| Fórmula: 6 componentes (MIV/MAS/TSS/FIS/ES/RS) + pesos + thresholds + **os 5 problemas estruturais** | **ADR-004** `359b65e5-c72b-819c-981c-fc1eaf79555f` |
+| Autoridade única do score (Pipeline_v2 = dono) | **ADR-003** `359b65e5-c72b-8106-8959-ce8615009166` (+ ADR-009/010, writer do raw) |
+| Significado dos componentes + níveis de alerta | SOP/Glossário `328b65e5-c72b-81d8-a25b-c83921610282` |
+| Schema `phi_score_history` + VIEW `phi_score_current` | Doc Técnica v1.4 `328b65e5-c72b-8103-9ad0-d2fb81dd8055` · DDL git `docs/handoff/2026-05-09-A7b-DDL-VIEW.md` |
+| Auditoria-mãe + causas-raiz | A.1 `358b65e5-c72b-8117-ae16-f8713c2458ce` + Aprendizados #7–#11 (linkados no ADR-004) |
+| **Análise/correção em curso** (dissecação do JSON live + kit BQ) | git `docs/handoff/2026-07-01-saude-digital-phi-midia-score-analise-subchat-brief.md` |
+| Dados | BQ `phi_prod`: `raw_campaign_data`, `client_config`, `model_config`, `phi_score_history`/`_current`, `workflow_execution_log` |
+
+### 7.2 Saúde Digital — arquitetura em 4 camadas
 | Tema | Documento |
 |---|---|
-| Fórmula do PHI Score (6 componentes MIV/MAS/TSS/FIS/ES/RS) | ADR-004 v2 (DB Decisões) |
-| PHI promovido a Índice de Saúde Digital; PHI·Mídia = score de campanha | ADR-21 (DB Decisões) |
-| Loop alerta → tarefa → Log de Otimizações | ADR-22 + [Especificação do Loop Operacional](https://app.notion.com/p/37db65e5c72b81a0a4a3e47bd562f91e) |
-| Autoridade de score / writer de dados | ADR-003 / ADR-009 / ADR-010 (Daily Entry) |
-| Workflows de métricas | git raiz (`phi_pipeline_v2.json`, `daily_entry_v4.json`, `phi_subworkflow_*.json`, `phi_operator_metricas.json`) + Catálogo |
-| Telemetria operacional interna | strawman `docs/strategic-planning/telemetria-minima/` + DB Snapshots |
+| Índice-mãe (PHI/IDS, 6 pilares) | **ADR-21** `37db65e5-c72b-814b-b3c1-eb6b8ceab705` (Aceito) |
+| Visão das 4 camadas (ETL→Análise→Entrega→Erro) | BRUTO git `saude-digital/BRUTO-v0.1-arquitetura-saude-digital.md` |
+| Separação Agregador (ETL) × Orquestrador (Análise) | ADR-23 — rascunho git `saude-digital/adr-rascunhos/ADR-23-*.md` |
+| Granularidade T28 + bottom-up rollup (ad→adset→campaign) | ADR-24 — rascunho git `…/ADR-24-*.md` |
+| Sub-WFs reutilizáveis Social + GBP | ADR-25 — rascunho git `…/ADR-25-*.md` |
+| Error Handler global (`onError` + sub-WF + `t28_errors`) | **ADR-26** `388b65e5-c72b-8186-aed5-c5fafd65b5f8` (Aceito) |
+| Entrega de análises (DB Análises PHI + write-back) | ADR-27 — rascunho git `…/ADR-27-*.md` |
+| Loop operacional O.D.A.E. (alerta→tarefa→Log) | **ADR-22** `37db65e5-c72b-8134-8475-f702f1e39ff1` + Espec. `37db65e5-c72b-81a0-a4a3-e47bd562f91e` |
+| Camada 2 — design do Orquestrador campaign | git `saude-digital/L3.0-orquestrador-campaign-design.md` |
+| Framework cognitivo dos agentes de análise | Guia de Agentes `37db65e5-c72b-8164-82c5-e4f246be9f2c` · Arquitetura de IA `342b65e5-c72b-81f8-a05e-dfe05e564105` |
+
+### 7.3 Workflows n8n por camada
+| Camada | Workflow | id |
+|---|---|---|
+| 1 · ETL | PHI — Agregador Multi-fonte | `4sdG2UKMCBuFq8xn` |
+| 1 · Ingestão raw | sw metricas campanhas ← operador único | `W571K320aqIHsdtH` ← `cLcimNoefTOnVVbd` |
+| Score | PHI - Pipeline_v2 (+ Subworkflow Campanhas) | `ITWG3Ge0asXtUM8U` (+ `b1pbn8qmzCNTufTp`) |
+| 2 · Análise | Orquestrador · Analise-Campaign | `8Q5ofmAZju0hTN08` · `fhYmJH0o9BW1IO4i` |
+| 3 · Entrega/Loop | Loop Alerta · Fechar Otimização · Alerta Erro | `JqPwFD9udCq2hRPw` · `83vfKD8XMYmjZjFQ` · `Oj1RbA0laZTzJZPx` |
+| 4 · Erro | WF-T28-Error-Handler | `rTS5pE34eElfuMPl` |
+
+> Dump recente do Pipeline_v2 p/ auditoria: git `docs/audits/PHI - Pipeline_v2.json`.
+> Índice de workflows (legado): [Registro de Workflows n8n](https://app.notion.com/p/354b65e5c72b815bb166ff8ea26861ae).
+
+### 7.4 DBs de destino
+- **Notion:** PHI - ANÁLISES `38fb65e5-c72b-80db-a425-e5939fc35c7a` · Campanhas `19fb65e5-c72b-8043-a82d-f47ede397928` · Clientes `19fb65e5-c72b-8147-8aa3-c63aa273d205` · Log de Otimizações `19fb65e5-c72b-8106-8e76-f1e684197316` · Demandas `a5c6b6ae-3e9c-4619-a3c3-48e58c75c25b`.
+- **BQ contract T28:** `t28_campaign / t28_adset / t28_ga4_landing / t28_gbp_daily / t28_clarity_daily / t28_meta_campaign / t28_errors`.
+- **Telemetria operacional interna** (tangencial): strawman `docs/strategic-planning/telemetria-minima/` + DB Snapshots.
 
 ## 8. Convenções rápidas
 
