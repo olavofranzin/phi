@@ -1,279 +1,238 @@
-# [REPORT sub-chat] Análise estratégica do PHI·Mídia Score (Pipeline_v2)
+# [REPORT sub-chat] Análise estratégica do PHI·Mídia Score (Pipeline_v2) — com evidências BQ
 
 > **Origem:** brief `2026-07-01-saude-digital-phi-midia-score-analise-subchat-brief.md`.
 > **Data:** 2026-07-02 · **Executor:** Claude Code (sessão remota, branch `claude/saude-digital-phi-midia-score-0ko12c`).
-> **Artefatos lidos:** `docs/audits/PHI - Pipeline_v2.json` (56 nós, dump live), linhagem A.5/A.6/A.6b/A.6c/A.7/A.7b (git),
-> ADR-004 v2 (`359b65e5-c72b-819c-981c-fc1eaf79555f`), ADR-21 (`37db65e5-c72b-814b-b3c1-eb6b8ceab705`) via Notion MCP.
-> **Nenhum workflow foi tocado.** Nenhuma query BQ foi executada (ver §8 — bloqueio de tooling).
+> **Fontes:** `docs/audits/PHI - Pipeline_v2.json` (dump), **read-back do live via MCP n8n**, linhagem A.5/A.6/A.6b/A.7/A.7b (git),
+> ADR-004 v2 + ADR-21 (Notion MCP), e **kit de evidências Q0–Q10 executado em `phi_prod`** (read-only, via 2 workflows
+> temporários `kC0zlUZO6YdbVRs4` e `OsMJazBXN0gj1oUt`, arquivados após uso — execuções n8n `13407`/`13408`).
+> **Nenhum workflow de produção foi tocado.**
 
 ---
 
-## 0. Sumário executivo
+## 0. Sumário executivo — a resposta à pergunta do brief
 
-O diagnóstico do brief **se sustenta integralmente no código** — e a análise encontrou **um mecanismo de quebra
-adicional, potencialmente mais grave** que o descrito na camada C:
+**"O score está quebrado, incompleto, ou os dois?" → Os dois, mas de um jeito diferente do hipotetizado.**
 
-1. **🔴 Camada C confirmada em código, com agravante:** no dump, **nenhum dos 16 nós BigQuery tem o prefixo `=`
-   no `sqlQuery`**. Sem `=`, o n8n **não avalia** `{{ }}` — o texto literal `'{{ $("Buscar ID de Sucesso
-   Hoje").first().json.source_execution_id }}'` é enviado ao BigQuery como valor. Em qualquer dos dois cenários
-   (expressão não avaliada → literal; ou avaliada com campo inexistente → vazio/`undefined`), o filtro do MERGE
-   **casa zero linhas do raw** e o score **não é recalculado**. Há um teste BQ decisivo para distinguir os
-   cenários (§6, query Q0).
-2. **🟠 Camada A confirmada — e é decisão, não spec faltante:** o ADR-004 v2 (Aceito, 2026-05-07, reconfirmado
-   2026-06-18) **já documenta** ES/RS/OS como *placeholders sem implementação* ("não são Engagement/Recovery/
-   Optimization Scores"). Não existe fórmula oficial a implementar; existe uma decisão de modelo em aberto
-   (candidata a ADR-008). O caminho de menor risco é **v1.1 com peso 0** (stub inerte) + roadmap.
-3. **🟡 Camada B confirmada — e é estrutural, não só "dado ralo":** a discovery A.6b provou que o
-   `PHI - Subworkflow Campanhas` é **writer efetivo** de `raw_campaign_data` (`GADS_INSERT`, 42 linhas vs 14 do
-   `DAILY_ENTRY` na época) e **não escreve** `cost_3d/cost_7d/conversions_3d/conversions_7d`. Ou seja: mesmo com
-   o join corrigido, as linhas dominadas pelo `GADS_INSERT` derrubam MAS/TSS no fallback 50.
-4. **🟢 Camada D confirmada** (FQN inconsistente, mojibake, CPA-only, FALLBACK-*) + 2 achados novos: o
-   `threshold_used` é persistido mas **ignorado** na classificação (hardcoded 80/60/40), e o nó
-   `Get All Current Scores (Sync)` — que alimenta o Notion — tem o mesmo problema de expressão não avaliada,
-   o que explicaria o **`Score Diário` congelado no Notion** de forma independente do MERGE.
+O score **não está congelado**: o MERGE **escreve todos os dias** (Q1/Q7: 2 linhas hoje às 07:01). O que acontece é pior
+de diagnosticar e mais simples de explicar:
 
-**O que falta para fechar:** o kit de evidências BQ (§6) — bloqueado nesta sessão por ausência de credenciais
-BigQuery e de autenticação no MCP n8n (§8). Todo o SQL está pronto para colar e rodar.
+1. **O pipeline pontua as linhas erradas do raw.** O join casa apenas as **linhas-esqueleto** escritas pelo próprio
+   `PHI - Subworkflow Campanhas` (`ingestion_step='GADS_INSERT'`, **todas as janelas 3d/7d = NULL** — Q5/Q10). Com janelas
+   NULL, todos os componentes caem nos fallbacks `ELSE 50.0` → **phi_value = 50.0 exato, todo dia, por construção**, com
+   `calculation_status='SUCCESS'` e classificação WARNING. O "50 congelado" da CLI-4 é um **50 recalculado diariamente
+   sobre dado vazio**.
+2. **O cliente CLI-5 (IMPACTO WEB, ROAS) nunca é pontuado.** Suas linhas raw vêm só do `DAILY_ENTRY` (`EXEC-DE-*`), que o
+   filtro por execution_id do run (`FALLBACK-*`) nunca casa. Dos 2 clientes ativos (Q6b), um é pontuado com constante 50
+   e o outro é **excluído em silêncio**. E CLI-5 é ROAS — a decisão CPA×ROAS deixou de ser teórica.
+3. **A CLI-4 não tem NENHUMA linha raw com janelas 7d/3d nos últimos dias** (Q10): o Daily Entry não escreveu para as
+   campanhas dela; só existe o esqueleto do GADS_INSERT. Mesmo com o join perfeito, hoje não há dado para pontuar CLI-4.
+4. **Gravidade-50 quantificada** (Q2/Q3/Q4): pesos `es+rs+os = 0.40` (0.15+0.15+0.10) → 40% do score é constante.
+   Range teórico [20, 80] → **EXCELLENT (≥80) é matematicamente inalcançável**. Distribuição real: 100 WARNING (todos
+   entre 40–50), 12 CRITICAL, 2 GOOD (máx histórico 68.74), 0 EXCELLENT. Em 115 linhas: `tss=50` em 112, `fis=50` em 90,
+   `mas=50` em 64, `es/rs/os=50` em ~115.
+5. **⚠️ ALERTA DE REGRESSÃO IMINENTE:** alguém publicou nova versão do Pipeline_v2 **hoje às 17:19Z**
+   (`activeVersionId 4b723285`, ≠ do active `15b91f10` e do draft `a09f6e35` registrados no brief). A versão ativa agora
+   filtra o raw por `source_execution_id` — **que o upstream não emite**. A rodada de hoje 07:01 ainda era a versão
+   antiga (escreveu com `source_execution_id=NULL`); **na rodada de amanhã 07:00 o MERGE tende a escrever ZERO linhas**
+   (de "50 constante" para "nada"). Confirmar com Olavo quem publicou e se foi intencional.
+6. **FALLBACK-* é o caminho único, não a exceção** (Q0): TODOS os execution_id do `workflow_execution_log` são
+   `FALLBACK-*`. Motivo estrutural: às 07:00:00 o `Buscar ID de Sucesso Hoje` procura um `INGESTION SUCCESS` de hoje que
+   só o próprio pipeline escreverá às 07:00:53 — o COALESCE **sempre** cai no fallback. (Daily Entry não loga fase
+   INGESTION nesse log.) De positivo: as expressões `{{ }}` **renderizam** no live — a ausência do prefixo `=` no
+   dump/read-back é artefato de serialização, não bug.
 
 ---
 
-## 1. Veredito camada a camada (brief §3)
+## 1. Veredito camada a camada (brief §3) — agora com evidência BQ
 
 | Camada | Hipótese do brief | Veredito | Evidência |
 |---|---|---|---|
-| 🔴 C | Join do MERGE quebrado: upstream só emite `execution_id`, score filtra por `source_execution_id` | **CONFIRMADA em código** (falta réplica BQ) | Nó `Buscar ID de Sucesso Hoje`: `SELECT COALESCE(...) AS execution_id` — **uma coluna só**. Nó `Calcular e Persistir PHI Score`: `WHERE r.execution_id = '{{ ...source_execution_id }}'`. Linhagem: A.6 aplicou o patch de dois IDs e **foi revertido** ("rollback aplicado", doc A.6); o nó de score manteve as referências órfãs. |
-| 🔴 C+ (novo) | — | **NOVO ACHADO** | **Todos os 16 nós BQ estão sem prefixo `=` no `sqlQuery`** no dump. Se o dump for fiel, *nenhuma* expressão `{{ }}` renderiza em nó BQ nenhum (inclusive os logs de fase). Uniformidade sugere possível normalização do export do MCP — **verificar com Q0 (§6) e/ou read-back na UI antes de qualquer fix**. |
-| 🟠 A | ES/RS/OS = 50 hardcoded entram na média ponderada; flags mentem | **CONFIRMADA em código + design** | SQL do MERGE: `50.0 AS es, 50.0 AS rs, 50.0 AS os`; `FALSE AS rs_data_insufficient, FALSE AS os_data_unavailable`; `'SUCCESS' AS calculation_status` incondicional. ADR-004 v2 já registrava como "problema estrutural 3". Impacto (compressão do range) depende dos pesos em `model_config` → Q2/Q3 (§6). |
-| 🟡 B | MAS/TSS/FIS colapsam para 50 em dado ralo, silenciosamente | **CONFIRMADA em código + agravante estrutural** | `ELSE 50.0` nos 3 componentes. Agravante (A.6b): o `GADS_INSERT` do Subworkflow **não popula janelas 3d/7d** e domina as linhas recentes do raw — o fallback não é exceção, é o caminho comum para linhas dessa origem. Quantificar com Q4/Q6 (§6). |
-| 🟢 D | FALLBACK-*, FQN inconsistente, direção CPA/ROAS, mojibake | **CONFIRMADA** | FALLBACK-* no `COALESCE` do `Buscar ID de Sucesso Hoje`. FQN dentro do SQL em 2 nós (`Log INGESTION SUCCESS`, `Log CALCULATION SUCCESS`). Mojibake em 3 nós (`Log INGESTION FAILED`, `Buscar Campanhas Alertas`, `Execute SQL Verificar Escalada`). CPA-only: `primary_metric_type` carregado no CTE e **nunca usado** (ADR-004 problema 4); MAS/MIV usam semântica CPA (menor=melhor) para todos. |
-| 🟢 D+ (novos) | — | **NOVOS ACHADOS** | (i) `threshold_used` (de `model_config.threshold`) é persistido mas a classificação usa 80/60/40 hardcoded — já capturado no ADR-004 (Aprendizado #9), segue vivo no dump. (ii) `Get All Current Scores (Sync)` filtra `phi_score_current` por `execution_id` com `{{ }}` sem `=` → o sync de score para o Notion provavelmente retorna 0 linhas → **Notion congelado por caminho próprio**, independente do MERGE. (iii) INNER JOIN com `client_config`/`model_config` exclui campanhas sem config **sem trilha** (ADR-004 problema 5). |
+| 🔴 C | Join quebrado → MERGE não escreve → score congelado | **REFORMULADA** | O MERGE **escreve** (Q1/Q7). Na versão que rodou até hoje 07:01, o filtro efetivo casava o id do run (`FALLBACK-*`) — que é exatamente o id que o Subworkflow grava nas linhas-esqueleto. O join "funciona", mas **acopla o cálculo ao esqueleto sem janelas**, ignorando os dados reais do `DAILY_ENTRY`. O 50 é recalculado, não congelado. A parte "upstream não emite `source_execution_id`" **confirma-se** (read-back + Q1 com `source_execution_id=NULL`) e vira **regressão iminente** com a versão publicada hoje 17:19Z (item 5 do §0). |
+| 🟠 A | es/rs/os = 50 fixos + pesos > 0 comprimem o range | **CONFIRMADA** | Q2: modelo único `MODEL-VAREJO-001 v1.1`, pesos 0.20/0.20/0.20/0.15/0.15/0.10 (soma 1.0), `threshold=0.75` (ignorado na classificação). 40% do score constante; range [20,80]; Q3: zero EXCELLENT na história; máx 68.74. Flags `rs_data_insufficient`/`os_data_unavailable` FALSE fixas. |
+| 🟡 B | mas/tss/fis colapsam para 50 em dado ralo, silenciosamente | **CONFIRMADA — e é o mecanismo dominante** | Q4: em 115 linhas, tss=50 em 112 (97%), fis=50 em 90, mas=50 em 64. Q10: linhas GADS_INSERT da CLI-4 com `cost_3d/7d/conversions_3d/7d = NULL` e `calculation_status='SUCCESS'` mesmo assim. Um "50" hoje significa "sem janela de dados", não "mediano". |
+| 🟢 D | FALLBACK-*, FQN, CPA×ROAS, mojibake | **CONFIRMADA + agravada** | Q0: 100% dos logs com `FALLBACK-*` (chicken-and-egg estrutural). Q6b: **CLI-5 é ROAS e está ativo** → mas nunca é pontuado (exclusão silenciosa; Q1/Q3 só têm CLI-4 recente). FQN inconsistente em 2 nós; mojibake em 3; `threshold_used`/`phi_threshold_override` carregados e ignorados. |
 
-### Como os dois mecanismos da camada C se distinguem (importa para o fix)
-
-- **Cenário 1 — expressões não avaliadas (sem `=`):** o `execution_id` gravado em `workflow_execution_log`
-  pelos nós de log conteria o **texto literal** `{{ ... }}`. O fix passa por adicionar `=` em todos os nós BQ
-  com template **além** de corrigir os dois IDs.
-- **Cenário 2 — dump normalizado, expressões avaliadas no live:** os logs teriam IDs reais; o problema fica
-  restrito a `source_execution_id` inexistente (render vazio/`undefined`) → filtro vazio → zero linhas.
-- Em **ambos** os cenários o MERGE não escreve nada em rodada normal, o que é consistente com o smoke do L3.0
-  (CLI-4 com `phi_value=50` e `calculated_date=2026-06-30` estagnado). **Q0 e Q1 (§6) decidem o cenário.**
+**Achados fora do brief:**
+- **`client_config` NÃO tem `primary_metric_goal`** (Q9 — a query do brief §5.6 falha). A meta vive **por campanha** em
+  `raw_campaign_data` (Q10: 3.5 e 5.2 para as 2 campanhas da CLI-4). O CLAUDE.md descreve `primary_metric_goal` como
+  campo de config — atualizar a documentação.
+- `client_config` tem `phi_threshold_override` (FLOAT64, NULL nos 2 clientes) — mais um mecanismo de threshold nunca usado.
+- Q8: a VIEW `phi_score_current` já projeta `source_execution_id` (A.7b foi aplicada na VIEW) e filtra
+  `calculation_status='SUCCESS'` + último `calculated_date` por campanha — ou seja, **a VIEW já está pronta para a
+  semântica INSUFFICIENT_DATA** (basta o MERGE parar de rotular dado vazio como SUCCESS).
+- Existe 1 linha histórica com classificação legada `'OK'` (Q3) — resíduo de esquema antigo; tratar no backfill.
 
 ---
 
 ## 2. Confronto fórmula live × design (ADR-004 v2 / ADR-21)
 
-**Conclusão central: não há divergência entre o live e o ADR-004 v2 — o ADR documenta exatamente o live,
-placeholders inclusos.** A lacuna do PHI·Mídia não é "implementação que fugiu da spec"; é **decisão de modelo
-nunca tomada** (o próprio ADR-004 lista os 5 problemas estruturais como pendentes e nomeia o ADR-008 como
-candidato para a decisão CPA-only × polimorfismo).
+Sem divergência live×ADR-004 v2: o ADR documenta exatamente o live, placeholders inclusos — a lacuna é **decisão de
+modelo nunca tomada** (candidata a ADR-008: CPA-only × polimorfismo). Já o **ADR-21 é violado na prática**: a guarda
+cognitiva "nenhum pilar emite leitura com volume insuficiente — responde VOLUME INSUFICIENTE em vez de pontuar" é
+exatamente o oposto do comportamento atual (50 confiante + SUCCESS sobre janelas NULL). A semântica `INSUFFICIENT_DATA`
+não é opção de design; é alinhamento com ADR vigente.
 
-| Ponto | ADR-004 v2 (design) | Live (dump) | Lacuna |
+| Ponto | ADR-004 v2 (design) | Live (verificado) | Lacuna |
 |---|---|---|---|
-| MAS | `(goal / CPA_real) × 100`, capped; 0 se conv=0; 50 fallback; **CPA-only** | idem | Nenhuma — decisão CPA×ROAS em aberto (ADR-008) |
-| TSS | estabilidade CPA 3d vs 7d; 50 fallback | idem | Nenhuma |
-| FIS | `100 − share de custo no portfólio`; 50 fallback | idem | Semântica é *exposição*, não saúde — revisar se deve compor média de "saúde" |
-| ES/RS/OS | **placeholders 50.0, "NÃO implementado"** | idem | Decisão: calcular / peso 0 / remover. Sem spec para "implementar" |
-| Classificação | 80/60/40 hardcoded; `threshold_used` ignorado (Aprendizado #9) | idem | Usar `model_config.threshold` ou remover o campo |
-| Flags de qualidade | `rs_data_insufficient`/`os_data_unavailable` FALSE fixos | idem | Flags mentem — corrigir junto com semântica sem-dado |
-| `priority_score` | `(100−phi)×0.60 + miv_norm×0.40`, pesos hardcoded | idem | Aceitável (priorização ≠ saúde), documentado |
-
-**ADR-21 (guardas cognitivas) → implicação direta no modelo:** o ADR-21 declara que **nenhum pilar do PHI emite
-leitura com volume insuficiente — responde "VOLUME INSUFICIENTE" em vez de pontuar** (Tema 10), e que alertas
-devem distinguir ruído de problema (Tema 19). O comportamento atual (50 confiante + `calculation_status='SUCCESS'`
-em qualquer cenário de dado ralo) **viola a guarda**. Isso resolve a decisão 2 do brief pelo design já aceito:
-a semântica `INSUFFICIENT_DATA` não é opção, é **alinhamento com ADR vigente**.
+| MAS/TSS/FIS/MIV | fórmulas CPA-only com fallback 50 | idem | decisão CPA×ROAS (agora obrigatória — CLI-5 é ROAS) |
+| ES/RS/OS | placeholders 50.0 "NÃO implementado" | idem, pesos 0.15/0.15/0.10 | decisão: calcular / **peso 0 (recomendado)** / remover |
+| Classificação | 80/60/40 hardcoded; `threshold` ignorado | idem (Q2 confirma threshold=0.75 ignorado) | usar ou remover |
+| Flags de qualidade | FALSE fixas | idem | corrigir junto com sem-dado |
 
 ---
 
 ## 3. Recomendações para as 7 decisões (brief §4) — a travar com Olavo
 
-1. **Modelo-alvo:** **v1.1 MVP = ES/RS/OS com peso 0 em `model_config`** (stub inerte e honesto; `phi_value`
-   passa a ser média de MAS/TSS/FIS com pesos renormalizados) + roadmap explícito de fase 2 para componentes
-   reais. Registrar como novo ADR (ou revisão do ADR-004) — evita inventar fórmula sem dado e descomprime o
-   range imediatamente. Pré-requisito: Q2 (pesos atuais).
-2. **Semântica sem-dado:** adotar `calculation_status='INSUFFICIENT_DATA'` + `phi_value=NULL` + flags
-   verdadeiras quando (goal ausente/zero) ou (janelas 3d/7d ausentes). **Já decidido em essência pelo ADR-21**
-   (guarda "VOLUME INSUFICIENTE"). Downstream (L3, loop de alertas, VIEW) deve filtrar `SUCCESS`.
-3. **Join (camada C):** corrigir `Buscar ID de Sucesso Hoje` para emitir **os dois IDs** (proposta de SQL em §5),
-   MERGE filtrar o raw por `source_execution_id`, persistir ambos no history. **Condicional ao resultado de Q0:**
-   se cenário 1, incluir o prefixo `=` em todos os nós BQ com template no mesmo lote.
-4. **CPA × ROAS:** decisão ADR-008. Recomendação: ramificar `mas`/`miv` por `primary_metric_type` (ROAS usa
-   `conv_value/cost`, maior=melhor) **somente se** Q6 mostrar clientes ROAS ativos; senão, declarar CPA-only
-   formal e validar `primary_metric_type='CPA'` na ingestão (falha explícita, não silêncio).
-5. **FALLBACK-*:** eliminar. Sem `INGESTION SUCCESS` de hoje → **abortar a fase de cálculo com log
-   `CALCULATION FAILED (no ingestion)`** em vez de inventar um ID que nunca casará com o raw. Um ID falso
-   "rastreável" continua produzindo MERGE vazio — não há caso de uso legítimo.
-6. **Subworkflow Campanhas:** A.6b provou que é **writer concorrente** do raw com snapshot reduzido (sem janelas
-   3d/7d, sem campos v23), sobrescrevendo o estado do `Daily Entry`/`operador unico metricas` para CLI-4. Decidir
-   **um writer canônico** do raw (recomendação: `sw metricas campanhas` 04:00; o subworkflow deixa de escrever
-   raw ou passa a escrever tabela própria de staging). Sem isso, a camada B reaparece mesmo com tudo corrigido.
-7. **Backfill:** após fix C+B, recalcular o history por janela retroativa (respeitando `reprocessed=TRUE`),
-   por lote de `calculated_date`, comparando distribuição de classificação antes/depois (Q3 como baseline).
-   Detalhar em doc próprio depois do smoke em `phi_dev`.
+1. **Modelo-alvo:** v1.1 MVP = **es/rs/os com peso 0** e mas/tss/fis renormalizados (nova `model_version` em
+   `model_config`, `valid_until` na anterior). Roadmap explícito para componentes reais na fase 2. Registrar como ADR.
+2. **Semântica sem-dado:** `calculation_status='INSUFFICIENT_DATA'` + `phi_value=NULL` + flags verdadeiras quando
+   janelas/meta ausentes. A VIEW já filtra SUCCESS (Q8) — downstream fica limpo de graça. Decidido em essência pelo ADR-21.
+3. **Join (revisado pela evidência):** a ideia original "emitir os dois IDs" é insuficiente — há **múltiplos**
+   `EXEC-DE-*` por dia (um por cliente), então um único `source_execution_id` não cobre o portfólio. **Recomendação:
+   abandonar o filtro por execution_id no MERGE** e filtrar por **data de negócio + writer canônico**:
+   `WHERE r.date = D-1 AND r.ingestion_status='SUCCESS' AND r.ingestion_step='DAILY_ENTRY'`, persistindo `r.execution_id`
+   como `source_execution_id` **por linha** (linhagem preservada, sem plumbing frágil). O `execution_id` do run continua
+   vindo do nó de ID (para log/rastreio), sem participar do join.
+4. **CPA × ROAS:** **obrigatório** — 1 dos 2 clientes ativos é ROAS (CLI-5) e hoje está fora do score. Ramificar
+   `mas`/`miv` por `primary_metric_type` (ROAS: `revenue/cost`, maior=melhor; campo `revenue` existe no raw — Q10).
+5. **FALLBACK-*:** eliminar. Está provado (Q0) que é o caminho único por design (o log INGESTION SUCCESS que ele procura
+   é escrito pelo próprio pipeline minutos depois). Sem raw D-1 do writer canônico → `CALCULATION FAILED (no data)` e
+   parar, em vez de pontuar esqueleto.
+6. **Subworkflow Campanhas / writer canônico:** decisão que **destrava tudo**. Hoje o GADS_INSERT (esqueleto sem
+   janelas) domina o raw da CLI-4 e o Daily Entry não cobre as campanhas dela (Q10). Ou o Daily Entry passa a cobrir
+   100% das campanhas ativas (e o subworkflow para de escrever `raw_campaign_data`), ou o subworkflow passa a escrever
+   as janelas completas. Sem isso, o fix do join só muda o tipo de vazio.
+7. **Backfill:** após fixes, recalcular por `calculated_date` respeitando `reprocessed=TRUE`; limpar a linha legada
+   `'OK'`; usar Q3/Q4 como baseline de comparação antes/depois (descompressão da distribuição).
+
+**Ordem sugerida:** (a) confirmar com Olavo a publicação de hoje 17:19Z e mitigar a regressão de amanhã; (b) travar
+decisões 6+3 (writer + join) e 2 (sem-dado) — são o sinal; (c) 1+4 (modelo/ROAS) — são a qualidade do sinal; (d) smoke
+`phi_dev` com CLI-4 e CLI-5; (e) backfill; (f) só então liberar framework §4 e Camada 2 (L3.0).
 
 ---
 
-## 4. Mapa do fluxo do score no Pipeline_v2 (como está no dump)
+## 4. Fixes propostos (draft-only — NÃO aplicados)
 
-```
-Schedule 07:00
-  → Buscar ID de Sucesso Hoje        [BQ]  emite: execution_id (só)  ← COALESCE(log INGESTION SUCCESS de hoje, FALLBACK-*)
-  → Log INGESTION RUNNING            [BQ]
-  → Buscar Clientes Ativos           [BQ]
-  → Code INSERT execution_id         [code] injeta execution_id em cada cliente
-  → Loop Clientes → Call Subworkflow Campanhas  (passa execution_id, client_id e source_execution_id=undefined)
-        └── Subworkflow ESCREVE raw_campaign_data (MERGE, GADS_INSERT, sem janelas 3d/7d)  ← A.6b
-  → Log INGESTION SUCCESS/FAILED     [BQ]
-  → Log CALCULATION RUNNING          [BQ]
-  → Calcular e Persistir PHI Score   [BQ MERGE]  filtro: r.execution_id = source_execution_id (inexistente) → 0 linhas
-  → Log CALCULATION SUCCESS/FAILED   [BQ]
-  → Fase 3 (Fechamento → Escalada → Abertura) usa Buscar Campanhas Alertas (mesmo padrão de filtro)
-  → Get All Current Scores (Sync)    [BQ]  filtro por execution_id com {{ }} sem '=' → sync Notion suspeito
-```
+### 4.1 `Calcular e Persistir PHI Score` — plumbing (decisão 3)
 
----
-
-## 5. Fixes propostos (draft-only — NÃO aplicados; guardrails do brief §6 respeitados)
-
-### 5.1 `Buscar ID de Sucesso Hoje` — emitir os dois IDs
-
+No CTE `campanhas_exec`, substituir:
 ```sql
-WITH ingestion AS (
-  SELECT execution_id AS source_execution_id
-  FROM `phi_prod.workflow_execution_log`
-  WHERE DATE(started_at, 'America/Sao_Paulo') = CURRENT_DATE('America/Sao_Paulo')
-    AND status = 'SUCCESS'
-    AND phase  = 'INGESTION'
-  ORDER BY started_at DESC
-  LIMIT 1
-)
-SELECT
-  CONCAT('EXEC-PHI-', FORMAT_TIMESTAMP('%Y%m%d%H%M%S', CURRENT_TIMESTAMP()), '-',
-         SUBSTR(GENERATE_UUID(), 1, 8))            AS execution_id,          -- id do RUN de cálculo
-  (SELECT source_execution_id FROM ingestion)      AS source_execution_id    -- id do raw que origina o cálculo (NULL se não houver)
+WHERE r.execution_id = '{{ $("Buscar ID de Sucesso Hoje").first().json.source_execution_id }}'
+  AND r.ingestion_status = 'SUCCESS'
+  AND r.date = DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 1 DAY)
 ```
-
-Com regra downstream: se `source_execution_id IS NULL` → branch de erro → `Log CALCULATION FAILED` (mata o
-FALLBACK-*; decisão 5). **Atenção à lição da A.6:** o `execution_id` `EXEC-PHI-*` NÃO pode ser repassado ao
-Subworkflow como id de ingestão (foi isso que quebrou a A.6 e forçou o rollback) — o Subworkflow deve receber
-`source_execution_id` ou parar de escrever o raw (decisão 6).
-
-### 5.2 `Calcular e Persistir PHI Score` — mudanças mínimas de plumbing
-
-- Prefixar `sqlQuery` com `=` (se Q0 confirmar cenário 1 — e nesse caso, em **todos** os nós BQ com `{{ }}`).
-- Filtro do raw permanece `WHERE r.execution_id = '{{ ...source_execution_id }}'` — passa a funcionar com 5.1.
-- Persistência de `execution_id` + `source_execution_id` já está no MERGE (nada a mudar).
-- FQN: padronizar `phi_prod.tabela` (sem project id) nos 2 nós divergentes (regra 1 do CLAUDE.md).
-- Mojibake: corrigir strings nos 3 nós afetados, no mesmo lote.
-
-### 5.3 Mudanças de modelo (após decisões 1/2/4)
-
-- `model_config`: nova `model_version` com `peso_es=peso_rs=peso_os=0` e `peso_mas/tss/fis` renormalizados
-  (somando 1.0); `valid_until` na versão anterior (histórico auditável, sem UPDATE destrutivo).
-- CTE `calc_components`: substituir `ELSE 50.0` por `ELSE NULL` + coluna de status; SELECT final emite
-  `calculation_status = CASE WHEN <insuficiente> THEN 'INSUFFICIENT_DATA' ELSE 'SUCCESS' END`, `phi_value=NULL`
-  quando insuficiente, e flags reais. VIEW `phi_score_current` e consumidores filtram `SUCCESS` (verificar
-  definição da VIEW — pendência A.7b: é VIEW, `ALTER TABLE` não se aplica).
-- Ramo ROAS (se decisão 4 = polimorfismo): `mas_roas = LEAST(100, (roas_real / roas_goal) * 100)` com
-  `roas_real = conv_value_7d / cost_7d` — **depende de `conv_value` existir no raw** (verificar schema; o
-  snapshot do GADS_INSERT tem `revenue`).
-
-### 5.4 Canal de aplicação
-
-Guardrail do brief mantido: MCP `update_workflow` **não persistiu** o nó grande na tentativa do Codex
-(retornou `appliedOperations` sem efeito). Qualquer aplicação exige **read-back** (`get_workflow_details`)
-comparando o SQL byte a byte; se não persistir, aplicar via UI manual com o SQL exato deste report.
-**Nada disso sem OK do Olavo e smoke em `phi_dev`.**
-
----
-
-## 6. Kit de evidências BigQuery — pronto para rodar (read-only, `phi_prod`)
-
-> **Q0 é o teste decisivo do mecanismo da camada C** — rodar primeiro.
-
+por:
 ```sql
--- Q0 · Expressões renderizam? (cenário 1 × 2)
--- Se execution_id contiver '{{' → cenário 1 (sem '='); se contiver IDs reais → cenário 2 (dump normalizado).
-SELECT execution_id, phase, status, started_at
-FROM `phi_prod.workflow_execution_log`
-ORDER BY started_at DESC
-LIMIT 20;
-
--- Q1 · History da CLI-4: congelou? source_execution_id vazio/literal?
-SELECT calculated_date, snapshot_timestamp, execution_id, source_execution_id,
-       phi_value, mas, tss, fis, es, rs, os, calculation_status, phi_classification
-FROM `phi_prod.phi_score_history`
-WHERE client_id = 'CLI-4'
-ORDER BY calculated_date DESC, snapshot_timestamp DESC
-LIMIT 30;
-
--- Q2 · Pesos do modelo vigente (impacto da gravidade-50 = es+rs+os)
-SELECT model_id, model_version, business_model, mas, tss, fis, es, rs, os,
-       (mas+tss+fis+es+rs+os) AS soma_pesos, threshold, valid_until
-FROM `phi_prod.model_config`
-ORDER BY model_id, model_version;
-
--- Q3 · Distribuição de classificação (comprimida em GOOD/WARNING?)
-SELECT phi_classification, COUNT(*) n,
-       ROUND(AVG(phi_value),1) media, MIN(phi_value) min, MAX(phi_value) max
-FROM `phi_prod.phi_score_history`
-WHERE calculation_status = 'SUCCESS'
-GROUP BY 1 ORDER BY 2 DESC;
-
--- Q4 · % de componentes presos em 50 (fallback silencioso)
-SELECT COUNT(*) total,
-       COUNTIF(mas = 50) mas_50, COUNTIF(tss = 50) tss_50, COUNTIF(fis = 50) fis_50,
-       COUNTIF(es = 50) es_50, COUNTIF(rs = 50) rs_50, COUNTIF(os = 50) os_50
-FROM `phi_prod.phi_score_history`;
-
--- Q5 · Frescor do raw × linhagem de execution_id (+ writer efetivo por origem)
-SELECT date, execution_id, ingestion_status, ingestion_step, COUNT(*) linhas,
-       COUNTIF(cost_7d IS NULL OR cost_7d = 0) sem_cost7d,
-       COUNTIF(conversions_7d IS NULL) sem_conv7d
-FROM `phi_prod.raw_campaign_data`
-WHERE date >= DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 10 DAY)
-GROUP BY 1,2,3,4 ORDER BY date DESC;
-
--- Q6 · Clientes sem meta / clientes ROAS
-SELECT client_id, client_slug, primary_metric_type, primary_metric_goal, model_id, is_active
-FROM `phi_prod.client_config`
-ORDER BY is_active DESC, client_id;
-
--- Q7 · O MERGE escreveu algo na última rodada? (provável: 0)
-SELECT COUNT(*) linhas_escritas_hoje
-FROM `phi_prod.phi_score_history`
-WHERE calculated_date = DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 1 DAY)
-  AND snapshot_timestamp >= TIMESTAMP(CURRENT_DATE('America/Sao_Paulo'));
-
--- Q8 · Definição da VIEW phi_score_current (pendência A.7b)
-SELECT table_name, view_definition
-FROM `phi_prod.INFORMATION_SCHEMA.VIEWS`
-WHERE table_name = 'phi_score_current';
+WHERE r.ingestion_status = 'SUCCESS'
+  AND r.ingestion_step = 'DAILY_ENTRY'          -- writer canônico (decisão 6)
+  AND r.date = DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 1 DAY)
 ```
+e no SELECT do CTE, trocar a constante template de `source_execution_id` por `r.execution_id AS source_execution_id`
+(linhagem por linha). Manter o `execution_id` do run via template (esse renderiza — Q0).
 
-**Apêndice de evidências:** a preencher com os resultados (tabela por query) na próxima sessão com acesso BQ.
+### 4.2 Semântica sem-dado (decisão 2) — no mesmo MERGE
+
+`ELSE NULL` nos componentes + no SELECT final:
+```sql
+CASE WHEN conversions_7d IS NULL OR cost_7d IS NULL THEN 'INSUFFICIENT_DATA' ELSE 'SUCCESS' END AS calculation_status
+```
+com `phi_value=NULL` e flags reais quando insuficiente. A VIEW (Q8) já filtra SUCCESS — nada a mudar nela.
+
+### 4.3 Modelo (decisão 1) — `model_config`
+
+Nova row `MODEL-VAREJO-001 v1.2`: `mas=0.34, tss=0.33, fis=0.33, es=0, rs=0, os=0`; `valid_until=CURRENT_TIMESTAMP()`
+na v1.1. (Valores exatos a travar com Olavo.)
+
+### 4.4 Higiene no mesmo lote
+
+FQN `phi_prod.tabela` nos 2 nós divergentes; mojibake em 3 nós; decidir destino de `threshold_used`/`phi_threshold_override`
+(usar na classificação ou remover); corrigir o filtro do `Get All Current Scores (Sync)` conforme novo desenho.
+
+### 4.5 Canal de aplicação
+
+Guardrail mantido: MCP `update_workflow` já falhou silenciosamente no nó grande (Codex) → aplicar com **read-back
+byte a byte** ou via UI com o SQL exato. **Smoke em `phi_dev` + OK do Olavo antes de publicar.**
 
 ---
 
-## 7. Ordem de execução recomendada (revisão do plano do brief §7)
+## 5. Apêndice de evidências (Q0–Q10, executadas 2026-07-02 ~18:37Z em `phi_prod`)
 
-1. **Evidência:** rodar Q0–Q8 (bloqueado nesta sessão — §8). Q0 decide o escopo do fix C.
-2. **Design:** travar decisões 1–7 (§3) com Olavo; registrar ADR novo (v1.1 do modelo) + ADR-008 (CPA×ROAS).
-3. **Fix plumbing (draft + read-back):** 5.1 + 5.2 (+ `=` global se cenário 1) + fix do `Get All Current
-   Scores (Sync)` — este último destrava o Notion mesmo antes do backfill.
-4. **Fix modelo:** 5.3 (peso 0, INSUFFICIENT_DATA, ramo ROAS se aprovado).
-5. **Decisão do writer do raw** (Subworkflow × Daily Entry) — sem ela, B volta.
-6. **Smoke `phi_dev`** (1 cliente, CLI-4, componentes antes/depois) → OK Olavo → aplicar → **backfill**.
-7. Só então liberar framework §4 e reavaliar Camada 2 (L3.0).
+### Q0 — `workflow_execution_log` (20 mais recentes)
+100% dos `execution_id` são `FALLBACK-YYYYMMDD-<uuid>`. Padrão diário: INGESTION SUCCESS ~07:00:53 → CALCULATION
+SUCCESS ~07:01:32 → 4× OPERATIONAL ~07:01:49. Rodada manual extra em 2026-07-01 10:45–10:46. Dias 2026-06-29/30 sem
+rodada do pipeline (gap no cron ou execução falha). **Expressões renderizam; FALLBACK é o caminho único.**
+
+### Q1 — `phi_score_history` CLI-4 (30 mais recentes)
+2 linhas/dia (2 campanhas), snapshots diários novos (ex.: `2026-07-02T07:01:34`), `execution_id=FALLBACK-*` do dia,
+`source_execution_id=NULL`, **todas as linhas com phi_value=50.0 e mas=tss=fis=es=rs=os=50.0**, status SUCCESS,
+WARNING. Série contínua desde pelo menos 2026-06-14 (com buracos nos dias sem rodada: 06-20, 06-28/29).
+
+### Q2 — `model_config`
+| model_id | version | mas | tss | fis | es | rs | os | threshold | valid_until |
+|---|---|---|---|---|---|---|---|---|---|
+| MODEL-VAREJO-001 | v1.1 | 0.20 | 0.20 | 0.20 | 0.15 | 0.15 | 0.10 | 0.75 | NULL |
+
+Modelo único. Soma 1.0. `es+rs+os=0.40` fixos em 50 → contribuição constante de 20 pts; parte variável máx 60 pts.
+
+### Q3 — Distribuição de `phi_classification` (status SUCCESS)
+| classificação | n | média | min | max |
+|---|---|---|---|---|
+| WARNING | 100 | 47.2 | 40.0 | 50.0 |
+| CRITICAL | 12 | 31.6 | 26.62 | 33.51 |
+| GOOD | 2 | 65.0 | 61.27 | 68.74 |
+| OK (legado) | 1 | 68.0 | 68.0 | 68.0 |
+
+Zero EXCELLENT na história. Compressão confirmada.
+
+### Q4 — Componentes presos em 50 (115 linhas totais)
+mas: 64 · tss: **112** · fis: 90 · es: **114** · rs: **115** · os: **115**.
+
+### Q5 — `raw_campaign_data` últimos 10 dias (por date × execution_id × step)
+Duas famílias por dia: `GADS_INSERT` (2 linhas/dia, `execution_id=FALLBACK-*` do pipeline do dia seguinte,
+**sem_cost7d=2, sem_conv7d=2** — esqueleto) e `DAILY_ENTRY` (1–2 execs/dia `EXEC-DE-*`, janelas populadas).
+O id que o MERGE casa é o da família esqueleto.
+
+### Q6b — `client_config` (completa)
+| client_id | nome | model | metric_type | threshold_override | ativo |
+|---|---|---|---|---|---|
+| CLI-4 | KILDARE & BRUNA BECKER | MODEL-VAREJO-001 | CPA | NULL | ✔ |
+| CLI-5 | IMPACTO WEB CURSOS | MODEL-VAREJO-001 | **ROAS** | NULL | ✔ |
+
+**Sem coluna `primary_metric_goal`** (a query do brief falha com "Unrecognized name"). Meta vive no raw, por campanha.
+
+### Q7 — MERGE escreveu na última rodada?
+`linhas_escritas_hoje = 2` (calculated_date 2026-07-01, snapshot ≥ hoje). **Escreve — refuta o "MERGE não escreve".**
+(As 2 linhas são da CLI-4; CLI-5 = 0.)
+
+### Q8 — Definição da VIEW `phi_score_current`
+Último `calculated_date` por (client, campaign) com `calculation_status='SUCCESS'`; já projeta `source_execution_id`.
+
+### Q9 — Schemas
+`client_config`: client_id, client_name, model_id, phi_threshold_override, primary_metric_type, is_active, created_at,
+updated_at, client_slug. `raw_campaign_data`: inclui cost/conversions/revenue diários + janelas cost_3d/7d,
+conversions_3d/7d + primary_metric_goal (por linha).
+
+### Q10 — Raw CLI-4, últimos 3 dias
+Somente linhas `GADS_INSERT`: dados diários reais (ex.: 2026-07-01 Salão: cost 35.57, conv 10, goal 3.5) mas **todas as
+janelas 3d/7d NULL**. Nenhuma linha `DAILY_ENTRY` para as campanhas da CLI-4 no período. (Nota: com goal 3.5 e CPA real
+~3.56, a campanha Salão estaria ~no alvo — o dado bruto para pontuar de verdade existe, só não está janelado.)
 
 ---
 
-## 8. Bloqueios desta sessão (tooling)
+## 6. Estado do live verificado (read-back MCP, 2026-07-02 ~18:30Z)
 
-- **BigQuery:** ambiente remoto sem `bq`/`gcloud` e sem credenciais GCP → kit §6 não executado. Alternativas:
-  rodar na próxima sessão local, ou via n8n (workflow temporário read-only), ou conceder credencial de leitura.
-- **MCP n8n:** requer autenticação (OAuth) não disponível em sessão não-interativa → sem read-back do draft
-  live (`a09f6e35-...`) para confirmar coerência pós-Codex, e sem verificação do prefixo `=` no live. O dump
-  em git foi usado como fonte, com o caveat de fidelidade registrado em §1.
-- **Consequência:** este report cobre Fase 1 (parcial — código e linhagem, sem BQ) e Fase 2 (design) do plano
-  do brief. Nenhuma alteração foi aplicada em workflow.
+- `PHI - Pipeline_v2` ativo, `versionId = activeVersionId = 4b723285-dacb-4c96-9728-dcdf6a804421`,
+  `updatedAt 2026-07-02T17:19:28Z` — **nova versão publicada hoje, autor a confirmar** (difere do estado do brief:
+  active `15b91f10`, draft `a09f6e35`).
+- Nó de score na versão ativa: filtro do raw por `source_execution_id` (template) — com upstream emitindo só
+  `execution_id`, a rodada de amanhã tende a escrever 0 linhas (regressão vs. o "50 constante" atual).
+- 16 nós BQ sem prefixo `=` na serialização (dump e API) — **não é bug**: Q0 prova que as expressões renderizam.
+
+## 7. Pendências / próximos passos
+
+1. **Olavo:** confirmar a publicação de 17:19Z de hoje (quem/por quê); decidir mitigação antes das 07:00 de amanhã.
+2. Travar decisões §3 (writer canônico, join por data, sem-dado, peso-0, ROAS, fim do FALLBACK).
+3. Registrar ADRs (v1.2 do modelo; revisão do desenho de linhagem — o A.7 de "um source_execution_id por run" morre
+   em favor de linhagem por linha).
+4. Aplicar fixes em draft com read-back; smoke `phi_dev` (CLI-4 **e** CLI-5); backfill; só então L3/framework §4.
+5. Corrigir CLAUDE.md (`primary_metric_goal` não é campo de `client_config`).
