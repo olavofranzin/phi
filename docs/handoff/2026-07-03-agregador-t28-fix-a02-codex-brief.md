@@ -120,6 +120,23 @@ meta_metrica_mae: num(c.meta_metrica_mae) || num(ctx.meta_metrica_mae) || num(c.
 landing_page: c.landing_page ?? ctx.landing_page ?? null,
 ```
 
+## 1.5 Addendum pós-leitura do report a01 (Claude, 2026-07-03)
+
+O report a01 (`2026-07-03-agregador-t28-smoke-draft-codex-report.md`) confirmou o diagnóstico e
+acrescentou 3 pontos incorporados abaixo:
+
+- **E2 do brief a01 tinha erro de tipo** (`ingested_at TIMESTAMP >= CURRENT_DATE() DATE`). Usar:
+  `WHERE ingested_at >= TIMESTAMP(CURRENT_DATE('America/Sao_Paulo'))` em todas as queries E2.
+- **O baseline B1 documenta a contaminação que o fix resolve:** TODAS as linhas históricas das duas
+  campanhas têm `meta_metrica_mae = 5.2` e landing `lp-corte-barba` (contexto da Barbearia vazado).
+  **Valor esperado pós-fix no C2:** Salão (`GADS-21116045403`) com meta **3.5** (CPA Alvo próprio no
+  Notion, ou fallback `primary_metric_goal` do raw) e landing própria; Barbearia mantém 5.2. Se o
+  Notion não tiver os campos por campanha, o fallback do raw (3.5/5.2) decide — qualquer resultado
+  em que as duas campanhas fiquem idênticas é FAIL.
+- **Limpeza pré-smoke:** as 5 linhas ruins são exatamente `execution_id = 'EXEC-T28-13697'`
+  (client_id NULL). DELETE por esse execution_id (mais preciso que por NULL):
+  `DELETE FROM `phi_prod.t28_campaign` WHERE execution_id = 'EXEC-T28-13697'` — registrar contagem (esperado: 5).
+
 ## 2. Re-smoke (mesmo procedimento do brief a01, com correções)
 
 - Brief original: `2026-07-03-agregador-t28-smoke-draft-codex-brief.md`, com:
