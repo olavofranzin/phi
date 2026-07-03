@@ -139,15 +139,19 @@ planejamento cria o contrato; a otimização cobra o contrato. Depende do padrã
 
 ## 6. Decisões a travar na red-line (D1–D7)
 
+> **Red-line 2026-07-03 (Olavo):** D1 e D7 **DECIDIDOS** (abaixo). D2–D6
+> permanecem como proposta v0.1 — valem como default salvo objeção na
+> próxima revisão.
+
 | # | Decisão | Proposta v0.1 |
 |---|---|---|
-| D1 | Definição e limiares das fases, por plataforma | Tabela do §1; limiares em config; "alteração vital" definida por lista fechada |
+| D1 | Definição e limiares das fases, por plataforma | ✅ **DECIDIDO (Olavo 2026-07-03): Google Ads usa a MESMA definição da Meta** — 14 dias / ~50 conversões/semana, alteração vital reseta (tabela §1). Limiares unificados, ainda assim mantidos em config (não hardcoded). *Reavaliar quando:* houver dado próprio suficiente (D6) mostrando que o comportamento Google local diverge do modelo |
 | D2 | Onde a fase é calculada e persistida | No T28 (colunas `fase_campanha` em t28_campaign) + espelho no score; fonte do relógio = Data de Início (Notion) + Log de Otimizações (resets) |
 | D3 | Alertas durante aprendizado | Reinterpretar (rotear para P1/P2), nunca suprimir silenciosamente |
 | D4 | Forma dos playbooks | SOPs versionados no DB SOPs; checklist da tarefa gerado a partir do SOP vigente (id do SOP registrado na tarefa — auditável) |
 | D5 | Papel do LLM | Igual L3: regras determinísticas disparam, LLM contextualiza e recomenda playbook + preenche hipótese; humano executa |
 | D6 | Métrica de sucesso da camada | Tempo médio em WARNING/CRITICAL até ação; % de otimizações fechadas com efeito positivo na janela seguinte (via Log); entra na Telemetria |
-| D7 | Gate de construção | Lote 1 só inicia após: decisões keystone aplicadas + smoke verde do Pipeline_v2 corrigido + smoke do Agregador `cbd3568d` |
+| D7 | Gate de construção | ✅ **DECIDIDO (Olavo 2026-07-03), conforme escrito:** Lote 1 só inicia após: decisões keystone aplicadas + smoke verde do Pipeline_v2 corrigido + smoke do Agregador `cbd3568d` |
 
 ## 7. Plano de lotes
 
