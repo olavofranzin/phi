@@ -5,19 +5,21 @@ Use for BigQuery nodes, DDL, DML, parameterized queries, inserts, and pipeline t
 ## Checklist
 
 - Confirm Standard SQL syntax.
-- Confirm project, dataset, and table IDs.
+- Confirm project, dataset, and table IDs. In PHI, table refs are `dataset.table` without project ID inside backticks (e.g. `phi_prod.raw_campaign_data`).
 - Confirm parameter names in SQL match n8n `queryParameters`.
 - Confirm date boundaries use explicit timezone/business-date rules.
 - Confirm insert fields match destination schema and nullable/required constraints.
 - Confirm numeric casts are deliberate: `SAFE_CAST` for untrusted data, raw numeric types for typed node output.
 - Confirm aggregation grain: every selected non-aggregated field appears in `GROUP BY` or uses a deliberate aggregate.
-- Confirm idempotency strategy for repeated workflow runs.
+- Confirm idempotency strategy for repeated workflow runs (in PHI, `phi_score_history` requires MERGE, never plain INSERT).
+- Confirm dynamic SQL is assembled in a Code node — never `{{ }}` expressions inside the BigQuery query field.
 
 ## n8n BigQuery Node Checks
 
 - For reads: inspect `sqlQuery`, `options.queryParameters`, timeout, and return numeric behavior.
 - For inserts: inspect `projectId`, `datasetId`, `tableId`, `dataMode`, `fieldsUi`, batch size, and unknown/invalid row handling.
 - Watch for validation warnings where `displayOptions` hide or invalidate parameters.
+- INSERT/MERGE nodes must have `Always Output Data = true`, otherwise the chain silently stops when the statement returns no rows.
 
 ## Query Review Pattern
 

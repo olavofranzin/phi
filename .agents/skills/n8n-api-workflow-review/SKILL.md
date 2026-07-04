@@ -18,7 +18,6 @@ Use this skill to build or review n8n workflow changes with validation-first dis
    - If no installed skill covers the domain, use `$find-skills` or run `npx skills find "<domain keywords>"`, then verify quality before relying on it.
 3. Use primary schemas and live validation over memory:
    - For n8n, call `get_sdk_reference`, `get_suggested_nodes`, `search_nodes`, `get_node_types`, `validate_node_config`, and `validate_workflow` as applicable.
-   - For OpenAI product details, use the OpenAI docs workflow.
    - For current API behavior, use official docs or live schema/tool validation when available.
 
 ## Reference Routing
@@ -29,7 +28,10 @@ Read only the reference needed for the current surface:
 - BigQuery SQL, DDL, data-pipeline review: `references/bigquery-sql.md`
 - Google Ads GAQL and Google APIs in HTTP Request nodes: `references/google-apis.md`
 - Generic HTTP APIs and webhooks: `references/http-apis.md`
+- PHI critical rules, production IDs, table contracts: `references/phi-project-rules.md`
 - PHI-specific review and handoff checklist: `references/phi-checklist.md`
+
+For any PHI workflow or `phi_prod` change, `references/phi-project-rules.md` is mandatory reading in addition to the surface-specific reference.
 
 ## Review Workflow
 
@@ -39,8 +41,9 @@ Read only the reference needed for the current surface:
 4. Validate node configs before applying them.
 5. Apply the smallest operation set possible.
 6. Re-fetch live workflow details after updates and verify versionIds and targeted changes.
-7. For production sub-workflows, publish only when requested or required; report the new activeVersionId.
-8. Update handoff docs with exact IDs, warnings, and verification evidence.
+7. When behavior was exercised (test run or scheduled run), inspect the actual execution via `search_executions` + `get_execution` — node-level output beats assumptions.
+8. For production sub-workflows, publish only when requested or required; report the new activeVersionId.
+9. Update handoff docs with exact IDs, warnings, and verification evidence.
 
 ## Non-Negotiables
 
@@ -56,10 +59,12 @@ Read only the reference needed for the current surface:
 | Surface | Check |
 | --- | --- |
 | n8n Code node | JavaScript syntax, `$()` node references, null handling, item shape, mojibake |
+| splitInBatches v3 | branch 0 = loop, branch 1 = done — inverted wiring runs once or loops forever |
+| IF node | branch 0 = TRUE, branch 1 = FALSE — verify both outputs are wired as intended |
 | Execute Workflow | input schema matches caller mapping, types match sub-workflow trigger |
 | Error handling | `onError` value, error output connections, fallback behavior if handler fails |
 | HTTP Request | method, auth mode, credential type, headers, query/body shape, pagination/retry |
 | GAQL | selected fields are compatible, date literals valid, customer/login IDs correct |
-| BigQuery | Standard SQL, dataset/table IDs, parameter names, date/time types, insert schema |
+| BigQuery | Standard SQL, dataset/table IDs, parameter names, date/time types, insert schema, `Always Output Data` on INSERT/MERGE, no `{{ }}` inside query text |
 | Notion | body text limits, property names, rich text/block limits |
 | Handoff | SHA, versionId, activeVersionId, warnings, unrun smokes |

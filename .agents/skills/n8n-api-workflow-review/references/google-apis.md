@@ -6,7 +6,7 @@ Use for Google Ads API, GAQL, GA4 Data API, GBP/Business Profile APIs, and Googl
 
 - Confirm API version in endpoint and docs.
 - Confirm selected fields are valid for the queried resource.
-- Confirm metrics and segments are compatible.
+- Confirm metrics and segments are compatible. Known v23 trap: `metrics.cost_per_conversion` cannot be combined with `segments.conversion_action_name` or `segments.conversion_action_category`.
 - Confirm `WHERE` uses valid date syntax and quoted literals.
 - Confirm `LIMIT` is present for exploratory/high-volume queries.
 - Confirm customer ID and login customer ID mapping.
@@ -15,7 +15,7 @@ Use for Google Ads API, GAQL, GA4 Data API, GBP/Business Profile APIs, and Googl
 ## Google Ads HTTP Request Node
 
 - Endpoint format: `https://googleads.googleapis.com/vXX/customers/{customer_id}/googleAds:search` or `searchStream`.
-- Headers usually include `developer-token` and optionally `login-customer-id`.
+- Headers must include `developer-token` — the `googleAdsOAuth2Api` credential does NOT inject it — and optionally `login-customer-id`.
 - Auth should use the configured Google Ads OAuth credential, not hardcoded bearer tokens.
 - Body must contain a `query` string.
 - Retry/backoff matters for quota and transient API errors.
