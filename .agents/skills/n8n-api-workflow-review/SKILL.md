@@ -1,6 +1,6 @@
 ---
 name: n8n-api-workflow-review
-description: Use when creating, reviewing, or fixing n8n workflows, n8n node JSON, Execute Workflow contracts, HTTP Request nodes, Google Ads GAQL, BigQuery SQL, GA4/GBP/Clarity/Notion/Telegram API calls, workflow versioning, publishing, or PHI automation handoffs.
+description: Use when creating, reviewing, or fixing n8n workflows, n8n node JSON, Execute Workflow contracts, HTTP Request nodes, Google Ads GAQL, Meta Ads Graph API, BigQuery SQL, GA4/GBP/Clarity/Notion/Telegram API calls, workflow versioning, publishing, or PHI automation handoffs.
 ---
 
 # n8n API Workflow Review
@@ -27,6 +27,7 @@ Read only the reference needed for the current surface:
 - n8n nodes, workflow JSON, sub-workflows, versioning: `references/n8n.md`
 - BigQuery SQL, DDL, data-pipeline review: `references/bigquery-sql.md`
 - Google Ads GAQL and Google APIs in HTTP Request nodes: `references/google-apis.md`
+- Meta Ads Graph API Insights and normalization: `references/meta-ads.md`
 - Generic HTTP APIs and webhooks: `references/http-apis.md`
 - PHI critical rules, production IDs, table contracts: `references/phi-project-rules.md`
 - PHI-specific review and handoff checklist: `references/phi-checklist.md`
@@ -65,6 +66,7 @@ For any PHI workflow or `phi_prod` change, `references/phi-project-rules.md` is 
 | Error handling | `onError` value, error output connections, fallback behavior if handler fails |
 | HTTP Request | method, auth mode, credential type, headers, query/body shape, pagination/retry |
 | GAQL | selected fields are compatible, date literals valid, customer/login IDs correct |
+| Meta Insights | `level` explicit, metrics cast from string, conversions extracted from `actions[]`, empty `data` handled |
 | BigQuery | Standard SQL, dataset/table IDs, parameter names, date/time types, insert schema, `Always Output Data` on INSERT/MERGE, no `{{ }}` inside query text |
 | Notion | body text limits, property names, rich text/block limits |
 | Handoff | SHA, versionId, activeVersionId, warnings, unrun smokes |

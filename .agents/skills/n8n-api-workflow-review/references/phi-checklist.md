@@ -35,7 +35,8 @@ Record:
 
 - Error handler caller/callee schema alignment.
 - `error_details` type and truncation strategy.
-- Notion block length.
+- Notion block length (rich_text elements cap at 2000 chars; block append requests cap at 100 blocks — truncate intentionally, keep full detail in BigQuery).
+- Notion property names must match the database schema exactly (case- and accent-sensitive, e.g. `Score Diário`).
 - BigQuery insert field mapping.
 - `onError` for critical nodes and handler best-effort behavior.
 - Error-output connections from all intended source nodes.
