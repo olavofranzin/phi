@@ -48,3 +48,28 @@ read-back, recomendo não bloquear a publicação por ele; pode auditar a poster
 MCP `update_workflow` de terceiros retornou `appliedOperations` sem persistir nó grande (2º caso);
 o MCP oficial n8n persistiu o mesmo nó (8K) com sucesso. Canal de aplicação para nós grandes:
 MCP oficial ou UI, sempre com read-back byte a byte — nunca confiar no retorno da API.
+
+---
+
+## 6. PUBLICADO (2026-07-04, OK do Olavo nesta conversa)
+
+- `publish_workflow` via MCP: `activeVersionId = 9a174e50-e98e-4e25-9fd5-9c7aac32a851` (sucesso).
+- **Verificação da próxima rodada 07:00** (rodar após ~07:05 BRT):
+
+```sql
+-- V1: escreveu com valores reais?
+SELECT calculated_date, campaign_id, phi_value, mas, tss, fis, calculation_status,
+       phi_classification, execution_id, source_execution_id
+FROM `phi_prod.phi_score_history`
+WHERE snapshot_timestamp >= TIMESTAMP(CURRENT_DATE('America/Sao_Paulo'))
+ORDER BY campaign_id;
+-- esperado: 2 linhas CLI-4, phi != 50 constante, execution_id EXEC-PHI-*, model v1.2
+
+-- V2: log das 3 fases sem erro de is_reprocessing
+SELECT execution_id, phase, status, error_message, started_at
+FROM `phi_prod.workflow_execution_log`
+WHERE DATE(started_at, 'America/Sao_Paulo') = CURRENT_DATE('America/Sao_Paulo')
+ORDER BY started_at;
+-- esperado: INGESTION + CALCULATION + OPERATIONAL, execution_id EXEC-PHI-* (sem FALLBACK)
+```
+- Conferir também no Notion: `Score Diário` das 2 campanhas CLI-4 atualizado com valor real.
