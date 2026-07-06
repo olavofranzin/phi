@@ -8,7 +8,7 @@ Use for any change that touches PHI workflows, `phi_prod` tables, or PHI Notion 
 2. **INSERT/MERGE nodes:** `Always Output Data = true` is mandatory, otherwise downstream nodes silently stop on empty results.
 3. **`primary_metric_goal`** is FLOAT64 (e.g. `5.20`); **`primary_metric_type`** is STRING (e.g. `'CPA'`). Never mix them.
 4. **`client_id`** (`CLI-4`) and **`client_slug`** (`KIL`) are different fields. Never use one for the other.
-5. **splitInBatches v3:** branch 0 = loop, branch 1 = done.
+5. **splitInBatches v3 branches:** `CLAUDE.md` rule 5 states branch 0 = loop, branch 1 = done — but `docs/analises/google_ads/` and n8n's documented Loop Over Items v3 say the opposite (0 = done, 1 = loop). This conflict is unresolved in the repo: verify against the live node before wiring, and always add the loop-back connection from the last body node to the splitInBatches node.
 6. **IF nodes:** branch 0 = TRUE, branch 1 = FALSE.
 7. **Workflow JSON connections:** keys are node NAMES, not UUIDs.
 8. **Dynamic queries:** build SQL in a Code node; never use `{{ }}` expressions inside a BigQuery query field.

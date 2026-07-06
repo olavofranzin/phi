@@ -20,11 +20,19 @@ Use for Google Ads API, GAQL, GA4 Data API, GBP/Business Profile APIs, and Googl
 - Body must contain a `query` string.
 - Retry/backoff matters for quota and transient API errors.
 
-## GA4 / GBP Checks
+## GA4 (Analytics Data API v1beta) Checks
 
-- Verify property/location/account IDs come from trusted upstream fields.
+- Property ID must use the `properties/{property_id}` format — a bare numeric ID fails.
+- `runReport` body: `dimensions`, `metrics`, and `dateRanges` (`startDate`/`endDate`, ISO `YYYY-MM-DD` or the literal `today`).
+- Dimension/metric compatibility is enforced: incompatible pairings return `INVALID_ARGUMENT`. When unsure, validate the pairing against the schema (or a `checkCompatibility` call) before wiring the query into production.
+- Dimensional date output is `YYYYMMDD` (no separators) — account for this when joining GA4 rows to BigQuery `DATE` columns.
+- Auth scope: read-only reporting needs `analytics.readonly`. Configuration writes (Admin API) need `analytics.edit` — never request edit scope for a read-only pipeline.
+- Handle partial or empty API responses without breaking normalization.
+
+## GBP Checks
+
+- Verify location/account IDs come from trusted upstream fields.
 - Verify date ranges use ISO `YYYY-MM-DD`.
-- Verify dimensions/metrics are compatible for the endpoint.
 - Handle partial or empty API responses without breaking normalization.
 
 ## Source Discipline

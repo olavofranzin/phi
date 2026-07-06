@@ -30,9 +30,10 @@ Read only the reference needed for the current surface:
 - Meta Ads Graph API Insights and normalization: `references/meta-ads.md`
 - Generic HTTP APIs and webhooks: `references/http-apis.md`
 - PHI critical rules, production IDs, table contracts: `references/phi-project-rules.md`
+- Recurring real-review defects (loop topology, secrets, GAQL limits): `references/known-defect-patterns.md`
 - PHI-specific review and handoff checklist: `references/phi-checklist.md`
 
-For any PHI workflow or `phi_prod` change, `references/phi-project-rules.md` is mandatory reading in addition to the surface-specific reference.
+For any PHI workflow or `phi_prod` change, `references/phi-project-rules.md` is mandatory reading in addition to the surface-specific reference. Scan `references/known-defect-patterns.md` when reviewing loop structures, HTTP nodes, GAQL, or report-generation chains — these bugs have shipped before.
 
 ## Review Workflow
 
@@ -60,7 +61,7 @@ For any PHI workflow or `phi_prod` change, `references/phi-project-rules.md` is 
 | Surface | Check |
 | --- | --- |
 | n8n Code node | JavaScript syntax, `$()` node references, null handling, item shape, mojibake |
-| splitInBatches v3 | branch 0 = loop, branch 1 = done — inverted wiring runs once or loops forever |
+| splitInBatches v3 | verify branch semantics against the live node (repo docs conflict); loop-body last node MUST connect back to the loop node or only item 1 runs |
 | IF node | branch 0 = TRUE, branch 1 = FALSE — verify both outputs are wired as intended |
 | Execute Workflow | input schema matches caller mapping, types match sub-workflow trigger |
 | Error handling | `onError` value, error output connections, fallback behavior if handler fails |
