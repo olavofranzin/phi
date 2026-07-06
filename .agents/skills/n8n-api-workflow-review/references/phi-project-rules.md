@@ -8,14 +8,14 @@ Use for any change that touches PHI workflows, `phi_prod` tables, or PHI Notion 
 2. **INSERT/MERGE nodes:** `Always Output Data = true` is mandatory, otherwise downstream nodes silently stop on empty results.
 3. **`primary_metric_goal`** is FLOAT64 (e.g. `5.20`); **`primary_metric_type`** is STRING (e.g. `'CPA'`). Never mix them.
 4. **`client_id`** (`CLI-4`) and **`client_slug`** (`KIL`) are different fields. Never use one for the other.
-5. **splitInBatches v3 branches:** `CLAUDE.md` rule 5 states branch 0 = loop, branch 1 = done — but `docs/analises/google_ads/` and n8n's documented Loop Over Items v3 say the opposite (0 = done, 1 = loop). This conflict is unresolved in the repo: verify against the live node before wiring, and always add the loop-back connection from the last body node to the splitInBatches node.
+5. **splitInBatches v3 branches:** output 0 = done (fires once at end), output 1 = loop (fires per batch) — confirmed in the n8n SDK (`.onDone` = 0, `.onEachBatch` = 1). Always add the loop-back connection from the last body node to the splitInBatches node, or only the first item runs.
 6. **IF nodes:** branch 0 = TRUE, branch 1 = FALSE.
 7. **Workflow JSON connections:** keys are node NAMES, not UUIDs.
 8. **Dynamic queries:** build SQL in a Code node; never use `{{ }}` expressions inside a BigQuery query field.
 9. **`phi_score` / `Score Diário` in Notion:** written only by PHI after Fase 2 — never by Daily Entry.
 10. **PHI never executes optimizations** — it detects, classifies, and guides.
 11. **Fase 3 order is immutable:** Fechamento → Escalada → Abertura.
-12. **Google Ads API:** `developer-token` must be set in the request header — it is NOT injected by the `googleAdsOAuth2Api` credential.
+12. **Google Ads API:** `developer-token` must be set in the request header — it is NOT injected by the `googleAdsOAuth2Api` credential. This n8n instance is self-hosted without the Variables feature, so the token lives in the node (and in exported JSON). That is a known platform limitation, not a fixable defect — do not flag it; just keep the value out of docs, logs, and commit messages.
 13. **Google Ads API v23:** `metrics.cost_per_conversion` is incompatible with `segments.conversion_action_name` / `segments.conversion_action_category` in the same query.
 14. **`phi_score_history`:** writes must use MERGE (idempotent re-runs), never plain INSERT.
 

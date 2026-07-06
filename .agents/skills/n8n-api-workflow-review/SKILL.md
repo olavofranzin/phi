@@ -29,11 +29,14 @@ Read only the reference needed for the current surface:
 - Google Ads GAQL and Google APIs in HTTP Request nodes: `references/google-apis.md`
 - Meta Ads Graph API Insights and normalization: `references/meta-ads.md`
 - Generic HTTP APIs and webhooks: `references/http-apis.md`
-- PHI critical rules, production IDs, table contracts: `references/phi-project-rules.md`
-- Recurring real-review defects (loop topology, secrets, GAQL limits): `references/known-defect-patterns.md`
-- PHI-specific review and handoff checklist: `references/phi-checklist.md`
+- Recurring review defects (loop topology, secrets, GAQL limits): `references/known-defect-patterns.md`
 
-For any PHI workflow or `phi_prod` change, `references/phi-project-rules.md` is mandatory reading in addition to the surface-specific reference. Scan `references/known-defect-patterns.md` when reviewing loop structures, HTTP nodes, GAQL, or report-generation chains — these bugs have shipped before.
+The references above are project-agnostic — they apply to any n8n workflow, not just this repo. Two optional overlays apply only when working inside a project that adopts them:
+
+- `references/phi-project-rules.md` — PHI-specific conventions, production IDs, and table contracts. Read only when the change touches PHI workflows or `phi_prod`.
+- `references/phi-checklist.md` — PHI review and handoff checklist.
+
+Scan `references/known-defect-patterns.md` whenever reviewing loop structures, HTTP nodes, GAQL, or report-generation chains — those defect classes recur across n8n workflows regardless of project.
 
 ## Review Workflow
 
@@ -61,7 +64,7 @@ For any PHI workflow or `phi_prod` change, `references/phi-project-rules.md` is 
 | Surface | Check |
 | --- | --- |
 | n8n Code node | JavaScript syntax, `$()` node references, null handling, item shape, mojibake |
-| splitInBatches v3 | verify branch semantics against the live node (repo docs conflict); loop-body last node MUST connect back to the loop node or only item 1 runs |
+| splitInBatches v3 | output 0 = done (fires once at end), output 1 = loop (fires per batch); loop-body last node MUST connect back to the loop node or only item 1 runs |
 | IF node | branch 0 = TRUE, branch 1 = FALSE — verify both outputs are wired as intended |
 | Execute Workflow | input schema matches caller mapping, types match sub-workflow trigger |
 | Error handling | `onError` value, error output connections, fallback behavior if handler fails |

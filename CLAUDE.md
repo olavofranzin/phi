@@ -88,7 +88,7 @@ Sistema automatizado de monitoramento e gestão de campanhas de tráfego pago (G
 2. **Nodes INSERT/MERGE:** `Always Output Data = true` obrigatório
 3. **`primary_metric_goal`** = FLOAT64 (valor numérico ex: `5.20`). **`primary_metric_type`** = STRING (ex: `'CPA'`)
 4. **`client_id`** = `CLI-4` (identificador). **`client_slug`** = `KIL` (sigla 3 letras). São campos diferentes
-5. **splitInBatches v3:** branch 0 = loop, branch 1 = done
+5. **splitInBatches v3:** branch 0 = done (dispara uma vez, ao fim), branch 1 = loop (dispara a cada item). O último node do corpo do loop DEVE reconectar ao splitInBatches, senão só o 1º item é processado. (Confirmado no SDK n8n: `.onDone` = saída 0, `.onEachBatch` = saída 1.)
 6. **IF nodes:** branch 0 = TRUE, branch 1 = FALSE
 7. **Conexões no JSON n8n:** usar NOMES dos nodes como chaves, não UUIDs
 8. **Queries dinâmicas:** montar SQL no Code node, nunca usar `{{ }}` dentro da query BigQuery
