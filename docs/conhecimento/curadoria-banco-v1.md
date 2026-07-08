@@ -1,5 +1,14 @@
 # Curadoria do Banco de Estratégias v1 — promoção Rascunho → Ativa
 
+> ## ✅ DECISÃO APROVADA (Olavo, 2026-07-05) — AÇÃO PENDENTE (bloqueada em Notion offline)
+> **Executar quando o MCP Notion reconectar** (data source `collection://0c6f2e04-b7fe-4e09-92b5-189b716c1dc2`):
+> 1. **Promover Tier A + Tier B → `Status = Ativa`** — os 19: #1,2,3,4,5,6,7,8,9,10,11,12 (G2) + #13,15,17,18,19,20,21 (G3). Resolver título→page_id por busca no data source. Idempotente (Status=Ativa já-Ativa = no-op).
+> 2. **#14 (Escala Baiana) → NÃO promover.** `Status = Deprecada`. **Folding aprovado:** anexar à `Contraindicações` da **#9** (Escalar 20–30% com CPS) o texto: *"Não fragmentar o orçamento em muitos conjuntos idênticos sem calibrar — a 'Escala Baiana' reduzida (1-20-1, R$7/dia) deu 0 vendas em teste (esperado 2–3 a CPA R$60–80); a fragmentação trava o algoritmo no aprendizado [Sobral, teste n=1]."* Guardar contra duplicação (só anexar se ainda não estiver lá). No #14 deprecado, anotar em Contraindicações: "Consolidada como contraindicação da estratégia de escala (#9)."
+> 3. **Manter Rascunho:** #16 e #22 (recursos Meta em rollout).
+> **page_ids já resolvidos** (busca 17:29–17:32): #1 `394b65e5-c72b-8114-8380-ebfe7de0dcaf` · #4 `394b65e5-c72b-81e2-a1ea-fc6d67287e69` · #5 `394b65e5-c72b-8101-ac1f-f7432334e33c` · #7 `394b65e5-c72b-8177-9800-de1357584854` · #9 `394b65e5-c72b-81af-a63f-edaeb54b2f54` · #10 `394b65e5-c72b-811c-93fe-c0b5477fd30d` · #13 `394b65e5-c72b-810e-82c3-eca0bb8206d5` · #14 `394b65e5-c72b-811e-855f-c5ff7eea644b` · #16 `394b65e5-c72b-8176-a529-d9f9959ac4af` (hold) · #17 `394b65e5-c72b-816c-b84b-f0ec514fe6e2` · #18 `394b65e5-c72b-8126-8a69-fd7b0b35df79` · #20 `394b65e5-c72b-8121-b9a9-c970995255d1` · #21 `394b65e5-c72b-81e3-a029-e8da33ea3662`. **Faltam resolver por busca:** #2,3,6,8,11,12,15,19,22.
+> **Resultado esperado:** 19 Ativa · 1 Deprecada (#14, folded) · 2 Rascunho (#16,#22). Reportar ao Olavo pós-execução.
+
+
 > **Como usar:** as 22 estratégias do K3b estão no Notion como **Rascunho**. Nenhum
 > agente as usa como playbook enquanto Rascunho (a força de evidência A–D governa a
 > *confiança da citação*; o Status governa o *endosso humano*). Marque a coluna
