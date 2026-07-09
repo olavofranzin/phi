@@ -42,8 +42,16 @@ Ambos estão vazios (sem risco de perda):
 
 Reuso (não criar): `Gestão de Tráfego Pago` (1001) = SVC-ADS · `WebSite Institucuional` (1003) = SVC-SITE.
 
-## 6. Opção API (se preferir eu automatizar)
-Se você criar um **private app** com scopes `crm.schemas.custom.write` (+ `crm.objects.line_items.write` p/ produtos) e me passar o token pela via segura, eu rodo os itens 1–5 via API (`POST /crm/v3/properties/{objectType}`, `PATCH` p/ migração, `POST /crm/v3/objects/products`) com read-back — em vez do trabalho manual. Sem o token, o checklist acima é 100% suficiente para a UI.
+## 6. Opção API — ⛔ BLOQUEADA a partir do ambiente do agente (2026-07-05)
+Testado: `api.hubapi.com` é **negado pela política de egress** do ambiente remoto do Claude Code
+(proxy retorna **403 "policy denial"**; README manda não contornar). Portanto **este ambiente NÃO
+consegue chamar a API do HubSpot diretamente** — um private app token não adianta aqui. Caminhos válidos:
+- **UI (recomendado):** itens 1–5 acima, em Settings → Properties / Produtos. Não precisa de token.
+- **n8n (produção):** os agentes de enriquecimento rodam no n8n, que **tem conectividade própria** com
+  o HubSpot (credencial no cofre do n8n) — o bloqueio de egress é só deste container, não afeta o n8n.
+  Um workflow n8n poderia inclusive criar as propriedades via HTTP Request se quiséssemos automatizar.
+- **MCP:** cria produtos (registros), mas **não** cria propriedades/grupos/tipos (schema). Produtos via
+  MCP dependem de aprovar a ferramenta de escrita do HubSpot no cliente.
 
 ## Verificação pós-setup
 - `get_properties` (Deal) confirmando os 9 campos no grupo `ia_enriquecimento` + os 2 migrados como textarea.
