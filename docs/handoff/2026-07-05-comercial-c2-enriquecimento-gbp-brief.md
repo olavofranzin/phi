@@ -20,12 +20,14 @@ da empresa**) exige dado público/externo. Opções:
 |---|---|---|---|
 | **A. Google Places API (Place Details)** | nome, categorias, nota, nº de avaliações, até 5 reviews, horário, site, telefone, status | barato (grátis até cota) | **NÃO traz Q&A nem respostas da empresa nem descrição completa/produtos** |
 | **B. Local API paga (SerpAPI / Outscraper)** | tudo do A **+ Q&A, respostas do dono, atributos, produtos, fotos, popular times** | pago por consulta | baixa (mantida pelo fornecedor) |
-| **C. Scraping próprio (Playwright)** | potencialmente tudo | infra própria | **alta** (quebra, ToS cinza, manutenção) |
+| **C. Agente navegador/visão (Playwright / modelo com visão)** | potencialmente tudo (Q&A, posts, fotos, concorrentes) | infra própria | **média-alta** (bloqueio anti-bot, velocidade, manutenção) — mas ≫ robusto que scraping de HTML cru |
 
-**Recomendação:** **B (SerpAPI ou Outscraper)** — é a única que entrega o escopo que o Olavo pediu
-(Q&A + respostas da empresa) de forma sustentável. Se o orçamento não permitir agora, **A** cobre um
-MVP (nota/avaliações/categorias/completude) e marca Q&A/respostas como "não avaliado — fonte pendente".
-**→ Olavo decide A, B ou C (e, se B, qual fornecedor + orçamento).**
+**A rubrica do Olavo (10 pilares) elimina a opção A:** os pilares 3/4/5/7/9 exigem Q&A, respostas do
+dono, postagens, fotos e concorrentes — que Places API não entrega. Ver
+`docs/conhecimento/rubricas/gbp-auditoria-10-pilares.md` (§"Fonte de dados por pilar").
+**Recomendação:** **B** (dados estruturados estáveis) **e/ou C** (navegador/visão para os pilares
+qualitativos 3/8 e P9). MVP fiel à rubrica precisa de B ou C — A sozinha não serve.
+**→ Olavo decide: B (qual fornecedor + orçamento), C (navegador/visão), ou B+C híbrido.**
 
 ## 2. Resolver o lead → GBP (input)
 - Precisa de **nome do negócio + localização** (cidade) OU uma **URL do Maps/place_id** por lead.
@@ -42,7 +44,9 @@ MVP (nota/avaliações/categorias/completude) e marca Q&A/respostas como "não a
 6. Idempotente: reprocessar sobrescreve; registrar `execution_id`/data.
 
 ## 4. Saída (diagnóstico N2 — a lente tem que transparecer)
-Formato do texto em `analise_gbp_ia` (Guia §4 dose N2): 
+**A lente = a rubrica dos 10 pilares** (`docs/conhecimento/rubricas/gbp-auditoria-10-pilares.md`) — o
+agente percorre os 10 pilares e fecha com o plano de ação nos 4 níveis (🔴 Crítica / 🟠 Alta / 🟡 Média /
+🟢 Baixa). Essa rubrica vira o corpo do prompt do agente. Formato do texto em `analise_gbp_ia` (Guia §4 dose N2): 
 - **Completude** (0–100) + o que falta.
 - **Por área:** descrição (existe? clara?), produtos/serviços (listados?), **Q&A** (tem? respondidas?),
   avaliações (nota, volume, **respostas da empresa?**), categorias corretas, fotos.
