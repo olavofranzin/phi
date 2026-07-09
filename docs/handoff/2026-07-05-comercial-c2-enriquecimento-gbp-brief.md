@@ -18,16 +18,23 @@ da empresa**) exige dado público/externo. Opções:
 
 | Opção | Cobre | Custo | Fragilidade |
 |---|---|---|---|
-| **A. Google Places API (Place Details)** | nome, categorias, nota, nº de avaliações, até 5 reviews, horário, site, telefone, status | barato (grátis até cota) | **NÃO traz Q&A nem respostas da empresa nem descrição completa/produtos** |
-| **B. Local API paga (SerpAPI / Outscraper)** | tudo do A **+ Q&A, respostas do dono, atributos, produtos, fotos, popular times** | pago por consulta | baixa (mantida pelo fornecedor) |
-| **C. Agente navegador/visão (Playwright / modelo com visão)** | potencialmente tudo (Q&A, posts, fotos, concorrentes) | infra própria | **média-alta** (bloqueio anti-bot, velocidade, manutenção) — mas ≫ robusto que scraping de HTML cru |
+| A. Google Places API | nota, nº avaliações, até 5 reviews, categorias, horário, site | barato | ❌ sem Q&A / respostas do dono / posts — **descartada** (rubrica exige mais) |
+| B. Local API paga (SerpAPI/Outscraper) | + Q&A, respostas do dono, atributos, produtos, fotos | pago/consulta | baixa |
+| C. Agente navegador/visão (Playwright) | potencialmente tudo | infra própria | média-alta (anti-bot, manutenção) |
+| **✅ D. Apify (actor de Google Maps/Business Profile)** — **ESCOLHIDA (Olavo, 2026-07-05)** | **avaliações + respostas do dono, Q&A, fotos, categorias, atributos, popular times, posts; busca de concorrentes** | pago por resultado/CU (tem free tier) | **baixa — scraping gerenciado pelo Apify** |
 
-**A rubrica do Olavo (10 pilares) elimina a opção A:** os pilares 3/4/5/7/9 exigem Q&A, respostas do
-dono, postagens, fotos e concorrentes — que Places API não entrega. Ver
-`docs/conhecimento/rubricas/gbp-auditoria-10-pilares.md` (§"Fonte de dados por pilar").
-**Recomendação:** **B** (dados estruturados estáveis) **e/ou C** (navegador/visão para os pilares
-qualitativos 3/8 e P9). MVP fiel à rubrica precisa de B ou C — A sozinha não serve.
-**→ Olavo decide: B (qual fornecedor + orçamento), C (navegador/visão), ou B+C híbrido.**
+**Decisão travada:** fonte = **Apify** (o Olavo indicou que há actor pronto de Business Profile). É a
+opção B/C "gerenciada": riqueza de dados (cobre pilares 1–9 da rubrica) sem manter scraper próprio.
+Pilar 10 (Performance) segue só para clientes gerenciados (Business Profile API), não prospects.
+Qualidade de foto (P3) e proposta de valor (P8): Apify traz as URLs das fotos → um **passe de visão**
+opcional (fase 2) avalia o qualitativo. **Ver `docs/conhecimento/rubricas/gbp-auditoria-10-pilares.md`.**
+
+### Integração Apify (a definir no sub-chat)
+- **Actor:** escolher o de Google Maps/Business que retorne **reviews com owner responses + Q&A** (ex.: família "Google Maps Scraper"/"Google Maps Reviews"/"Google Maps Q&A"). Confirmar os campos do dataset.
+- **Chamada:** nó **Apify** nativo do n8n **ou** HTTP Request → `POST /v2/acts/{actor}/runs?token=…` → aguardar/poll `GET /v2/actor-runs/{id}` → `GET .../dataset/items`. Credencial **`APIFY_TOKEN`** no cofre do n8n (ADR-19), nunca em código.
+- **Input:** URL do Maps/place_id ou "nome + cidade" (resolver via search do próprio actor).
+- **Custo:** por resultado/compute unit — monitorar custo por lead; começar com 1 perfil no smoke.
+- **ToS/limite:** scraping via terceiro gerenciado; respeitar cota; sem PII além do público do GBP.
 
 ## 2. Resolver o lead → GBP (input)
 - Precisa de **nome do negócio + localização** (cidade) OU uma **URL do Maps/place_id** por lead.

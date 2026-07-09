@@ -68,5 +68,8 @@ SerpAPI/Outscraper **ou** agente navegador/visão). Mapa do que cada pilar exige
 | 9 Concorrentes/Local Pack | ❌ | ✅ (local pack) | ✅ |
 | 10 Performance | ❌ (só dono) | ❌ | ❌ — só via Business Profile API em cliente gerenciado |
 
-**Conclusão:** o MVP mínimo fiel a esta rubrica exige **B** (dados estruturados) e/ou **C** (navegador/visão
-para os pilares qualitativos 3/8 e para P9). Pilar 10 só para clientes já gerenciados (não prospects).
+**Conclusão:** o MVP mínimo fiel a esta rubrica exige dado rico (Q&A, respostas do dono, posts, fotos,
+concorrentes). **Fonte escolhida = Apify** (actor de Google Maps/Business Profile) — scraping gerenciado
+que cobre os pilares **1–9**. Pilar **10 (Performance)** só para clientes já gerenciados (Business Profile
+API), não prospects. Qualidade de foto (P3) e proposta de valor (P8): opcional um **passe de visão** sobre
+as URLs de foto que o Apify retorna (fase 2). Detalhe de integração no brief C2 §1.
