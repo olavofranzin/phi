@@ -10,30 +10,34 @@
 Deal (grupo `ia_enriquecimento`): `analise_gbp_ia` (multi-line, saída deste agente) + consolida em
 `dados_enriquecimento`. Não tocar `closedwon`/`closedlost`.
 
-## 1. ⚠️ DECISÃO QUE GATEIA O BUILD — fonte de dados do GBP de PROSPECT
+## 1. Fonte de dados do GBP de PROSPECT — ✅ RESOLVIDA: Apify em DOIS NÍVEIS (Olavo 2026-07-09)
 O `HTTP Request GBP` que já existe no Agregador usa a **Business Profile Performance API** — que só
 funciona para GBPs que a agência **gerencia** (OAuth de dono). **Prospect não gerenciamos** → essa API
-não serve. O que o Olavo quer analisar (descrição, produtos/serviços, **Q&A**, avaliações **+ respostas
-da empresa**) exige dado público/externo. Opções:
+não serve. Places API foi **descartada** (não traz Q&A/respostas do dono/posts). Fonte = **Apify**, mas
+o teste real (2026-07-09) mostrou que o actor pronto "GBP Auditor" é **raso** → decisão é **dois níveis**:
 
-| Opção | Cobre | Custo | Fragilidade |
+| Nível | Actor / config | Retorna (campos reais confirmados no teste) | Uso |
 |---|---|---|---|
-| A. Google Places API | nota, nº avaliações, até 5 reviews, categorias, horário, site | barato | ❌ sem Q&A / respostas do dono / posts — **descartada** (rubrica exige mais) |
-| B. Local API paga (SerpAPI/Outscraper) | + Q&A, respostas do dono, atributos, produtos, fotos | pago/consulta | baixa |
-| C. Agente navegador/visão (Playwright) | potencialmente tudo | infra própria | média-alta (anti-bot, manutenção) |
-| **✅ D. Apify (actor de Google Maps/Business Profile)** — **ESCOLHIDA (Olavo, 2026-07-05)** | **avaliações + respostas do dono, Q&A, fotos, categorias, atributos, popular times, posts; busca de concorrentes** | pago por resultado/CU (tem free tier) | **baixa — scraping gerenciado pelo Apify** |
+| **LEVE** | `"GBP Auditor on Apify Store"` (roda `compass/crawler-google-places`) — **testado 2026-07-09** | `profile.{rating,reviewCount,reviewsDistribution,hasWebsite,website,phone,address,imageCount,categories,permanentlyClosed}`. **NÃO retorna** (o próprio `manualChecks` admite): descrição, `questionsAndAnswers`, serviços/menu, posts, e nas reviews só distribuição (**sem `responseFromOwnerText`/texto/datas**). | Triagem barata de **todos** os leads |
+| **COMPLETO** | `compass/crawler-google-places` **cru** com `reviews`+`questionsAndAnswers`+`additionalInfo` ligados | reviews com **`responseFromOwnerText`** + texto + datas, **`questionsAndAnswers`**, `additionalInfo`/serviços, `popularTimesHistogram`, horários, `peopleAlsoSearch` (concorrentes) | Só no **lead qualificado** (alimenta pilares 1–9) |
 
-**Decisão travada:** fonte = **Apify** (o Olavo indicou que há actor pronto de Business Profile). É a
-opção B/C "gerenciada": riqueza de dados (cobre pilares 1–9 da rubrica) sem manter scraper próprio.
-Pilar 10 (Performance) segue só para clientes gerenciados (Business Profile API), não prospects.
-Qualidade de foto (P3) e proposta de valor (P8): Apify traz as URLs das fotos → um **passe de visão**
-opcional (fase 2) avalia o qualitativo. **Ver `docs/conhecimento/rubricas/gbp-auditoria-10-pilares.md`.**
+**Decisão travada:** funil de dois níveis — **LEVE** triagem geral → **COMPLETO** no lead qualificado.
+⚠️ **Ignorar o `score`/`grade`/`issues`/`recommendations` que o Auditor devolve** — é rubrica genérica em
+inglês; a nossa lente é a de 10 pilares PT-BR (`docs/conhecimento/rubricas/gbp-auditoria-10-pilares.md`),
+aplicada pelo nosso LLM. Do Apify só queremos o **dado**. Pilar 10 (Performance) segue só para clientes
+gerenciados. Fotos (P3) e proposta (P8): passe de visão opcional (fase 2) sobre as URLs do nível COMPLETO.
 
-### Integração Apify (a definir no sub-chat)
-- **Actor:** escolher o de Google Maps/Business que retorne **reviews com owner responses + Q&A** (ex.: família "Google Maps Scraper"/"Google Maps Reviews"/"Google Maps Q&A"). Confirmar os campos do dataset.
-- **Chamada:** nó **Apify** nativo do n8n **ou** HTTP Request → `POST /v2/acts/{actor}/runs?token=…` → aguardar/poll `GET /v2/actor-runs/{id}` → `GET .../dataset/items`. Credencial **`APIFY_TOKEN`** no cofre do n8n (ADR-19), nunca em código.
-- **Input:** URL do Maps/place_id ou "nome + cidade" (resolver via search do próprio actor).
-- **Custo:** por resultado/compute unit — monitorar custo por lead; começar com 1 perfil no smoke.
+### Integração Apify (a aterrissar no sub-chat)
+- **Nível LEVE:** actor `GBP Auditor` (já validado; input = "nome + cidade" ou place_id — no teste resolveu
+  "Niti Odontologia … Rio Preto" → `placeId ChIJw97SGvGzvZQRtT6_JH7z7T0`). Barato, 1 chamada.
+- **Nível COMPLETO:** `compass/crawler-google-places` com `maxReviews` limitado (ex.: 30–50 recentes),
+  `reviewsSort=newest`, `scrapeReviewsPersonalData=false`, e flags de Q&A/additionalInfo. Confirmar nomes
+  exatos dos campos rodando 1×.
+- **Chamada:** nó **Apify** nativo do n8n **ou** HTTP Request → `POST /v2/acts/{actor}/runs?token=…` →
+  poll `GET /v2/actor-runs/{id}` → `GET .../dataset/items`. Credencial **`APIFY_TOKEN`** no cofre do n8n
+  (ADR-19), nunca em código.
+- **Input:** URL do Maps/place_id ou "nome + cidade" (resolvido pelo próprio actor).
+- **Custo:** LEVE ~1 result/lead; COMPLETO paga scraping de reviews — monitorar custo por lead; smoke = 1 perfil.
 - **ToS/limite:** scraping via terceiro gerenciado; respeitar cota; sem PII além do público do GBP.
 
 ## 2. Resolver o lead → GBP (input)
@@ -42,13 +46,15 @@ opcional (fase 2) avalia o qualitativo. **Ver `docs/conhecimento/rubricas/gbp-au
   se faltar, o 1º passo é `Places Text Search` por nome (+ cidade quando houver) → `place_id`.
 - Se o lead não tiver GBP encontrável → gravar `analise_gbp_ia = "GBP não localizado"` + flag (não travar).
 
-## 3. Fluxo n8n (fatia)
+## 3. Fluxo n8n (fatia) — dois níveis
 1. **Trigger:** sweep agendado dos Deals em estágios 1–6 sem `analise_gbp_ia` (ou on-demand). (Estágios em `comercial-hubspot-subchat-brief.md` §1.)
 2. Buscar Deal + Company associada (nome/site/cidade).
-3. Resolver `place_id` (Text Search) → **buscar dados GBP** (fonte da Decisão §1).
-4. **LLM N2** diagnostica → JSON estruturado (§4).
-5. **Update Deal:** `analise_gbp_ia` (texto legível) + mesclar resumo em `dados_enriquecimento`.
-6. Idempotente: reprocessar sobrescreve; registrar `execution_id`/data.
+3. **Nível LEVE (todos):** actor `GBP Auditor` por "nome + cidade" → `placeId` + números básicos. Grava um
+   diagnóstico curto de triagem. Se lead **qualificado** (estágio avançado / flag comercial) → passo 4.
+4. **Nível COMPLETO (qualificado):** `compass/crawler-google-places` cru (reviews+Q&A+additionalInfo) no `placeId`.
+5. **LLM N2 (Gemini Flash)** aplica a rubrica → JSON estruturado (§4). No nível LEVE, campos sem dado = "verificar manual".
+6. **Update Deal:** `analise_gbp_ia` (texto legível) + mesclar resumo em `dados_enriquecimento`.
+7. Idempotente: reprocessar sobrescreve; registrar `execution_id`/data/nível usado.
 
 ## 4. Saída (diagnóstico N2 — a lente tem que transparecer)
 **A lente = a rubrica dos 10 pilares** (`docs/conhecimento/rubricas/gbp-auditoria-10-pilares.md`) — o
@@ -62,15 +68,16 @@ agente percorre os 10 pilares e fecha com o plano de ação nos 4 níveis (🔴 
 - **Gap → oferta:** se há gaps materiais de GBP, sinalizar `SVC-GBP` como serviço ofertável (input p/ C3/NBA).
 
 ## 5. Modelo e guardrails
-- **Modelo:** N2 estruturado → Gemini Flash (barato, ADR Tiering) é suficiente; Claude se quiser mais nuance. Decidir por custo.
+- **Modelo:** ✅ **Gemini Flash** (decidido Olavo 2026-07-09) — N2 estruturado sobre JSON, alinhado ao ADR de tiering. Passe de visão (fase 2, fotos) pode subir de tier se preciso.
 - HubSpot é **produção**: só escrever `analise_gbp_ia`/`dados_enriquecimento`; nunca `closedwon`/`closedlost`. A IA **descreve**, não age.
 - **Fonte externa:** respeitar ToS/cota; sem PII além do público do GBP. Se B (API paga), credencial no cofre n8n (ADR-19), custo por lead monitorado.
 - Smoke com 1 Deal real (idealmente um lead Negócio Local com GBP — ex.: perfil do próprio Charles/CLI-13 ou um lead real) → conferir `analise_gbp_ia` legível e ancorado.
 
 ## 6. Lotes
-- **C2.0:** decidir fonte (§1) + verificar campos de localização na Company.
-- **C2.1:** workflow n8n (resolver place_id → fetch → LLM → update Deal), smoke 1 lead.
-- **C2.2:** endurecer (não-encontrado, cota, idempotência) + ligar sweep agendado.
+- **C2.0:** ✅ fonte decidida (Apify dois níveis, §1) + modelo (Gemini Flash). Falta: verificar campos de localização na Company (nome/cidade) e confirmar os campos exatos do dataset rodando cada actor 1×.
+- **C2.1:** workflow n8n **nível LEVE** (nome+cidade → GBP Auditor → placeId+números → LLM triagem → update Deal), smoke 1 lead.
+- **C2.2:** **nível COMPLETO** (scraper cru reviews+Q&A+additionalInfo no lead qualificado) + rubrica inteira.
+- **C2.3:** endurecer (não-encontrado, cota, idempotência, gate de qualificação) + ligar sweep agendado.
 - Depois: **C3** (NBA + produtos ofertáveis, consumindo `analise_gbp_ia` + `analise_site_ia`).
 
 ## 7. Âncoras

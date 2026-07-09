@@ -51,25 +51,38 @@
 
 ---
 
-## Fonte de dados por pilar (por que a rubrica define o requisito da fonte)
-Esta rubrica **elimina a opção "Places API only"** e empurra para uma fonte rica (Local API paga tipo
-SerpAPI/Outscraper **ou** agente navegador/visão). Mapa do que cada pilar exige:
+## Fonte de dados por pilar — Apify em DOIS NÍVEIS (decidido Olavo 2026-07-09)
+Esta rubrica **elimina a Places API** (não traz Q&A, respostas do dono, posts) e a fonte é o **Apify**.
+Mas há dois actors/configs com profundidade diferente — e o teste real (2026-07-09, perfil "Niti
+Odontologia") mostrou que **o wrapper "GBP Auditor" é raso**. Por isso a decisão é **dois níveis**:
 
-| Pilar | Places API (A) | Local API paga (B) | Navegador/Visão (C) |
-|---|---|---|---|
-| 1 Info básicas | ✅ maioria | ✅ | ✅ |
-| 2 SEO local (descrição/serviços/NAP) | parcial | ✅ | ✅ |
-| 3 Fotos/vídeos (qualidade) | contagem só | contagem | ✅ (visão avalia qualidade) |
-| 4 Avaliações (respostas do dono, distribuição, crescimento) | ❌ (só nota+5 reviews) | ✅ | ✅ |
-| 5 Q&A | ❌ | ✅ | ✅ |
-| 6 Serviços/Produtos | ❌/parcial | ✅ | ✅ |
-| 7 Postagens | ❌ | ✅ (alguns) | ✅ |
-| 8 Conversão (proposta/CTAs) | parcial | parcial | ✅ (avalia qualitativo) |
-| 9 Concorrentes/Local Pack | ❌ | ✅ (local pack) | ✅ |
-| 10 Performance | ❌ (só dono) | ❌ | ❌ — só via Business Profile API em cliente gerenciado |
+- **Nível LEVE — actor "GBP Auditor on Apify Store"** (testado; roda `compass/crawler-google-places` por
+  baixo). Retorna: `profile.rating/reviewCount/reviewsDistribution`, `hasWebsite/website/phone/address`,
+  `imageCount`, `categories`, `permanentlyClosed`. **O próprio JSON confessa (`manualChecks`) que NÃO
+  retorna:** `businessDescription`, `questionsAndAnswers`, `servicesOrMenu`, `recentPosts` — e nas reviews
+  só distribuição/contagem (**sem `responseFromOwnerText`, sem texto/datas**). Também traz um `score/grade`
+  próprio numa rubrica genérica em inglês — **ignoramos** (a lente é a nossa, PT-BR, 10 pilares → `SVC-GBP`).
+- **Nível COMPLETO — `compass/crawler-google-places` CRU** com `reviews` + `questionsAndAnswers` +
+  `additionalInfo` ligados. Aí vêm reviews com `responseFromOwnerText`, o Q&A, atributos/serviços,
+  `popularTimesHistogram`, horários e `peopleAlsoSearch` (concorrentes). Alimenta os pilares **1–9** de verdade.
 
-**Conclusão:** o MVP mínimo fiel a esta rubrica exige dado rico (Q&A, respostas do dono, posts, fotos,
-concorrentes). **Fonte escolhida = Apify** (actor de Google Maps/Business Profile) — scraping gerenciado
-que cobre os pilares **1–9**. Pilar **10 (Performance)** só para clientes já gerenciados (Business Profile
-API), não prospects. Qualidade de foto (P3) e proposta de valor (P8): opcional um **passe de visão** sobre
-as URLs de foto que o Apify retorna (fase 2). Detalhe de integração no brief C2 §1.
+**Estratégia de funil:** LEVE em todos os leads (triagem barata) → COMPLETO só no lead qualificado.
+
+| Pilar | Nível LEVE (GBP Auditor) | Nível COMPLETO (scraper cru) |
+|---|---|---|
+| 1 Info básicas | ✅ nome, categorias, tel, site, endereço | ✅ + horários, atributos, áreas |
+| 2 SEO local (descrição/serviços/NAP) | ⚠️ só categoria/nome (descrição e serviços faltam) | ✅ (descrição, serviços, NAP) |
+| 3 Fotos/vídeos (qualidade) | ⚠️ só `imageCount` | ✅ contagem + URLs (visão fase 2 avalia qualidade) |
+| 4 Avaliações (respostas do dono, crescimento) | ⚠️ só nota+volume+distribuição | ✅ texto + `responseFromOwnerText` + datas |
+| 5 Q&A | ❌ | ✅ `questionsAndAnswers` |
+| 6 Serviços/Produtos | ❌ | ✅ `additionalInfo`/serviços |
+| 7 Postagens | ❌ | ⚠️ parcial (posts nem sempre expostos) |
+| 8 Conversão (proposta/CTAs) | ⚠️ tem site/tel, sem descrição | ✅ descrição/atributos (qualitativo) |
+| 9 Concorrentes/Local Pack | ❌ (`competitors:[]` no teste) | ✅ `peopleAlsoSearch` |
+| 10 Performance | ❌ | ❌ — só Business Profile API em cliente gerenciado |
+
+**Conclusão:** fonte = **Apify, dois níveis**. O nível LEVE (Auditor testado) faz triagem; o COMPLETO
+(scraper cru com reviews+Q&A+additionalInfo) alimenta a rubrica inteira nos leads qualificados. Pilar **10
+(Performance)** só para clientes já gerenciados (não prospects). Qualidade de foto (P3) e proposta (P8):
+opcional um **passe de visão** sobre as URLs de foto que o nível COMPLETO retorna (fase 2). Detalhe de
+integração e os campos reais do JSON no brief C2 §1.
