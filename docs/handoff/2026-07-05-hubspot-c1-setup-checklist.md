@@ -42,7 +42,21 @@ Ambos estão vazios (sem risco de perda):
 
 Reuso (não criar): `Gestão de Tráfego Pago` (1001) = SVC-ADS · `WebSite Institucuional` (1003) = SVC-SITE.
 
-## 6. Opção API — ⛔ BLOQUEADA a partir do ambiente do agente (2026-07-05)
+## 5b. Opção CLI (recomendada p/ automatizar sem UI) — `scripts/hubspot-c1-setup.sh`
+Script pronto que cria **tudo** (grupo + migração dos 2 campos + 6 campos Deal + 1 Meeting + 2 produtos)
+via API REST, **idempotente** (re-rodar não duplica). **Rode NA SUA MÁQUINA** (o ambiente do agente
+não alcança `api.hubapi.com`). O token fica só no seu shell, nunca no arquivo/git.
+```bash
+# 1) HubSpot > Settings > Integrations > Private Apps > Create, com scopes:
+#    crm.schemas.deals.read/write · crm.objects.deals.read · crm.schemas.custom.read/write · e-commerce
+# 2) exporte o token e rode:
+export HUBSPOT_TOKEN='pat-na1-...'
+bash scripts/hubspot-c1-setup.sh
+```
+Ao final ele imprime um read-back (campos do grupo `ia_enriquecimento`, `transcricao_ia`, produtos 1004/1005).
+Se algum POST der 403 citando um scope, adicione o scope no private app e rode de novo. Revogue/rotacione o token depois.
+
+## 6. Opção API direta — ⛔ BLOQUEADA a partir do ambiente do agente (2026-07-05)
 Testado: `api.hubapi.com` é **negado pela política de egress** do ambiente remoto do Claude Code
 (proxy retorna **403 "policy denial"**; README manda não contornar). Portanto **este ambiente NÃO
 consegue chamar a API do HubSpot diretamente** — um private app token não adianta aqui. Caminhos válidos:
