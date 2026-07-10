@@ -167,8 +167,19 @@ num score só, e descartado como lead pelo motivo errado; o IPC diz "está ótim
 Estrela em **1º** citando "perfect 5-star rating **despite having only one review**" como força — exatamente a
 falha de guarda de volume que o nosso motor determinístico evita (autoridade da Estrela = 3/100, não 98).
 
-**Ajuste pendente de calibração:** o benchmark deve ser **por termo/categoria** (conjunto competitivo local),
-não misturando clínicas médicas com dentistas como no teste (n pequeno). Pesos das fórmulas: v0 plausível, refinar com set maior.
+**Run de segmento único (dentistas, 2026-07-10) — confirma benchmark por categoria:** com o benchmark só de
+dentistas (avgImages 65, puxado pela Quineli/109 + `peopleAlsoSearch`), o **único gap do Leandro (21 fotos)
+apareceu** — conteúdo 75→53, IPC 6→11. No set misturado (avgImages 33) esse gap sumia. Conclusão: **benchmark
+por segmento é mais discriminante** e deve incluir o `peopleAlsoSearch` (reflete o local pack real, não só os líderes).
+
+**Refino v1 (implementar com set de ~20 lugares):** o `04_benchmark_engine` deve calcular também a **prevalência**
+de features binárias no segmento (% de pares com booking / site próprio / posts / cada grupo de atributo). O motor
+de regras então **só marca gap no que os pares de fato têm** — ex.: se 0% dos dentistas tem `bookingLinks`, não
+penalizar a ausência (não é gap do segmento); se a Quineli tem 109 fotos, o Leandro com 21 **é** gap. Isso torna
+IPC/leadScore **relativos ao segmento** e elimina falsos gaps. v0 usa média absoluta; requer `maxCrawledPlacesPerSearch≈20`.
+
+**Ajuste pendente de calibração:** pesos v0 plausíveis; refinar com set maior (20+ por segmento). Benchmark **por
+termo/categoria** (confirmado — não misturar segmentos).
 
 ## Decisões em aberto (para o sub-chat do build)
 1. **Onde roda o motor de regras (02–04):** nós **Code** no n8n (JS puro) vs micro-serviço. Recomendo Code no n8n (fica tudo num WF, sem infra nova). O `scripts/gbp_scoring_prototype.py` é a spec a portar.
