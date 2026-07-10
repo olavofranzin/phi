@@ -54,8 +54,13 @@ def normalize(p):
     }
 
 # ---------- 04_benchmark_engine ------------------------------------------
+def pct(v, arr):
+    """Percentil de v no segmento (fração de pares <= v). Robusto a outliers (ex.: o gigante de 711 reviews)."""
+    if not arr: return 0.0
+    return sum(1 for a in arr if a <= v) / len(arr)
+
 def build_benchmark(norms):
-    """Média dos concorrentes = pares do mesmo set + entradas de peopleAlsoSearch com reviews>0."""
+    """Média + PREVALÊNCIA de features do segmento (pares do set + peopleAlsoSearch)."""
     revs, imgs, scs = [], [], []
     for n in norms:
         revs.append(n["reviews"]); imgs.append(n["images"])
@@ -64,7 +69,19 @@ def build_benchmark(norms):
             revs.append(x.get("reviewsCount") or 0)
             if (x.get("totalScore") or 0) > 0: scs.append(x["totalScore"])
     avg = lambda a: (sum(a)/len(a)) if a else 0
-    return {"avgReviews": avg(revs), "avgImages": avg(imgs), "avgScore": avg(scs)}
+    frac = lambda cond: (sum(1 for n in norms if cond(n))/len(norms)) if norms else 0
+    attrs = sorted(n["nAttrGroups"] for n in norms)
+    return {
+        "avgReviews": avg(revs), "avgImages": avg(imgs), "avgScore": avg(scs),
+        "revsList": revs, "imgsList": imgs,
+        # PREVALÊNCIA no segmento (v1): só é gap o que os pares de fato têm
+        "prevSite": frac(lambda n: n["websiteType"]=="site"),
+        "prevBooking": frac(lambda n: n["hasBooking"]),
+        "prevPosts": frac(lambda n: n["nPosts"]>0),
+        "prevSecondary": frac(lambda n: n["nCategories"]>=2),
+        "attrRef": max(attrs[len(attrs)*3//4] if attrs else 4, 4),  # p75 de grupos de atributo
+        "maxPosts": max([n["nPosts"] for n in norms] + [8]),
+    }
 
 # ---------- 03_scoring_engine --------------------------------------------
 clamp = lambda x, lo=0, hi=100: max(lo, min(hi, x))
@@ -119,17 +136,40 @@ def viability(n):
     return round(v,2)
 
 def ipc(n, bm, tech):
-    """IPC = gap_endereçável × viabilidade. NÃO é 100 - técnico."""
+    """v0 — IPC = gap_endereçável × viabilidade (média absoluta)."""
     gap = 0
-    gap += 22*(1-min(n["reviews"]/max(bm["avgReviews"],1),1))    # SVC-GBP: reviews
-    gap += 16*(1-min(n["images"]/max(bm["avgImages"],1),1))      # SVC-GBP: fotos
-    gap += 12*(1-min(n["nAttrGroups"]/6,1))                      # SVC-GBP: atributos/SEO
-    gap += 8 *(n["nCategories"]<2)                               # SVC-GBP: categorias
-    gap += 6 *(not n["hasHours"])                                # SVC-GBP: horário
-    gap += 12*n["unclaimed"]                                     # SVC-GBP: perfil não reivindicado
-    gap += 14*(n["websiteType"]!="site")                         # SVC-SITE: sem site próprio
-    gap += 10*((n["ownerResponseRate"] or 0) < 0.5)             # reputação: baixa resposta
+    gap += 22*(1-min(n["reviews"]/max(bm["avgReviews"],1),1))
+    gap += 16*(1-min(n["images"]/max(bm["avgImages"],1),1))
+    gap += 12*(1-min(n["nAttrGroups"]/6,1))
+    gap += 8 *(n["nCategories"]<2)
+    gap += 6 *(not n["hasHours"])
+    gap += 12*n["unclaimed"]
+    gap += 14*(n["websiteType"]!="site")
+    gap += 10*((n["ownerResponseRate"] or 0) < 0.5)
     return round(clamp(gap) * viability(n))
+
+# ---------- v1: percentil + prevalência (gap = só o que os pares têm) ------
+def ipc_v1(n, bm):
+    pr, pi = pct(n["reviews"], bm["revsList"]), pct(n["images"], bm["imgsList"])
+    gap = 0
+    gap += 22*(1-pr)                                            # SVC-GBP: reviews (percentil)
+    gap += 16*(1-pi)                                            # SVC-GBP: fotos (percentil)
+    gap += 12*(1-min(n["nAttrGroups"]/bm["attrRef"],1))         # SEO: atributos vs p75 do segmento
+    gap += 8 *bm["prevSecondary"]*(n["nCategories"]<2)          # só se secundárias forem comuns no ramo
+    gap += 6 *(not n["hasHours"])
+    gap += 12*n["unclaimed"]
+    gap += 14*bm["prevSite"]*(n["websiteType"]!="site")         # SVC-SITE: gap ∝ prevalência de site no ramo
+    gap += 6 *bm["prevBooking"]*(not n["hasBooking"])           # só penaliza booking se o ramo usa
+    return round(clamp(gap) * viability(n))
+
+def lead_opportunity_v1(n, bm):
+    pr, pi = pct(n["reviews"], bm["revsList"]), pct(n["images"], bm["imgsList"])
+    g = (25*(1-pr) + 20*(1-0.5*pr-0.5*pi) + 15*(1-pi)
+         + 10*bm["prevSecondary"]*(n["nCategories"]<2)
+         + 5*bm["prevSite"]*(n["websiteType"]!="site")
+         + 5*(not n["hasHours"]) + 5*(1-min(n["nAttrGroups"]/bm["attrRef"],1))
+         + (5*(1-n["score"]/5) if n["reviews"]>=5 else 2.5))
+    return round(g)
 
 # ---------- runner --------------------------------------------------------
 def load(files):
@@ -145,26 +185,23 @@ def load(files):
 def main(files):
     norms = load(files)
     bm = build_benchmark(norms)
-    print(f"Benchmark (n={len(norms)}): avgReviews={bm['avgReviews']:.0f} "
-          f"avgImages={bm['avgImages']:.0f} avgScore={bm['avgScore']:.2f}\n")
+    print(f"Benchmark (n={len(norms)}): avgReviews={bm['avgReviews']:.0f} avgImages={bm['avgImages']:.0f} "
+          f"avgScore={bm['avgScore']:.2f}")
+    print(f"Prevalência: site={bm['prevSite']:.0%} booking={bm['prevBooking']:.0%} "
+          f"posts={bm['prevPosts']:.0%} 2+cats={bm['prevSecondary']:.0%} attrRef(p75)={bm['attrRef']}\n")
     rows = []
     for n in norms:
         dims = dimensions(n, bm); tech = technical(dims)
-        lead, gaps = lead_opportunity(n, bm); i = ipc(n, bm, tech)
-        rows.append((n, dims, tech, lead, i))
-    rows.sort(key=lambda r: r[4], reverse=True)      # ordena por IPC (prioridade comercial)
-    for n, dims, tech, lead, i in rows:
-        flags = []
-        if n["unclaimed"]: flags.append("NÃO-REIVINDICADO")
-        if n["websiteType"]=="social": flags.append("site=rede-social→SVC-SITE")
-        if n["reviews"]<5: flags.append(f"volume-fraco(n={n['reviews']})")
-        print(f"■ {n['name'][:48]}")
-        print(f"   score={n['score']} reviews={n['reviews']} imgs={n['images']} "
-              f"cats={n['nCategories']} attr={n['nAttrGroups']} posts={n['nPosts']} "
-              f"orr={n['ownerResponseRate']}")
-        print(f"   dims={dims}")
-        print(f"   >> TÉCNICO={tech}  leadOpp={lead}  IPC={i}   {' | '.join(flags)}")
-        print()
+        rows.append((n, tech, ipc(n,bm,tech), ipc_v1(n,bm), lead_opportunity_v1(n,bm)))
+    rows.sort(key=lambda r: r[3], reverse=True)      # ordena por IPC v1 (prioridade comercial)
+    print(f"{'#':>2} {'Perfil':34} {'Téc':>3} {'IPCv0':>5} {'IPCv1':>5} {'lead':>4}  flags")
+    for i,(n,tech,i0,i1,lead) in enumerate(rows,1):
+        fl = []
+        if n["unclaimed"]: fl.append("não-reivindicado")
+        if n["websiteType"]=="social": fl.append("site=rede→SVC-SITE")
+        elif n["websiteType"]=="none": fl.append("sem-site")
+        if n["reviews"]<5: fl.append(f"vol-fraco({n['reviews']})")
+        print(f"{i:>2} {n['name'][:34]:34} {tech:>3} {i0:>5} {i1:>5} {lead:>4}  {', '.join(fl)}")
 
 if __name__ == "__main__":
     main(sys.argv[1:] or [])

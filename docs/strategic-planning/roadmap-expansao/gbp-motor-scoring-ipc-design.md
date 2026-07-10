@@ -178,8 +178,24 @@ de regras então **só marca gap no que os pares de fato têm** — ex.: se 0% d
 penalizar a ausência (não é gap do segmento); se a Quineli tem 109 fotos, o Leandro com 21 **é** gap. Isso torna
 IPC/leadScore **relativos ao segmento** e elimina falsos gaps. v0 usa média absoluta; requer `maxCrawledPlacesPerSearch≈20`.
 
-**Ajuste pendente de calibração:** pesos v0 plausíveis; refinar com set maior (20+ por segmento). Benchmark **por
-termo/categoria** (confirmado — não misturar segmentos).
+### Calibração v1 (segmento real — 30 dentistas Rio Preto, 2026-07-10)
+Rodado o v1 (percentil + prevalência) no `gbp_scoring_prototype.py`. Benchmark n=30: avgReviews=70, avgImages=21,
+avgScore=4,82. **Prevalência do segmento: site próprio 43%, agendamento 27%, posts 20%, 2+ categorias 50%, p75 de atributos=6.**
+
+Ranking por IPC v1 (topo=lead quente): `Odonto` (não-reivindicado, sem site, 2 fotos, téc 41/IPC 52) · `João
+Carlos` (1 review, téc 29/IPC 51) · `OrtosD` (não-reivindicado, téc 44/IPC 49) · `Odontobem` (site=Instagram→SVC-SITE,
+téc 39/IPC 42). Fundo (não perturbar): `Pessoa Odontologia` (téc **96**/IPC 13), `Implantes G` (téc 92/IPC 5),
+`Leandro` (téc 82/IPC 7), `MundiDents` (640 reviews, téc 74/IPC 5).
+
+**O que a prevalência corrigiu (v0→v1):**
+- **Não penaliza mais ausência de booking** (só 27% do ramo tem → não é gap do segmento). v0 punia todos.
+- **Gap de site fica ∝ aos 43%** que têm site → `Quineli` caiu IPC 22→13 (forte em tudo; único gap = site, flag SVC-SITE mantido).
+- **Percentil no lugar de média** torna gaps robustos ao outlier (o dentista de 711 reviews não "rebaixa" o segmento inteiro).
+
+**Ressalva dos dados:** `maxReviews=2` nesse run → **taxa de resposta ao cliente/sentimento não usáveis** (engajamento
+saiu 0; reputação retirada do IPC v1 de propósito). Produção com `maxReviews≈20` reativa engajamento/reputação — não altera o ranking de IPC atual.
+
+**Status calibração:** v1 validado em segmento real (n=30). Pesos e limiares prontos para o build; refino contínuo por segmento.
 
 ## Decisões em aberto (para o sub-chat do build)
 1. **Onde roda o motor de regras (02–04):** nós **Code** no n8n (JS puro) vs micro-serviço. Recomendo Code no n8n (fica tudo num WF, sem infra nova). O `scripts/gbp_scoring_prototype.py` é a spec a portar.
