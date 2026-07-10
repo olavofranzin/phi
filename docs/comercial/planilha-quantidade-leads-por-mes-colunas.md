@@ -96,19 +96,44 @@ Os nomes exatos não estão documentados (provavelmente **perdidos no apagamento
 
 ---
 
-## O que restaurar (resumo acionável)
-1. **Aba `leads`:** recriar as colunas dos Blocos 1–3 (22 extraídas + `status` + `data_extracao` + `enriquecimento`)
-   na ordem, mais os 6 do Bloco 4. A aba hoje está reduzida (evidência: a versão enxuta grava só `id, nome, setor,
-   data extração`).
-2. **Aba `qtd leads mes`:** garantir `mes` + `quantidade` (o code lê `leads_do_mês` p/ calcular vagas).
-3. **Reconectar os nós Google Sheets** dos workflows (mapeamento de colunas) se os nomes mudarem.
+## Schema REAL (cabeçalhos enviados pelo Olavo, 2026-07-10) e colunas a acrescentar
+A planilha **evoluiu**: além dos campos de extração, já carrega as **saídas do motor de scoring** e abandonou os
+6 campos de validação manual (o scoring automatizou o rótulo). **As tabelas de blocos acima descrevem a FUNÇÃO
+de cada tipo de campo (válidas); os nomes reais são os abaixo.**
 
-## Gaps a confirmar com a planilha viva (Drive estava bloqueado por aprovação nesta sessão)
-- Os **2 campos extraídos** não nomeados (para fechar os 22).
-- Os **nomes/opções originais dos 6 campos de validação manual** (se recuperáveis; senão, usar a reconstrução).
-- Os **cabeçalhos exatos** da aba `qtd leads mes`.
-> Aprovando o acesso ao Google Drive (ou colando os cabeçalhos que sobraram), eu concilio este spec com a
-> planilha real e fecho os gaps com precisão.
+**36 colunas presentes:** `id` · `nome` · `setor` · `e-mail` · `contato` · `site` · `enriquecimento` ·
+`Categoria 1` · `Categoria 2` · `Patrocinado` · `Searchstring` · `Posição Pesquisa` · `Quantidade reviews` ·
+`Cidade` · `Estado` · `Bairro` · `CEP` · `Endereço` · `data extração` · `status hubspot` · `mês extração` ·
+`score_tecnico` · `ipc` · `potencial_comercial` · `oferta_recomendada` · `dim_saude` · `dim_seo` ·
+`dim_autoridade` · `dim_conversao` · `dim_engajamento` · `dim_conteudo` · `site_tipo` · `nao_reivindicado` ·
+`flags_score` · `data_processamento_score` · `id_hubspot`.
+(Equivalências: `setor`=categoria principal · `contato`=telefone · `status hubspot`=status · as colunas de score
+são as saídas do `scripts/gbp_scoring_prototype.py`.)
+
+### Colunas a ACRESCENTAR (apagadas / faltantes) — 🔴 trava o scoring
+Existem as colunas de **saída** do score, mas faltam os **sinais brutos de entrada** que o motor consome:
+
+| Coluna a adicionar | Origem (Apify) | Alimenta | Prioridade |
+|---|---|---|---|
+| **Avaliação** (nota Google) | `totalScore` | `dim_autoridade`, `ipc`, guarda de volume | 🔴 crítica |
+| **Quantidade fotos** | `imagesCount` | `dim_conteudo`, `ipc`, benchmark | 🔴 crítica |
+| **Atributos** (nº/lista) | `additionalInfo` | `dim_saude`, `dim_seo` | 🔴 crítica |
+| **Horário** (tem?/texto) | `openingHours` | `dim_saude`, `dim_conversao`, viabilidade | 🟠 alta |
+| **Agendamento** (tem?/link) | `bookingLinks` | `dim_conversao` | 🟠 alta |
+| **Posts** (nº) | `ownerUpdates` | `dim_conteudo`, `dim_engajamento` | 🟠 alta |
+| **Rua/Avenida** | `street` | endereço estruturado | 🟡 média (`Endereço` já traz o texto) |
+
+**Sem as 3 críticas — sobretudo `Avaliação`** — as colunas `score_tecnico`/`ipc`/`dim_*` não têm como ser
+preenchidas: o motor precisa do rating, das fotos e dos atributos como entrada.
+
+**Confirmar `id` = `place_id`?** Se a coluna `id` não guarda o `place_id` do Google, adicionar **`place_id`** —
+é a chave de dedup e de casamento com o scraper; sem ela o re-processamento de score não localiza o lead.
+
+**Diferidas (só com scrape profundo de reviews — fora da prospecção):** `Taxa resposta reviews`
+(`responseFromOwnerText`), `Tags reviews` (`reviewsTags`) — entram no enriquecimento do lead qualificado.
+
+### Aba `qtd leads mes`
+Garantir período + contagem (`mês` + `quantidade`) — o workflow lê `leads_do_mês` p/ `vagas = max(0, 50 − n)`.
 
 ## Âncoras
 - Análise oficial (Notion): `350b65e5-c72b-817f-ae19-f07f8a332549`.
