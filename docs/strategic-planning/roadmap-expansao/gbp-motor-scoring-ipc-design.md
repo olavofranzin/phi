@@ -118,6 +118,34 @@ Casos: A (téc 95 / IPC 12 → quase perfeito, lead fraco) · B (téc 54 / IPC 9
 - Consequência: IPC alto pode coexistir com técnico médio; técnico baixo **não** garante IPC alto.
 - **Destino:** IPC/leadScore priorizam a fila comercial → futuro campo numérico no HubSpot + input da NBA (C3).
 
+## Roteamento de OFERTA — duas forças opostas (decisão Olavo 2026-07-10)
+O IPC **não gateia "abordar ou não"** — ele **roteia para a oferta certa**. Quase todo negócio é lead de *algo*;
+o que muda é a oferta e o valor do deal. Duas forças opostas de oportunidade:
+- **Fundação (SVC-GBP / SVC-SITE):** alta quando o perfil é **fraco** (poucos reviews/fotos, não reivindicado, sem site).
+- **Amplificação (SVC-ADS):** alta quando o perfil é **forte + tem site próprio** — já tem fundação e demanda, é onde tráfego pago rende.
+
+Sequência lógica (precisa de base antes de anunciar): **SVC-SITE → SVC-GBP → SVC-ADS**. Roteamento (no protótipo):
+- sem site próprio (`none`/rede social) → **SVC-SITE**
+- GBP fraco (autoridade<40 ou conteúdo<30 ou não reivindicado ou atributos < 60% do p75) → **SVC-GBP**
+- site próprio **e** GBP sólido → **SVC-ADS**
+
+**Potencial Comercial = max(gap de fundação, prontidão de ADS) × viabilidade** — assim um perfil forte **não é
+descartado**: vira lead de ADS. Validação (30 dentistas): topo por potencial vira **SVC-ADS** (Leandro téc 82 →
+POT 99; Implantes/MundiDents/Pessoa téc 74–96 → POT 88–92), antes "descartados" com IPC ~5–13. Perfis
+não-reivindicados/sem-site → **SVC-SITE+GBP** (POT 42–52). GBP forte mas site=rede social → **SVC-SITE**.
+
+**Refino v1.1 (anotado):** negócio forte com site=rede social (ex.: Quineli, 259 reviews, site=Instagram) é lead
+de **SVC-SITE→ADS** de alto valor, mas a régua de fundação o subvaloriza (POT 13) por tratar site como gap pequeno.
+Ponderar o valor do SVC-SITE pela **força do GBP** (negócio pujante sem site = melhor lead de site que um fraco).
+
+## Reviews (scraping profundo) — FORA da prospecção (decisão Olavo 2026-07-10)
+Para **scoring/prospecção**, os agregados do scrape básico bastam: `reviewsCount`, `totalScore`,
+`reviewsDistribution` e **`reviewsTags`** (tópicos já sumarizados, ex.: "má fé", "trauma") cobrem Autoridade e
+sentimento grosseiro. **Não** é preciso o texto de centenas de reviews para saber se o lead é fraco/forte.
+- O **actor dedicado de reviews** (texto completo + respostas do dono + datas/velocidade) entra só na **camada de
+  enriquecimento (C2)**, sob demanda, no lead **já qualificado** — e mais ainda na **entrega** (gestão de reputação). É a parte cara do scrape.
+- Na **discovery**, manter `maxReviews` baixo (0–2) — barato. `ownerResponseRate`/sentimento profundo ficam para o enriquecimento (exigem `maxReviews≈20`).
+
 ## Bloco "Potencial Perdido" (no relatório)
 Reframe que muda a percepção mesmo em perfil já bom: "seu perfil tem nota máxima e está bem configurado,
 porém há oportunidades claras de gerar mais clientes" → aumentar avaliações · cadastrar serviços · responder

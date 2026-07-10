@@ -171,6 +171,31 @@ def lead_opportunity_v1(n, bm):
          + (5*(1-n["score"]/5) if n["reviews"]>=5 else 2.5))
     return round(g)
 
+# ---------- roteamento de OFERTA (ponto Olavo 2026-07-10) ------------------
+# Duas forças opostas: FUNDAÇÃO (SVC-GBP/SITE) alta em perfil fraco;
+# AMPLIFICAÇÃO (SVC-ADS) alta em perfil FORTE + site próprio. Sequência lógica: SITE -> GBP -> ADS.
+def weak_gbp(n, bm, dims):
+    return (dims["autoridade"] < 40 or dims["conteudo"] < 30 or n["unclaimed"]
+            or n["nAttrGroups"] < bm["attrRef"]*0.6)
+
+def ads_readiness(n, dims):
+    """SVC-ADS só faz sentido com site próprio + GBP sólido + negócio viável (fundação pronta p/ escalar)."""
+    if n["websiteType"] != "site" or n["unclaimed"]: return 0
+    base = 0.55*dims["autoridade"] + 0.35*dims["conteudo"] + 10
+    return round(clamp(base) * viability(n))
+
+def recommend_offer(n, bm, dims):
+    offers = []
+    if n["websiteType"] != "site": offers.append("SVC-SITE")     # sem site próprio: base primeiro
+    if weak_gbp(n, bm, dims):      offers.append("SVC-GBP")      # GBP fraco: consertar fundação
+    if n["websiteType"] == "site" and not weak_gbp(n, bm, dims):
+        offers.append("SVC-ADS")                                 # forte + site: amplificar
+    return offers or ["SVC-GBP"]
+
+def commercial_potential(n, bm, dims):
+    """Potencial = melhor oferta disponível. Inclui ADS p/ perfil forte (não descarta)."""
+    return max(ipc_v1(n, bm), ads_readiness(n, dims))
+
 # ---------- runner --------------------------------------------------------
 def load(files):
     seen, norms = set(), []
@@ -192,16 +217,19 @@ def main(files):
     rows = []
     for n in norms:
         dims = dimensions(n, bm); tech = technical(dims)
-        rows.append((n, tech, ipc(n,bm,tech), ipc_v1(n,bm), lead_opportunity_v1(n,bm)))
-    rows.sort(key=lambda r: r[3], reverse=True)      # ordena por IPC v1 (prioridade comercial)
-    print(f"{'#':>2} {'Perfil':34} {'Téc':>3} {'IPCv0':>5} {'IPCv1':>5} {'lead':>4}  flags")
-    for i,(n,tech,i0,i1,lead) in enumerate(rows,1):
+        found = ipc_v1(n, bm); ads = ads_readiness(n, dims)
+        pot = commercial_potential(n, bm, dims); offers = recommend_offer(n, bm, dims)
+        rows.append((n, tech, found, ads, pot, offers))
+    rows.sort(key=lambda r: r[4], reverse=True)      # ordena por POTENCIAL comercial
+    print(f"{'#':>2} {'Perfil':32} {'Téc':>3} {'Fund':>4} {'ADS':>3} {'POT':>3}  {'Oferta':16} flags")
+    for i,(n,tech,found,ads,pot,offers) in enumerate(rows,1):
         fl = []
-        if n["unclaimed"]: fl.append("não-reivindicado")
-        if n["websiteType"]=="social": fl.append("site=rede→SVC-SITE")
+        if n["unclaimed"]: fl.append("não-reivind.")
+        if n["websiteType"]=="social": fl.append("site=rede")
         elif n["websiteType"]=="none": fl.append("sem-site")
-        if n["reviews"]<5: fl.append(f"vol-fraco({n['reviews']})")
-        print(f"{i:>2} {n['name'][:34]:34} {tech:>3} {i0:>5} {i1:>5} {lead:>4}  {', '.join(fl)}")
+        if n["reviews"]<5: fl.append(f"vol({n['reviews']})")
+        print(f"{i:>2} {n['name'][:32]:32} {tech:>3} {found:>4} {ads:>3} {pot:>3}  "
+              f"{'+'.join(offers):16} {', '.join(fl)}")
 
 if __name__ == "__main__":
     main(sys.argv[1:] or [])
