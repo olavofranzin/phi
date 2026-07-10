@@ -73,7 +73,8 @@ A maior parte daqui é uma frente nova e substancial (não "acréscimo"). Mapa:
 
 | Item | Onde encaixa | Esforço | Depende de |
 |---|---|---|---|
-| Análise básica GBP (descrição, produtos, Q&A, avaliações + respostas) | Comercial/Prospecção + reuso Saúde Digital (sub-WF GBP do ADR-25) | **M** | credencial GBP (já pendente); agente N2 leitura |
+| **Descoberta de leads (GBP fraco) — Apify modo busca** | Comercial/Prospecção (novo motor) | **M** | `compass/crawler-google-places` em modo busca (query+geo) → `rank`/`totalScore`/`reviewsCount`/`claimThisBusiness` por resultado. Leads com nota baixa/poucos reviews/**perfil não reivindicado** saltam. Testado 2026-07-10. |
+| Análise básica GBP (descrição, produtos, Q&A, avaliações + respostas) — **C2** | Comercial/Prospecção; fonte = **Apify dois níveis** (não a Performance API) | **M** | Apify (LEVE Auditor → COMPLETO scraper cru, modo place_id); agente N2 Gemini Flash. Ver `docs/handoff/2026-07-05-comercial-c2-enriquecimento-gbp-brief.md` |
 | Análise de perfil Instagram (frequência, tipo de post topo/meio/fundo, produto vs conteúdo útil) | Comercial/Prospecção | **M** | acesso IG/scraping; taxonomia de conteúdo |
 | Análise básica de site | reuso do estrato de análise de site (§2) | **S–M** | GA4/scraping |
 | HubSpot: campo follow-up (input p/ NBA) | HubSpot (custom property) | **S** | HubSpot MCP (✅ conectado) |
