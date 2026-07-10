@@ -1,142 +1,136 @@
-# Planilha "Quantidade de Leads por Mês" — colunas e função na aprendizagem dos agentes
+# Contrato de Dados — Planilha de Leads da Prospecção Comercial
 
-> **Para que serve este doc:** fonte de verdade (versionada) das colunas da planilha de prospecção
-> e a função de cada uma no aprendizado dos agentes. Criado em 2026-07-10 porque **várias colunas foram
-> apagadas por engano** e precisavam ser restauradas — e não havia spec versionado (só a análise no Notion).
-> **Fonte primária:** análise oficial **aprovada** no Notion "📊 PHI™ Prospecção — Análise Workflow Google
-> Maps Atual" (`350b65e5-c72b-817f-ae19-f07f8a332549`, Documento Oficial=Sim, Aprovado). **Cruzado com** os
-> workflows n8n que leem/escrevem a planilha.
->
-> **Planilha (Google Sheets):** `1MuetJ4N7xiazkw55YOSHtq_nIaHPRKOE-g6GwfaNJKM`
-> **Workflows que a usam:** `Google Maps - Extração e Enriquecimento` (n8n `5L3SyzDkZqf1N6vW`, 16 nós, versão
-> documentada) e uma versão enxuta (`google_maps_updated.json` no repo). **Abas:** `qtd leads mes` (gid
-> `624786381`, LEITURA) e `leads` (gid `0`, ESCRITA).
+> **Status:** FONTE DE VERDADE (versionada) do schema e do PROPÓSITO da planilha de prospecção.
+> **Regra-mãe (governança):** nenhuma coluna é criada, renomeada ou removida sem atualizar este contrato
+> no mesmo PR. Perder colunas aqui = perder **memória de aprendizado** do processo comercial (já ocorreu
+> uma vez, 2026-07; não pode recorrer — ver §4/§5). **Criado/consolidado:** 2026-07-10.
+> **Planilha:** Google Sheets `1MuetJ4N7xiazkw55YOSHtq_nIaHPRKOE-g6GwfaNJKM` · abas `leads` (gid 0) e
+> `qtd leads mes` (gid 624786381). **Workflows:** n8n `5L3SyzDkZqf1N6vW` + `google_maps_updated.json`.
+> **HubSpot:** portal 5633277, pipeline `default` ("Pipeline de Vendas"). **Owner:** Comercial (Olavo).
 
-## Contexto: por que a planilha existe e como alimenta o aprendizado
-O workflow extrai até ~50 leads/mês do Google Maps (Apify), enriquece cada um com pesquisa (Gemini + Google
-Search) e cria o Deal no HubSpot. A planilha é **(a) gate de cota** (conta leads do mês → libera vagas) e
-**(b) o corpus de aprendizado**: o agente de enriquecimento é, de propósito, um **agregador sem classificação**
-— "o output serve para o sistema **aprender padrões de ICP**". As colunas são as features (sinais do negócio) +
-os **rótulos humanos** (validação manual) de onde o futuro **Qualificador Cognitivo** (score ≥ 70) vai aprender
-o que é "bom lead". **É a planilha precursora do motor de scoring GBP** (`scripts/gbp_scoring_prototype.py`) —
-os mesmos sinais (rating, reviews, site, categoria, patrocinado) que hoje calculamos como Score Técnico/IPC.
+## 0. POR QUE esta planilha existe (o que quase perdemos)
+Esta planilha **não é uma lista de contatos** — é o **livro-razão de aprendizado do processo comercial**.
+Ela cruza, por lead, **dois lados**:
+- **FEATURES** (sinais do negócio na captação: nota, reviews, fotos, site, categoria, score/IPC…) e
+- **LABELS / RESULTADO REAL** (o que aconteceu com o lead no HubSpot: avançou? foi rejeitado? por quê?
+  converteu? por quanto?).
 
----
+É o cruzamento **feature × resultado** que ensina os agentes comerciais — o mesmo padrão do Log de
+Otimizações (Hipótese → Resultado Real → Aprendizado). Sem os **labels de resultado**, o motor de scoring
+não se calibra, o Qualificador não aprende o que é "bom lead" e o relatório comercial não explica perdas.
+**Apagar as colunas de resultado apaga a memória supervisionada do comercial.** Por isso o contrato é
+versionado e protegido por guarda automática (§5).
 
-## Aba `qtd leads mes` (gid 624786381) — LEITURA / controle de cota
-O node "Consultar quantidade de leads" lê esta aba e calcula `vagas = max(0, 50 − leads_do_mês)` (free tier Apify).
+## 1. Aba `leads` (gid 0) — dicionário de colunas
+Três blocos: **features de extração** (Apify), **saídas do motor de scoring** e **⭐ resultado/aprendizado**
+(HubSpot). Nomes reais entre crases; equivalências anotadas.
 
-| Coluna | Tipo | Função na aprendizagem / operação |
+### 1.1 Chaves e identidade
+| Coluna | Origem | Função |
 |---|---|---|
-| `mes` (competência) | texto/data (ex.: `2026-07`) | chave do período; separa a contagem por mês |
-| `quantidade` (leads extraídos) | número | quantos leads já entraram no mês → define vagas restantes |
-| *(opcional)* `limite` | número (50) | teto mensal; hoje fixo no code (`50`) — se existir, parametriza a cota |
+| `id` | Apify `placeId`? | **CONFIRMAR** que guarda o `place_id` (chave de dedup e de casamento com o scraper). Se não, adicionar `place_id`. |
+| `id_hubspot` | HubSpot deal id | **chave do JOIN** planilha ↔ HubSpot (usada pelo loop de sync, §5.1) |
+| `nome` | `title` | identidade |
+| `contato` | `phone` | telefone |
+| `e-mail` | enriquecimento | contato p/ outreach |
+| `site` | `website` | sinal de ICP + oferta (SVC-SITE) |
+| `Endereço`/`Bairro`/`Cidade`/`Estado`/`CEP` | address/… | geografia |
 
-> ⚠️ Os nomes exatos desta aba não estão na análise (ela só descreve a função). Confirmar com a planilha viva
-> (ou aceitar a reconstrução acima). O essencial: **período + contagem**.
-
----
-
-## Aba `leads` (gid 0) — ESCRITA / corpus de aprendizado
-São **22 campos extraídos** (mapeados do Apify) + `status` + `data_extracao` + o **enriquecimento (Gemini)** +
-os **6 campos de validação manual**. Cada linha = um lead; cada coluna = uma feature ou um rótulo.
-
-### Bloco 1 — Identidade e contato (extraídos do Apify)
-| Coluna | Origem Apify | Função na aprendizagem |
+### 1.2 Features de extração (Apify) — o que descreve o lead
+| Coluna | Origem | Função no aprendizado |
 |---|---|---|
-| `place_id` | `placeId` | **chave única** (dedup); liga extração → enriquecimento → HubSpot. Sem ela o aprendizado duplica. |
-| `nome` | `title` | identidade do negócio |
-| `telefone` | `phone` | contato; canal de abordagem |
-| `site` | `website` | **sinal de ICP e de oferta**: ter/não ter site (e se é rede social) → aprende oportunidade de **SVC-SITE** |
-| `endereco` | `address` | localização completa |
-| `bairro` | `neighborhood` | padrão territorial (densidade/renda por região) |
-| `rua_avenida` | `street` | endereço |
-| `cidade` | `city` | recorte geográfico de campanha |
-| `cep` | `postalCode` | micro-território (cruzável com renda) |
-| `estado` | `state` | UF |
+| `setor` | `categoryName` | categoria principal — eixo de benchmark por segmento |
+| `Categoria 1` / `Categoria 2` | `categories[]` | categorias secundárias — completude/SEO |
+| `Quantidade reviews` | `reviewsCount` | volume — qualifica a nota (guarda de volume) |
+| `Posição Pesquisa` | `rank` | visibilidade no Maps |
+| `Patrocinado` | `isAdvertisement` | já anuncia → sinal SVC-ADS/budget |
+| `Searchstring` | `searchString` | termo que trouxe o lead |
+| `enriquecimento` | Gemini | corpus qualitativo (financeiro, digital, setor, abordagem) |
+| `data extração` / `mês extração` | `$now` | temporalidade + cota mensal |
+| 🔴 **`Avaliação`** *(a criar)* | `totalScore` | nota Google — **input de `dim_autoridade`/`ipc`; sem ela o score não roda** |
+| 🔴 **`Quantidade fotos`** *(a criar)* | `imagesCount` | `dim_conteudo`, `ipc`, benchmark |
+| 🔴 **`Atributos`** *(a criar)* | `additionalInfo` | `dim_saude`, `dim_seo` |
+| 🟠 **`Horário`** *(a criar)* | `openingHours` | `dim_saude`, `dim_conversao`, viabilidade |
+| 🟠 **`Agendamento`** *(a criar)* | `bookingLinks` | `dim_conversao` |
+| 🟠 **`Posts`** *(a criar)* | `ownerUpdates` | `dim_conteudo`, `dim_engajamento` |
+| 🟡 **`Rua/Avenida`** *(a criar)* | `street` | endereço estruturado (opcional) |
 
-### Bloco 2 — Sinais de porte/reputação/mercado (extraídos) — o núcleo do aprendizado de ICP
-| Coluna | Origem Apify | Função na aprendizagem |
-|---|---|---|
-| `rating` | `totalScore` | reputação; **só vale com volume** (guarda de volume) — feeds Autoridade |
-| `total_reviews` | `reviewsCount` | volume/maturidade digital; qualifica o `rating` (5,0 com 1 review ≠ com 200) |
-| `rank` | `rank` | posição no Google Maps p/ o termo → proxy de concorrência/visibilidade |
-| `patrocinado` | `isAdvertisement` | **já investe em anúncios** → sinal de budget e de lead **SVC-ADS** |
-| `categoria` | `categoryName` | **segmento** — eixo primário do aprendizado (qual segmento converte) |
-| `categoria_1` | `categories[1]` | categoria secundária → completude/SEO do perfil |
-| `categoria_2` | `categories[2]` | idem |
-| `search_string` | `searchString` | **qual termo** trouxe o lead → aprendizado de visibilidade/keywords |
-
-### Bloco 3 — Controle e enriquecimento
-| Coluna | Origem | Função na aprendizagem |
-|---|---|---|
-| `status` | fixo `novo` → `Prospectado` | **rótulo de funil**: o agente aprende quais características avançam no funil |
-| `data_extracao` | `$now` | temporalidade/sazonalidade + contagem de cota mensal |
-| `enriquecimento` | saída do **Gemini** | **corpus qualitativo**: capacidade financeira, presença digital, redes sociais, maturidade do setor, abordagem recomendada — de onde se extraem os padrões de ICP |
-
-> A análise cita **"Mapeia 22 campos"**; 20 estão nomeados acima (18 extraídos + `status` + `data_extracao`).
-> **Faltam 2** que a análise não enumera — candidatos prováveis pelos dados do Apify: `telefone_sem_formatacao`
-> (`phoneUnformatted`), `latitude`/`longitude` (`location`) ou `perfil_reivindicado` (`claimThisBusiness`).
-> **Confirmar com a planilha viva.**
-
-### Bloco 4 — Validação manual (6 campos, dropdowns) — os RÓTULOS do aprendizado supervisionado
-A análise diz: "6 campos adicionados no Google Sheets, dropdowns padronizados, formatação condicional por status".
-São o **ground truth** que ensina o Qualificador: sem eles, o sistema perde a referência do que é "bom lead".
-Os nomes exatos não estão documentados (provavelmente **perdidos no apagamento**). **Reconstrução recomendada**
-(alinhada ao aprendizado e ao motor de scoring — ajustar aos originais se aparecerem):
-
-| Coluna (proposta) | Tipo | Função na aprendizagem |
-|---|---|---|
-| `validacao_humana` | dropdown: Aprovado / Reprovado / Revisar | rótulo mestre: entra ou não no funil |
-| `fit_icp` | dropdown: Alto / Médio / Baixo | quão aderente ao cliente ideal → alvo do Qualificador |
-| `oferta_indicada` | dropdown: SVC-GBP / SVC-SITE / SVC-ADS / Combo | liga ao **roteamento de oferta** do motor de scoring |
-| `motivo` | dropdown/texto | por que aprovado/reprovado → aprende critérios de qualificação e perda |
-| `prioridade` | dropdown: Alta / Média / Baixa | ordenação da fila comercial |
-| `observacoes` | texto | contexto humano livre |
-
----
-
-## Schema REAL (cabeçalhos enviados pelo Olavo, 2026-07-10) e colunas a acrescentar
-A planilha **evoluiu**: além dos campos de extração, já carrega as **saídas do motor de scoring** e abandonou os
-6 campos de validação manual (o scoring automatizou o rótulo). **As tabelas de blocos acima descrevem a FUNÇÃO
-de cada tipo de campo (válidas); os nomes reais são os abaixo.**
-
-**36 colunas presentes:** `id` · `nome` · `setor` · `e-mail` · `contato` · `site` · `enriquecimento` ·
-`Categoria 1` · `Categoria 2` · `Patrocinado` · `Searchstring` · `Posição Pesquisa` · `Quantidade reviews` ·
-`Cidade` · `Estado` · `Bairro` · `CEP` · `Endereço` · `data extração` · `status hubspot` · `mês extração` ·
+### 1.3 Saídas do motor de scoring (já presentes) — a PREVISÃO
 `score_tecnico` · `ipc` · `potencial_comercial` · `oferta_recomendada` · `dim_saude` · `dim_seo` ·
 `dim_autoridade` · `dim_conversao` · `dim_engajamento` · `dim_conteudo` · `site_tipo` · `nao_reivindicado` ·
-`flags_score` · `data_processamento_score` · `id_hubspot`.
-(Equivalências: `setor`=categoria principal · `contato`=telefone · `status hubspot`=status · as colunas de score
-são as saídas do `scripts/gbp_scoring_prototype.py`.)
+`flags_score` · `data_processamento_score`. (Spec: `scripts/gbp_scoring_prototype.py`.) São a **previsão** do
+sistema — só ganham valor de aprendizado quando confrontadas com o resultado real (§1.4).
 
-### Colunas a ACRESCENTAR (apagadas / faltantes) — 🔴 trava o scoring
-Existem as colunas de **saída** do score, mas faltam os **sinais brutos de entrada** que o motor consome:
+### 1.4 ⭐ Bloco de RESULTADO / APRENDIZADO (HubSpot) — os LABELS que faltavam
+Escrito pelo **loop de sincronização** (§5.1), casando por `id_hubspot`. **Este é o bloco cujo apagamento
+motivou este contrato.** Funil real: Prospectado → Interação Instagram → Contato Realizado → Reunião
+Agendada → Tomada de Decisão → Contrato Enviado → Vencido / Perdido.
 
-| Coluna a adicionar | Origem (Apify) | Alimenta | Prioridade |
-|---|---|---|---|
-| **Avaliação** (nota Google) | `totalScore` | `dim_autoridade`, `ipc`, guarda de volume | 🔴 crítica |
-| **Quantidade fotos** | `imagesCount` | `dim_conteudo`, `ipc`, benchmark | 🔴 crítica |
-| **Atributos** (nº/lista) | `additionalInfo` | `dim_saude`, `dim_seo` | 🔴 crítica |
-| **Horário** (tem?/texto) | `openingHours` | `dim_saude`, `dim_conversao`, viabilidade | 🟠 alta |
-| **Agendamento** (tem?/link) | `bookingLinks` | `dim_conversao` | 🟠 alta |
-| **Posts** (nº) | `ownerUpdates` | `dim_conteudo`, `dim_engajamento` | 🟠 alta |
-| **Rua/Avenida** | `street` | endereço estruturado | 🟡 média (`Endereço` já traz o texto) |
+| Coluna *(a criar)* | Origem HubSpot | Função no aprendizado |
+|---|---|---|
+| `hubspot_estagio` | `dealstage` (label) | **andamento** do lead no funil |
+| `hubspot_status` | derivado de `hs_is_closed`/`hs_is_closed_won` | **Aberto / Vencido / Perdido** — label mestre |
+| ⭐ `motivo_perda` | `closed_lost_reason` | **por que foi rejeitado/perdido** — ensina quais features predizem perda |
+| `motivo_ganho` | `closed_won_reason` | o que fez ganhar |
+| `valor` | `amount` | ticket/LTV — pondera o valor do lead |
+| `via_aquisicao` | `hs_analytics_source` | canal de origem — quais canais convertem |
+| `num_interacoes` | `num_contacted_notes` | esforço (nº de toques) até o desfecho |
+| `ultimo_contato` | `notes_last_contacted` | recência/cadência |
+| `data_criacao_deal` | `createdate` | início no funil |
+| `data_fechamento` | `closedate` | fim |
+| `dias_no_funil` | derivado (`closedate`/agora − `createdate`) | velocidade — prioridade |
+| `probabilidade` | `hs_deal_stage_probability` | confiança do estágio |
+| `nba_recomendada` | `proxima_acao_recomendada` | o que a IA sugeriu |
+| ⭐ `nba_aceite` | `proxima_acao_aceite` (pendente/aceita/rejeitada) | **feedback humano do NBA** (aceito/rejeitado) |
+| `abordagem_ia` | `abordagem_sugerida_ia` | abordagem usada |
+| ⭐ `acerto_previsao` | derivado (`potencial_comercial`/`oferta_recomendada` × desfecho) | **o scoring acertou?** — sinal de calibração do motor |
+| `data_sync_hubspot` | agora | auditoria da sincronização |
 
-**Sem as 3 críticas — sobretudo `Avaliação`** — as colunas `score_tecnico`/`ipc`/`dim_*` não têm como ser
-preenchidas: o motor precisa do rating, das fotos e dos atributos como entrada.
+> **Melhoria de qualidade:** `closed_lost_reason` hoje é **texto livre** → padronizar como **dropdown**
+> (ex.: preço, timing, sem-fit, concorrente, sem-resposta, orçamento) melhora muito o aprendizado de perda.
 
-**Confirmar `id` = `place_id`?** Se a coluna `id` não guarda o `place_id` do Google, adicionar **`place_id`** —
-é a chave de dedup e de casamento com o scraper; sem ela o re-processamento de score não localiza o lead.
+## 2. Aba `qtd leads mes` (gid 624786381) — controle de cota
+Leitura pelo workflow: `vagas = max(0, 50 − leads_do_mês)` (free tier Apify). Colunas mínimas: **`mês`**
+(competência) + **`quantidade`** (leads extraídos no mês). Confirmar cabeçalhos exatos.
 
-**Diferidas (só com scrape profundo de reviews — fora da prospecção):** `Taxa resposta reviews`
-(`responseFromOwnerText`), `Tags reviews` (`reviewsTags`) — entram no enriquecimento do lead qualificado.
+## 3. O que os agentes comerciais aprendem com cada lado
+- **Qualificador Cognitivo:** features (1.2/1.3) → label "entrou no funil / rejeitado" (`hubspot_status`, `motivo_perda`).
+- **Calibração do motor de scoring:** `potencial_comercial`/`oferta_recomendada` (previsão) × `hubspot_status`/`valor` (real) = `acerto_previsao`.
+- **NBA / Estrategista:** `nba_recomendada` × `nba_aceite` (aceito/rejeitado) e `abordagem_ia` × ganho.
+- **Relatório comercial mensal / Curador:** agrega `via_aquisicao`, `motivo_perda`, `dias_no_funil`, `valor` → padrões de aquisição, perda e velocidade.
 
-### Aba `qtd leads mes`
-Garantir período + contagem (`mês` + `quantidade`) — o workflow lê `leads_do_mês` p/ `vagas = max(0, 50 − n)`.
+## 4. Governança — por que não se perde de novo (documentação)
+1. **Este contrato é a fonte de verdade** (git, ADR-012). Mudança de schema **só via PR que o atualiza**.
+2. **Registrar a planilha na DB `PHI — Fontes de Conhecimento`** (Camada de Conhecimento §2) como fonte viva:
+   `{nome, tipo=google-sheet, file_id, dono=Comercial, domínio=comercial, schema_hash, modificado_em, contrato=este arquivo}`.
+3. **ADR proposto (registrar):** "*Todo artefato de dados operacional (planilha/DB) tem Contrato de Dados
+   versionado + guarda-schema + backup automático.*" Torna a prevenção uma política, não um remendo.
 
-## Âncoras
+## 5. Automação — os DOIS loops (o "gatilho que salva" + o "loop que checa")
+### 5.1 Loop de SINCRONIZAÇÃO HubSpot → planilha (captura o resultado automaticamente)
+**n8n, Schedule (ex.: a cada 6 h).** Para cada lead com `id_hubspot` (ou deals `hs_lastmodifieddate` desde a
+última sync): lê os campos do §1.4 no HubSpot → calcula derivados (`hubspot_status`, `dias_no_funil`,
+`acerto_previsao`) → **grava/atualiza** a linha na aba `leads` (upsert por `id_hubspot`/`place_id`) →
+carimba `data_sync_hubspot`. Idempotente. **É o gatilho que salva o andamento/rejeição/motivo sem depender
+de ninguém preencher à mão.** (HubSpot é produção: este loop **só lê** o deal e **escreve na planilha** — não
+altera o CRM.)
+
+### 5.2 Loop GUARDA-SCHEMA + BACKUP (impede a perda e detecta apagamento)
+**n8n, Schedule diário.** (1) Lê a **linha de cabeçalho** da planilha e compara com a lista de colunas deste
+contrato → **coluna do contrato ausente = alerta imediato (Telegram)** com os nomes faltantes. (2) **Snapshot**:
+exporta a aba `leads` (CSV) para backup (git/Drive `backups/leads/AAAA-MM-DD.csv`), retendo histórico → qualquer
+apagamento é **detectado em ≤24 h e sempre restaurável**. Opcional: auto-recriar o cabeçalho faltante.
+
+> Os dois loops vivem no **n8n** (persistente) — não em cron de sessão (que morre). MCP do n8n disponível para construir.
+
+## 6. Restauração imediata (checklist)
+1. Criar na aba `leads` as colunas 🔴/🟠 do §1.2 (**`Avaliação` é a mais urgente**) e o **bloco §1.4 inteiro**.
+2. Fazer o nó de normalização do workflow Apify mapear `totalScore/imagesCount/additionalInfo/openingHours/bookingLinks/ownerUpdates`.
+3. Subir o loop §5.1 (sync HubSpot→planilha) e o §5.2 (guarda+backup).
+4. Registrar a planilha em `PHI — Fontes de Conhecimento` e o ADR do §4.
+
+## 7. Âncoras
 - Análise oficial (Notion): `350b65e5-c72b-817f-ae19-f07f8a332549`.
-- Planilha: `1MuetJ4N7xiazkw55YOSHtq_nIaHPRKOE-g6GwfaNJKM` (abas `qtd leads mes` gid 624786381, `leads` gid 0).
-- Workflows: n8n `5L3SyzDkZqf1N6vW`; repo `google_maps_updated.json`.
-- Sucessor do aprendizado: motor de scoring GBP — `docs/strategic-planning/roadmap-expansao/gbp-motor-scoring-ipc-design.md`, `scripts/gbp_scoring_prototype.py`.
+- Motor de scoring: `docs/strategic-planning/roadmap-expansao/gbp-motor-scoring-ipc-design.md` · `scripts/gbp_scoring_prototype.py`.
+- C2/HubSpot: `docs/handoff/2026-07-05-comercial-c2-enriquecimento-gbp-brief.md`. Camada de Conhecimento: `docs/strategic-planning/camada-conhecimento/BRUTO-v0.1-design.md`.
+- HubSpot: pipeline `default`; estágios Prospectado(`70807682-148b-4914-acd0-97aad8c2a000`)→qualifiedtobuy→17222650→presentationscheduled→decisionmakerboughtin→contractsent→closedwon/closedlost.
