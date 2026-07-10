@@ -50,6 +50,37 @@
   etc.) ficaram intactas, e as 14 colunas novas foram gravadas (score_tecnico 79, ipc 6,
   potencial_comercial 90, oferta_recomendada SVC-GBP, as 6 dimensões, site_tipo, etc.).
 
+### Extensão 2026-07-10 (revisão Olavo): também grava no HubSpot
+
+Olavo pediu que os campos do motor também orientem o comercial dentro do HubSpot, não só na
+planilha (papel da sheet: segundo repositório de leads + base p/ medir "o que é lead bom"/perfil
+ICP; o HubSpot é onde o time de vendas de fato trabalha). A sheet já tinha uma coluna `id_hubspot`
+(dealId) recriada pelo Olavo após a coluna original ter sido sobrescrita na primeira rodada de
+cabeçalhos — confirmei o cabeçalho completo (`GET .../values/leads!A1:BZ1`) antes de prosseguir.
+
+- **Propriedades criadas no HubSpot (objeto Deal, grupo `ia_enriquecimento`)** via chave privada
+  provisória fornecida pelo Olavo (usada uma vez, nunca persistida em arquivo; recomendei rotacionar
+  a chave após o uso): `score_tecnico`, `ipc`, `potencial_comercial` (número);
+  `oferta_recomendada` (checkbox múltiplo: SVC-GBP/SVC-SITE/SVC-ADS); `dim_saude`/`dim_seo`/
+  `dim_autoridade`/`dim_conversao`/`dim_engajamento`/`dim_conteudo` (número); `site_tipo` (dropdown:
+  site/social/none); `nao_reivindicado` (checkbox booleano); `flags_score` (texto);
+  `data_processamento_score` (data/hora). Todas via `POST /crm/v3/properties/deals`, 14/14 `201 Created`.
+- **Novos nós no L2:** `Buscar id_hubspot (Sheets)` (lookup por `id`=place_id logo após o Motor de
+  Regras, antes de montar a linha) → `Preparar Linha` agora referencia o Motor de Regras
+  explicitamente (`$('02+03+04 Motor de Regras...')`) já que o lookup virou o predecessor imediato,
+  e adiciona `id_hubspot` + `oferta_recomendada_hubspot` (join `;` em vez de `+`, formato esperado
+  pelo HubSpot p/ checkbox múltiplo) → depois do Sort, o fluxo bifurca: Sheets upsert (sempre) e
+  `Ja tem Deal no HubSpot?` (IF: `id_hubspot` not empty) → `Atualizar Deal (HubSpot - scores GBP)`.
+  Lead sem `id_hubspot` (ainda não virou Deal) só grava na sheet, não quebra o fluxo.
+- **Bug pego em teste real e corrigido:** a propriedade `data_processamento_score` é `datetime` no
+  HubSpot, que exige epoch millis (`long`), não string ISO — a primeira tentativa (`$now.toISO()`
+  direto) voltou `400 INVALID_LONG`. Corrigido com `new Date(...).getTime()`.
+- **Testes reais (dois casos):** (1) p9.digital, sem `id_hubspot` na sheet → IF corretamente
+  desviou pro ramo falso, HubSpot não foi tocado. (2) Centro do Sorriso Odontologia
+  (`id_hubspot=60048853870`) → Deal atualizado de verdade; li o Deal de volta e confirmei as 14
+  propriedades gravadas (score_tecnico 77, ipc 6, potencial_comercial 87, oferta_recomendada
+  SVC-GBP, as 6 dimensões, site_tipo, nao_reivindicado, data_processamento_score em epoch ms).
+
 ## L3 — Enriquecimento (Pipeline B / C2)
 
 - **Workflow n8n:** `GBP Scoring - L3 Enriquecimento (Pipeline B / C2)` — `EFD7Drr0LDMqfDXw`
