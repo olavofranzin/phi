@@ -234,6 +234,7 @@ saiu 0; reputação retirada do IPC v1 de propósito). Produção com `maxReview
 6. **Benchmark por termo/categoria** (não misturar segmentos) — regra confirmada na calibração.
 
 ## Âncoras
+- **Build (hand-off do sub-chat):** `docs/handoff/2026-07-10-motor-scoring-gbp-build-subchat-brief.md`.
 - Rubrica (lente): `docs/conhecimento/rubricas/gbp-auditoria-10-pilares.md` (§"Campos confirmados").
 - Brief do agente: `docs/handoff/2026-07-05-comercial-c2-enriquecimento-gbp-brief.md`.
 - Frente Prospecção: `docs/strategic-planning/roadmap-expansao/BRUTO-v0.1-frentes-paralelas.md` §3.
