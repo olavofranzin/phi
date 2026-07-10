@@ -140,16 +140,43 @@ Input testado tinha: `maxReviews:2`, `maxCompetitorsToAnalyze:2`, `maxCrawledPla
 | `maximumLeadsEnrichmentRecords` | 0 | opcional (pago) | contatos p/ outreach — só se valer o custo |
 | `skipClosedPlaces` | true | true | filtro de viabilidade (alinha ao IPC) |
 
-**⚠️ Q&A:** `scrapePlaceDetailPage` já estava `true` e `questionsAndAnswers` veio `[]` → ou o negócio não
-tem Q&A, ou **este actor não extrai Q&A**. Validar rodando num perfil sabidamente com Q&A; se persistir vazio,
-usar actor dedicado de Q&A ou rebaixar o pilar 5 a "verificar manual".
+**Q&A — RESOLVIDO (2026-07-10):** `questionsAndAnswers` veio `[]` nos **4 negócios** testados (inclusive o
+dentista com 435 reviews) → **este actor NÃO extrai Q&A**. Pilar 5 fica "verificar manual" OU exige actor
+dedicado de Q&A. **Posts (pilar 7) vêm de `ownerUpdates`** (Leandro: 10; demais: 0) — não do Q&A.
+
+## Calibração v0 (perfis reais, 2026-07-10) — `scripts/gbp_scoring_prototype.py`
+Rodado nos 6 perfis (buscas "clínica médica" e "clínica odontológica", Rio Preto). **Edge cases do normalizer
+descobertos nos dados** (a serem portados pro n8n Code):
+- ⚠️ `totalScore`/`reviewsCount` vêm **`null`** (não `0`) quando o negócio não tem review → **coagir null→0** ou o scoring quebra.
+- `website` pode ser **rede social** (Quineli: `instagram.com`) → classificar `site` vs `social` vs `none`; `social` vira **sinal de SVC-SITE**.
+- **Q&A ausente** (ver acima); **posts = `ownerUpdates`**; **taxa de resposta ao dono** = % de reviews com `responseFromOwnerText` (Quineli 95%, Leandro 71%).
+- Número de **grupos de `additionalInfo`** é proxy de completude/SEO (Leandro 8, Estrela 4, Quineli 1).
+
+**Resultado (ordenado por IPC = prioridade comercial):**
+| Perfil | score/reviews/imgs | Técnico | leadOpp | **IPC** | Flag |
+|---|---|---:|---:|---:|---|
+| Clínica médica (Cidade Nova) | 0 / 0 / 1 | 26 | 78 | **68** | não reivindicado |
+| Clínica Médica Estrela | 5 / 1 / 1 | 21 | 83 | **64** | não reivindicado; volume fraco |
+| Quineli & Sallum (odonto) | 4,8 / 259 / 109 | 63 | 19 | **32** | site=rede-social → SVC-SITE |
+| Dr. Leandro Cusinato | 4,9 / 435 / 21 | 86 | 6 | **6** | perfil forte — não perturbar |
+
+**Interpretação:** o IPC faz o que o score único não faz — Leandro (técnico **86** / IPC **6**) seria "ótimo perfil"
+num score só, e descartado como lead pelo motivo errado; o IPC diz "está ótimo, não há o que vender". Os 2 perfis
+**não reivindicados** (técnico ~20 / IPC ~65) sobem como leads quentes; o Quineli isola um ângulo de **SVC-SITE**.
+**Prova do "regras > IA":** a IA embutida do actor (`enableCompetitorAnalysis`, arquivo de comparação) rankeou a
+Estrela em **1º** citando "perfect 5-star rating **despite having only one review**" como força — exatamente a
+falha de guarda de volume que o nosso motor determinístico evita (autoridade da Estrela = 3/100, não 98).
+
+**Ajuste pendente de calibração:** o benchmark deve ser **por termo/categoria** (conjunto competitivo local),
+não misturando clínicas médicas com dentistas como no teste (n pequeno). Pesos das fórmulas: v0 plausível, refinar com set maior.
 
 ## Decisões em aberto (para o sub-chat do build)
-1. **Onde roda o motor de regras (02–04):** nós **Code** no n8n (JS puro) vs micro-serviço. Recomendo Code no n8n (fica tudo num WF, sem infra nova).
-2. **Fórmula exata do IPC e do Índice de Visibilidade** (pesos) — calibrar com 5–10 perfis reais.
-3. **Q&A e `maxImages`** — 1 run de validação para fechar as 2 lacunas.
+1. **Onde roda o motor de regras (02–04):** nós **Code** no n8n (JS puro) vs micro-serviço. Recomendo Code no n8n (fica tudo num WF, sem infra nova). O `scripts/gbp_scoring_prototype.py` é a spec a portar.
+2. **Refino dos pesos** do IPC/leadScore/dimensões — v0 já validado (ver Calibração); calibrar com set maior (20+ perfis, benchmark por categoria).
+3. **`maxImages`** — 1 run com o param ligado para popular `imageUrls` (passe de visão, fase 2). Q&A já resolvido (actor não extrai).
 4. **Persistir `leadScore`/`IPC` como campos numéricos no HubSpot** (lote comercial futuro) — hoje cabem em `dados_enriquecimento`.
 5. **Tamanho do array de buscas** (custo da visibilidade) — começar com 5.
+6. **Benchmark por termo/categoria** (não misturar segmentos) — regra confirmada na calibração.
 
 ## Âncoras
 - Rubrica (lente): `docs/conhecimento/rubricas/gbp-auditoria-10-pilares.md` (§"Campos confirmados").
