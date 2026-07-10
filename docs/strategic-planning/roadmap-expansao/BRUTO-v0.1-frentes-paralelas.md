@@ -73,7 +73,7 @@ A maior parte daqui é uma frente nova e substancial (não "acréscimo"). Mapa:
 
 | Item | Onde encaixa | Esforço | Depende de |
 |---|---|---|---|
-| **Descoberta de leads (GBP fraco) — Apify modo busca** | Comercial/Prospecção (novo motor) | **M** | `compass/crawler-google-places` em modo busca (query+geo) → `rank`/`totalScore`/`reviewsCount`/`claimThisBusiness` por resultado. Leads com nota baixa/poucos reviews/**perfil não reivindicado** saltam. Testado 2026-07-10. |
+| **Descoberta + scoring de leads (GBP) — motor de 5 módulos + IPC** | Comercial/Prospecção (novo motor) | **M–L** | Apify modo busca → `02_normalizer`→`03_scoring`→`04_benchmark` (regras, sem IA) → Lead Opportunity Score + **IPC** (potencial comercial) + Índice de Visibilidade multi-busca. Design completo: `docs/strategic-planning/roadmap-expansao/gbp-motor-scoring-ipc-design.md`. Testado 2026-07-10. |
 | Análise básica GBP (descrição, produtos, Q&A, avaliações + respostas) — **C2** | Comercial/Prospecção; fonte = **Apify dois níveis** (não a Performance API) | **M** | Apify (LEVE Auditor → COMPLETO scraper cru, modo place_id); agente N2 Gemini Flash. Ver `docs/handoff/2026-07-05-comercial-c2-enriquecimento-gbp-brief.md` |
 | Análise de perfil Instagram (frequência, tipo de post topo/meio/fundo, produto vs conteúdo útil) | Comercial/Prospecção | **M** | acesso IG/scraping; taxonomia de conteúdo |
 | Análise básica de site | reuso do estrato de análise de site (§2) | **S–M** | GA4/scraping |

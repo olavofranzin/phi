@@ -62,9 +62,16 @@ gerenciados. Fotos (P3) e proposta (P8): passe de visão opcional (fase 2) sobre
 7. Idempotente: reprocessar sobrescreve; registrar `execution_id`/data/nível usado.
 
 ## 4. Saída (diagnóstico N2 — a lente tem que transparecer)
-**A lente = a rubrica dos 10 pilares** (`docs/conhecimento/rubricas/gbp-auditoria-10-pilares.md`) — o
-agente percorre os 10 pilares e fecha com o plano de ação nos 4 níveis (🔴 Crítica / 🟠 Alta / 🟡 Média /
-🟢 Baixa). Essa rubrica vira o corpo do prompt do agente. Formato do texto em `analise_gbp_ia` (Guia §4 dose N2): 
+> **Arquitetura (decisão Olavo 2026-07-10): REGRAS antes de IA.** Não é a IA que "analisa" — um **motor de
+> regras determinístico** calcula scores/forças/fraquezas/oportunidades/prioridade + benchmark de concorrentes
+> + **IPC** (potencial comercial), e a IA (Flash) **só redige** o JSON enriquecido em relatório consultivo.
+> Pipeline de 5 módulos, Lead Opportunity Score (Camada 1) vs IPC, Índice de Visibilidade multi-busca, e os
+> parâmetros do actor por modo estão em **`docs/strategic-planning/roadmap-expansao/gbp-motor-scoring-ipc-design.md`**.
+
+**A lente = a rubrica dos 10 pilares** (`docs/conhecimento/rubricas/gbp-auditoria-10-pilares.md`), reagrupada
+em 6 dimensões no motor de scoring (Saúde/SEO/Autoridade/Conversão/Engajamento/Conteúdo). O relatório percorre
+as dimensões e fecha com o plano de ação nos 4 níveis (🔴 Crítica / 🟠 Alta / 🟡 Média / 🟢 Baixa) + bloco
+"Potencial Perdido". Formato do texto em `analise_gbp_ia` (Guia §4 dose N2): 
 - **Completude** (0–100) + o que falta.
 - **Por área:** descrição (existe? clara?), produtos/serviços (listados?), **Q&A** (tem? respondidas?),
   avaliações (nota, volume, **respostas da empresa?**), categorias corretas, fotos.
@@ -73,7 +80,9 @@ agente percorre os 10 pilares e fecha com o plano de ação nos 4 níveis (🔴 
 - **Gap → oferta:** se há gaps materiais de GBP, sinalizar `SVC-GBP` como serviço ofertável (input p/ C3/NBA).
 
 ## 5. Modelo e guardrails
-- **Modelo:** ✅ **Gemini Flash** (decidido Olavo 2026-07-09) — N2 estruturado sobre JSON, alinhado ao ADR de tiering. Passe de visão (fase 2, fotos) pode subir de tier se preciso.
+- **Modelo:** ✅ **Gemini Flash** (decidido Olavo 2026-07-09) — **reforçado** pela arquitetura "regras antes de
+  IA": como a IA só redige (não raciocina/pontua), o modelo barato é o ideal. A IA aparece em 2 pontos leves:
+  gerar o array de buscas (upfront) e redigir o relatório (`05_ai_report`). Passe de visão (fase 2, fotos) pode subir de tier.
 - HubSpot é **produção**: só escrever `analise_gbp_ia`/`dados_enriquecimento`; nunca `closedwon`/`closedlost`. A IA **descreve**, não age.
 - **Fonte externa:** respeitar ToS/cota; sem PII além do público do GBP. Se B (API paga), credencial no cofre n8n (ADR-19), custo por lead monitorado.
 - Smoke com 1 Deal real (idealmente um lead Negócio Local com GBP — ex.: perfil do próprio Charles/CLI-13 ou um lead real) → conferir `analise_gbp_ia` legível e ancorado.
