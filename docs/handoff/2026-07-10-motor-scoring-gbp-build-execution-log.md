@@ -28,14 +28,27 @@
   (`compass~crawler-google-places`, "Run actor and get dataset", modo busca:
   `maxCrawledPlacesPerSearch:20`, `maxReviews:1`, `maxImages:0`, `skipClosedPlaces:true`) → Motor
   de Regras (mesmo Code node do L1, copy-paste — ADR-25: n8n não tem import real) → Set
-  (achata pra Sheets) → Sort por `potencialComercial` → Google Sheets append.
-- **Saída escolhida:** Google Sheets (não HubSpot) — decisão default deste build: discovery gera
-  uma *lista de leads candidatos* pra triagem humana, não deals automáticos no CRM de produção
-  (alinhado ao guardrail "HubSpot é produção, a IA descreve/lista, não age" — criar Deals em massa
-  fica pra decisão explícita futura). `documentId`/`sheetName` ficaram deliberadamente em branco
-  (resource locator mode `list`) — **não inventei ID de planilha**; selecionar antes de ativar.
+  (achata pra Sheets) → Sort por `potencial_comercial` → Google Sheets **upsert** (match por `id`).
+- **Saída (revisão 2026-07-10, Olavo):** wireado na planilha **real** de leads já usada pela
+  frente Comercial — https://docs.google.com/spreadsheets/d/1MuetJ4N7xiazkw55YOSHtq_nIaHPRKOE-g6GwfaNJKM
+  (aba `leads`, gid=0). Essa planilha já é alimentada por outra pipeline de discovery (colunas
+  `id`=place_id, `nome`, `setor`, `site`, `enriquecimento` — texto livre de IA num framework B2B
+  diferente do nosso, sem `[CERTEZA]`/`[HIPÓTESE]`/guarda de volume — , `Categoria 1/2`,
+  `Searchstring`, `Posição Pesquisa`, `Quantidade reviews`, geo, `status hubspot`). Ela **não tinha
+  nenhum campo determinístico** (score/IPC/oferta) — exatamente o gap que este motor fecha.
+  Decisão (Olavo): **upsert de colunas novas na mesma aba**, sem tocar nas colunas existentes.
+  Adicionei 14 colunas novas no cabeçalho (`V1:AI1`): `score_tecnico`, `ipc`,
+  `potencial_comercial`, `oferta_recomendada`, `dim_saude`/`dim_seo`/`dim_autoridade`/
+  `dim_conversao`/`dim_engajamento`/`dim_conteudo`, `site_tipo`, `nao_reivindicado`,
+  `flags_score`, `data_processamento_score`. `Salvar Ranking (Google Sheets)` agora é
+  `appendOrUpdate` com `matchingColumns:["id"]`.
 - Testado no n8n real com Apify mockado (pin data, 2 perfis) — motor + flatten + sort rodaram
   certo, roteamento de oferta bateu com a fórmula (`weakGbp` via `attrRef` pequeno em amostra de 2).
+- **Teste real contra a planilha de produção:** rodei o L2 com o place_id real da p9.digital
+  (`ChIJu70J8aKyvZQR0xb4Eznsqgs`, já existente na linha 2) e confirmei via leitura direta que o
+  upsert caiu na linha certa — as 21 colunas antigas (`nome`, `enriquecimento`, `status hubspot`
+  etc.) ficaram intactas, e as 14 colunas novas foram gravadas (score_tecnico 79, ipc 6,
+  potencial_comercial 90, oferta_recomendada SVC-GBP, as 6 dimensões, site_tipo, etc.).
 
 ## L3 — Enriquecimento (Pipeline B / C2)
 
