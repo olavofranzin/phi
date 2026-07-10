@@ -81,6 +81,34 @@ cabeçalhos — confirmei o cabeçalho completo (`GET .../values/leads!A1:BZ1`) 
   propriedades gravadas (score_tecnico 77, ipc 6, potencial_comercial 87, oferta_recomendada
   SVC-GBP, as 6 dimensões, site_tipo, nao_reivindicado, data_processamento_score em epoch ms).
 
+### Extensão 2026-07-10 (revisão Olavo, parte 2): L3 também popula os 14 campos + flag
+
+Olavo perguntou minha posição sobre popular o mesmo enriquecimento profundo (os 14 campos
+numéricos/categóricos) no HubSpot também a partir do L3, não só do L2. Argumentei a favor: o L3
+roda com deep-dive (`maxReviews:20` vs `maxReviews:1` do L2), então o score ali é mais confiável;
+sobrescrever o valor raso do L2 com o valor mais profundo do L3 é o comportamento correto, não um
+bug; e isso fecha o ciclo "regras antes de IA" também no CRM (hoje o HubSpot só recebia o texto da
+IA no L3, os números que sustentam esse texto ficavam só na sheet). Único cuidado: se quiséssemos
+comparar "score raso" vs "score profundo" como duas features de treino separadas, sobrescrever o
+mesmo campo perde essa distinção — resolvido com um campo booleano extra (`enriquecido_profundo`)
+em vez de duplicar os 14 campos.
+
+- **Nova propriedade HubSpot:** `enriquecido_profundo` (Deal, grupo `ia_enriquecimento`, tipo
+  `bool`/`booleancheckbox`) — criada via `POST /crm/v3/properties/deals` usando o node HTTP Request
+  com `authentication: predefinedCredentialType` + a credencial `HubSpot account` já cadastrada no
+  n8n (sem precisar de token cru desta vez). Detalhe da API: propriedade booleana exige o array
+  `options` com os dois valores (`true`/`false`) explícitos — a primeira tentativa sem isso voltou
+  `400 INVALID_BOOLEAN_OPTION`.
+- **`Montar Campos HubSpot` (L3):** ganhou os mesmos 14 campos do L2 (`score_tecnico`, `ipc`,
+  `potencial_comercial`, `oferta_recomendada`, as 6 dimensões, `site_tipo`, `nao_reivindicado`,
+  `flags_score`, `data_processamento_score`) lidos do Motor de Regras, mais `enriquecido_profundo:
+  true`. `Atualizar Deal` agora grava os 17 campos (2 de texto + 14 + a flag) no mesmo Deal.
+- **Teste real:** contra o Deal `60048853870` (Centro do Sorriso Odontologia) — o L2 tinha gravado
+  `score_tecnico=77`/`potencial_comercial=87`/`dim_autoridade=96` (discovery raso). Depois do L3
+  rodar (deep-dive, mesmo place), o Deal foi sobrescrito para `score_tecnico=83`/
+  `potencial_comercial=90`/`dim_autoridade=98` e `enriquecido_profundo=true` — confirmado lendo o
+  Deal de volta via API. Comportamento esperado: dado mais profundo prevalece.
+
 ## L3 — Enriquecimento (Pipeline B / C2)
 
 - **Workflow n8n:** `GBP Scoring - L3 Enriquecimento (Pipeline B / C2)` — `EFD7Drr0LDMqfDXw`
@@ -91,8 +119,9 @@ cabeçalhos — confirmei o cabeçalho completo (`GET .../values/leads!A1:BZ1`) 
   (Basic LLM Chain + Gemini Flash `models/gemini-2.5-flash`, temperature 0.3 — prompt de sistema
   reforça "só redige, não pontua", 6 dimensões, `[CERTEZA]`/`[HIPÓTESE]`, guarda de volume, 4 níveis
   de prioridade, bloco "Potencial Perdido", oferta recomendada tirada do JSON) → Set (monta
-  `analise_gbp_ia`+`dados_enriquecimento`) → HubSpot update Deal (só esses 2 campos; nunca
-  `closedwon`/`closedlost`).
+  `analise_gbp_ia`+`dados_enriquecimento`) → HubSpot update Deal (nesta versão inicial, só esses 2
+  campos; nunca `closedwon`/`closedlost`. Ver extensão acima: depois passou a gravar também os 14
+  campos numéricos/categóricos + `enriquecido_profundo`).
 - **Teste real no n8n:** Apify e HubSpot mockados via pin data; a chamada ao Gemini Flash rodou de
   verdade (subnode de IA não é pinável) — o relatório saiu em PT-BR, seguiu a estrutura pedida,
   ancorou cada achado no dado (`"nota de 87"`, `"120 avaliações"`), classificou gaps nos 4 níveis, e
