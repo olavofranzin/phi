@@ -130,13 +130,15 @@ Execução em `claude/gbp-scoring-motor-n8n-0zri0i` (log: `docs/handoff/2026-07-
 - **R3 ✅ testado real** `Comercial - Sync HubSpot -> Planilha` (`WRFU2NM8rLJU7bRT`, ativo, 6 h). Cursor em Data Table `gbp_sync_cursor` (`zPnW2B39G0ovWjpA`). 13 deals na 1ª execução (1 Vencido). Só LÊ o HubSpot. Bug `Number(null)=0` no `acerto_previsao` corrigido.
 - **R4 ✅ testado real** `Comercial - Guarda-Schema + Backup` (`vUI0pPlDASf64Htn`, ativo, diário 08:00). Schema espelhado em Data Table `gbp_leads_schema_canonico` (`QIrDCkhppfc0FfOH`, 60 linhas). Backup = duplica a aba (`backup_leads_AAAA-MM-DD`, retenção 30 d). Alerta Telegram `chatId 930549271`.
 
-### Watch-items (fechar antes de dar como concluído)
-1. 🔴 **`acerto_previsao` — fonte da previsão:** `potencial_comercial`/`oferta_recomendada` vivem na **planilha** (saída do motor), não no Deal. Confirmar que o sync lê a previsão da **linha da planilha** (senão o sinal de calibração fica vazio p/ a maioria — foi o sintoma do bug `Number(null)`).
-2. 🟠 **Backup na mesma planilha:** protege contra apagar COLUNA, não contra perder o ARQUIVO. Mover o snapshot p/ Drive/git quando houver credencial no cofre.
-3. 🟠 **Duas fontes de schema:** git `planilha-leads-schema.json` (contrato) × Data Table `gbp_leads_schema_canonico` (que o guarda lê). **Git é a fonte**; ao mudar o contrato, recarregar a Data Table (ideal: um passo que sincroniza Data Table ← git).
+### Watch-items (verificados 2026-07-11 na execução real do sync `WRFU2NM8rLJU7bRT`)
+1. ✅ **`acerto_previsao` — fonte VÁLIDA (corrige o watch-item anterior):** `potencial_comercial`, `oferta_recomendada`, `score_tecnico`, `ipc` **existem como propriedades do Deal no HubSpot** (o motor de scoring as grava) — o sync lê certo. **Mas 2 defeitos no nó "Derivar Campos de Aprendizado" (patch pronto):**
+   - 🟠 **`probabilidade`** grava o float cru `hs_deal_stage_probability` (`0.1000000000000000055511…`, 60 dígitos) → `probabilidade: p.hs_deal_stage_probability != null && p.hs_deal_stage_probability !== '' ? Math.round(Number(p.hs_deal_stage_probability)*100) : ''` (→ `10`, `100`). É só a probabilidade **do estágio**, não do lead.
+   - 🟠 **`acerto_previsao`** dispara em deal **não pontuado/legado** (`potencial_comercial`≈0 → "errou" falso). Trocar `temPotencial (!== '')` por `const potencial = Number(p.potencial_comercial); const temPotencial = Number.isFinite(potencial) && potencial > 0;`. E clampar `dias_no_funil` negativo (deal legado 2023 com `closedate<createdate` → `-63`) para `''`.
+2. 🟠 **Backup na mesma planilha** — mover p/ Drive/git quando houver credencial no cofre.
+3. 🟠 **Duas fontes de schema:** git `planilha-leads-schema.json` × Data Table `gbp_leads_schema_canonico`. **Git é a fonte**; sincronizar a Data Table ao mudar o contrato.
 4. **R2 não testado end-to-end** — validar na próxima extração real que as 6 features brutas chegam preenchidas.
-5. **R5 (governança) pendente:** registrar em `PHI — Fontes de Conhecimento` (depende da DB existir — lote K2 da Camada de Conhecimento) + ADR do Contrato de Dados.
-6. **Reconciliação de branch:** contrato + schema JSON vivem em `claude/agentic-agency-planning-KwJEw`; execução em `claude/gbp-scoring-motor-n8n-0zri0i`. No merge, conferir que o schema JSON segue refletindo as 60 colunas reais.
+5. ✅ **R5 — FEITO (parcial):** a DB `PHI - Fontes de Conhecimento` **existe** (`47424c69-9781-45fd-b9f1-27ca755561ec`) e a planilha **foi registrada** (page `39ab65e5-c72b-8115-9648-fb92b87e70c2`, evidência A). Falta só o **ADR** do Contrato de Dados (registrar no Notion).
+6. **Reconciliação de branch:** contrato + schema JSON em `claude/agentic-agency-planning-KwJEw`; execução em `claude/gbp-scoring-motor-n8n-0zri0i`. No merge, conferir schema JSON × 60 colunas reais.
 
 ## 6. Restauração imediata (checklist)
 1. Criar na aba `leads` as colunas 🔴/🟠 do §1.2 (**`Avaliação` é a mais urgente**) e o **bloco §1.4 inteiro**.
