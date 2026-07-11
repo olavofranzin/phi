@@ -137,7 +137,7 @@ Execução em `claude/gbp-scoring-motor-n8n-0zri0i` (log: `docs/handoff/2026-07-
 2. 🟠 **Backup na mesma planilha** — mover p/ Drive/git quando houver credencial no cofre.
 3. 🟠 **Duas fontes de schema:** git `planilha-leads-schema.json` × Data Table `gbp_leads_schema_canonico`. **Git é a fonte**; sincronizar a Data Table ao mudar o contrato.
 4. **R2 não testado end-to-end** — validar na próxima extração real que as 6 features brutas chegam preenchidas.
-5. ✅ **R5 — FEITO (parcial):** a DB `PHI - Fontes de Conhecimento` **existe** (`47424c69-9781-45fd-b9f1-27ca755561ec`) e a planilha **foi registrada** (page `39ab65e5-c72b-8115-9648-fb92b87e70c2`, evidência A). Falta só o **ADR** do Contrato de Dados (registrar no Notion).
+5. ✅ **R5 — FEITO:** planilha registrada em `PHI - Fontes de Conhecimento` (page `39ab65e5-c72b-8115-9648-fb92b87e70c2`, evidência A) + **ADR-31** criado (`39ab65e5-c72b-817b-87d1-f1ec824af590`, Status **Proposto** — aguarda o Olavo mover para Aceito). Documenta a política (contrato+guarda+backup) e os 2 loops (SOP-04).
 6. **Reconciliação de branch:** contrato + schema JSON em `claude/agentic-agency-planning-KwJEw`; execução em `claude/gbp-scoring-motor-n8n-0zri0i`. No merge, conferir schema JSON × 60 colunas reais.
 
 ## 6. Restauração imediata (checklist)
