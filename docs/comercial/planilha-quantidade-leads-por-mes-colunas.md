@@ -123,6 +123,21 @@ apagamento é **detectado em ≤24 h e sempre restaurável**. Opcional: auto-rec
 
 > Os dois loops vivem no **n8n** (persistente) — não em cron de sessão (que morre). MCP do n8n disponível para construir.
 
+## 5b. Estado AS-BUILT (2026-07-11) — construído pelo sub-chat
+Execução em `claude/gbp-scoring-motor-n8n-0zri0i` (log: `docs/handoff/2026-07-11-restaurar-planilha-leads-loops-sync-guarda-execution-log.md` **naquela branch**). Os workflows vivem no n8n (produção, independem de branch).
+- **R1 ✅** aba `leads` = **60 colunas** (36 originais + 24 restauradas em `AK1:BH1`, aditivo).
+- **R2 ✅ (não testado end-to-end)** aplicado no workflow REAL `HubSpot - Atualizar status e disparar extracao` (`kED2AlXJjIYgvHXH`), nó "Normalizar campos do lead" — **não** no `5L3SyzDkZqf1N6vW` (inativo/abandonado, ref. quebrada). `totalScore→Avaliação` agora é gravado.
+- **R3 ✅ testado real** `Comercial - Sync HubSpot -> Planilha` (`WRFU2NM8rLJU7bRT`, ativo, 6 h). Cursor em Data Table `gbp_sync_cursor` (`zPnW2B39G0ovWjpA`). 13 deals na 1ª execução (1 Vencido). Só LÊ o HubSpot. Bug `Number(null)=0` no `acerto_previsao` corrigido.
+- **R4 ✅ testado real** `Comercial - Guarda-Schema + Backup` (`vUI0pPlDASf64Htn`, ativo, diário 08:00). Schema espelhado em Data Table `gbp_leads_schema_canonico` (`QIrDCkhppfc0FfOH`, 60 linhas). Backup = duplica a aba (`backup_leads_AAAA-MM-DD`, retenção 30 d). Alerta Telegram `chatId 930549271`.
+
+### Watch-items (fechar antes de dar como concluído)
+1. 🔴 **`acerto_previsao` — fonte da previsão:** `potencial_comercial`/`oferta_recomendada` vivem na **planilha** (saída do motor), não no Deal. Confirmar que o sync lê a previsão da **linha da planilha** (senão o sinal de calibração fica vazio p/ a maioria — foi o sintoma do bug `Number(null)`).
+2. 🟠 **Backup na mesma planilha:** protege contra apagar COLUNA, não contra perder o ARQUIVO. Mover o snapshot p/ Drive/git quando houver credencial no cofre.
+3. 🟠 **Duas fontes de schema:** git `planilha-leads-schema.json` (contrato) × Data Table `gbp_leads_schema_canonico` (que o guarda lê). **Git é a fonte**; ao mudar o contrato, recarregar a Data Table (ideal: um passo que sincroniza Data Table ← git).
+4. **R2 não testado end-to-end** — validar na próxima extração real que as 6 features brutas chegam preenchidas.
+5. **R5 (governança) pendente:** registrar em `PHI — Fontes de Conhecimento` (depende da DB existir — lote K2 da Camada de Conhecimento) + ADR do Contrato de Dados.
+6. **Reconciliação de branch:** contrato + schema JSON vivem em `claude/agentic-agency-planning-KwJEw`; execução em `claude/gbp-scoring-motor-n8n-0zri0i`. No merge, conferir que o schema JSON segue refletindo as 60 colunas reais.
+
 ## 6. Restauração imediata (checklist)
 1. Criar na aba `leads` as colunas 🔴/🟠 do §1.2 (**`Avaliação` é a mais urgente**) e o **bloco §1.4 inteiro**.
 2. Fazer o nó de normalização do workflow Apify mapear `totalScore/imagesCount/additionalInfo/openingHours/bookingLinks/ownerUpdates`.

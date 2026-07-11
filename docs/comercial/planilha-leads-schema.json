@@ -6,7 +6,8 @@
     "gid": 0,
     "join_key": "id_hubspot",
     "dedup_key": "id",
-    "versao": "2026-07-10"
+    "versao": "2026-07-10",
+    "estado": "AS-BUILT 2026-07-11: todas as colunas listadas ja foram criadas na planilha (60 no total). O flag 'add' e historico (era a lista de restauracao). Espelho operacional deste schema vive na n8n Data Table 'gbp_leads_schema_canonico' (QIrDCkhppfc0FfOH), que o loop guarda-schema le — MANTER sincronizada com este arquivo (git = fonte)."
   },
   "colunas": [
     {"name": "id", "bloco": "chave", "origem": "apify.placeId", "add": false, "nota": "CONFIRMAR que guarda place_id; se nao, criar coluna place_id"},
