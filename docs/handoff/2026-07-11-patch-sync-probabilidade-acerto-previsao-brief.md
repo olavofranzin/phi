@@ -1,9 +1,9 @@
-# [BRIEF sub-chat] Patch — 2 correções no loop de sync (probabilidade + acerto_previsao)
+# [BRIEF sub-chat] Patch do sync + backup off-file no Drive (Comercial)
 
-> **Cole como 1ª mensagem.** Frente: Comercial. Runtime: **n8n** (MCP). Alvo: **1 nó** do workflow
-> **`Comercial - Sync HubSpot -> Planilha (loop de aprendizado)`** (`WRFU2NM8rLJU7bRT`, ativo, 6h).
-> **Escopo estrito:** editar SÓ o Code node **"Derivar Campos de Aprendizado"**. Nada mais. Não tocar em
-> outros nós, no schedule, nem no upsert. Verificado por análise da execução real `16160` (13 deals).
+> **Cole como 1ª mensagem.** Frente: Comercial. Runtime: **n8n** (MCP). **Dois lotes independentes**, ambos
+> em produção: **Lote 1** — patch no Code node "Derivar Campos de Aprendizado" do sync
+> `WRFU2NM8rLJU7bRT`. **Lote 2** — backup off-file no Google Drive no guarda-schema `vUI0pPlDASf64Htn`.
+> Escopo estrito por lote (não tocar em nada além do descrito). Verificado por análise da execução real `16160`.
 
 ## Contexto (o que está errado)
 O sync grava 2 campos incorretos na aba `leads` a cada 6h:
@@ -15,8 +15,8 @@ O sync grava 2 campos incorretos na aba `leads` a cada 6h:
    A fonte está OK — `potencial_comercial`/`oferta_recomendada`/`score_tecnico`/`ipc` **existem como propriedades
    do Deal no HubSpot** (o motor grava). O bug é o guard: `!== ''` deixa passar `0`.
 
-## Patch (no node "Derivar Campos de Aprendizado")
-No `jsCode`, dentro do `.map(...)`:
+## Lote 1 — Patch no nó "Derivar Campos de Aprendizado" (`WRFU2NM8rLJU7bRT`)
+Escopo estrito: SÓ este Code node. No `jsCode`, dentro do `.map(...)`:
 
 **a) probabilidade** — trocar
 ```js
@@ -49,18 +49,36 @@ let diasNoFunil = created ? Math.round((end.getTime() - created.getTime()) / 864
 if (diasNoFunil !== '' && diasNoFunil < 0) diasNoFunil = '';
 ```
 
+## Lote 2 — Backup OFF-FILE no Google Drive (`vUI0pPlDASf64Htn`)
+**Problema:** hoje o backup duplica a aba `leads` na **mesma** planilha (`backup_leads_AAAA-MM-DD`) — protege
+contra apagar COLUNA, mas não contra perder/corromper o ARQUIVO, e polui a planilha com N abas. **Já existe
+credencial Google Drive no n8n:** `7YDwXhsbVGkrlV5p` (tipo `googleDriveOAuth2Api`, "Google Drive account").
+
+**Mudança (adicionar ao guarda-schema, sem mexer no diff de schema/alerta Telegram):**
+- Nó **Google Drive → Copy file**: copiar o arquivo inteiro `1MuetJ4N7xiazkw55YOSHtq_nIaHPRKOE-g6GwfaNJKM`
+  para uma pasta de backups, nome `backup_leads_AAAA-MM-DD`. Copiar o arquivo **todo** (não só a aba) preserva
+  todas as abas + formatação = disaster recovery real. Credencial `7YDwXhsbVGkrlV5p`.
+- **Pasta:** criar/usar uma pasta Drive "PHI - Backups Planilha Leads" (Drive node `create folder` na 1ª vez,
+  ou confirmar com o Olavo um folderId existente) e guardar o `folderId`.
+- **Retenção Drive 30 dias:** listar `backup_leads_*` na pasta → deletar os com data > 30 dias (gate para não
+  chamar delete com lista vazia).
+- **Reduzir o backup in-file para 7 dias** (restauração rápida) — o Drive passa a ser a cópia durável de 30 dias.
+  Evita o bloat de 30 abas. (Remover o in-file de vez fica a critério do Olavo.)
+
 ## Método e guardrails
-- n8n SDK: `get_sdk_reference` → editar só o Code node → `validate_workflow` **antes** de publicar.
-- **Não** alterar o mapeamento do Google Sheets (as colunas já existem), nem o cursor, nem o schedule.
-- HubSpot: continua **só leitura** (nenhuma escrita no CRM).
-- Manter o workflow **ativo** após publicar.
+- n8n SDK: `get_sdk_reference` → editar → `validate_workflow` **antes** de publicar cada workflow.
+- **Lote 1:** não alterar mapeamento do Google Sheets, cursor nem schedule. **Lote 2:** não alterar o diff de
+  schema nem o alerta Telegram; só adicionar a cópia p/ Drive + retenção.
+- HubSpot: continua **só leitura** (nenhuma escrita no CRM). Escrita no Drive só na pasta de backup.
+- Manter os dois workflows **ativos** após publicar.
 
 ## Teste de aceitação
-- Rodar 1 execução **manual** (`executionMode: manual`) — não avança nada de errado (upsert idempotente).
-- No output do node "Derivar Campos de Aprendizado": `probabilidade` = inteiro (ex.: `10`, `100`), sem
-  decimais longos; deals `Aberto` seguem com `acerto_previsao=''`; nenhum deal não-pontuado com "errou/acertou";
-  `dias_no_funil` sem negativos.
-- Conferir 1 linha real na planilha (ex.: linha 3) depois do run: `probabilidade` legível.
+- **Lote 1:** rodar 1 execução **manual** do sync (upsert idempotente). No output do "Derivar Campos de
+  Aprendizado": `probabilidade` = inteiro (ex.: `10`, `100`), sem decimais longos; deals `Aberto` seguem com
+  `acerto_previsao=''`; nenhum deal não-pontuado com "errou/acertou"; `dias_no_funil` sem negativos. Conferir a
+  linha 3 real na planilha depois: `probabilidade` legível.
+- **Lote 2:** rodar 1 execução **manual** do guarda-schema → confirmar que surge `backup_leads_AAAA-MM-DD` **na
+  pasta do Drive** (não só na planilha) e que a retenção não apaga nada < 30 dias.
 
 ## Âncoras
 - Contrato de Dados (watch-items 2026-07-11): `docs/comercial/planilha-quantidade-leads-por-mes-colunas.md` §5b.
