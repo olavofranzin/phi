@@ -63,10 +63,30 @@ Nenhum gatilho de produção (Schedule/Webhook) — o motor **não roda sozinho 
 | Backfill `id_hubspot` | — | loop no L2 preenche `id_hubspot` na planilha |
 
 ## 5. Lacunas remanescentes (não bloqueiam; são o próximo trabalho)
-1. 🟠 **Autonomia** — sem Schedule Trigger; falta a varredura agendada de Deals qualificados sem `analise_gbp_ia`
-   chamando o L3 via Execute Workflow. Hoje só roda disparado à mão pelo L2.
-2. 🟡 **Resolução lead→`placeUrl`** — L3 tem `Buscar Lead` (planilha) + refs a Places; confirmar se resolve
-   `Deal/nome+cidade → placeUrl` sozinho ou ainda exige `placeUrl` pronto.
+
+### 5.1 ✅ Resolução lead→GBP — CONFIRMADO (2026-07-13): não há lacuna de `placeUrl`
+O L3 **não usa `placeUrl`** — o nó Apify (modo place) resolve por **`placeIds: [ $json.id ]`**, ou seja, pelo
+**place_id** que já é a coluna `id` da planilha (gravada na discovery). **Não precisa de Places Text Search nem
+de resolver `Deal/nome+cidade → placeUrl`.** O fluxo real do L3 já é um **sweep da planilha inteira**:
+```
+Buscar Lead (lê todas as linhas, sem filtro) → Loop Over Items
+  Loop→If (id≠'' E nome≠'' E analise_gbp_ia='') → Apify(place_id) → Motor → Gemini → HubSpot → Update planilha → Wait → volta
+  Loop (fim) → Call 'Enriquecimento Site L4'
+```
+O `If` já é o **guard de idempotência** (pula quem já tem `analise_gbp_ia`). O `Update row in sheet` casa por `id`.
+
+### 5.2 🟠 Autonomia — falta SÓ um Schedule Trigger, MAS há 2 pré-requisitos de segurança
+Como o L3 já se auto-varre, ligar autonomia é **adicionar um Schedule Trigger ligado ao `Buscar Lead`** (paralelo
+ao `Start (chamado por L2)`). **Antes de ligar**, resolver:
+- **(b) Falta guard de `id_hubspot`** 🔴 — `Atualizar Deal` usa `dealId = {{ $('Loop Over Items').item.json.id_hubspot }}`
+  com **`onError` default (stopWorkflow)**. O `If` não checa `id_hubspot`. Lead **sem Deal** (sem `id_hubspot`)
+  passa no `If`, é enriquecido e **quebra** no `Atualizar Deal` → **o sweep inteiro para**. Correção: acrescentar
+  `id_hubspot notEmpty` ao `If` (ou `onError:continueRegularOutput` no `Atualizar Deal`, ou um IF-guard como o do L2).
+- **(a) Sem gate de qualificação** 🟠 — o `If` enriquece **todo** lead não-enriquecido, não só os qualificados.
+  Deep-dive (`maxReviews:20`, `maxImages:10`) + Gemini por lead é caro. Decidir: enriquecer todos vs. gate por
+  `potencial_comercial ≥ X` / `dealstage`. Considerar também um teto por execução (custo/rate Apify+Gemini).
+
+### 5.3 Outras
 3. 🟡 **v1.1** — peso do SVC-SITE × força do GBP; Índice de Visibilidade multi-termo; passe de visão (`maxImages`).
 4. 🟢 **Reconciliação de branch** — `scripts/gbp_scoring_core.js` + log de build em
    `claude/gbp-scoring-motor-n8n-0zri0i`; design + contrato + este doc em `claude/agentic-agency-planning-KwJEw`.

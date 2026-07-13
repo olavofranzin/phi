@@ -251,8 +251,8 @@ saiu 0; reputação retirada do IPC v1 de propósito). Produção com `maxReview
 **Decisões antes "em aberto" já resolvidas no as-built:** #1 motor 02–04 = Code node JS no n8n (copy-paste entre WFs, ADR-25); #4 `leadScore`/`IPC`/oferta/dims **já são campos numéricos/enum no HubSpot** (grupo `ia_enriquecimento`) — não ficaram só em `dados_enriquecimento`; #6 benchmark por termo/categoria aplicado. A IA (Gemini `gemini-2.5-flash`, temp 0.3) segue **só redigindo** (05_ai_report).
 
 **Lacunas remanescentes (L4/operacional):**
-1. 🟠 **Autonomia:** nenhum Schedule Trigger — o motor roda só disparado à mão a partir do L2. Falta a varredura agendada de Deals qualificados sem `analise_gbp_ia`.
-2. 🟡 **Resolução lead→GBP:** L3 tem "Buscar Lead" (planilha) + referências a Places; confirmar se o passo "resolver Deal/nome→`placeUrl`" está completo ou ainda exige `placeUrl` pronto.
+1. ✅ **Resolução lead→GBP — CONFIRMADO (2026-07-13):** o L3 resolve por **place_id** (`placeIds:[$json.id]`), não por `placeUrl`; o `id` já é a coluna da planilha. **Sem lacuna** — não precisa de Places Text Search. O L3 inclusive já é um **sweep** da planilha (Buscar Lead→Loop→If(analise vazio)→enrich→Call L4).
+2. 🟠 **Autonomia:** falta **só um Schedule Trigger** ligado ao `Buscar Lead`. **2 pré-requisitos antes de ligar:** (b) 🔴 sem guard de `id_hubspot` no `If` + `Atualizar Deal` com `onError` default → lead sem Deal **para o sweep**; (a) 🟠 sem gate de qualificação → enriquece **todo** lead (deep-dive caro). Detalhe: reconciliação §5.2.
 3. 🟡 **v1.1** (peso do site × força GBP), Índice de Visibilidade multi-termo, passe de visão (`maxImages`).
 4. 🟢 **Reconciliação de branch:** `gbp_scoring_core.js` + log de build em `claude/gbp-scoring-motor-n8n-0zri0i`; este design + contrato em `claude/agentic-agency-planning-KwJEw`.
 
