@@ -89,6 +89,17 @@ Agendada → Tomada de Decisão → Contrato Enviado → Vencido / Perdido.
 > **Melhoria de qualidade:** `closed_lost_reason` hoje é **texto livre** → padronizar como **dropdown**
 > (ex.: preço, timing, sem-fit, concorrente, sem-resposta, orçamento) melhora muito o aprendizado de perda.
 
+### 1.5 Saídas dos pipelines de scoring GBP (gravadas fora do loop de sync)
+Colunas gravadas pelos workflows de scoring GBP — **não** pelo loop §5.1. Detectadas no cabeçalho real em
+2026-07-13 e registradas aqui para fechar o drift git↔planilha (o guarda-schema só alerta coluna *ausente*,
+não coluna *extra*, então elas passavam despercebidas). Agora fazem parte do contrato e são protegidas.
+
+| Coluna | Origem (workflow) | Função no aprendizado |
+|---|---|---|
+| `score_gbp` | **GBP Scoring - L2 Discovery** (Pipeline A) | score do perfil GBP na fase de discovery/triagem |
+| `analise_gbp_ia` | **GBP Scoring - L3 Enriquecimento** (Pipeline B / C2) | **texto longo** — diagnóstico IA do perfil GBP (vai na aba 'IA/Diagnóstico' do record HubSpot) |
+| `enriquecimento_site` | **GBP Scoring - L3 Enriquecimento** (Pipeline B / C2) | enriquecimento/análise do site — *origem a confirmar* (companheira de `enriquecimento`) |
+
 ## 2. Aba `qtd leads mes` (gid 624786381) — controle de cota
 Leitura pelo workflow: `vagas = max(0, 50 − leads_do_mês)` (free tier Apify). Colunas mínimas: **`mês`**
 (competência) + **`quantidade`** (leads extraídos no mês). Confirmar cabeçalhos exatos.
@@ -130,13 +141,29 @@ Execução em `claude/gbp-scoring-motor-n8n-0zri0i` (log: `docs/handoff/2026-07-
 - **R3 ✅ testado real** `Comercial - Sync HubSpot -> Planilha` (`WRFU2NM8rLJU7bRT`, ativo, 6 h). Cursor em Data Table `gbp_sync_cursor` (`zPnW2B39G0ovWjpA`). 13 deals na 1ª execução (1 Vencido). Só LÊ o HubSpot. Bug `Number(null)=0` no `acerto_previsao` corrigido.
 - **R4 ✅ testado real** `Comercial - Guarda-Schema + Backup` (`vUI0pPlDASf64Htn`, ativo, diário 08:00). Schema espelhado em Data Table `gbp_leads_schema_canonico` (`QIrDCkhppfc0FfOH`, 60 linhas). Backup = duplica a aba (`backup_leads_AAAA-MM-DD`, retenção 30 d). Alerta Telegram `chatId 930549271`.
 
-### Watch-items (verificados 2026-07-11 na execução real do sync `WRFU2NM8rLJU7bRT`)
-1. ✅ **`acerto_previsao` — fonte VÁLIDA (corrige o watch-item anterior):** `potencial_comercial`, `oferta_recomendada`, `score_tecnico`, `ipc` **existem como propriedades do Deal no HubSpot** (o motor de scoring as grava) — o sync lê certo. **Mas 2 defeitos no nó "Derivar Campos de Aprendizado" (patch pronto):**
-   - 🟠 **`probabilidade`** grava o float cru `hs_deal_stage_probability` (`0.1000000000000000055511…`, 60 dígitos) → `probabilidade: p.hs_deal_stage_probability != null && p.hs_deal_stage_probability !== '' ? Math.round(Number(p.hs_deal_stage_probability)*100) : ''` (→ `10`, `100`). É só a probabilidade **do estágio**, não do lead.
-   - 🟠 **`acerto_previsao`** dispara em deal **não pontuado/legado** (`potencial_comercial`≈0 → "errou" falso). Trocar `temPotencial (!== '')` por `const potencial = Number(p.potencial_comercial); const temPotencial = Number.isFinite(potencial) && potencial > 0;`. E clampar `dias_no_funil` negativo (deal legado 2023 com `closedate<createdate` → `-63`) para `''`.
-2. 🔧 **Backup off-file** — credencial Google Drive **existe** no n8n (`7YDwXhsbVGkrlV5p`). Especificado no brief `docs/handoff/2026-07-11-patch-sync-probabilidade-acerto-previsao-brief.md` (Lote 2): copiar o arquivo inteiro p/ pasta Drive "PHI - Backups Planilha Leads", retenção 30d; in-file reduzido a 7d. **Pendente aplicar** (sub-chat).
-3. 🟠 **Duas fontes de schema:** git `planilha-leads-schema.json` × Data Table `gbp_leads_schema_canonico`. **Git é a fonte**; sincronizar a Data Table ao mudar o contrato.
+### Patch de sync + backup off-file — APLICADO E VERIFICADO (2026-07-13)
+Brief `docs/handoff/2026-07-11-patch-sync-probabilidade-acerto-previsao-brief.md` (Lotes 1 e 2) foi
+**construído e publicado por sub-chat** (~14:17–14:18) e **verificado por este chat** em dado vivo:
+- **Lote 1** (`WRFU2NM8rLJU7bRT`, nó "Derivar Campos de Aprendizado"): `probabilidade` = inteiro (linha 3/CISO
+  `60040241490` = `10`, o float de 60 dígitos sumiu de **todas** as 37 linhas); `acerto_previsao` sem falso
+  positivo (0 "acertou"/"errou" — nenhum deal fechado ainda); `dias_no_funil` sem negativos.
+- **Lote 2** (`vUI0pPlDASf64Htn`): execução manual `17222` criou o backup off-file real `backup_leads_2026-07-13`
+  na pasta Drive "PHI - Backups Planilha Leads" (`18FuTQi_CLfFN5AjMTXufr8srczSXddhO`, cred `7YDwXhsbVGkrlV5p`);
+  retenção Drive 30d rodou sem apagar nada; in-file reduzido a 7d.
+- **Nota:** há **2 arquivos** `backup_leads_2026-07-13` no Drive (build do sub-chat + verificação deste chat) —
+  cosmético, a retenção limpa em 30d.
+
+### Watch-items (atualizados 2026-07-13)
+1. ✅ **`acerto_previsao` + `probabilidade` + `dias_no_funil` — CORRIGIDOS** (Lote 1 acima). Fonte válida
+   (`potencial_comercial`/`oferta_recomendada`/`score_tecnico`/`ipc` existem como propriedades do Deal). Encerrado.
+2. ✅ **Backup off-file — FEITO** (Lote 2 acima). Encerrado.
+3. 🟠 **Duas fontes de schema:** git `planilha-leads-schema.json` (63 colunas) × Data Table
+   `gbp_leads_schema_canonico` (`QIrDCkhppfc0FfOH`). **Git é a fonte.** Ao fechar o drift das 3 colunas de scoring
+   GBP (§1.5), sincronizar a Data Table adicionando `enriquecimento_site`, `score_gbp`, `analise_gbp_ia` para que
+   o guarda passe a **protegê-las**.
 4. **R2 não testado end-to-end** — validar na próxima extração real que as 6 features brutas chegam preenchidas.
+7. 🟢 **Drift git↔planilha fechado (2026-07-13):** cabeçalho real = **63 colunas** (60 do contrato + 3 dos
+   pipelines de scoring GBP, §1.5). Documentadas no contrato e no schema JSON no mesmo commit.
 5. ✅ **R5 — FEITO:** planilha registrada em `PHI - Fontes de Conhecimento` (page `39ab65e5-c72b-8115-9648-fb92b87e70c2`, evidência A) + **ADR-31** criado (`39ab65e5-c72b-817b-87d1-f1ec824af590`, Status **Proposto** — aguarda o Olavo mover para Aceito). Documenta a política (contrato+guarda+backup) e os 2 loops (SOP-04).
 6. **Reconciliação de branch:** contrato + schema JSON em `claude/agentic-agency-planning-KwJEw`; execução em `claude/gbp-scoring-motor-n8n-0zri0i`. No merge, conferir schema JSON × 60 colunas reais.
 

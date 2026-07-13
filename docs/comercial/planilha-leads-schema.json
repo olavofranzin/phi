@@ -6,8 +6,8 @@
     "gid": 0,
     "join_key": "id_hubspot",
     "dedup_key": "id",
-    "versao": "2026-07-10",
-    "estado": "AS-BUILT 2026-07-11: todas as colunas listadas ja foram criadas na planilha (60 no total). O flag 'add' e historico (era a lista de restauracao). Espelho operacional deste schema vive na n8n Data Table 'gbp_leads_schema_canonico' (QIrDCkhppfc0FfOH), que o loop guarda-schema le — MANTER sincronizada com este arquivo (git = fonte)."
+    "versao": "2026-07-13",
+    "estado": "AS-BUILT 2026-07-13: 63 colunas reais no cabecalho da aba leads. 60 do contrato + 3 gravadas pelos pipelines de scoring GBP (enriquecimento_site, score_gbp, analise_gbp_ia), adicionadas aqui para fechar o drift git<->planilha detectado em 2026-07-13. O flag 'add' e historico (era a lista de restauracao). Espelho operacional deste schema vive na n8n Data Table 'gbp_leads_schema_canonico' (QIrDCkhppfc0FfOH), que o loop guarda-schema le — MANTER sincronizada com este arquivo (git = fonte)."
   },
   "colunas": [
     {"name": "id", "bloco": "chave", "origem": "apify.placeId", "add": false, "nota": "CONFIRMAR que guarda place_id; se nao, criar coluna place_id"},
@@ -69,6 +69,9 @@
     {"name": "nba_aceite", "bloco": "aprendizado", "origem": "hubspot.proxima_acao_aceite", "add": true, "nota": "pendente|aceita|rejeitada — feedback do NBA"},
     {"name": "abordagem_ia", "bloco": "aprendizado", "origem": "hubspot.abordagem_sugerida_ia", "add": true},
     {"name": "acerto_previsao", "bloco": "aprendizado", "origem": "derivado(potencial_comercial/oferta_recomendada x hubspot_status)", "add": true, "nota": "sinal de calibracao do motor"},
-    {"name": "data_sync_hubspot", "bloco": "aprendizado", "origem": "$now(loop sync)", "add": true, "nota": "auditoria da ultima sincronizacao"}
+    {"name": "data_sync_hubspot", "bloco": "aprendizado", "origem": "$now(loop sync)", "add": true, "nota": "auditoria da ultima sincronizacao"},
+    {"name": "enriquecimento_site", "bloco": "feature", "origem": "GBP Scoring - L3 Enriquecimento (Pipeline B / C2)", "add": false, "nota": "origem a CONFIRMAR — provavel analise IA do site (companheira de enriquecimento); registrada 2026-07-13 p/ fechar drift"},
+    {"name": "score_gbp", "bloco": "scoring", "origem": "GBP Scoring - L2 Discovery (Pipeline A)", "add": false, "nota": "score do perfil GBP gravado na fase de discovery; registrada 2026-07-13 p/ fechar drift"},
+    {"name": "analise_gbp_ia", "bloco": "scoring", "origem": "GBP Scoring - L3 Enriquecimento (Pipeline B / C2)", "add": false, "nota": "texto longo — diagnostico IA do perfil GBP; registrada 2026-07-13 p/ fechar drift"}
   ]
 }
