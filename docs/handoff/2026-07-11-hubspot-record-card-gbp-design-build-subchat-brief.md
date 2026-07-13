@@ -27,24 +27,27 @@ e os **6 `dim_*`**: `dim_saude`, `dim_seo`, `dim_autoridade`, `dim_conversao`, `
 5. **NBA:** chip de `proxima_acao_aceite` (Pendente/Aceita/Rejeitada).
 > Regra de limpeza: **nenhum texto longo no card**; tudo que é string extensa vai pra aba (§3).
 
-## 2. Fase 0 — CAMINHO e viabilidade (portal NÃO é Enterprise)
-Confirmado: `5633277` = accountType STANDARD, **não-Enterprise** → **UI extension de private app NÃO roda**
-(private app React exige Enterprise). Caminho correto: **App Card (UI extension) como PUBLIC APP, construída na
-conta de desenvolvedor**, instalada no portal.
+## 2. Fase 0 — CAMINHO e viabilidade (portal é Free — CONFIRMADO pelo Olavo 2026-07-13)
+Confirmado: `5633277` = accountType STANDARD **e tier Free** (Olavo confirmou 2026-07-13). Isso fecha o caminho:
+- **UI extension de private app NÃO roda** (private app React exige Enterprise).
+- **App Card de public app NÃO renderiza em produção Free** — só a partir de plano **PAGO (Starter+)**.
 
-**Realidade de renderização (fonte: docs + comunidade HubSpot, jul/2026):**
-- O card **renderiza numa Developer Test Account** (grátis, features completas) → serve para **construir e
-  demonstrar** a versão premium.
-- Em **produção**, App Card de public app **só aparece em plano PAGO (Starter+)**; em **Free NÃO renderiza**.
-  - **Se `5633277` for Free:** a extension fica **protótipo no dev test account** até upgrade; produção recebe o **plano nativo** (§3+§6) já.
-  - **Se for Starter+/Pro:** confirmar suporte a App Card de public app nesse tier e instalar.
-- **Setup (Olavo está finalizando):** conta de desenvolvedor + Developer Test Account; HubSpot CLI
-  (`@hubspot/cli`, auth por **personal access key** da dev account — a credencial n8n `nKntASZQRG3NzatW` é de API, **não** serve pro CLI).
-- **Legacy:** construir como **App Card (UI extension)**, não CRM card clássico (legacy sai em 31/out/2026).
+**Consequência decisiva (não re-verificar tier — já está resolvido):**
+- A **Camada B (extension)** fica **exclusivamente como protótipo/demo no Developer Test Account** — **não tentar
+  instalar/promover em produção** enquanto o portal for Free. Isso serve pra construir e demonstrar a versão premium
+  e ficar pronta pra promover **no dia do upgrade** para Starter+.
+- A **Camada A (nativa)** é a que vai pra **produção agora** e carrega ~80% do valor (página limpa e hierárquica).
+- **Regra:** o sub-chat **não** deve gastar ciclo confirmando Free vs Starter (resolvido) nem tentar contornar a
+  limitação de plano pra forçar a extension na produção. Se algo empurrar nessa direção, parar e reportar.
 
-### Entrega em 2 camadas (recomendado — não travar valor no tier)
-- **(A) NATIVO em produção AGORA** (§3 + §6): aba 'IA/Diagnóstico' + Destaques de dados + grupos de propriedades. Funciona em **qualquer tier**; entrega ~80% do valor (página limpa e hierárquica).
-- **(B) EXTENSION como protótipo** (§4) no Developer Test Account + **mockup** (§5) — pronta para promover à produção quando o tier permitir.
+**Setup (Olavo está finalizando):** conta de desenvolvedor + Developer Test Account; HubSpot CLI
+(`@hubspot/cli`, auth por **personal access key** da dev account — a credencial n8n `nKntASZQRG3NzatW` é de API,
+**não** serve pro CLI).
+**Legacy:** construir como **App Card (UI extension)**, não CRM card clássico (legacy sai em 31/out/2026).
+
+### Entrega em 2 camadas (portal Free → esta é a estratégia, não uma opção)
+- **(A) NATIVO em produção AGORA** (§3 + §6): aba 'IA/Diagnóstico' + Destaques de dados + grupos de propriedades. Funciona em Free; entrega ~80% do valor (página limpa e hierárquica). **É a entrega que o Olavo vê no portal real.**
+- **(B) EXTENSION como protótipo** (§4) no Developer Test Account + **mockup** (§5) — **não vai pra produção agora** (Free não renderiza); fica pronta para promover à produção **no upgrade** para Starter+.
 
 ## 3. Aba nativa 'IA / Diagnóstico' (não precisa de dev)
 Adicionar uma **aba** na coluna central (Settings → Objetos → Negócios → Personalização de registro) com cards de
@@ -73,11 +76,11 @@ Gerar um **esboço das 3 colunas** mostrando: esquerda (negócio/contato — man
 - Se a API/CLI não permitir algo (placement, plano), **reportar e cair no plano nativo** — nunca contornar limitação de plano.
 
 ## 8. Entregáveis do sub-chat
-1. **Relatório de viabilidade** — tier real do `5633277` (Free vs Starter+), setup da dev account/CLI ok?
+1. **Relatório de setup** — dev account + Developer Test Account + CLI (`@hubspot/cli`) autenticados e OK. (Tier já confirmado: **Free** — não re-verificar; produção recebe só a Camada A.)
 2. **Mockup** (Claude Design) das 3 colunas.
 3. **Spec** campo→coluna→card/aba (a partir de §1/§3/§6).
-4. **Camada A — produção AGORA (qualquer tier):** aba 'IA/Diagnóstico' + Destaques de dados + grupos aplicados/documentados.
-5. **Camada B — protótipo:** projeto public app (App Card) construído e testado no **Developer Test Account** (Niti como smoke). Instalar na produção **só se** o tier permitir (Starter+); senão, fica pronto para promover no upgrade.
+4. **Camada A — produção AGORA (Free):** aba 'IA/Diagnóstico' + Destaques de dados + grupos aplicados/documentados. **Esta é a única camada que toca o portal real.**
+5. **Camada B — protótipo (só Developer Test Account):** projeto public app (App Card) construído e testado no **Developer Test Account** (Niti como smoke). **Não instalar em produção** (Free não renderiza); deixar pronto para promover no upgrade para Starter+.
 
 ## 9. Teste de aceitação
 - No record do **Niti**: card mostra Potencial 79, Oferta SVC-ADS (badge), IPC 11, Score 75, as 6 dimensões em barras, e os chips de sinal; aba 'IA/Diagnóstico' com os textões; visão geral **limpa** (sem texto longo solto).
