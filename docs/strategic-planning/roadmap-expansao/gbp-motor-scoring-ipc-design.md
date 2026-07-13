@@ -233,7 +233,32 @@ saiu 0; reputação retirada do IPC v1 de propósito). Produção com `maxReview
 5. **Tamanho do array de buscas** (custo da visibilidade) — começar com 5.
 6. **Benchmark por termo/categoria** (não misturar segmentos) — regra confirmada na calibração.
 
+## Estado AS-BUILT (2026-07-13) — o motor está CONSTRUÍDO (não é mais "a construir")
+> Reconciliação do design (plano) com o que existe vivo no n8n. Verificado por leitura direta dos workflows
+> em 2026-07-13. O log de build original (`2026-07-10-motor-scoring-gbp-build-execution-log.md`) e o port JS
+> (`scripts/gbp_scoring_core.js`) vivem na branch **`claude/gbp-scoring-motor-n8n-0zri0i`** — os workflows
+> vivos evoluíram além dele (ver reconciliação: `docs/handoff/2026-07-13-motor-scoring-gbp-as-built-reconciliacao.md`).
+
+**Cadeia real (tudo on-demand — `triggerCount:0`, sem Schedule):** `L2 Discovery → chama L3 → chama L4`.
+
+| Módulo | Workflow n8n (ID) | Estado | Grava |
+|---|---|---|---|
+| **L1 Core (teste)** | `GBP Scoring - L1 Core Engine (teste)` · `dtXFdLAHp7HmUh7o` | harness de validação | — (bate com `gbp_scoring_prototype.py`) |
+| **L2 Discovery (A)** | `GBP Scoring - L2 Discovery (Pipeline A)` · `5j79f7oR8x1Nxs4q` | active, on-demand | planilha `leads` (14 scores + **`score_gbp`**, upsert por `id`) · Deal HubSpot (14 props) · backfill `id_hubspot` |
+| **L3 Enriquecimento (B/C2)** | `GBP Scoring - L3 Enriquecimento (Pipeline B / C2)` · `EFD7Drr0LDMqfDXw` | active, chamado por L2 | HubSpot (**`analise_gbp_ia`** + `dados_enriquecimento` + 14 scores + `enriquecido_profundo`) · planilha (`analise_gbp_ia`) |
+| **L4 Enriquecimento Site** | `Enriquecimento Site L4` · `5L3SyzDkZqf1N6vW` (repurposado do antigo discovery) | chamado por L3 | planilha (**`enriquecimento_site`**) |
+
+**Decisões antes "em aberto" já resolvidas no as-built:** #1 motor 02–04 = Code node JS no n8n (copy-paste entre WFs, ADR-25); #4 `leadScore`/`IPC`/oferta/dims **já são campos numéricos/enum no HubSpot** (grupo `ia_enriquecimento`) — não ficaram só em `dados_enriquecimento`; #6 benchmark por termo/categoria aplicado. A IA (Gemini `gemini-2.5-flash`, temp 0.3) segue **só redigindo** (05_ai_report).
+
+**Lacunas remanescentes (L4/operacional):**
+1. 🟠 **Autonomia:** nenhum Schedule Trigger — o motor roda só disparado à mão a partir do L2. Falta a varredura agendada de Deals qualificados sem `analise_gbp_ia`.
+2. 🟡 **Resolução lead→GBP:** L3 tem "Buscar Lead" (planilha) + referências a Places; confirmar se o passo "resolver Deal/nome→`placeUrl`" está completo ou ainda exige `placeUrl` pronto.
+3. 🟡 **v1.1** (peso do site × força GBP), Índice de Visibilidade multi-termo, passe de visão (`maxImages`).
+4. 🟢 **Reconciliação de branch:** `gbp_scoring_core.js` + log de build em `claude/gbp-scoring-motor-n8n-0zri0i`; este design + contrato em `claude/agentic-agency-planning-KwJEw`.
+
 ## Âncoras
+- **AS-BUILT / reconciliação (2026-07-13):** `docs/handoff/2026-07-13-motor-scoring-gbp-as-built-reconciliacao.md`.
+- **Build (log original, branch do motor):** `docs/handoff/2026-07-10-motor-scoring-gbp-build-execution-log.md`.
 - **Build (hand-off do sub-chat):** `docs/handoff/2026-07-10-motor-scoring-gbp-build-subchat-brief.md`.
 - Rubrica (lente): `docs/conhecimento/rubricas/gbp-auditoria-10-pilares.md` (§"Campos confirmados").
 - Brief do agente: `docs/handoff/2026-07-05-comercial-c2-enriquecimento-gbp-brief.md`.

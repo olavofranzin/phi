@@ -98,7 +98,7 @@ não coluna *extra*, então elas passavam despercebidas). Agora fazem parte do c
 |---|---|---|
 | `score_gbp` | **GBP Scoring - L2 Discovery** (Pipeline A) | score do perfil GBP na fase de discovery/triagem |
 | `analise_gbp_ia` | **GBP Scoring - L3 Enriquecimento** (Pipeline B / C2) | **texto longo** — diagnóstico IA do perfil GBP (vai na aba 'IA/Diagnóstico' do record HubSpot) |
-| `enriquecimento_site` | **GBP Scoring - L3 Enriquecimento** (Pipeline B / C2) | enriquecimento/análise do site — *origem a confirmar* (companheira de `enriquecimento`) |
+| `enriquecimento_site` | **Enriquecimento Site L4** (`5L3SyzDkZqf1N6vW`, chamado pelo L3) | enriquecimento/análise do site (companheira de `enriquecimento`) |
 
 ## 2. Aba `qtd leads mes` (gid 624786381) — controle de cota
 Leitura pelo workflow: `vagas = max(0, 50 − leads_do_mês)` (free tier Apify). Colunas mínimas: **`mês`**

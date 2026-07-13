@@ -70,7 +70,7 @@
     {"name": "abordagem_ia", "bloco": "aprendizado", "origem": "hubspot.abordagem_sugerida_ia", "add": true},
     {"name": "acerto_previsao", "bloco": "aprendizado", "origem": "derivado(potencial_comercial/oferta_recomendada x hubspot_status)", "add": true, "nota": "sinal de calibracao do motor"},
     {"name": "data_sync_hubspot", "bloco": "aprendizado", "origem": "$now(loop sync)", "add": true, "nota": "auditoria da ultima sincronizacao"},
-    {"name": "enriquecimento_site", "bloco": "feature", "origem": "GBP Scoring - L3 Enriquecimento (Pipeline B / C2)", "add": false, "nota": "origem a CONFIRMAR — provavel analise IA do site (companheira de enriquecimento); registrada 2026-07-13 p/ fechar drift"},
+    {"name": "enriquecimento_site", "bloco": "feature", "origem": "Enriquecimento Site L4 (5L3SyzDkZqf1N6vW, chamado pelo L3)", "add": false, "nota": "enriquecimento/analise do site; origem confirmada na reconciliacao 2026-07-13"},
     {"name": "score_gbp", "bloco": "scoring", "origem": "GBP Scoring - L2 Discovery (Pipeline A)", "add": false, "nota": "score do perfil GBP gravado na fase de discovery; registrada 2026-07-13 p/ fechar drift"},
     {"name": "analise_gbp_ia", "bloco": "scoring", "origem": "GBP Scoring - L3 Enriquecimento (Pipeline B / C2)", "add": false, "nota": "texto longo — diagnostico IA do perfil GBP; registrada 2026-07-13 p/ fechar drift"}
   ]
