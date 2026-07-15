@@ -95,3 +95,54 @@
 | Enriquecimento Site L4 | `5L3SyzDkZqf1N6vW` | Padrão de enriquecimento Gemini + Google Search grounding (ref. item 4). |
 | Comercial - Deduplicar Leads HubSpot | `izimrLm19H4i6LOq` | Deduplica deals em "Prospectado" — cuidado com duplicatas criadas. |
 | Comercial - Sync HubSpot → Planilha (loop de aprendizado) | `WRFU2NM8rLJU7bRT` | Também sincroniza HubSpot→planilha — verificar sobreposição com o item 1. |
+
+---
+
+## Testes a conduzir (para averiguar as alterações)
+
+> A execução real contra n8n/HubSpot/Apify/Sheets ao vivo é feita pelo Claude no aceite. O executor conduz os testes abaixo **sobre o arquivo JSON** (estrutural + rastreio lógico). Marque como `PENDENTE-LIVE` o que só puder ser confirmado em execução real.
+
+### Bloco A — Validação estrutural (obrigatória; cada item = PASS/FAIL)
+1. `jq . workflows/hubspot-status-extracao.json` roda sem erro (JSON válido).
+2. Toda expressão `$('Nome do Nó')` referencia um nó que existe; toda entrada em `connections` aponta para nós existentes (sem referência órfã).
+3. Todos os `id` de nós e o `id` do workflow preservados; nós novos têm `id`.
+4. `Google Gemini Chat Model` **e** `Google Gemini Chat Model1` com `modelName` **não-vazio**.
+5. `Atualizar status do lead na planilha`: `matchingColumns` contém **`id_deal_hubspot`** (e **não** `id_hubspot`).
+6. `Mapear estagio para status`: `mode = "runOnceForEachItem"`.
+7. `If Quantidade_vagas`: condição única **`vagas > 0`** (IF v2), sem 2ª condição malformada.
+8. `Get row(s)` (Data Table): filtro com **`keyName` preenchido**.
+9. `Get dataset items`: `offset = 0` e `limit` numérico (não `null`/vazio).
+10. `Salvar lead bruto na planilha`: mapeamentos referenciam **`$('Normalizar campos do lead')`**; nenhum mapeamento `"="` vazio.
+11. `Buscar lead por place_id`: `whenFilterHasNoMatch` definido (trata lead novo).
+12. Nós Agente (`Agente de Enriquecimento`, `Agente de Enriquecimento1`): `onError = "continueRegularOutput"` e `retryOnFail = true`.
+13. Item 6: existe um `If` que só grava quando `output` é **não-vazio**, antes de `Atualizar lead enriquecido na planilha1` e de `Update enriquecimento`.
+14. `Loop Over Items`: a saída "loop" **não** religa a `Run Google Maps Scraper` (sem re-scrape por batch).
+15. Watermark presente: `Deals que mudaram de status`/`Get recently created/updated deals` limita por data de modificação; nó vestigial removido/neutralizado.
+16. Restrições respeitadas: gatilho ainda é Schedule 2x/dia (sem webhook); contagem ainda lê a célula agregada; `Wait`/`Wait1` presentes; `active` continua `false`.
+
+### Bloco B — Rastreio lógico por cenário (simular o fluxo com estes dados)
+Para cada cenário, percorra o grafo e registre a saída esperada de cada nó-chave:
+
+- **C1 — mudança de status:** entrada `deal_id="D123"`, `novo_estagio="qualifiedtobuy"`. Esperado: `status_mapeado="Interação Instagram"`; `Atualizar status do lead na planilha` casa a linha por `id_deal_hubspot="D123"` e grava o status (atualiza, **não** cria linha nova).
+- **C2 — cálculo de vagas:** célula agregada = `47`. Esperado: `vagas=3`; `If Quantidade_vagas` passa (true); `Run Google Maps Scraper` recebe `maxCrawledPlacesPerSearch=3`.
+- **C3 — lead novo:** `place_id="ChIJnovo..."` não existe na planilha. Esperado: ramo "novo" → `Salvar lead bruto` grava campos **não-vazios** vindos do Normalizar → `Criar deal no HubSpot` → `id_deal_hubspot` gravado na planilha.
+- **C4 — lead já existente:** `place_id` já na planilha. Esperado: ramo "existente" → **não** duplica linha nem deal.
+- **C5 — Gemini falha (free tier):** `Agente de Enriquecimento` retorna erro. Esperado: wf **não interrompe**; lead segue sem `enriquecimento`; o loop do item 6 o recaptura, reenvia, e **se o output vier vazio, NÃO grava** no HubSpot/planilha.
+- **C6 — fechamento:** loop de re-enriquecimento chega em "done". Esperado: dispara `Call 'GBP Scoring - L2 Discovery (Pipeline A)'` (`5j79f7oR8x1Nxs4q`).
+
+### Bloco C — Execução real (gate final; conduzida pelo Claude no aceite)
+Push ao n8n (`update_workflow` no ID `kED2AlXJjIYgvHXH`) + execução controlada; confere: linha atualizada (não duplicada) na aba `leads`; Apify chamado com nº de vagas correto; deal criado no HubSpot com `id_deal_hubspot` refletido na planilha; enriquecimento gravado só quando preenchido; L2 Discovery disparado. Se o executor tiver acesso de escrita a uma **cópia de teste**, pode antecipar este bloco; caso contrário, deixar para o Claude.
+
+---
+
+## Meta — critérios para reportar "correção efetuada"
+
+Só reporte a correção como **efetuada** quando **TODOS** os itens abaixo forem verdadeiros. Se algum depender de execução real que você não pôde rodar, reporte-o como `PENDENTE-LIVE (Claude)` — não como concluído.
+
+1. **Bloco A 100% PASS** (16/16 checagens estruturais).
+2. **Bloco B**: os **7 comportamentos** rastreáveis de ponta a ponta com as saídas esperadas dos 6 cenários (C1–C6).
+3. **12 bugs corrigidos** (checklist da seção "Problemas confirmados"), cada um com PASS.
+4. **Zero referências quebradas** e JSON válido.
+5. **Zero restrições violadas** (gatilho schedule mantido, célula agregada mantida, ids preservados, waits mantidos, `active=false`).
+
+Enquanto qualquer item de 1–5 estiver FAIL, a correção **não** está efetuada. O relatório final deve trazer o resultado item a item (PASS / FAIL / PENDENTE-LIVE) para que o Claude faça a validação real (Bloco C) e o aceite.
