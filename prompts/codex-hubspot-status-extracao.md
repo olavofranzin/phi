@@ -5,6 +5,25 @@
 
 ---
 
+## Localização dos arquivos (GitHub)
+
+- **Repositório:** `olavofranzin/phi` (privado — precisa de acesso autenticado)
+- **Branch:** `claude/fix-daily-entry-workflow-dC96Q`
+
+| Arquivo | Caminho no repo | URL |
+|---|---|---|
+| Workflow a editar | `workflows/hubspot-status-extracao.json` | https://github.com/olavofranzin/phi/blob/claude/fix-daily-entry-workflow-dC96Q/workflows/hubspot-status-extracao.json |
+| Este brief | `prompts/codex-hubspot-status-extracao.md` | https://github.com/olavofranzin/phi/blob/claude/fix-daily-entry-workflow-dC96Q/prompts/codex-hubspot-status-extracao.md |
+
+**Raw (para baixar direto):**
+`https://raw.githubusercontent.com/olavofranzin/phi/claude/fix-daily-entry-workflow-dC96Q/workflows/hubspot-status-extracao.json`
+
+> Se o executor rodar em um clone local do repo, use os **caminhos relativos** acima direto na branch `claude/fix-daily-entry-workflow-dC96Q`. Edite e faça commit/push nessa mesma branch.
+
+**Workflows irmãos (JSON):** ainda **não exportados** para o repo. Se você precisar lê-los (ver seção final), **peça ao Claude** — ele exporta cada um para `workflows/<nome>.json` (ex.: `workflows/l2-discovery-pipeline-a.json`, `workflows/comercial-sync-hubspot-planilha.json`) assim que o n8n MCP estiver conectado.
+
+---
+
 ## Papel do workflow (objetivo que a correção deve cumprir)
 
 1. **Atualizar a planilha** (Google Sheets "Quantidade de Leads por Mês") quando um lead **muda de status** no HubSpot (ex.: "Prospectado" → "Interação Instagram").
