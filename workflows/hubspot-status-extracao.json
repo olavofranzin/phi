@@ -20,7 +20,7 @@
       "main": [
         [
           {
-            "node": "Get recently created/updated deals",
+            "node": "Ler watermark",
             "type": "main",
             "index": 0
           }
@@ -148,7 +148,7 @@
         ],
         [
           {
-            "node": "Run Google Maps Scraper",
+            "node": "Loop Over Items",
             "type": "main",
             "index": 0
           }
@@ -287,7 +287,7 @@
       "main": [
         [
           {
-            "node": "Atualizar lead enriquecido na planilha1",
+            "node": "If output preenchido",
             "type": "main",
             "index": 0
           }
@@ -499,17 +499,6 @@
         ]
       ]
     },
-    "Get recently created/updated deals": {
-      "main": [
-        [
-          {
-            "node": "Deals que mudaram de status",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Deals que mudaram de status": {
       "main": [
         [
@@ -578,6 +567,35 @@
           }
         ]
       ]
+    },
+    "Ler watermark": {
+      "main": [
+        [
+          {
+            "node": "Deals que mudaram de status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If output preenchido": {
+      "main": [
+        [
+          {
+            "node": "Atualizar lead enriquecido na planilha1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "nodes": [
@@ -617,7 +635,8 @@
         "filters": {
           "conditions": [
             {
-              "keyValue": "1"
+              "keyValue": "1",
+              "keyName": "id"
             }
           ]
         }
@@ -906,36 +925,31 @@
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "Agendamento": "={{ $json.Agendamento }}",
-            "Atributos": "={{ $json.Atributos }}",
-            "Avaliação": "={{ $json['Avaliação'] }}",
-            "Bairro": "={{ $json.Bairro }}",
-            "CEP": "={{ $json.CEP }}",
-            "Categoria 1": "={{ $json['Categoria 1'] }}",
-            "Categoria 2": "={{ $json['Categoria 2'] }}",
-            "Cidade": "={{ $json.Cidade }}",
-            "Endereço": "={{ $json['Endereço'] }}",
-            "Estado": "={{ $json.Estado }}",
-            "Horário": "={{ $json['Horário'] }}",
-            "Patrocinado": "={{ $json.Patrocinado }}",
-            "Posição Pesquisa": "={{ $json['Posição Pesquisa'] }}",
-            "Posts": "={{ $json.Posts }}",
-            "Quantidade fotos": "={{ $json['Quantidade fotos'] }}",
-            "Quantidade reviews": "={{ $json['Quantidade reviews'] }}",
-            "Rua/Avenida": "={{ $json['Rua/Avenida'] }}",
-            "Searchstring": "={{ $json.Searchstring }}",
-            "contato": "={{ $json.contato }}",
-            "data extração": "={{ $json['data extração'] }}",
-            "id": "={{ $json.id }}",
-            "nome": "={{ $json.nome }}",
-            "setor": "={{ $json['Categoria 1'] }}",
-            "site": "={{ $json.site }}",
-            "status hubspot": "={{ $json.hubspot_estagio }}",
-            "e-mail": "={{ $json['e-mail'] }}",
-            "score_tecnico": "=",
-            "mês extração": "={{ $json['mês extração'] }}",
-            "oferta_recomendada": "=",
-            "potencial_comercial": "="
+            "id": "={{ $('Normalizar campos do lead').item.json.place_id }}",
+            "nome": "={{ $('Normalizar campos do lead').item.json.nome }}",
+            "setor": "={{ $('Normalizar campos do lead').item.json.categoria }}",
+            "contato": "={{ $('Normalizar campos do lead').item.json.telefone }}",
+            "site": "={{ $('Normalizar campos do lead').item.json.site }}",
+            "Categoria 1": "={{ $('Normalizar campos do lead').item.json.categoria }}",
+            "Categoria 2": "={{ $('Normalizar campos do lead').item.json.categoria_2 }}",
+            "Patrocinado": "={{ $('Normalizar campos do lead').item.json.patrocinado }}",
+            "Searchstring": "={{ $('Normalizar campos do lead').item.json.search_string }}",
+            "Posição Pesquisa": "={{ $('Normalizar campos do lead').item.json.rank }}",
+            "Quantidade reviews": "={{ $('Normalizar campos do lead').item.json.total_reviews }}",
+            "Cidade": "={{ $('Normalizar campos do lead').item.json.cidade }}",
+            "Estado": "={{ $('Normalizar campos do lead').item.json.estado }}",
+            "Bairro": "={{ $('Normalizar campos do lead').item.json.bairro }}",
+            "CEP": "={{ $('Normalizar campos do lead').item.json.cep }}",
+            "Endereço": "={{ $('Normalizar campos do lead').item.json.endereco }}",
+            "data extração": "={{ $('Normalizar campos do lead').item.json.data_extracao }}",
+            "mês extração": "={{ $now.toFormat('MM/yyyy') }}",
+            "Rua/Avenida": "={{ $('Normalizar campos do lead').item.json.rua_avenida }}",
+            "Avaliação": "={{ $('Normalizar campos do lead').item.json.rating }}",
+            "Quantidade fotos": "={{ $('Normalizar campos do lead').item.json.images_count }}",
+            "Atributos": "={{ $('Normalizar campos do lead').item.json.atributos }}",
+            "Horário": "={{ $('Normalizar campos do lead').item.json.horario }}",
+            "Agendamento": "={{ $('Normalizar campos do lead').item.json.agendamento }}",
+            "Posts": "={{ $('Normalizar campos do lead').item.json.posts }}"
           },
           "matchingColumns": [
             "id"
@@ -1920,7 +1934,7 @@
           "value": {
             "id": "={{ $(\"Normalizar campos do lead\").item.json.place_id }}",
             "status hubspot": "Prospectado",
-            "id_deal_hubspot": "={{ $json.id || $json.properties?.hs_object_id || \"\" }}"
+            "id_hubspot": "={{ $json.id || $json.properties?.hs_object_id || \"\" }}"
           },
           "matchingColumns": [
             "id"
@@ -2197,8 +2211,8 @@
               "removed": false
             },
             {
-              "id": "id_deal_hubspot",
-              "displayName": "id_deal_hubspot",
+              "id": "id_hubspot",
+              "displayName": "id_hubspot",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -2223,7 +2237,8 @@
     },
     {
       "parameters": {
-        "options": {}
+        "options": {},
+        "modelName": "models/gemini-2.5-flash"
       },
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1,
@@ -2251,8 +2266,8 @@
       "parameters": {
         "resource": "Datasets",
         "datasetId": "={{ $json.defaultDatasetId }}",
-        "offset": "=",
-        "limit": null,
+        "offset": 0,
+        "limit": "={{ $('Calcular vagas disponiveis').item.json.vagas }}",
         "options": {}
       },
       "id": "25bcc923-bf2d-46cd-8b2b-bb506ef25c04",
@@ -2316,7 +2331,8 @@
     },
     {
       "parameters": {
-        "jsCode": "const stageMap = {\n  '70807682-148b-4914-acd0-97aad8c2a000': 'Prospectado',\n  'qualifiedtobuy': 'Interação Instagram',\n  '17222650': 'Contato Realizado',\n  'presentationscheduled': 'Reunião Agendada',\n  'decisionmakerboughtin': 'Tomada de Decisão',\n  'contractsent': 'Contrato Enviado',\n  'closedwon': 'Vencido',\n  'closedlost': 'Perdido',\n};\n\nconst dealId = $input.item.json.deal_id;\nconst novoEstagio = $input.item.json.novo_estagio;\nconst statusMapeado = stageMap[novoEstagio] || novoEstagio;\n\nreturn [{\n  json: {\n    deal_id: dealId,\n    novo_estagio: novoEstagio,\n    status_mapeado: statusMapeado,\n  }\n}];"
+        "jsCode": "const stageMap = {\n  '70807682-148b-4914-acd0-97aad8c2a000': 'Prospectado',\n  'qualifiedtobuy': 'Interação Instagram',\n  '17222650': 'Contato Realizado',\n  'presentationscheduled': 'Reunião Agendada',\n  'decisionmakerboughtin': 'Tomada de Decisão',\n  'contractsent': 'Contrato Enviado',\n  'closedwon': 'Vencido',\n  'closedlost': 'Perdido',\n};\n\nconst dealId = $input.item.json.deal_id;\nconst novoEstagio = $input.item.json.novo_estagio;\nconst statusMapeado = stageMap[novoEstagio] || novoEstagio;\n\nreturn {\n  json: {\n    deal_id: dealId,\n    novo_estagio: novoEstagio,\n    status_mapeado: statusMapeado,\n  }\n};",
+        "mode": "runOnceForEachItem"
       },
       "id": "84d5fcdf-c6c5-43e7-8d8b-a661e7b919e5",
       "name": "Mapear estagio para status",
@@ -3061,23 +3077,30 @@
     {
       "parameters": {
         "conditions": {
-          "number": [
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
             {
-              "value1": "={{ $json.vagas }}",
-              "operation": "smallerEqual",
-              "value2": 50
-            },
-            {
-              "value1": "={{ $json.vagas }}",
-              "operation": "larger"
+              "id": "vagas-gt-0",
+              "leftValue": "={{ $json.vagas }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
             }
-          ]
+          ],
+          "combinator": "and"
         }
       },
       "id": "b060a35e-7a76-4f77-bc4c-396b878718bd",
       "name": "If Quantidade_vagas",
       "type": "n8n-nodes-base.if",
-      "typeVersion": 1,
+      "typeVersion": 2.3,
       "position": [
         608,
         560
@@ -3105,7 +3128,8 @@
     },
     {
       "parameters": {
-        "options": {}
+        "options": {},
+        "modelName": "models/gemini-2.5-flash"
       },
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1,
@@ -3230,8 +3254,8 @@
             },
             {
               "id": "795b53b8-16ee-4fa7-bb1b-93dd3d1ebb48",
-              "name": "id_deal_hubspot",
-              "value": "={{ $json.id_deal_hubspot }}",
+              "name": "id_hubspot",
+              "value": "={{ $json.id_hubspot }}",
               "type": "number"
             }
           ]
@@ -3956,7 +3980,7 @@
           "mappingMode": "defineBelow",
           "value": {
             "id": "={{ /^ChI[A-Za-z0-9_-]+$/.test(String($(\"Loop id_deal\").item.json.id || $(\"Loop id_deal\").item.json.place_id || \"\")) ? ($(\"Loop id_deal\").item.json.id || $(\"Loop id_deal\").item.json.place_id) : \"\" }}",
-            "id_deal_hubspot": "={{ $json.id || $json.properties?.hs_object_id || \"\" }}"
+            "id_hubspot": "={{ $json.id || $json.properties?.hs_object_id || \"\" }}"
           },
           "matchingColumns": [
             "id"
@@ -4208,8 +4232,8 @@
               "canBeUsedToMatch": true
             },
             {
-              "id": "id_deal_hubspot",
-              "displayName": "id_deal_hubspot",
+              "id": "id_hubspot",
+              "displayName": "id_hubspot",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -4261,7 +4285,7 @@
         "filtersUI": {
           "values": [
             {
-              "lookupColumn": "id_deal_hubspot"
+              "lookupColumn": "id_hubspot"
             },
             {
               "lookupColumn": "validacao_manual"
@@ -4589,7 +4613,8 @@
       "position": [
         1840,
         688
-      ]
+      ],
+      "alwaysOutputData": true
     },
     {
       "parameters": {
@@ -4640,7 +4665,8 @@
         832,
         -368
       ],
-      "alwaysOutputData": true
+      "alwaysOutputData": true,
+      "disabled": true
     },
     {
       "parameters": {
@@ -4652,7 +4678,7 @@
           "cachedResultName": "GBP Scoring - L2 Discovery (Pipeline A)"
         },
         "workflowInputs": {
-          "mappingMode": "defineBelow",
+          "mappingMode": "passthrough",
           "value": {},
           "matchingColumns": [],
           "schema": [],
@@ -4684,6 +4710,11 @@
                     "propertyName": "dealstage",
                     "operator": "NEQ",
                     "value": "70807682-148b-4914-acd0-97aad8c2a000"
+                  },
+                  {
+                    "propertyName": "hs_lastmodifieddate",
+                    "operator": "GT",
+                    "value": "={{ $json.watermark }}"
                   }
                 ]
               }
@@ -4818,6 +4849,52 @@
         576
       ],
       "executeOnce": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const staticData = $getWorkflowStaticData('global');\nconst lastRun = staticData.lastRunTimestamp || 0;\nstaticData.lastRunTimestamp = Date.now();\nreturn [{ json: { watermark: String(lastRun) } }];"
+      },
+      "id": "a1b2c3d4-1111-4a2b-9c3d-e4f5a6b7c8d9",
+      "name": "Ler watermark",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        608,
+        -224
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "output-nao-vazio",
+              "leftValue": "={{ $json.output }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "b2c3d4e5-2222-4b3c-8d4e-f5a6b7c8d9e0",
+      "name": "If output preenchido",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2368,
+        96
+      ]
     }
   ],
   "nodeGroups": [],
