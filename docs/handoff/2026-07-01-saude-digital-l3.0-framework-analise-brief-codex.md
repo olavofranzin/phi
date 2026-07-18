@@ -11,14 +11,39 @@
 
 ---
 
-## 0. Pré-requisito bloqueante
+## 1. Comando `/goal` — rodar antes de começar
+
+Antes de tocar em qualquer node, rode `/goal` e registre a meta desta sessão
+com o texto abaixo (cole exatamente, é a meta que baliza o trabalho):
+
+```
+Implementar o node de análise LLM (Claude Sonnet, Structured Output) no
+sub-WF n8n WF-T28-Analise-Campaign (fhYmJH0o9BW1IO4i, draft), substituindo
+o placeholder determinístico pelas decisões travadas em
+docs/strategic-planning/saude-digital/L3.0-framework-analise-campanha.md:
+(1) reescrever "Build Deterministic Flags" com a taxonomia final de 12
+flags + severidade agregada, corrigindo os bugs numeric(null)->0 e a
+colisão de nome analise.leitura/analise.insight; (2) inserir o node Claude
+com o system+user prompt e o schema estruturado do framework (§2 e §10);
+(3) ajustar "Build Notion Page" para consumir llm.insight/recomendacoes/
+evidencias, mantendo flags_ativas/severidade determinísticos (nunca vindos
+do LLM). Manter os workflows em DRAFT (sem publish/activate/PUT). Entregar
+validado (validate_workflow verde nos dois workflows) e pronto para
+pré-revisão + smoke real em phi_dev, reusando o Orquestrador
+8Q5ofmAZju0hTN08, batendo os critérios de aceite da §5 deste brief.
+```
+
+Use essa meta como critério de "pronto" — se algum dos 3 itens não foi
+concluído, a tarefa não está feita, mesmo que o workflow valide.
+
+## 2. Pré-requisito bloqueante
 
 **Credencial Claude/Anthropic no n8n.** Ainda não configurada (pendência
 registrada em `ESTADO-DO-PROJETO.md` §5). Sem ela o node Anthropic não roda —
 confirmar com Olavo antes de iniciar, ou implementar o node em draft sem
 credencial atribuída (fica pendente de teste até a credencial existir).
 
-## 1. Mudanças no sub-WF `WF-T28-Analise-Campaign`
+## 3. Mudanças no sub-WF `WF-T28-Analise-Campaign`
 
 ### Grafo alvo
 ```
@@ -29,7 +54,7 @@ Execute Workflow Trigger
   → Lookup Existing Analysis → Has Existing Analysis → Update/Create Analysis Page  (INALTERADO)
 ```
 
-### 1.1 `Build Deterministic Flags` — reescrever
+### 3.1 `Build Deterministic Flags` — reescrever
 
 Substituir a lógica atual pela taxonomia final (framework §3):
 
@@ -122,12 +147,17 @@ return { json: { ...p, analise: {
 } } };
 ```
 
-### 1.2 `Analise LLM Claude` — node novo
+### 3.2 `Analise LLM Claude` — node novo
 
 - Tipo: node Anthropic do n8n (chat/message com tool-use forçado ou
   Structured Output, conforme disponível na versão do node).
-- Model: Sonnet (linha atual disponível na credencial — ver framework §7;
-  não fixar um ID específico sem checar o que está disponível no momento).
+- **Model: Claude Sonnet — fixado, não usar Opus nem Haiku.** Usar a versão
+  Sonnet vigente na credencial Anthropic do n8n (hoje, linha Sonnet 5 —
+  ex.: `claude-sonnet-5`); confirmar o identificador exato disponível no
+  seletor do node antes de salvar, mas a família é sempre Sonnet. Racional
+  (framework §7): severidade/flags já são determinísticas, o LLM só narra,
+  prioriza e recomenda dentro de um schema fechado — não precisa do modelo
+  mais caro da família.
 - System prompt: literal do framework §2.1.
 - User message: montar via expression concatenando os campos do payload,
   conforme framework §2.2 (adaptar para sintaxe de expressão única do n8n —
@@ -146,7 +176,7 @@ return { json: { ...p, analise: {
   return { json: { ...$json, llm: <parsed tool output>, analise: { ...$json.analise, modelo_llm: 'claude-<versao-exata-do-node>' } } };
   ```
 
-### 1.3 `Build Notion Page` — ajustar
+### 3.3 `Build Notion Page` — ajustar
 
 - `blocks[0].text` passa a vir de `llm.insight` (fallback para
   `analise.insight` se o LLM não rodou/falhou de forma tolerada).
@@ -159,17 +189,17 @@ return { json: { ...p, analise: {
 - `props.severidade` continua vindo de `analise.severidade` (determinístico
   — **não** usar `llm.severidade`, que é só para checagem de consistência).
 - `props.modelo_llm` passa a vir de `analise.modelo_llm` já atualizado pelo
-  node LLM (ex.: string real do modelo usado, não mais
+  node LLM (ex.: string real do modelo Sonnet usado, não mais
   `placeholder_deterministico_l3_0`).
 
-## 2. Validação
+## 4. Validação
 
 - `validate_node_config` no node Anthropic e no `Build Deterministic Flags`
   antes de plugar no grafo completo.
 - `validate_workflow` no sub-WF inteiro — deve continuar `valid=true`.
 - Manter **draft** (sem publish/activate), igual ao restante do L3.0.
 
-## 3. Smoke esperado (reusa o Orquestrador, phi_dev)
+## 5. Smoke esperado (reusa o Orquestrador, phi_dev)
 
 1. Disparar `WF-T28-Orquestrador-Analises` (`8Q5ofmAZju0hTN08`) via
    `execute_workflow` manual, mesmo config do smoke anterior
@@ -192,7 +222,7 @@ return { json: { ...p, analise: {
    nova seção) ou em log novo dedicado a esta entrega: execution ids, texto
    real do insight gerado, modelo usado, e confirmação de idempotência.
 
-## 4. Fora de escopo (não fazer agora)
+## 6. Fora de escopo (não fazer agora)
 
 - Ativar Schedule / rodar em `phi_prod`.
 - Integração com o loop de Demandas (ADR-22) a partir das recomendações.
