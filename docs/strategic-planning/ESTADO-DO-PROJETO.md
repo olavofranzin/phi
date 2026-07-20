@@ -104,6 +104,28 @@ PRODUÇÃO desde 2026-06-13 (`a05`, smoke verde 19+0); T6 RESOLVIDO.
 **Documentação e Ferramentas** aberta 2026-06-04 (este doc). **Dashboard de
 produto** (Lovable) em scoping — aguardando acesso aos protótipos.
 
+### Snapshot 2026-07-19 (atualização)
+
+Um mês depois do snapshot acima. Quatro mudanças estruturais:
+
+1. **Keystone PHI·Mídia Score CONSERTADO.** O `Pipeline_v2`
+   (`ITWG3Ge0asXtUM8U`) está em produção na **v1.2** (activeVersion
+   `9a174e50`), com **valores reais confirmados em produção** — não mais o
+   "50" congelado: ex. Salão `phi=67.12` (GOOD), Barbearia `phi=49.38`
+   (`MAS=0` honesto). No `model_config` v1.2 os componentes `es/rs/os` têm
+   **peso 0** (placeholder assumido, não mais falso-50). **INCIDENTE:** a
+   credencial `Google BigQuery account` (`UhLRAanVarQeOpQy`) **expirou de
+   08 a 16/jul** — 10 dias de score **silenciosamente sem dado** (zero
+   linhas, zero logs, sem erro visível); reconectada por Olavo em 17/jul.
+2. **Comercial deixou de ser "vestigial".** Foi construído e ativado o
+   **Motor de Scoring GBP** (cadeia L1-L4, on-demand) — ver §3.6.
+3. **Governança nova.** Ledger operacional **"PHI — Registro de Execuções
+   (Sub-chats)"** (`8d8eb685f66249c7ba4f298d744feec3`) + **digest diário**
+   n8n (`rhobbBEeQaiWIuiF`, 08:30 BRT, Telegram) + **ADR-32** (regra de
+   registro obrigatório dos sub-chats).
+4. **L3.0 §4 framework de análise implementado** (Codex) — o IP da Camada 2
+   — mas **BLOQUEADO** na credencial Claude/Anthropic no n8n (ver §3.8).
+
 ---
 
 ## 3. Roadmap por área (status por lote)
@@ -165,9 +187,48 @@ Estados: `Backlog` · `Em design` · `Em execução` · `Em smoke` ·
 | Lote | Status |
 |---|---|
 | WF-COM-Deduplicar-Leads-HubSpot | **Em execução REAL desde 2026-06-05** — DRY_RUN=false após smoke ENT-20 aprovado por Olavo (cleanup confirmado: Smoke Sintetico 2026-05-29 + 31 etapas). Gatilho MANUAL (sem schedule), intencional. Stage HubSpot alvo `70807682-148b-4914-acd0-97aad8c2a000` (Prospectado) hardcoded sem ADR. n8n `izimrLm19H4i6LOq`. |
-| Área formal (strawman + âncora Notion + DB dedicado) | Backlog — sem data — bloqueada por priorização |
+| **Motor de Scoring GBP (cadeia L1-L4)** | **Construído e ATIVO on-demand (2026-07-13)** — `triggerCount` 0 (sem schedule ainda). **Substitui o enquadramento anterior de "área formal vestigial em backlog":** a frente Comercial passa a ter motor operacional. Detalhe abaixo. |
+| **Planilha de leads — Contrato de Dados (ADR-31)** | **Ativa** — schema canônico (63 colunas) + 2 loops de guarda. Detalhe abaixo. |
+| Área formal Comercial (SOP + âncora Notion + DB dedicado) | Backlog — a governança formal (SOP + âncora Notion + DB) segue pendente; a frente hoje é operada via os workflows GBP + planilha, sem área formalizada |
 | Lote 0 (SOP + modelo de dados Comercial) | Backlog |
 | Lote 1+ | Backlog (indefinido) |
+
+**Motor de Scoring GBP (frente Comercial/GBP — 2026-07-13).** Cadeia de 4
+workflows n8n, ativos on-demand (`triggerCount` 0, ainda sem schedule),
+resolução por `place_id`:
+
+- **L1 Core** `dtXFdLAHp7HmUh7o`
+- **L2 Discovery** `5j79f7oR8x1Nxs4q`
+- **L3 Enriquecimento** `EFD7Drr0LDMqfDXw`
+- **L4 Enriquecimento Site** `5L3SyzDkZqf1N6vW`
+
+Cadeia L2→L3→L4. Design:
+`docs/strategic-planning/roadmap-expansao/gbp-motor-scoring-ipc-design.md`;
+reconciliação as-built:
+`docs/handoff/2026-07-13-motor-scoring-gbp-as-built-reconciliacao.md`.
+
+**Planilha de leads — Contrato de Dados (ADR-31).** Schema canônico em
+`docs/comercial/planilha-quantidade-leads-por-mes-colunas.md` +
+`planilha-leads-schema.json` (63 colunas). 2 loops n8n de guarda:
+`WRFU2NM8rLJU7bRT` (sync HubSpot→planilha, Schedule 6h) e `vUI0pPlDASf64Htn`
+(guarda-schema + backup, Schedule diário 08:00, com backup off-file no
+Drive). **Patch #2** (probabilidade/acerto/dias + backup Drive) aplicado e
+verificado. Governança: **ADR-31** (Proposto).
+
+**Fixes recentes (GBP).** Actor Apify trocado de reviews-only
+(`Xb8osYTtOjlsgI6k9`) para `compass/crawler-google-places`
+(`nwua9Gu5YrADL7ZDj`) nos L2/L3 — o actor antigo era reviews-only e
+degradava os scores sem erro visível. Dedup `izimrLm19H4i6LOq` com `DRY_RUN`
+removido (execução real).
+
+**Pendências Comercial/GBP:** (a) aplicar autonomia do L3 (Schedule + gate
+só-Deals + teto/run — brief
+`docs/handoff/2026-07-13-motor-gbp-autonomia-sweep-l3-brief.md`); (b) fix
+`websiteType` (trocar a fonte do site de `p.website` do Apify para o campo
+`site` do node Loop no L2); (c) teste real do L2 (busca por segmento/cidade);
+(d) reprocessar Deals já pontuados com o actor antigo (scores provavelmente
+subestimados); (e) card GBP no record HubSpot — brief pronto, **gated na
+conta de desenvolvedor** (portal HubSpot Free).
 
 > **Débitos técnicos do WF-COM-Deduplicar** (legado pré-padrões-inegociáveis,
 > a sanar antes de qualquer expansão): (a) emojis literais em 2 nós jsCode
@@ -218,12 +279,34 @@ abaixo têm nomes precisos do que cobrem, não do índice agregado final.
 | L1.5 Agregador T28 — promoção phi_dev -> phi_prod | **Concluído + ATIVO em produção (2026-06-22)** | DDL `phi_prod_t28_tables.sql` aplicado (12 objetos: 6 BASE TABLE + 6 VIEW). MCP `update_workflow` (versionId `68a5cde3-27eb-4093-9cfe-79eef187ade9`) trocou `datasetId` `phi_dev`->`phi_prod` nos 6 BQ Inserts. Smoke L1.5 verde: counts 12/0/2/1/1/0 em phi_prod (idênticos ao L1 phi_dev). **active=true** via MCP `publish_workflow` (activeVersionId `d11e7959-ec07-4923-b711-2f05266ebdcc`) — Schedule Triggers Semanal e Mensal agora disparando automaticamente. |
 | L2 Error Handler global (ADR-26 ✅ Aceito 2026-06-22) | **Concluído (2026-06-28)** — ATIVO em produção (Agregador `4sdG2UKMCBuFq8xn` activeVersionId `412d874b-875c-450e-9792-cf728e95a4a1`) | ADR-26 publicado (page `388b65e5...b5f8`). Entregue: DDL `t28_errors` (phi_dev+phi_prod); sub-WF `WF-T28-Error-Handler` (`rTS5pE34eElfuMPl`, activeVersionId `5ce0bf17...`); cadeia de erro = **1** `[Err] Roteador Payload` + **1** `[Err] Call Handler`, 15 error outputs; refactor `safe()`→`readOrThrow`/`safeOptional` no Adaptador. **Iteração a02→a05** (Codex → pré-revisão Claude → Antigravity rodadas 1/2 → smoke real): a03 `node_name` via `$prevNode` + `error_details` string + retry 429; a04 deduplica cadeia paralela + corrige mapping/schema; a05 trunca corpo Notion (limite 2000) + Call Handler `onError:continueRegularOutput` (best-effort) + `errMessage` string. **Hotfix rename** (2026-06-27): `Code prepara datas para extração`→`extracao` (ASCII, elimina mojibake no ref do Adaptador) + correção do ref órfão no Roteador. **L2 cirúrgico** (2026-06-28, `docs/handoff/2026-06-27-saude-digital-l2-codex-l2cirurgico-brief.md`): exec `11655` revelou run degradada (Adaptador saía pelo error output com `Cannot read properties of undefined [line 81]` — `.item.json`/`.first().json` resolviam `undefined` em `runOnceForAllItems`+`executeOnce`). M1 helpers `nodeFirst`/`nodeAll`/`optionalSource` (zero `.item.json`/`.first().json`); M2 **granularidade de falha** — só 5 fontes core (`Set dados`, `Get database campanhas/clientes`, datas, `[T28] BQ Read raw_campaign_data`) seguem `readOrThrow`; GBP/Clarity/GA4 Org/Pago + GAQL/Meta/SearchTerms viram `optionalSource`; M3 `source_status` por fonte no output + Normalizador `sourceAvailable` (fonte ausente→0 linhas naquela tabela, status na coluna JSON). Aplicado via API pública PUT (auto-ativou: `versionId==activeVersionId`). **Smoke `11755` PASS** (manual, success): `12/0/2/0/0/0` com GBP+Clarity falhando **de verdade** (`source_status: gbp/clarity=missing`) → resiliência provada organicamente: Adaptador concluiu sem error output, `t28_campaign`=12 e `t28_ga4_landing`=2 escritos, só `t28_gbp_daily`/`t28_clarity_daily` degradaram para 0; cadeia de erro logou e a run terminou `success`. **Deferido:** L2.5 saneamento dívida arquitetural (cadeia morta Merge1→Calculate KPIs off) + anti-spam Telegram + Error Workflow nativo; L1.6 idempotência BQ (inserts append-only duplicam a cada run); Task 3 multi-campanha (`campaign_id` por linha OK; `landing_page`/ctx da campanha 1 aplicado à 2); investigação GBP/Clarity caindo (§5, **stand-by**). |
 | L1.6 Idempotência BQ (MERGE nos writes t28_*) | **Concluído + ATIVO em produção (2026-06-28)** — Agregador `4sdG2UKMCBuFq8xn` activeVersionId `a46d5a6a-e5bc-4dee-babe-a002872277bd` | Inserts streaming append-only (duplicavam a cada run + prendiam streaming buffer ~90min) substituídos por **MERGE via `executeQuery` (DML)**, padrão do Daily Entry. Topologia `Filter → [T28] Build MERGE (Code) → [T28] BQ Merge (executeQuery)` × 6 tabelas; builder monta MERGE com type-map derivado do DDL (CAST por coluna: DATE/TIMESTAMP/JSON/BOOL/INT64/FLOAT64), chave de negócio por tabela, guarda 0-row→`[]`. Codex via MCP `update_workflow` (draft, sem PUT, SHA `6f97a69`). **Pré-revisão Claude PASS** (SCHEMA idêntico ao DDL coluna-a-coluna 38/26/22/18/17/30; zero `.first()`/streaming; zero mojibake; achei+corrigi dedup one-shot perdendo PARTITION/CLUSTER). **Smoke phi_dev** (2×): idempotência provada (`c=5→5` sem crescimento; pós-dedup `HAVING c>1` vazio). Flip `DATASET phi_dev→phi_prod` (UI, 6 builders) + **smoke phi_prod** (só duplicatas históricas; MERGE não cria nova). Dedup one-shot (`phi_prod_t28_dedup_oneshot.sql`, preserva PARTITION/CLUSTER) limpou histórico. Publicado: activeVersionId `a46d5a6a` → Schedule Triggers agora escrevem via MERGE (sem duplicar). |
-| **L3.0** Orquestrador Análises — fatia vertical **campaign** (plumbing) + DB `PHI - ANÁLISES` (ADR-23/24/27) | **Plumbing VALIDADO — smoke phi_dev PASS + idempotência provada (2026-07-01)** | Design travado (`saude-digital/L3.0-orquestrador-campaign-design.md`): fatia campaign; **schedule próprio** lendo `t28_*`; score PHI·Mídia **lido canônico** de `phi_score_current` (ADR-003 — **NÃO recalcula**; chave `client_id`+`campaign_id`). **Decisões Olavo 2026-06-30:** framework §4 (IP) **por último em sub-chat** de análise/otimização; flags **híbrido** (regras+LLM); modelo **Claude** p/ análise densa (campaign/cliente) + **Gemini** p/ ad/adset; **relations** (não rich_text). DB **`PHI - ANÁLISES`** criado (databaseId `38fb65e5-c72b-80db-a425-e5939fc35c7a`, ds `38fb65e5-c72b-80ff-9543-000b9a7468af`; 18 props snake_case; relations→Clientes Database/Campanhas). Codex implementou 2 WFs **draft**: `WF-T28-Orquestrador-Analises` (`8Q5ofmAZju0hTN08`) — BQ JOIN `t28_campaign×phi_score_current`, resolução relations best-effort, fan-out; `WF-T28-Analise-Campaign` (`fhYmJH0o9BW1IO4i`) — flags determinísticas placeholder + upsert idempotente. **Pré-revisão Claude + fixes** (via `update_workflow`, mantém draft, versionId `5f63c883`): chaves Notion com tipo/nome errado (`cliente`/`campanha` minúsculo, `janela`/`leitura`=**select**, `titulo\|title` no update) + `matchType=allFilters` (era `anyFilter`/OR default → quebrava idempotência) + `phi_midia_score`/`leitura` null-guard. **Pendente:** smoke real (Olavo); confirmar formatos `client_id`/`campaign_id` p/ resolver relations; credencial Claude no n8n (só p/ framework, não p/ plumbing). Achado bônus: write-back do PHI já tem casa na `Campanhas` (`Status Geral da Campanha`/`Score Diário`/`phi_ultima_execucao`) → alvo do L3.5. **Smoke phi_dev 2026-07-01 (MCP `execute_workflow`):** run `13046` SUCCESS (2 campanhas CLI-4; score JOIN OK `phi_value=50`/`WARNING` de `phi_score_current`; `campanha` relation resolvida; 2 pages criadas); run `13054` **idempotência provada** (mesmos page IDs, `criado_em` preservado → UPDATE, não duplica). Fix pego pelo smoke: `sqlQuery` era expressão `const/return` (n8n não aceita) → template `{{ }}`. Follow-up `cliente` relation **resolvido** (re-smoke `13060`: filtro `id_client|formula`, page KILDARE & BRUNA BECKER; **ambas relations resolvem → plumbing 100%**). Resta bug cosmético `numeric(null)→0` no placeholder de flags (reescreve no sub-chat §4). |
+| **L3.0** Orquestrador Análises — fatia vertical **campaign** (plumbing) + DB `PHI - ANÁLISES` (ADR-23/24/27) | **Plumbing VALIDADO — smoke phi_dev PASS + idempotência provada (2026-07-01)** | Design travado (`saude-digital/L3.0-orquestrador-campaign-design.md`): fatia campaign; **schedule próprio** lendo `t28_*`; score PHI·Mídia **lido canônico** de `phi_score_current` (ADR-003 — **NÃO recalcula**; chave `client_id`+`campaign_id`). **Decisões Olavo 2026-06-30:** framework §4 (IP) **por último em sub-chat** de análise/otimização; flags **híbrido** (regras+LLM); modelo **Claude** p/ análise densa (campaign/cliente) + **Gemini** p/ ad/adset; **relations** (não rich_text). DB **`PHI - ANÁLISES`** criado (databaseId `38fb65e5-c72b-80db-a425-e5939fc35c7a`, ds `38fb65e5-c72b-80ff-9543-000b9a7468af`; 18 props snake_case; relations→Clientes Database/Campanhas). Codex implementou 2 WFs **draft**: `WF-T28-Orquestrador-Analises` (`8Q5ofmAZju0hTN08`) — BQ JOIN `t28_campaign×phi_score_current`, resolução relations best-effort, fan-out; `WF-T28-Analise-Campaign` (`fhYmJH0o9BW1IO4i`) — flags determinísticas placeholder + upsert idempotente. **Pré-revisão Claude + fixes** (via `update_workflow`, mantém draft, versionId `5f63c883`): chaves Notion com tipo/nome errado (`cliente`/`campanha` minúsculo, `janela`/`leitura`=**select**, `titulo\|title` no update) + `matchType=allFilters` (era `anyFilter`/OR default → quebrava idempotência) + `phi_midia_score`/`leitura` null-guard. **Pendente:** smoke real (Olavo); confirmar formatos `client_id`/`campaign_id` p/ resolver relations; credencial Claude no n8n (só p/ framework, não p/ plumbing). Achado bônus: write-back do PHI já tem casa na `Campanhas` (`Status Geral da Campanha`/`Score Diário`/`phi_ultima_execucao`) → alvo do L3.5. **Smoke phi_dev 2026-07-01 (MCP `execute_workflow`):** run `13046` SUCCESS (2 campanhas CLI-4; score JOIN OK `phi_value=50`/`WARNING` de `phi_score_current`; `campanha` relation resolvida; 2 pages criadas); run `13054` **idempotência provada** (mesmos page IDs, `criado_em` preservado → UPDATE, não duplica). Fix pego pelo smoke: `sqlQuery` era expressão `const/return` (n8n não aceita) → template `{{ }}`. Follow-up `cliente` relation **resolvido** (re-smoke `13060`: filtro `id_client|formula`, page KILDARE & BRUNA BECKER; **ambas relations resolvem → plumbing 100%**). Resta bug cosmético `numeric(null)→0` no placeholder de flags (reescreve no sub-chat §4). **Atualização 2026-07-19:** o framework §4 (o IP) foi **implementado por Codex** no sub-WF `WF-T28-Analise-Campaign` (`fhYmJH0o9BW1IO4i`) — reescreveu "Build Deterministic Flags" (taxonomia final + fix `numeric(null)`) + adicionou nó Claude (`@n8n/n8n-nodes-langchain.anthropic`, node "Message a model", `claude-sonnet-5`) com tool `phi_analise_campanha` (schema §10) + "Merge LLM Output" + "Build Notion Page". **BLOQUEADO:** credencial Claude/Anthropic no n8n não configurada — exec real **#18711** em 2026-07-18 falhou "Node does not have any credentials set"; smoke oficial §5 (reusar Orquestrador `8Q5ofmAZju0hTN08` em phi_dev + atualizar as 2 pages de smoke `390b...d28f`/`390b...5553`) ainda pendente. |
 | L3.1 Análise Adset + Ad (criativos_json + ga4_landing) + rollup bottom-up (Gemini) | Backlog | Espelho ADR-24. Data sources p/ relations: Conjuntos `19fb65e5-c72b-8180-88fe-000bb75c8b84`, Anúncios `297b65e5-c72b-80e9-a1f3-000be92275f6`. |
 | L3.2 Análise Saúde Cliente (consolida mídia + social + GBP + Clarity) (Claude) | Backlog | Nível `cliente`; relation `cliente`, `campanha` vazia. |
 | L3.5 Entrega: DB Otimizações + Telegram + update properties DBs | Backlog | Write-back na `Campanhas` já tem colunas (`Status Geral da Campanha`/`Score Diário (0-100)`/`phi_ultima_execucao`) — descoberto no L3.0. |
 | L4 Expansão Saúde Digital — redes sociais (t28_social_* + ingestão APIs Instagram/Facebook/LinkedIn + análise social) | Backlog | Adiciona redes sociais à camada 1; análise social entra na camada 2. ADR-25 estrutura o sub-WF reutilizável. |
 | L5 Reuso prospecção (sub-WFs Social/GBP cliente↔prospecto, ADR-25) | Backlog | Coordenar com área Comercial. |
+
+**Atualização 2026-07-19 — keystone + Agregador T28.**
+
+- **Keystone PHI·Mídia Score CONSERTADO (v1.2).** O `Pipeline_v2`
+  (`ITWG3Ge0asXtUM8U`, activeVersion `9a174e50`) foi corrigido e está em
+  produção com **valores reais** — não mais o "50" congelado (ex. Salão
+  `phi=67.12` GOOD, Barbearia `phi=49.38` `MAS=0` honesto). Fix:
+  `model_config` MODEL-VAREJO-001 **v1.2** com `es/rs/os` **peso 0**
+  (placeholder assumido) + DROP NOT NULL em `phi_score_history` + CLI-5
+  inativado no `client_config`. **INCIDENTE:** a credencial
+  `Google BigQuery account` (`UhLRAanVarQeOpQy`) **expirou 08-16/jul** —
+  10 dias de score silenciosamente sem dado (zero linhas, zero logs, sem
+  erro). Reconectada por Olavo em 17/jul. Docs:
+  `docs/handoff/2026-07-02-saude-digital-phi-midia-score-analise-report.md`
+  + `2026-07-03/04-keystone-pipeline-v2-*`.
+- **Agregador T28 — fix ctx-por-campanha (draft, BLOQUEADO no re-smoke).**
+  activeVersionId em produção `a46d5a6a` intocado. Draft `cbd3568d` teve
+  **smoke a01 = FAIL** (a cadeia T28 roda no done-branch do Loop, sem
+  "iteração atual"). Brief **a02** (mapa de contexto keyed por
+  `id_google_camp`) **redigido, NÃO despachado** ao Codex. Limpeza pendente:
+  **5 linhas `client_id NULL`** em `phi_prod.t28_campaign`
+  (`execution_id=EXEC-T28-13697`).
 
 ---
 
@@ -266,6 +349,16 @@ abaixo têm nomes precisos do que cobrem, não do índice agregado final.
   abrindo o L2** · ADR-27 (entrega DB Análises PHI) — rascunho, publica
   no L3.5. Numeração 23-27 é provisória de rascunho — o `Número ADR`
   real é atribuído no momento da publicação no Notion (auto-increment).
+- **ADR-31 — Contrato de Dados da planilha de leads + guarda-schema/backup:**
+  Status **Proposto** (Notion `39ab65e5-c72b-817b-87d1-f1ec824af590`).
+  Formaliza o schema canônico (63 colunas) + os 2 loops de guarda (sync
+  HubSpot→planilha 6h `WRFU2NM8rLJU7bRT`; guarda-schema + backup off-file no
+  Drive diário 08:00 `vUI0pPlDASf64Htn`). Ver §3.6.
+- **ADR-32 — Registro de Execuções (Sub-chats) obrigatório:** Status
+  **Proposto** (Notion `3a0b65e5-c72b-8106-8c8b-d8ac05f5397c`). Torna
+  obrigatório o registro de cada sub-chat no ledger operacional
+  (`8d8eb685f66249c7ba4f298d744feec3`), com digest diário n8n
+  (`rhobbBEeQaiWIuiF`, 08:30 BRT Telegram). Ver §2 (Snapshot 2026-07-19).
 
 ### 4.3. Decisões fora de ADR (registradas em strawmans e nesta conversa)
 
@@ -283,6 +376,11 @@ abaixo têm nomes precisos do que cobrem, não do índice agregado final.
 
 | Origem | Pendência | Próxima ação | Bloqueia? |
 |---|---|---|---|
+| 2026-07-19 | **Credencial Claude/Anthropic no n8n (cross-cutting)** — agora BLOQUEIA o L3.0 §4 (framework de análise **já implementado** no `WF-T28-Analise-Campaign`; exec #18711 falhou "Node does not have any credentials set"). Também bloqueia L3.2. | Olavo configura a credencial Claude/Anthropic no n8n e atribui ao node "Message a model"; depois rodar smoke §5 (Orquestrador `8Q5ofmAZju0hTN08` em phi_dev, atualizar as 2 pages de smoke). | **Bloqueia L3.0 §4 + Camada 2 de análise** |
+| 2026-07-19 | **Keystone — gap de score 08-16/jul (credencial BQ `UhLRAanVarQeOpQy` expirada)** | **Decisão: apenas REGISTRAR o gap, não recalcular** — não há dado (zero linhas coletadas nesses 10 dias). Também limpar/registrar as linhas antigas v1.1 (=50 constante). | Não bloqueia |
+| 2026-07-19 | **Blast radius da credencial BQ (`UhLRAanVarQeOpQy`)** — verificar quais WFs além do Pipeline_v2 pararam 08-16/jul (Agregador T28 e outros na mesma credencial) | Auditar execuções dos WFs que usam essa credencial na janela 08-16/jul; considerar monitor de "zero linhas/zero logs" (ver §6, T11). | Não bloqueia; investigação |
+| 2026-07-19 | **a03 — `client_id=''` no writer `sw metricas campanhas`** (`W571K320aqIHsdtH`) | Escritor do `raw_campaign_data` grava `client_id` vazio em algumas linhas; corrigir a origem. Segue não iniciado. | Não bloqueia; qualidade de dado |
+| 2026-07-19 | **Pendências Comercial/GBP** — autonomia do L3 (brief `docs/handoff/2026-07-13-motor-gbp-autonomia-sweep-l3-brief.md`); fix `websiteType`; teste real do L2; reprocessar Deals pontuados com o actor antigo; card GBP no record HubSpot (gated na conta de desenvolvedor, portal Free) | Ver §3.6. | Não bloqueia operação; bloqueia autonomia/expansão da frente |
 | 2026-06-28 | **GBP + Clarity caindo operacionalmente (fontes degradando)** — STAND-BY | Smoke L2 cirúrgico (exec `11755`) mostrou `gbp=missing` e `clarity=missing` no `source_status` (fontes erraram de verdade, provável 429/credencial). Não é bug do L2 — a granularidade de falha funcionou (só `t28_gbp_daily`/`t28_clarity_daily` degradaram para 0; `t28_campaign`=12 e `t28_ga4_landing`=2 OK). **Decisão Olavo 2026-06-28: stand-by.** Se os erros **persistirem** nas próximas runs (manual/agendada), voltamos a este ponto e investigamos a causa (rate-limit, credencial, query). Até lá, essas 2 tabelas ficam sem linha. | Não bloqueia L2 (fechado); monitorar |
 | 2026-06-30 | ~~**L3.0 — smoke phi_dev pendente**~~ | ✅ **PASS 2026-07-01.** Claude disparou via MCP `execute_workflow` (manual). Fix pego pelo smoke: `sqlQuery` era expressão `const/return` (n8n só aceita expressão única) → template `{{ }}`. Run `13046` SUCCESS (2 campanhas CLI-4, score JOIN OK, `campanha` relation resolvida, 2 pages); run `13054` **idempotência provada** (mesmos page IDs, `criado_em` preservado). Detalhe no execution log. | Resolvido |
 | 2026-06-30 | ~~**L3.0 — resolução da relation `cliente`**~~ | ✅ **Resolvido 2026-07-01.** Fonte: Agregador usa `id_client` (formula = "CLI-4") como `client_id`. Fix `Resolve Client Relation`: filtro `client_id|rich_text` → `id_client|formula` equals (returnType text), igual ao `Get database clientes` do Agregador. Re-smoke `13060`: `cliente` resolveu (page KILDARE & BRUNA BECKER) nas 2 análises; idempotência mantida. **Plumbing L3.0 100%.** | Resolvido |
@@ -359,6 +457,9 @@ Compilação das tensões espalhadas pelos strawmans + novas.
 | ~~T8~~ | ~~Sync git ↔ Notion: divergência potencial~~ | Conversa 2026-06-04 | ✅ **Resolvido** | **ADR-012 Aceito 2026-06-04** ([link](https://www.notion.so/376b65e5c72b818a87e8d491f98be1fb)). Git canônico para design, Notion canônico para estado operacional, sync via processo (manual hoje, Curador Lote 2/3 automatiza). |
 | T9 | Proliferação de agentes sem mapa consolidado (6 hoje, ~10 em 3 meses) | Conversa atual | Média | Mapa de agentes (§9) deste doc |
 | T10 | ~~Curador posicionado em "Procedimentos da Operação", mas faz mais sentido em "Documentação e Ferramentas"~~ | Conversa 2026-06-04 | ✅ Resolvido | **ME-20260604 aprovada e aplicada 2026-06-04** ([link](https://www.notion.so/375b65e5c72b8121834fd65d5395b481)). 1ª Mudança de Escopo completa do projeto — dogfood do Curador (Claude no papel de surrogate). Vira input de treino. |
+| T11 | **Falha silenciosa de credencial** — a expiração da credencial BQ (`UhLRAanVarQeOpQy`) passou **10 dias (08-16/jul)** sem alerta: zero linhas, zero logs, zero erro visível. Risco sistêmico para todos os pipelines críticos. | Incidente keystone 2026-07-17 | **Alta** | Considerar um **monitor de "zero linhas / zero logs"** para pipelines críticos (score, Agregador, writers do raw) — alerta quando uma run esperada não produz dado. |
+| T12 | **Fragmentação de branches** — 3+ branches `claude/*` divergentes (`agentic-agency-planning-KwJEw`, `lucid-tesla-ZWcbr`, `affectionate-davinci-Ey2oV`, branch do score) e `main` ~1 mês atrás. Históricos não-relacionados impedem merge git trivial. | 2026-07-19 | Média | Risco de integração + bus-factor. Decidir mecânica de consolidação de árvore com Olavo. |
+| T13 | **Credencial Claude/Anthropic = gargalo único da Camada 2 de análise** — todo o framework de análise densa (L3.0 §4, L3.2) depende de uma credencial n8n ainda não configurada. | 2026-07-19 | Média | Configurar a credencial; sem ela a Camada 2 (análise/otimização) não sai do plumbing. |
 
 ---
 
@@ -537,6 +638,7 @@ Escopo Retroativa automaticamente.
 
 | Versão | Data | Mudança |
 |---|---|---|
+| v0.1.52 | 2026-07-19 | **Atualização mensal (~1 mês de defasagem), a partir do ledger PHI — Registro de Execuções (Sub-chats).** (1) **Keystone PHI·Mídia Score CONSERTADO** — `Pipeline_v2` `ITWG3Ge0asXtUM8U` v1.2 (activeVersion `9a174e50`), valores reais em produção (Salão `phi=67.12` GOOD, Barbearia `phi=49.38` `MAS=0`), `es/rs/os` peso 0 no `model_config` v1.2; INCIDENTE: credencial `Google BigQuery account` `UhLRAanVarQeOpQy` expirou 08-16/jul (10 dias sem dado, sem alerta), reconectada 17/jul. (2) **Comercial deixa de ser vestigial** — Motor de Scoring GBP L1-L4 (`dtXFdLAHp7HmUh7o`/`5j79f7oR8x1Nxs4q`/`EFD7Drr0LDMqfDXw`/`5L3SyzDkZqf1N6vW`) + planilha Contrato de Dados (ADR-31) + 2 loops de guarda (`WRFU2NM8rLJU7bRT`/`vUI0pPlDASf64Htn`); §3.6 reescrita. (3) **Governança** — ledger operacional (`8d8eb685...`) + digest diário n8n (`rhobbBEeQaiWIuiF`) + ADR-31/ADR-32 (Proposto). (4) **L3.0 §4 framework implementado** (Codex, `WF-T28-Analise-Campaign` `fhYmJH0o9BW1IO4i` com nó Claude `claude-sonnet-5`) mas BLOQUEADO na credencial Claude/Anthropic no n8n (exec #18711). (5) **Agregador T28** — draft `cbd3568d` smoke a01 FAIL, brief a02 não despachado, 5 linhas `client_id NULL` a limpar. Seções tocadas: §2 (novo snapshot 2026-07-19), §3.6, §3.8, §4.2 (ADR-31/32), §5 (+5 pendências), §6 (+T11/T12/T13). |
 | v0.1.51 | 2026-07-05 | **2 briefs de sub-chat escritos (Comercial/HubSpot + Ramo Meta Ads), fundamentados em recon read-only.** **Comercial/HubSpot** (`docs/handoff/2026-07-05-comercial-hubspot-subchat-brief.md`): recon do portal `5633277` — 1 pipeline (8 estágios; `closedwon`/`closedlost` = os que a IA não toca), **3 campos custom já existem em Deals** (`followup`, `dados_enriquecimento`, `proxima_acao_recomendada` → reusar), sem campos IA em Contacts, sem campo de transcrição, 3 produtos (faltam Agentes de IA e GBP). Brief define spec dos campos novos (colisão checada: `proxima_acao_aceite`+data, `abordagem_sugerida_ia`, `analise_gbp/site/instagram_ia`, `transcricao_ia` em Meetings), 4 agentes (enriquecimento N2, NBA N3, abordagem por etapa, relatório mensal), lotes C1–C5. **C1 (criar campos+2 produtos) aguarda OK do Olavo** (CRM em produção). **Ramo Meta Ads** (`docs/handoff/2026-07-05-ramo-meta-ads-subchat-brief.md`): recon do Agregador `4sdG2UKMCBuFq8xn` revelou que **o caminho de escrita T28 do Meta já está construído e habilitado** (`Adaptador Input T28`→`Normalizador`→MERGE em `phi_prod.t28_meta_campaign`, schema definido); só `Fetch Meta Ads` está **off + sem credencial**. Cliente-teste **Charles Azevedo CLI-13/CHA** já tem BM/account/pixel IDs, campanha-teste CAMP-10 objetivo **MENS/WhatsApp** (métricas vazias/scaffold). 6 gaps p/ ligar: credencial Graph API (token BM — precisa Olavo), popular `id_meta_camp`, habilitar Fetch, confirmar tabela BQ, **estender mapa objetivo→resultado** (hoje só LEAD/PURCHASE; MENS→`messaging_conversation_started` sairia zerado — materializa o **Insight 1**), + `*_ranking` fields (**Insight 2** → es/rs/os). Diretriz do Olavo "criar sub-chats sempre que viável" aplicada. Pendências de decisão: C1 HubSpot (OK criar?), token Meta BM, migração de 2 campos string→multi-line, pesquisa de infra (Hermes/Openclaw), pastas Drive (MCP offline). |
 | v0.1.50 | 2026-07-05 | **Expansão de escopo — 6 frentes paralelas mapeadas + 6 decisões do Olavo travadas.** Olavo despejou roadmap em 6 frentes (Métricas, Prospecção/HubSpot, Conteúdo, Otimização, Infra, classificação de ~90 métricas Meta). Strawman `docs/strategic-planning/roadmap-expansao/BRUTO-v0.1-frentes-paralelas.md`. **Decisões:** (1) **princípio de 2 camadas de métrica CONFIRMADO** — canônicas (poucas, fixas, comparáveis → dirigem o score/contract T28) + contextuais (objetivo-dependentes → o agente de análise extrai); o "agente que busca métricas" é da Camada 2, não da ingestão. (2) **Classificação Meta A/B/C aceita** + 2 insights sobem pro sub-chat do score: **Insight 1** "Resultado/Custo por resultado/ROAS de resultados" (normalizado pela Meta) permite **uma fórmula cross-objetivo** (resolve o CPA×ROAS) guardando Compras/Leads crus p/ validar; **Insight 2** as 3 Classificações Meta (qualidade/engajamento/conversão) são candidatas a **preencher os `es/rs/os` stub** em campanhas Meta. **Cliente-teste Meta:** Charles Azevedo (Notion) tem dados de conta Meta Ads reais → destrava construir o ramo Meta. (3) **Comercial/HubSpot vira frente própria** + diretriz geral do Olavo: **"sempre que possível/viável criar sub-chats"**. (4) **Prioridade dos 'começar já':** HubSpot (campos) + **workflows que aguardavam campanha Meta Ads** (agora com Charles Azevedo) + pastas Drive. (5) **Catálogo de produtos/serviços v1** recebido e persistido (`docs/strategic-planning/catalogo-produtos-servicos.md`): `SVC-ADS` Anúncios online, `SVC-SITE` Criação de site, `SVC-IA` Agentes de IA e automação, `SVC-GBP` Config/gestão do GBP — pré-req de Conteúdo e do "produtos ofertáveis" no HubSpot. **Em curso:** 2 agentes de recon (Charles Azevedo + estado Meta no Agregador `4sdG2UKMCBuFq8xn`; estado atual do HubSpot — pipelines/estágios/propriedades) pra fundamentar 2 briefs de sub-chat (ramo Meta Ads; Comercial/HubSpot). **Bloqueado até o score:** agentes primários de otimização (dependem de score válido + dos 7 prompts do Módulo 28). Drive: MCP offline no momento (pastas ficam p/ quando reconectar). **Infra (Hermes/Openclaw):** pesquisa comparativa oferecida, aguarda OK. |
 | v0.1.49 | 2026-07-05 | **Camada de Conhecimento K3 CONCLUÍDO (população inicial + export do raciocínio).** **K3a:** export integral do Google Doc "Estudo de IA Cognitiva" (fileId `1_9F7BA…`, 314k chars, sem truncamento — razão de preservação 1.017) → `docs/conhecimento/temas/` (27 temas + 2 anexos de funil + `INDEX.md`) e prompt-library `docs/conhecimento/prompts/` (26 prompts; Tema 26 não tem prompt no original). **Resolve a dependência quebrada do Módulo 28** (que referenciava "Temas 01–27" inexistentes no repo). Todos os arquivos com header de fonte + aviso "claims numéricos sem fonte — não citar como fato" (Guia §2). Limpeza de export aplicada (escapes do Docs, tabela do Tema 26, bold quebrado). Commit `aceb264`. **K3b:** **22 estratégias criadas no Banco** (`0c6f2e04…`), todas **Status=Rascunho** (gate humano do Olavo → Ativa), tenant_id `phi-agencia`: **12 de G2 Santana** (E-Commerce; oferta/prova social 4,2–4,5/velocidade LCP/escala 20–30%/ROAS de aquisição segmentado) + **10 de G3 Sobral** (Infoproduto; TODAS com contraindicação padrão "teste n=1 — validar no contexto antes de generalizar"; inclui o **case negativo** Escala Baiana que falhou, marcado como tal). Evidência B (casos com números) ou D (opinião). Seed de broad match preservado (sem dedup necessário). Staging `docs/conhecimento/estrategias-staging-v1.md`. Verificação: `create-pages` retornou os 22 page IDs + busca no data source confirma indexação (17:29–17:32). SQL count gated por plano Notion (Business) — não bloqueia. **Estado da frente:** K0–K3 entregues; **restam K4** (fiação do Log — aguarda Trilha A estável), **K5** (watcher de sync Google Docs sobre o DB Fontes de Conhecimento), **K6** (Curador de Conhecimento N3). Pendências de gate humano: (a) promover estratégias Rascunho→Ativa; (b) mecânica de consolidação de árvore dos 2 branches. |
