@@ -159,13 +159,73 @@ mapear em `Anúncio|relation`. **Não é um patch; é design.** Registrar como i
 - **`activeVersionId`:** este WF já teve incidente de versão (ver log do Agregador) — anotar a versão ativa
   antes e depois; o histórico do n8n retém só ~7 versões (rollback longo não é confiável).
 
-## 5. Teste de aceitação (antes de publicar cada lote)
-- **Lote 1:** rodar manual; conferir na TSK-135 (ou numa task de teste) que — Prioridade = Alta (WARNING);
-  Gravidade = WARNING; `execution_id` = exec atual; Observação **acrescida** (não sobrescrita); e simular
-  recuperação (score GOOD 2 dias) → task **fecha** com Status `Concluído` e flag de otimização limpo.
-- **Lote 2:** `Dias em Alerta` numérico correto; título sem data enganosa; entrada no Log de Otimizações criada e
-  relacionada; `Workflow`/`Última Execução` preenchidos.
-- Confirmar que o `Chamar Loop Alerta Fase 1` está desabilitado e nenhuma task `[PHI] Otimizacao …` nova aparece.
+## 5. Verificação por lote — como o executor verifica e o resultado esperado
+
+> **Padrão de verificação (todos os lotes), 3 camadas:**
+> **(V1) Read-back de edição** — após cada `update_workflow`, `get_workflow_details` + comparação **byte-a-byte**
+> do(s) nó(s) tocado(s) contra o texto pretendido (via jq/python). PASS = idêntico; nenhum `U+FFFD` novo.
+> **(V2) Smoke funcional** — execução **manual** do `ITWG3Ge0asXtUM8U` (não publica). O executor **não** dispara
+> por MCP (approval-wall); pede ao Olavo para rodar pela UI e passar o `executionId`, ou usa `execute_workflow`
+> se liberado. Depois inspeciona a execução (`get_execution includeData`) e/ou consulta o Notion.
+> **(V3) Verificação de dado** — `notion-fetch`/`notion-query-data-sources` na task e no Log; queries BQ via um
+> workflow temporário (padrão do Agregador, arquivar ao fim).
+> **Regra de ouro:** verificar num **objeto de teito descartável** sempre que a ação for destrutiva (fechar task,
+> etc.) — nunca validar auto-close direto na TSK-135.
+
+### Lote 0 — Arquitetura (desativar o double-write)
+- **Método:** (a) `get_workflow_details(ITWG3Ge0asXtUM8U)` → `jq` no nó `Chamar Loop Alerta Fase 1` conferindo
+  `disabled == true`; (b) `get_workflow_details(JqPwFD9udCq2hRPw)` → `active == false` e `name` começa com
+  `[APOSENTADO 2026-07-21]`; (c) após o 1º smoke pós-mudança, `notion-query-data-sources` na DB Tasks filtrando
+  `Nome da Tarefa` que comece com `[PHI] Otimizacao` **criadas após** o timestamp do smoke.
+- **Resultado esperado (PASS):** nó `Chamar…` desabilitado; WF `JqPwFD9udCq2hRPw` inativo e renomeado;
+  **zero** tasks novas `[PHI] Otimizacao …` após o smoke. Só o formato `[…] PHI ALERT …` (inline) aparece.
+
+### Lote 1 — Falhas silenciosas + Prioridade/execution_id
+**V1 (read-back):** os nós `Check Auto-Close`, `Auto-Close Task (Notion)`, `Auto-Close: Desativar Otimização`,
+`Get Task para Fechar`, `Update a database page`, `Create a database page`, `Code Criar Checklist`,
+`Update Hipótese na Tarefa` batem byte-a-byte com o pretendido; **nenhum `U+FFFD`** remanescente neles
+(checar com `grep -c $'\\ufffd'`).
+
+**V2/V3 — cenário A (WARNING corrente, sem fechar):** rodar smoke; consultar a task da campanha em WARNING
+(TSK-135 / GADS-21149189736 via `notion-fetch`).
+- **PASS:** `Prioridade = Alta`; `Gravidade Detectada = WARNING` (banda real, não "Baixa"/"Média");
+  `execution_id` = id da execução **desta** run (prefixo `EXEC-PHI-<hoje>…`, **≠** `FALLBACK-20260701`);
+  `Observação` **acrescida** de uma linha datada nova (histórico preservado, não sobrescrito); a linha de
+  escalada (se ≥2 dias) **sobrevive** (não é mais clobberada); Status permanece `Em Andamento` (não fecha — WARNING).
+
+**V2/V3 — cenário B (teste controlado de auto-close, sem poluir BQ):**
+1. Criar **1 task descartável** na DB Tasks: `Nome = [TESTE] AUTOCLOSE`, `Criado por Automação = YES`,
+   `Status = Em Andamento`, `campaign_id = GADS-21116045403` (Salão, hoje **GOOD** phi≈67; confirmar via
+   `phi_score_current` que tem ≥2 dias GOOD/EXCELLENT consecutivos).
+2. Rodar smoke. 3. `notion-fetch` na task de teste.
+- **PASS:** Status vira **`Concluído`** (opção válida, sem `U+FFFD`); flag `Otimização Ativa?` = **false**
+  (desmarcado); e — controle negativo — a task da campanha WARNING **NÃO** fecha.
+4. **Cleanup:** apagar/cancelar a `[TESTE] AUTOCLOSE`. Registrar no report que foi removida.
+- **PASS de histerese:** se existir só **1** dia GOOD (não 2), a task de teste **não** deve fechar (fecha só com
+  2 dias consecutivos bons — simétrico à regra de abertura).
+
+### Lote 2 — Rastreabilidade e log (P1, P2, P6, S2)
+**V1 (read-back):** nós de create/update + o novo nó do Log de Otimizações batem byte-a-byte; props novas
+presentes.
+**V3 (dado) na task criada/atualizada no smoke:**
+- **P1 — `Dias em Alerta`:** número; cruzar com uma query BQ (via WF temporário) contando dias consecutivos em
+  `phi_score_history` para aquele `campaign_id` na banda CRITICAL/WARNING. **PASS:** o número na task == a
+  contagem do BQ (e reflete o valor real, ex.: 21, não capado em 2).
+- **P2 — Título/datas:** `Nome da Tarefa` = `[{client_slug}] PHI ALERT - {campaign_name}` (**sem data**);
+  existe `Data de Detecção` fixa (= data de criação, não muda entre runs). **PASS:** título estável run-a-run;
+  `Data de Detecção` não muda; sem data enganosa no título.
+- **P6 — Log de Otimizações:** `notion-query-data-sources` na DB Log de Otimizações
+  (`19fb65e5-c72b-8106-8e76-f1e684197316`) filtrando pela relação com a task. **PASS:** existe **1** entrada
+  ligada à task; a task tem `Log de Otimização` (relation) preenchido; sem duplicar em re-runs (idempotente).
+- **S2 — Workflow + run:** **PASS:** `Workflow` = "PHI - Pipeline_v2"; `Última Execução` = timestamp da run
+  (atualiza a cada run).
+
+### Fechamento (todos os lotes)
+- **Idempotência:** rodar o smoke **2×** — 2ª run **não** cria task duplicada para a mesma campanha, **não**
+  duplica entrada no Log, e apenas **atualiza** (Observação ganha +1 linha, Prioridade/Gravidade/execution_id
+  re-gravados). PASS = contagem de tasks/logs por `campaign_id` inalterada entre as duas runs.
+- **Versão:** anotar `activeVersionId` antes/depois; publicar **só** com OK do Olavo; confirmar `active:true`
+  e `versionId == activeVersionId` após publish.
 
 ## 6. Guardrails
 - Escopo estrito: só os nós de ciclo de vida da task no `ITWG3Ge0asXtUM8U` + desativar o `JqPwFD9udCq2hRPw`.
