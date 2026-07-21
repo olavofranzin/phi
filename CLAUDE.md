@@ -25,19 +25,6 @@ Sistema automatizado de monitoramento e gestão de campanhas de tráfego pago (G
 
 ---
 
-## Workflows n8n — IDs Ativos
-
-| Workflow | ID | Status | Horário |
-|----------|-----|--------|---------|
-| **PHI - Pipeline_v2** | `ITWG3Ge0asXtUM8U` | ✅ Produção | 07:00 diário |
-| **Daily Entry** | `zGgIqiLlo5iAn8ud` | ✅ Ativo | 06:00 diário |
-| **PHI - Subworkflow Campanhas** | `b1pbn8qmzCNTufTp` | ✅ Ativo | — |
-| **PHI - Fechar Otimização** | `83vfKD8XMYmjZjFQ` | ✅ Ativo | — |
-| **Google Ads v2** | `aueMKOExsN28nREq` | ⏸️ Reestruturação | — |
-| **Google Ads Insights Semanal** | `AG3g0LcpbxbCZoPZ` | 🆕 Criado (inativo) | Segunda 02:00 |
-
----
-
 ## Notion — IDs dos Databases
 
 | Database | ID |
@@ -66,19 +53,9 @@ Sistema automatizado de monitoramento e gestão de campanhas de tráfego pago (G
 
 ---
 
-## Estado Atual do Desenvolvimento
-
-### Funcionando em produção
-- PHI - Pipeline_v2 calculando scores e criando tarefas no Notion
-- Daily Entry ingerindo métricas diárias + blocos v23 no BigQuery
-- Auto-Close, Escalada, Sync de scores — todos implementados
-
-### Pendente / Em andamento
-- [ ] Google Ads v2: corrigir credentials (importar google_ads_v2.json manualmente via n8n UI)
-- [ ] Google Ads Insights Semanal (`AG3g0LcpbxbCZoPZ`): configurar credentials + criar tabela BQ + criar DB Notion Insights + ativar
-- [ ] Arquitetura de IA: implementar (spec em `342b65e5-c72b-81f8-a05e-dfe05e564105`)
-- [ ] Auto-Close para EXCELLENT (atual só cobre GOOD)
-- [ ] Tabelas de auditoria: `task_control_log`, `task_notion_sync_log`, `threshold_override_log`
+## VERIFICAÇÃO 
+Antes de finalizar QUALQUER tarefa:
+1. Descreva como você vai verificar se o resultado está correto.
 
 ---
 
@@ -135,13 +112,43 @@ Sistema automatizado de monitoramento e gestão de campanhas de tráfego pago (G
 
 ---
 
-## Arquivos SDK no Repositório
-
-| Arquivo | Workflow |
-|---------|---------|
-| `google_ads_v2.json` | Google Ads v2 (`aueMKOExsN28nREq`) — importar manualmente via n8n UI |
-| `google_ads_insights_semanal.js` | Google Ads Insights Semanal (`AG3g0LcpbxbCZoPZ`) |
+## Regras que você deve seguir
+- Fale comigo sempre em português, de forma simples e sem jargão.
+- Antes de mudar algo grande, me explique o plano e espere eu aprovar.
+- Prefira a solução mais simples que resolve. Nada de complicar sem motivo.
 
 ---
 
-*PHI™ v1.4.3 — Atualizado em 14/04/2026*
+# RTK - Rust Token Killer
+
+**Usage**: Token-optimized CLI proxy (60-90% savings on dev operations)
+
+## Meta Commands (always use rtk directly)
+
+```bash
+rtk gain              # Show token savings analytics
+rtk gain --history    # Show command usage history with savings
+rtk discover          # Analyze Claude Code history for missed opportunities
+rtk proxy <cmd>       # Execute raw command without filtering (for debugging)
+```
+
+## Installation Verification
+
+```bash
+rtk --version         # Should show: rtk X.Y.Z
+rtk gain              # Should work (not "command not found")
+which rtk             # Verify correct binary
+```
+
+⚠️ **Name collision**: If `rtk gain` fails, you may have reachingforthejack/rtk (Rust Type Kit) installed instead.
+
+## Hook-Based Usage
+
+All other commands are automatically rewritten by the Claude Code hook.
+Example: `git status` → `rtk git status` (transparent, 0 tokens overhead)
+
+Refer to CLAUDE.md for full command reference.
+   
+---
+
+*PHI™ v1.5 — Atualizado em 27/07/2026*
