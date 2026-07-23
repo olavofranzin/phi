@@ -74,6 +74,7 @@ Antes de finalizar QUALQUER tarefa:
 11. **Ordem da Fase 3 é imutável:** Fechamento → Escalada → Abertura
 12. **Google Ads API:** `developer-token` deve estar no header — NÃO é injetado automaticamente pelo `googleAdsOAuth2Api`
 13. **Google Ads API v23:** `metrics.cost_per_conversion` é incompatível com `segments.conversion_action_name/category`
+14. **Token Hardcoded no n8n:** o n8n self-hosted não permite que o token seja inserido uma credencial ou variável
 
 ---
 
