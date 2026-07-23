@@ -801,7 +801,7 @@
           "cachedResultName": "phi-production",
           "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=project-0e7c58d4-656f-49e8-807"
         },
-        "sqlQuery": "MERGE `phi_prod.workflow_execution_log` AS target\nUSING (\n  SELECT\n    '{{ $(\"Buscar ID de Sucesso Hoje\").first().json.execution_id }}' AS execution_id,\n    (SELECT COUNT(*) FROM `project-0e7c58d4-656f-49e8-807.phi_prod.raw_campaign_data`\n     WHERE execution_id = '{{ $(\"Buscar ID de Sucesso Hoje\").first().json.execution_id }}'\n    ) AS total_records\n) AS source\nON target.execution_id = source.execution_id\nWHEN MATCHED THEN\n  UPDATE SET status = 'SUCCESS', finished_at = CURRENT_TIMESTAMP(), records_processed = source.total_records;",
+        "sqlQuery": "MERGE `phi_prod.workflow_execution_log` AS target\nUSING (\n  SELECT\n    '{{ $(\"Buscar ID de Sucesso Hoje\").first().json.execution_id }}' AS execution_id,\n    (SELECT COUNT(*) FROM `phi_prod.raw_campaign_data`\n     WHERE execution_id = '{{ $(\"Buscar ID de Sucesso Hoje\").first().json.execution_id }}'\n    ) AS total_records\n) AS source\nON target.execution_id = source.execution_id\nWHEN MATCHED THEN\n  UPDATE SET status = 'SUCCESS', finished_at = CURRENT_TIMESTAMP(), records_processed = source.total_records;",
         "options": {}
       },
       "id": "d6ef60cd-2e3e-4b05-b01c-7a5895852f69",
@@ -867,7 +867,7 @@
           "cachedResultName": "phi-production",
           "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=project-0e7c58d4-656f-49e8-807"
         },
-        "sqlQuery": "MERGE `phi_prod.workflow_execution_log` AS target\nUSING (\n  SELECT\n    '{{ $('Buscar ID de Sucesso Hoje').first().json.execution_id }}' AS execution_id,\n    (SELECT COUNT(*) FROM `project-0e7c58d4-656f-49e8-807.phi_prod.phi_score_history`\n     WHERE execution_id = '{{ $('Buscar ID de Sucesso Hoje').first().json.execution_id }}'\n       AND calculation_status = 'SUCCESS') AS total_records\n) AS source\nON  target.execution_id = source.execution_id\nAND target.phase        = 'CALCULATION'\nWHEN MATCHED THEN\n  UPDATE SET\n    status            = 'SUCCESS',\n    finished_at       = CURRENT_TIMESTAMP(),\n    records_processed = source.total_records;",
+        "sqlQuery": "MERGE `phi_prod.workflow_execution_log` AS target\nUSING (\n  SELECT\n    '{{ $('Buscar ID de Sucesso Hoje').first().json.execution_id }}' AS execution_id,\n    (SELECT COUNT(*) FROM `phi_prod.phi_score_history`\n     WHERE execution_id = '{{ $('Buscar ID de Sucesso Hoje').first().json.execution_id }}'\n       AND calculation_status = 'SUCCESS') AS total_records\n) AS source\nON  target.execution_id = source.execution_id\nAND target.phase        = 'CALCULATION'\nWHEN MATCHED THEN\n  UPDATE SET\n    status            = 'SUCCESS',\n    finished_at       = CURRENT_TIMESTAMP(),\n    records_processed = source.total_records;",
         "options": {}
       },
       "id": "fc45b5ff-a286-4d6d-9cce-656055b8e4e6",
@@ -969,7 +969,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// PHI™ v1.3 — Fase 3: Code Clean Campanhas\nconst items = $input.all();\nconst outputItems = [];\nconst extractRichText = (arr) => arr?.length ? arr.map(s => s.plain_text).join('') : '';\nconst extractMultiSelect = (arr) => arr?.length ? arr.map(o => o.name).join(', ') : '';\nfor (const item of items) {\n  const props = item.json.properties;\n  // Lê campaign_id diretamente do campo de texto no Notion (inserido pelo SQL)\n  const campaignId = extractRichText(props['campaign_id']?.rich_text);\n  outputItems.push({ json: {\n    clean_notion_page_id: item.json.id,\n    clean_campaing_id: campaignId,\n    clean_notion_id_camp: props['notion_id_camp']?.formula?.string || '',\n    clean_client_id: extractRichText(props['client_id']?.rich_text),\n    clean_client_slug: extractRichText(props['client_slug']?.rich_text),\n    clean_nome_campanha: props['Nome Campanha']?.formula?.string || '',\n    clean_periodo_otimizacao_aberto: props['Otimização Ativa?']?.checkbox ?? false,\n    clean_meta_metrica_mae: props['Meta da Métrica-mãe']?.number ?? 0,\n    clean_metrica_mae: extractMultiSelect(props['Métrica-Mãe']?.multi_select),\n    clean_orcamento_diario: props['Orçamento Diário']?.number ?? 0,\n    clean_plataforma: props['Fonte']?.multi_select?.[0]?.name || '',\n    clean_notion_id_pro: props['Projeto']?.relation?.[0]?.id || ''\n  }});\n}\nreturn outputItems;"
+        "jsCode": "// PHI™ v1.3 — Fase 3: Code Clean Campanhas\nconst items = $input.all();\nconst outputItems = [];\nconst extractRichText = (arr) => arr?.length ? arr.map(s => s.plain_text).join('') : '';\nconst extractMultiSelect = (arr) => arr?.length ? arr.map(o => o.name).join(', ') : '';\nfor (const item of items) {\n  const props = item.json.properties;\n  // Lê campaign_id diretamente do campo de texto no Notion (inserido pelo SQL)\n  const campaignId = extractRichText(props['campaign_id']?.rich_text);\n  outputItems.push({ json: {\n    clean_notion_page_id: item.json.id,\n    clean_campaign_id: campaignId,\n    clean_notion_id_camp: props['notion_id_camp']?.formula?.string || '',\n    clean_client_id: extractRichText(props['client_id']?.rich_text),\n    clean_client_slug: extractRichText(props['client_slug']?.rich_text),\n    clean_nome_campanha: props['Nome Campanha']?.formula?.string || '',\n    clean_periodo_otimizacao_aberto: props['Otimização Ativa?']?.checkbox ?? false,\n    clean_meta_metrica_mae: props['Meta da Métrica-mãe']?.number ?? 0,\n    clean_metrica_mae: extractMultiSelect(props['Métrica-Mãe']?.multi_select),\n    clean_orcamento_diario: props['Orçamento Diário']?.number ?? 0,\n    clean_plataforma: props['Fonte']?.multi_select?.[0]?.name || '',\n    clean_notion_id_pro: props['Projeto']?.relation?.[0]?.id || ''\n  }});\n}\nreturn outputItems;"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -1017,7 +1017,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// PHI v1.3 - Code Enriquecer Campanha (v2: enriched with Notion data from Code Clean F3)\nconst campaignId = $json.campaign_id;\n\nif (!campaignId) {\n  return [{ json: { ...$json, _aviso: 'campaign_id ausente' } }];\n}\n\n// Look up Notion data for this campaign from Code Clean Campanhas F3\nconst allCleaned = $('Code Clean Campanhas F3').all();\nconst cleanMatch = allCleaned.find(item => item.json.clean_campaing_id === campaignId);\n\nreturn [{\n  json: {\n    execution_id:        $json.execution_id,\n    client_id:           $json.client_id,\n    campaign_id:         $json.campaign_id,\n    phi_value:           $json.phi_value,\n    phi_classification:  $json.phi_classification,\n    priority_score:      $json.priority_score,\n    miv:                 $json.miv,\n    mas:                 $json.mas,\n    tss:                 $json.tss,\n    fis:                 $json.fis,\n    es:                  $json.es,\n    rs:                  $json.rs,\n    os:                  $json.os,\n    threshold_used:      $json.threshold_used,\n    mas_janela:          $json.mas_janela,\n    primary_metric_type: $json.primary_metric_type,\n    business_model:      $json.business_model,\n    plataforma:          $json.plataforma,\n    conversions_7d:      $json.conversions_7d ?? null,\n    // Notion enrichment from Code Clean Campanhas F3\n    notion_page_id:  cleanMatch?.json.clean_notion_page_id  ?? null,\n    notion_id_camp:  cleanMatch?.json.clean_notion_id_camp  ?? null,\n    notion_id_pro:   cleanMatch?.json.clean_notion_id_pro   ?? null,\n    client_slug:     cleanMatch?.json.clean_client_slug     ?? $json.client_slug ?? null,\n    nome_campanha:   cleanMatch?.json.clean_nome_campanha   ?? null,\n    otimizacao_ativa: cleanMatch?.json.clean_periodo_otimizacao_aberto ?? false,\n    meta_metrica_mae: cleanMatch?.json.clean_meta_metrica_mae ?? null,\n    metrica_mae:      cleanMatch?.json.clean_metrica_mae      ?? null,\n    orcamento_diario: cleanMatch?.json.clean_orcamento_diario ?? null,\n    plataforma_notion: cleanMatch?.json.clean_plataforma      ?? null,\n  }\n}];\n"
+        "jsCode": "// PHI v1.3 - Code Enriquecer Campanha (v2: enriched with Notion data from Code Clean F3)\nconst campaignId = $json.campaign_id;\n\nif (!campaignId) {\n  return [{ json: { ...$json, _aviso: 'campaign_id ausente' } }];\n}\n\n// Look up Notion data for this campaign from Code Clean Campanhas F3\nconst allCleaned = $('Code Clean Campanhas F3').all();\nconst cleanMatch = allCleaned.find(item => item.json.clean_campaign_id === campaignId);\n\nreturn [{\n  json: {\n    execution_id:        $json.execution_id,\n    client_id:           $json.client_id,\n    campaign_id:         $json.campaign_id,\n    phi_value:           $json.phi_value,\n    phi_classification:  $json.phi_classification,\n    priority_score:      $json.priority_score,\n    miv:                 $json.miv,\n    mas:                 $json.mas,\n    tss:                 $json.tss,\n    fis:                 $json.fis,\n    es:                  $json.es,\n    rs:                  $json.rs,\n    os:                  $json.os,\n    threshold_used:      $json.threshold_used,\n    mas_janela:          $json.mas_janela,\n    primary_metric_type: $json.primary_metric_type,\n    business_model:      $json.business_model,\n    plataforma:          $json.plataforma,\n    conversions_7d:      $json.conversions_7d ?? null,\n    // Notion enrichment from Code Clean Campanhas F3\n    notion_page_id:  cleanMatch?.json.clean_notion_page_id  ?? null,\n    notion_id_camp:  cleanMatch?.json.clean_notion_id_camp  ?? null,\n    notion_id_pro:   cleanMatch?.json.clean_notion_id_pro   ?? null,\n    client_slug:     cleanMatch?.json.clean_client_slug     ?? $json.client_slug ?? null,\n    nome_campanha:   cleanMatch?.json.clean_nome_campanha   ?? null,\n    otimizacao_ativa: cleanMatch?.json.clean_periodo_otimizacao_aberto ?? false,\n    meta_metrica_mae: cleanMatch?.json.clean_meta_metrica_mae ?? null,\n    metrica_mae:      cleanMatch?.json.clean_metrica_mae      ?? null,\n    orcamento_diario: cleanMatch?.json.clean_orcamento_diario ?? null,\n    plataforma_notion: cleanMatch?.json.clean_plataforma      ?? null,\n  }\n}];\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -1164,7 +1164,7 @@
             },
             {
               "key": "Observação|rich_text",
-              "textContent": "=⚠️ Escalada automática PHI™ — campanha em {{ $('Code Enriquecer Campanha').first().json.phi_classification }} por 2+ dias consecutivos. PHI Score: {{ $('Code Enriquecer Campanha').first().json.phi_value }}. Priority Score: {{ $('Code Enriquecer Campanha').first().json.priority_score }}."
+              "textContent": "=⚠️ Escalada automática PHI™ — campanha em {{ $('Code Enriquecer Campanha').item.json.phi_classification }} por 2+ dias consecutivos. PHI Score: {{ $('Code Enriquecer Campanha').item.json.phi_value }}. Priority Score: {{ $('Code Enriquecer Campanha').item.json.priority_score }}."
             }
           ]
         },
@@ -1590,7 +1590,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Enrich sync data with Notion page info from Code Clean Campanhas F3\nconst campaignId = $json.campaign_id;\nconst allCleaned = $('Code Clean Campanhas F3').all();\nconst match = allCleaned.find(item => item.json.clean_campaing_id === campaignId);\n\nreturn [{\n  json: {\n    ...$json,\n    notion_page_id: match?.json.clean_notion_page_id ?? null,\n    client_slug:    match?.json.clean_client_slug    ?? null,\n  }\n}];\n"
+        "jsCode": "// Enrich sync data with Notion page info from Code Clean Campanhas F3\nconst campaignId = $json.campaign_id;\nconst allCleaned = $('Code Clean Campanhas F3').all();\nconst match = allCleaned.find(item => item.json.clean_campaign_id === campaignId);\n\nreturn [{\n  json: {\n    ...$json,\n    notion_page_id:   match?.json.clean_notion_page_id              ?? null,\n    client_slug:      match?.json.clean_client_slug                  ?? null,\n    otimizacao_ativa: match?.json.clean_periodo_otimizacao_aberto   ?? false,\n  }\n}];"
       },
       "id": "8916fdb4-daee-4fbc-8ecb-3547d30ab42b",
       "name": "Enrich for Sync",
@@ -1633,7 +1633,8 @@
             }
           ]
         },
-        "options": {}
+        "options": {},
+        "simple": false
       },
       "id": "c99c831b-8145-415d-b9b4-eedbcbacbe43",
       "name": "Sync Scores to Notion",

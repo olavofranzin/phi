@@ -1,0 +1,164 @@
+{
+  "name": "GitHub Workflow Importer",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "github-import",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "node-webhook-01",
+      "name": "GitHub Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "github-workflow-importer"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body ?? $input.first().json;\nconst commits = body.commits ?? [];\nconst branch = (body.ref ?? 'refs/heads/main').replace('refs/heads/', '');\nconst repo = body.repository?.full_name ?? '';\n\nconst files = [];\nfor (const commit of commits) {\n  for (const file of [...(commit.added ?? []), ...(commit.modified ?? [])]) {\n    if (file.endsWith('.json')) {\n      files.push({\n        filePath: file,\n        rawUrl: `https://raw.githubusercontent.com/${repo}/${branch}/${file}`\n      });\n    }\n  }\n}\n\nreturn files.length > 0\n  ? files.map(f => ({ json: f }))\n  : [{ json: { skip: true } }];"
+      },
+      "id": "node-extract-01",
+      "name": "Extrair Arquivos JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "skip-check",
+              "leftValue": "={{ $json.skip }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "equals" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "node-if-01",
+      "name": "Tem Arquivos?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "Nenhum arquivo JSON alterado no push.",
+        "options": { "responseCode": 200 }
+      },
+      "id": "node-respond-skip-01",
+      "name": "Responder Sem Arquivos",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [900, 180]
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "id": "node-loop-01",
+      "name": "Loop por Arquivo",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [900, 420]
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "Todos os workflows importados com sucesso.",
+        "options": { "responseCode": 200 }
+      },
+      "id": "node-respond-ok-01",
+      "name": "Responder OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1120, 280]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.rawUrl }}",
+        "options": {
+          "response": { "response": { "responseFormat": "json" } }
+        }
+      },
+      "id": "node-fetch-01",
+      "name": "Buscar JSON do GitHub",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1120, 560]
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json;\nconst workflow = typeof raw === 'string' ? JSON.parse(raw) : raw;\n\nif (!workflow.id) {\n  throw new Error(`Arquivo não contém campo \"id\": ${JSON.stringify(Object.keys(workflow))}`);\n}\n\nreturn [{\n  json: {\n    workflowId: workflow.id,\n    payload: {\n      name: workflow.name,\n      nodes: workflow.nodes,\n      connections: workflow.connections,\n      settings: workflow.settings ?? {},\n      staticData: workflow.staticData ?? null\n    }\n  }\n}];"
+      },
+      "id": "node-prepare-01",
+      "name": "Preparar Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1340, 560]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://n8n-n8n-editor.1unqx7.easypanel.host/api/v1/workflows/{{ $json.workflowId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.payload }}",
+        "options": {}
+      },
+      "id": "node-update-01",
+      "name": "Atualizar Workflow no n8n",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1560, 560],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "n8n-api-key-cred",
+          "name": "n8n API Key"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "GitHub Webhook": {
+      "main": [[{ "node": "Extrair Arquivos JSON", "type": "main", "index": 0 }]]
+    },
+    "Extrair Arquivos JSON": {
+      "main": [[{ "node": "Tem Arquivos?", "type": "main", "index": 0 }]]
+    },
+    "Tem Arquivos?": {
+      "main": [
+        [{ "node": "Responder Sem Arquivos", "type": "main", "index": 0 }],
+        [{ "node": "Loop por Arquivo", "type": "main", "index": 0 }]
+      ]
+    },
+    "Loop por Arquivo": {
+      "main": [
+        [{ "node": "Responder OK", "type": "main", "index": 0 }],
+        [{ "node": "Buscar JSON do GitHub", "type": "main", "index": 0 }]
+      ]
+    },
+    "Buscar JSON do GitHub": {
+      "main": [[{ "node": "Preparar Payload", "type": "main", "index": 0 }]]
+    },
+    "Preparar Payload": {
+      "main": [[{ "node": "Atualizar Workflow no n8n", "type": "main", "index": 0 }]]
+    },
+    "Atualizar Workflow no n8n": {
+      "main": [[{ "node": "Loop por Arquivo", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "tags": [{ "name": "infraestrutura" }]
+}

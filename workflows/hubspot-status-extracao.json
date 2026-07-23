@@ -1,0 +1,4930 @@
+{
+  "id": "kED2AlXJjIYgvHXH",
+  "name": "HubSpot - Atualizar status e disparar extracao",
+  "active": false,
+  "isArchived": false,
+  "versionId": "aff0ee87-2dab-4422-916b-d673c2c31ddc",
+  "activeVersionId": null,
+  "triggerCount": 1,
+  "createdAt": "2026-04-11T17:20:37.311Z",
+  "updatedAt": "2026-07-14T02:59:08.234Z",
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true,
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "connections": {
+    "Schedule Trigger1": {
+      "main": [
+        [
+          {
+            "node": "Ler watermark",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s)": {
+      "main": [
+        [
+          {
+            "node": "Preparar parametros de re-extracao",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ler contagem de leads": {
+      "main": [
+        [
+          {
+            "node": "Calcular vagas disponiveis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calcular vagas disponiveis": {
+      "main": [
+        [
+          {
+            "node": "If Quantidade_vagas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar campos do lead": {
+      "main": [
+        [
+          {
+            "node": "If place_id valido",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Salvar lead bruto na planilha": {
+      "main": [
+        [
+          {
+            "node": "Agente de Enriquecimento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agente de Enriquecimento": {
+      "main": [
+        [
+          {
+            "node": "Atualizar lead enriquecido na planilha",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Atualizar lead enriquecido na planilha": {
+      "main": [
+        [
+          {
+            "node": "Search deal por place_id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Criar deal no HubSpot": {
+      "main": [
+        [
+          {
+            "node": "Atualizar status prospectado na planilha",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Atualizar status prospectado na planilha": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Agente de Enriquecimento",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Ler contagem de leads1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get dataset items": {
+      "main": [
+        [
+          {
+            "node": "Remove Duplicates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Duplicates": {
+      "main": [
+        [
+          {
+            "node": "Normalizar campos do lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run Google Maps Scraper": {
+      "main": [
+        [
+          {
+            "node": "Get dataset items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mapear estagio para status": {
+      "main": [
+        [
+          {
+            "node": "If Vencido/Perdido",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Vencido/Perdido": {
+      "main": [
+        [
+          {
+            "node": "Atualizar status do lead na planilha",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Atualizar status do lead na planilha": {
+      "main": [
+        [
+          {
+            "node": "Loop deals novo status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar parametros de re-extracao": {
+      "main": [
+        [
+          {
+            "node": "Ler contagem de leads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Quantidade_vagas": {
+      "main": [
+        [
+          {
+            "node": "Run Google Maps Scraper",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get lead bruto sem id_deal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Agente de Enriquecimento1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar campos do lead1": {
+      "main": [
+        [
+          {
+            "node": "Agente de Enriquecimento1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agente de Enriquecimento1": {
+      "main": [
+        [
+          {
+            "node": "If output preenchido",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Atualizar lead enriquecido na planilha1": {
+      "main": [
+        [
+          {
+            "node": "Search deal no HubSpot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search deal": {
+      "main": [
+        [
+          {
+            "node": "Update id_deal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update id_deal": {
+      "main": [
+        [
+          {
+            "node": "Loop id_deal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get lead bruto sem id_deal": {
+      "main": [
+        [
+          {
+            "node": "Loop id_deal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop id_deal": {
+      "main": [
+        [
+          {
+            "node": "Get lead bruto sem id_deal1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Search deal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop enriquecimento leads": {
+      "main": [
+        [
+          {
+            "node": "Call 'GBP Scoring - L2 Discovery (Pipeline A)'",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Normalizar campos do lead1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get lead bruto sem id_deal1": {
+      "main": [
+        [
+          {
+            "node": "If id valido da planilha",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search deal no HubSpot": {
+      "main": [
+        [
+          {
+            "node": "Update enriquecimento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update enriquecimento": {
+      "main": [
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "Loop enriquecimento leads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search deal por place_id": {
+      "main": [
+        [
+          {
+            "node": "If deal ja existe",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If deal ja existe": {
+      "main": [
+        [
+          {
+            "node": "Atualizar status prospectado na planilha",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Criar deal no HubSpot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If id valido da planilha": {
+      "main": [
+        [
+          {
+            "node": "Loop enriquecimento leads",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "If place_id valido": {
+      "main": [
+        [
+          {
+            "node": "Buscar lead por place_id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar lead por place_id": {
+      "main": [
+        [
+          {
+            "node": "If lead ja existe",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If lead ja existe": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Salvar lead bruto na planilha",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Deals que mudaram de status": {
+      "main": [
+        [
+          {
+            "node": "Loop deals novo status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop deals novo status": {
+      "main": [
+        [
+          {
+            "node": "Get row(s)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Dados do deal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dados do deal": {
+      "main": [
+        [
+          {
+            "node": "Mapear estagio para status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ler contagem de leads1": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Ler contagem de leads",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get lead bruto sem id_deal1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ler watermark": {
+      "main": [
+        [
+          {
+            "node": "Deals que mudaram de status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If output preenchido": {
+      "main": [
+        [
+          {
+            "node": "Atualizar lead enriquecido na planilha1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 8
+            },
+            {
+              "triggerAtHour": 21
+            }
+          ]
+        }
+      },
+      "id": "fd077574-4e2d-4fa7-87ff-c5aa988ec088",
+      "name": "Schedule Trigger1",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        608,
+        -368
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "y1kpcfZuJZZqUPf3",
+          "mode": "list",
+          "cachedResultName": "Prospeccao",
+          "cachedResultUrl": "/projects/QAumYwlPGm37G3p1/datatables/y1kpcfZuJZZqUPf3"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyValue": "1",
+              "keyName": "id"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        2368,
+        -432
+      ],
+      "id": "59bfeee0-75bf-4099-9bb2-fff1a203298c",
+      "name": "Get row(s)",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1MuetJ4N7xiazkw55YOSHtq_nIaHPRKOE-g6GwfaNJKM",
+          "mode": "list",
+          "cachedResultName": "Quantidade de Leads por Mês",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MuetJ4N7xiazkw55YOSHtq_nIaHPRKOE-g6GwfaNJKM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 624786381,
+          "mode": "list",
+          "cachedResultName": "qtd leads mes",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MuetJ4N7xiazkw55YOSHtq_nIaHPRKOE-g6GwfaNJKM/edit#gid=624786381"
+        },
+        "options": {
+          "dataLocationOnSheet": {
+            "values": {
+              "rangeDefinition": "specifyRange",
+              "firstDataRow": 7
+            }
+          }
+        }
+      },
+      "id": "46f58d6f-df34-471d-b21e-f3b29f778cbf",
+      "name": "Ler contagem de leads",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        624,
+        32
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "vagas",
+              "name": "vagas",
+              "value": "={{ Math.max(0, 50 - ($json['Quantidade de Leads por Mês'] || 0)) }}",
+              "type": "number"
+            },
+            {
+              "id": "segmento",
+              "name": "segmento",
+              "value": "={{ $('Preparar parametros de re-extracao').item.json.segmento }}",
+              "type": "string"
+            },
+            {
+              "id": "tipo_localizacao",
+              "name": "tipo_localizacao",
+              "value": "={{ $('Preparar parametros de re-extracao').item.json.tipo_localizacao }}",
+              "type": "string"
+            },
+            {
+              "id": "localizacao",
+              "name": "localizacao",
+              "value": "={{ $('Preparar parametros de re-extracao').item.json.localizacao }}",
+              "type": "string"
+            },
+            {
+              "id": "tem_site",
+              "name": "tem_site",
+              "value": "={{ $('Preparar parametros de re-extracao').item.json.tem_site }}",
+              "type": "string"
+            },
+            {
+              "id": "avaliacao_minima",
+              "name": "avaliacao_minima",
+              "value": "={{ $('Preparar parametros de re-extracao').item.json.avaliacao_minima }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "44a21fc7-68b5-46b0-888e-ada8841150f9",
+      "name": "Calcular vagas disponiveis",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        608,
+        272
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "place_id",
+              "name": "place_id",
+              "type": "string",
+              "value": "={{ $json.placeId }}"
+            },
+            {
+              "id": "nome",
+              "name": "nome",
+              "type": "string",
+              "value": "={{ $json.title }}"
+            },
+            {
+              "id": "telefone",
+              "name": "telefone",
+              "type": "string",
+              "value": "={{ $json.phone }}"
+            },
+            {
+              "id": "site",
+              "name": "site",
+              "type": "string",
+              "value": "={{ $json.website }}"
+            },
+            {
+              "id": "rating",
+              "name": "rating",
+              "type": "number",
+              "value": "={{ $json.totalScore }}"
+            },
+            {
+              "id": "endereco",
+              "name": "endereco",
+              "type": "string",
+              "value": "={{ $json.address }}"
+            },
+            {
+              "id": "categoria",
+              "name": "categoria",
+              "type": "string",
+              "value": "={{ $json.categoryName }}"
+            },
+            {
+              "id": "status_novo",
+              "name": "status",
+              "type": "string",
+              "value": "novo"
+            },
+            {
+              "id": "data_extracao",
+              "name": "data_extracao",
+              "type": "string",
+              "value": "={{ $now.toFormat('dd/MM/yyyy') }}"
+            },
+            {
+              "id": "d1d52121-d935-461b-88f4-4c1e9271606e",
+              "name": "bairro",
+              "type": "string",
+              "value": "={{ $json.neighborhood }}"
+            },
+            {
+              "id": "6a2c0bb0-bbe3-491f-b0fc-6aa31d6e7d17",
+              "name": "rua_avenida",
+              "type": "string",
+              "value": "={{ $json.street }}"
+            },
+            {
+              "id": "21d7e563-d57f-4f85-843a-01b7e97f7370",
+              "name": "cidade",
+              "type": "string",
+              "value": "={{ $json.city }}"
+            },
+            {
+              "id": "4a1c6b7f-9c1d-4c21-8533-edffe5971e6d",
+              "name": "cep",
+              "type": "string",
+              "value": "={{ $json.postalCode }}"
+            },
+            {
+              "id": "864f9571-d577-4310-b9d8-978237872344",
+              "name": "estado",
+              "type": "string",
+              "value": "={{ $json.state }}"
+            },
+            {
+              "id": "548ccccf-d7cb-4594-832b-ee352a0909f3",
+              "name": "categoria_1",
+              "type": "string",
+              "value": "={{ $json.categories[1] }}"
+            },
+            {
+              "id": "0b01ff37-6a48-445f-86c8-ff656af5eba2",
+              "name": "categoria_2",
+              "type": "string",
+              "value": "={{ $json.categories[2] }}"
+            },
+            {
+              "id": "8d2961fb-1410-4ccd-88c0-e1d4b399ed50",
+              "name": "total_reviews",
+              "type": "number",
+              "value": "={{ $json.reviewsCount }}"
+            },
+            {
+              "id": "77aab4bf-b4f2-4995-9a3b-f5bac7931a78",
+              "name": "rank",
+              "type": "number",
+              "value": "={{ $json.rank }}"
+            },
+            {
+              "id": "d8339e7d-664b-4ac4-87fc-d51d7d6dee10",
+              "name": "patrocinado",
+              "type": "boolean",
+              "value": "={{ $json.isAdvertisement }}"
+            },
+            {
+              "id": "02541296-1df3-4a05-8057-d50eb2ff87ae",
+              "name": "search_string",
+              "type": "string",
+              "value": "={{ $json.searchString }}"
+            },
+            {
+              "id": "gbp1",
+              "name": "images_count",
+              "type": "number",
+              "value": "={{ $json.imagesCount }}"
+            },
+            {
+              "id": "gbp2",
+              "name": "atributos",
+              "type": "string",
+              "value": "={{ Object.keys($json.additionalInfo || {}).length + ' grupos | ' + JSON.stringify($json.additionalInfo || {}) }}"
+            },
+            {
+              "id": "gbp3",
+              "name": "horario",
+              "type": "string",
+              "value": "={{ JSON.stringify($json.openingHours || []) }}"
+            },
+            {
+              "id": "gbp4",
+              "name": "agendamento",
+              "type": "string",
+              "value": "={{ JSON.stringify($json.bookingLinks || []) }}"
+            },
+            {
+              "id": "gbp5",
+              "name": "posts",
+              "type": "string",
+              "value": "={{ JSON.stringify($json.ownerUpdates || []) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "8406613a-302d-4461-b149-695324ab0076",
+      "name": "Normalizar campos do lead",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1584,
+        464
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "cachedResultName": "Quantidade de Leads por Mês",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MuetJ4N7xiazkw55YOSHtq_nIaHPRKOE-g6GwfaNJKM/edit?usp=drivesdk",
+          "mode": "list",
+          "value": "1MuetJ4N7xiazkw55YOSHtq_nIaHPRKOE-g6GwfaNJKM"
+        },
+        "sheetName": {
+          "__rl": true,
+          "cachedResultName": "leads",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MuetJ4N7xiazkw55YOSHtq_nIaHPRKOE-g6GwfaNJKM/edit#gid=0",
+          "mode": "list",
+          "value": "gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $('Normalizar campos do lead').item.json.place_id }}",
+            "nome": "={{ $('Normalizar campos do lead').item.json.nome }}",
+            "setor": "={{ $('Normalizar campos do lead').item.json.categoria }}",
+            "contato": "={{ $('Normalizar campos do lead').item.json.telefone }}",
+            "site": "={{ $('Normalizar campos do lead').item.json.site }}",
+            "Categoria 1": "={{ $('Normalizar campos do lead').item.json.categoria }}",
+            "Categoria 2": "={{ $('Normalizar campos do lead').item.json.categoria_2 }}",
+            "Patrocinado": "={{ $('Normalizar campos do lead').item.json.patrocinado }}",
+            "Searchstring": "={{ $('Normalizar campos do lead').item.json.search_string }}",
+            "Posição Pesquisa": "={{ $('Normalizar campos do lead').item.json.rank }}",
+            "Quantidade reviews": "={{ $('Normalizar campos do lead').item.json.total_reviews }}",
+            "Cidade": "={{ $('Normalizar campos do lead').item.json.cidade }}",
+            "Estado": "={{ $('Normalizar campos do lead').item.json.estado }}",
+            "Bairro": "={{ $('Normalizar campos do lead').item.json.bairro }}",
+            "CEP": "={{ $('Normalizar campos do lead').item.json.cep }}",
+            "Endereço": "={{ $('Normalizar campos do lead').item.json.endereco }}",
+            "data extração": "={{ $('Normalizar campos do lead').item.json.data_extracao }}",
+            "mês extração": "={{ $now.toFormat('MM/yyyy') }}",
+            "Rua/Avenida": "={{ $('Normalizar campos do lead').item.json.rua_avenida }}",
+            "Avaliação": "={{ $('Normalizar campos do lead').item.json.rating }}",
+            "Quantidade fotos": "={{ $('Normalizar campos do lead').item.json.images_count }}",
+            "Atributos": "={{ $('Normalizar campos do lead').item.json.atributos }}",
+            "Horário": "={{ $('Normalizar campos do lead').item.json.horario }}",
+            "Agendamento": "={{ $('Normalizar campos do lead').item.json.agendamento }}",
+            "Posts": "={{ $('Normalizar campos do lead').item.json.posts }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "nome",
+              "displayName": "nome",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "setor",
+              "displayName": "setor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "e-mail",
+              "displayName": "e-mail",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "contato",
+              "displayName": "contato",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "site",
+              "displayName": "site",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "enriquecimento",
+              "displayName": "enriquecimento",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Categoria 1",
+              "displayName": "Categoria 1",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Categoria 2",
+              "displayName": "Categoria 2",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Patrocinado",
+              "displayName": "Patrocinado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Searchstring",
+              "displayName": "Searchstring",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Posição Pesquisa",
+              "displayName": "Posição Pesquisa",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Quantidade reviews",
+              "displayName": "Quantidade reviews",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Cidade",
+              "displayName": "Cidade",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Estado",
+              "displayName": "Estado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Bairro",
+              "displayName": "Bairro",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "CEP",
+              "displayName": "CEP",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Endereço",
+              "displayName": "Endereço",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "data extração",
+              "displayName": "data extração",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status hubspot",
+              "displayName": "status hubspot",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "mês extração",
+              "displayName": "mês extração",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "score_tecnico",
+              "displayName": "score_tecnico",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ipc",
+              "displayName": "ipc",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "potencial_comercial",
+              "displayName": "potencial_comercial",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "oferta_recomendada",
+              "displayName": "oferta_recomendada",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "dim_saude",
+              "displayName": "dim_saude",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "dim_seo",
+              "displayName": "dim_seo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "dim_autoridade",
+              "displayName": "dim_autoridade",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "dim_conversao",
+              "displayName": "dim_conversao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "dim_engajamento",
+              "displayName": "dim_engajamento",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "dim_conteudo",
+              "displayName": "dim_conteudo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "site_tipo",
+              "displayName": "site_tipo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "nao_reivindicado",
+              "displayName": "nao_reivindicado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "flags_score",
+              "displayName": "flags_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "data_processamento_score",
+              "displayName": "data_processamento_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "id_hubspot",
+              "displayName": "id_hubspot",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Rua/Avenida",
+              "displayName": "Rua/Avenida",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Avaliação",
+              "displayName": "Avaliação",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Quantidade fotos",
+              "displayName": "Quantidade fotos",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Atributos",
+              "displayName": "Atributos",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Horário",
+              "displayName": "Horário",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Agendamento",
+              "displayName": "Agendamento",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Posts",
+              "displayName": "Posts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "hubspot_estagio",
+              "displayName": "hubspot_estagio",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "hubspot_status",
+              "displayName": "hubspot_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "motivo_perda",
+              "displayName": "motivo_perda",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "motivo_ganho",
+              "displayName": "motivo_ganho",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "valor",
+              "displayName": "valor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "via_aquisicao",
+              "displayName": "via_aquisicao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "num_interacoes",
+              "displayName": "num_interacoes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ultimo_contato",
+              "displayName": "ultimo_contato",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "data_criacao_deal",
+              "displayName": "data_criacao_deal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "data_fechamento",
+              "displayName": "data_fechamento",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "dias_no_funil",
+              "displayName": "dias_no_funil",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "probabilidade",
+              "displayName": "probabilidade",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "nba_recomendada",
+              "displayName": "nba_recomendada",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "nba_aceite",
+              "displayName": "nba_aceite",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "abordagem_ia",
+              "displayName": "abordagem_ia",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "acerto_previsao",
+              "displayName": "acerto_previsao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "data_sync_hubspot",
+              "displayName": "data_sync_hubspot",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "enriquecimento_site",
+              "displayName": "enriquecimento_site",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "score_gbp",
+              "displayName": "score_gbp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "analise_gbp_ia",
+              "displayName": "analise_gbp_ia",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "0c25b022-824e-4749-981d-eadd4b7abb94",
+      "name": "Salvar lead bruto na planilha",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1840,
+        464
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ 'Pesquise e analise o seguinte lead para prospecção B2B:\\n\\n' +\n'DADOS DO LEAD:\\n' +\n'- Nome: ' + $(\"Normalizar campos do lead\").item.json.nome + '\\n' +\n'- Telefone: ' + $(\"Normalizar campos do lead\").item.json.telefone + '\\n' +\n'- Site: ' + $(\"Normalizar campos do lead\").item.json.site + '\\n' +\n'- Endereço: ' + $(\"Normalizar campos do lead\").item.json.endereco + '\\n' +\n'- Categoria: ' + $(\"Normalizar campos do lead\").item.json.categoria + '\\n' +\n'- Avaliação Google: ' + $(\"Normalizar campos do lead\").item.json.rating + '\\n\\n' +\n'PESQUISAS OBRIGATÓRIAS:\\n\\n' +\n'1. CAPACIDADE FINANCEIRA\\n' +\n'Pesquise em fontes reconhecidas (Econodata, Serasa, LinkedIn, Receita Federal, notícias de negócios) ' +\n'informações sobre porte da empresa, número de funcionários, faturamento estimado, ' +\n'investimentos recentes, crescimento e presença em contratos ou licitações públicas.\\n\\n' +\n'2. ANÁLISE DO SITE (' + $(\"Normalizar campos do lead\").item.json.site + ')\\n' +\n'Acesse e analise o site buscando: tempo de funcionamento e histórico da empresa, ' +\n'serviços e produtos oferecidos, possíveis clientes ou segmentos atendidos, ' +\n'como a empresa se posiciona no mercado, qualidade do conteúdo digital ' +\n'(SEO, blog, cases, depoimentos, CTAs) e lacunas de conteúdo que nossos serviços de ' +\n'comunicação e marketing podem sanar.\\n\\n' +\n'3. PRESENÇA EM REDES SOCIAIS\\n' +\n'Busque no Google Business Profile, site da empresa e internet em geral se a empresa possui:\\n' +\n'- Instagram (URL e número aproximado de seguidores)\\n' +\n'- Facebook (URL e engajamento)\\n' +\n'- LinkedIn (URL da página corporativa)\\n' +\n'- YouTube (se tem canal)\\n' +\n'- TikTok (se relevante para o segmento)\\n' +\n'Avalie: Frequência de postagens, qualidade do conteúdo, engajamento, se está ativo ou abandonado.\\n\\n' +\n'4. MATURIDADE DO MERCADO\\n' +\n'Pesquise o setor (' + $(\"Normalizar campos do lead\").item.json.categoria + ') no Brasil: ' +\n'nível de digitalização, tendências atuais, pressões competitivas e como a maturidade ' +\n'do segmento impacta o comportamento de compra e investimento em marketing.\\n\\n' +\n'ESTRUTURE O RELATÓRIO COM AS SEÇÕES:\\n' +\n'A) Perfil Financeiro — capacidade de investimento (alta/média/baixa) com justificativa e fontes\\n' +\n'B) Análise da Presença Digital — pontos fortes e lacunas identificadas no site\\n' +\n'C) Redes Sociais — quais redes possui, URLs, atividade (ativo/inativo), engajamento e lacunas\\n' +\n'D) Maturidade do Setor — nível (inicial/em desenvolvimento/maduro) e impacto no negócio\\n' +\n'E) Potencial de Prospecção — (alto/médio/baixo) com motivo\\n' +\n'F) Abordagem Recomendada — tom, argumento principal e abertura sugerida para o primeiro contato' }}",
+        "options": {}
+      },
+      "id": "0159cad0-4f54-4fe5-82d0-8e45a3e0f5f8",
+      "name": "Agente de Enriquecimento",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        2064,
+        464
+      ],
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1MuetJ4N7xiazkw55YOSHtq_nIaHPRKOE-g6GwfaNJKM",
+          "mode": "list",
+          "cachedResultName": "Quantidade de Leads por Mês",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MuetJ4N7xiazkw55YOSHtq_nIaHPRKOE-g6GwfaNJKM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "leads",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MuetJ4N7xiazkw55YOSHtq_nIaHPRKOE-g6GwfaNJKM/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $('Salvar lead bruto na planilha').item.json.id }}",
+            "enriquecimento": "={{ $json.output }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "nome",
+              "displayName": "nome",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "setor",
+              "displayName": "setor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "e-mail",
+              "displayName": "e-mail",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "contato",
+              "displayName": "contato",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "site",
+              "displayName": "site",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "enriquecimento",
+              "displayName": "enriquecimento",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Categoria 1",
+              "displayName": "Categoria 1",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Categoria 2",
+              "displayName": "Categoria 2",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Patrocinado",
+              "displayName": "Patrocinado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Searchstring",
+              "displayName": "Searchstring",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Posição Pesquisa",
+              "displayName": "Posição Pesquisa",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Quantidade reviews",
+              "displayName": "Quantidade reviews",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Cidade",
+              "displayName": "Cidade",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Estado",
+              "displayName": "Estado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Bairro",
+              "displayName": "Bairro",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "CEP",
+              "displayName": "CEP",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Endereço",
+              "displayName": "Endereço",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "data extração",
+              "displayName": "data extração",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status hubspot",
+              "displayName": "status hubspot",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "mês extração",
+              "displayName": "mês extração",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "validacao_manual",
+              "displayName": "validacao_manual",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "classificacao_manual",
+              "displayName": "classificacao_manual",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "potencial_ticket",
+              "displayName": "potencial_ticket",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "motivo_rejeicao",
+              "displayName": "motivo_rejeicao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "notas_validacao",
+              "displayName": "notas_validacao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "data_validacao",
+              "displayName": "data_validacao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "e4c9af05-19cd-48a4-906b-942bb60e6e1a",
+      "name": "Atualizar lead enriquecido na planilha",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        2416,
+        464
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "appToken",
+        "resource": "deal",
+        "stage": "70807682-148b-4914-acd0-97aad8c2a000",
+        "additionalFields": {
+          "customPropertiesUi": {
+            "customPropertiesValues": [
+              {
+                "property": "telefone",
+                "value": "={{ $(\"Normalizar campos do lead\").item.json.telefone }}"
+              }
+            ]
+          },
+          "description": "={{ $(\"Agente de Enriquecimento\").item.json.output }}",
+          "dealName": "={{ $('Salvar lead bruto na planilha').item.json.nome }}"
+        }
+      },
+      "id": "23f7a7c9-9133-47b1-adfa-11fc2208cc43",
+      "name": "Criar deal no HubSpot",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2.2,
+      "position": [
+        2656,
+        704
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1MuetJ4N7xiazkw55YOSHtq_nIaHPRKOE-g6GwfaNJKM",
+          "mode": "list",
+          "cachedResultName": "Quantidade de Leads por Mês",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MuetJ4N7xiazkw55YOSHtq_nIaHPRKOE-g6GwfaNJKM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "leads",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MuetJ4N7xiazkw55YOSHtq_nIaHPRKOE-g6GwfaNJKM/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $(\"Normalizar campos do lead\").item.json.place_id }}",
+            "status hubspot": "Prospectado",
+            "id_hubspot": "={{ $json.id || $json.properties?.hs_object_id || \"\" }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "nome",
+              "displayName": "nome",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "setor",
+              "displayName": "setor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "e-mail",
+              "displayName": "e-mail",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "contato",
+              "displayName": "contato",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "site",
+              "displayName": "site",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "enriquecimento",
+              "displayName": "enriquecimento",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Categoria 1",
+              "displayName": "Categoria 1",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Categoria 2",
+              "displayName": "Categoria 2",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Patrocinado",
+              "displayName": "Patrocinado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Searchstring",
+              "displayName": "Searchstring",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Posição Pesquisa",
+              "displayName": "Posição Pesquisa",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Quantidade reviews",
+              "displayName": "Quantidade reviews",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Cidade",
+              "displayName": "Cidade",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Estado",
+              "displayName": "Estado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Bairro",
+              "displayName": "Bairro",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "CEP",
+              "displayName": "CEP",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Endereço",
+              "displayName": "Endereço",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "data extração",
+              "displayName": "data extração",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "status hubspot",
+              "displayName": "status hubspot",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "mês extração",
+              "displayName": "mês extração",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "validacao_manual",
+              "displayName": "validacao_manual",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "classificacao_manual",
+              "displayName": "classificacao_manual",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "potencial_ticket",
+              "displayName": "potencial_ticket",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "motivo_rejeicao",
+              "displayName": "motivo_rejeicao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "notas_validacao",
+              "displayName": "notas_validacao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "data_validacao",
+              "displayName": "data_validacao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "id_hubspot",
+              "displayName": "id_hubspot",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "7318af8c-b2d2-4a3e-a20c-d1769768e653",
+      "name": "Atualizar status prospectado na planilha",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        2656,
+        880
+      ]
+    },
+    {
+      "parameters": {
+        "options": {},
+        "modelName": "models/gemini-2.5-flash"
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        2064,
+        704
+      ],
+      "id": "0b0a5271-87d0-4b57-9917-95033f33b7e7",
+      "name": "Google Gemini Chat Model"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        48,
+        512
+      ],
+      "id": "c6a26bcb-9c98-4780-91d3-6f56cd9f247c",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "resource": "Datasets",
+        "datasetId": "={{ $json.defaultDatasetId }}",
+        "offset": 0,
+        "limit": "={{ $('Calcular vagas disponiveis').item.json.vagas }}",
+        "options": {}
+      },
+      "id": "25bcc923-bf2d-46cd-8b2b-bb506ef25c04",
+      "name": "Get dataset items",
+      "type": "@apify/n8n-nodes-apify.apify",
+      "position": [
+        864,
+        80
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "compare": "selectedFields",
+        "fieldsToCompare": "placeId",
+        "options": {}
+      },
+      "id": "ee083ba3-9efc-4b99-9690-8b4fe65bda53",
+      "name": "Remove Duplicates",
+      "type": "n8n-nodes-base.removeDuplicates",
+      "position": [
+        864,
+        -80
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "actorId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "nwua9Gu5YrADL7ZDj",
+          "cachedResultUrl": "https://console.apify.com/actors/nwua9Gu5YrADL7ZDj/input",
+          "cachedResultName": "Google Maps Scraper (compass/crawler-google-places)"
+        },
+        "customBody": "={\n  \"includeWebResults\": false,\n  \"language\": \"pt-BR\",\n  \"locationQuery\": \"{{ $json.localizacao }}\",\n  \"maxCrawledPlacesPerSearch\": {{ $json.vagas }},\n  \"maximumLeadsEnrichmentRecords\": 0,\n  \"placeMinimumStars\": \"{{ $json.avaliacao_minima >= 5 ? 'five' : $json.avaliacao_minima >= 4 ? 'four' : $json.avaliacao_minima >= 3 ? 'three' : $json.avaliacao_minima >= 2 ? 'two' : $json.avaliacao_minima >= 1 ? 'one' : '' }}\",\n  \"scrapeContacts\": false,\n  \"scrapeDirectories\": false,\n  \"scrapeImageAuthors\": false,\n  \"scrapePlaceDetailPage\": false,\n  \"scrapeReviewsPersonalData\": true,\n  \"scrapeSocialMediaProfiles\": {\n    \"facebooks\": false,\n    \"instagrams\": true,\n    \"tiktoks\": false,\n    \"twitters\": false,\n    \"youtubes\": false\n  },\n  \"scrapeTableReservationProvider\": false,\n  \"searchStringsArray\": [\"{{ $json.segmento + ' ' + $json.localizacao }}\"],\n  \"skipClosedPlaces\": true,\n  \"website\": \"{{ $json.tem_site === 'all' || $json.tem_site == null ? 'allPlaces' : $json.tem_site ? 'withWebsite' : 'withoutWebsite' }}\"\n}"
+      },
+      "id": "3cce7990-ccb8-4583-9a60-9eadd2338a4b",
+      "name": "Run Google Maps Scraper",
+      "type": "@apify/n8n-nodes-apify.apify",
+      "position": [
+        896,
+        304
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "amount": 2,
+        "unit": "minutes"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2688,
+        1152
+      ],
+      "id": "bd90cbce-8eb7-49b3-b31f-6b3bc0c61848",
+      "name": "Wait",
+      "webhookId": "e4b27c02-c3bd-45d6-bbcb-517362597cb5"
+    },
+    {
+      "parameters": {
+        "jsCode": "const stageMap = {\n  '70807682-148b-4914-acd0-97aad8c2a000': 'Prospectado',\n  'qualifiedtobuy': 'Interação Instagram',\n  '17222650': 'Contato Realizado',\n  'presentationscheduled': 'Reunião Agendada',\n  'decisionmakerboughtin': 'Tomada de Decisão',\n  'contractsent': 'Contrato Enviado',\n  'closedwon': 'Vencido',\n  'closedlost': 'Perdido',\n};\n\nconst dealId = $input.item.json.deal_id;\nconst novoEstagio = $input.item.json.novo_estagio;\nconst statusMapeado = stageMap[novoEstagio] || novoEstagio;\n\nreturn {\n  json: {\n    deal_id: dealId,\n    novo_estagio: novoEstagio,\n    status_mapeado: statusMapeado,\n  }\n};",
+        "mode": "runOnceForEachItem"
+      },
+      "id": "84d5fcdf-c6c5-43e7-8d8b-a661e7b919e5",
+      "name": "Mapear estagio para status",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1712,
+        -368
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "status-not-prospectado",
+              "leftValue": "={{ $json.status_mapeado }}",
+              "rightValue": "Prospectado",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1936,
+        -368
+      ],
+      "id": "efbdb268-a2d3-480b-a1ff-00012e0d9ad2",
+      "name": "If Vencido/Perdido"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1MuetJ4N7xiazkw55YOSHtq_nIaHPRKOE-g6GwfaNJKM",
+          "mode": "list",
+          "cachedResultName": "Quantidade de Leads por Mês",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MuetJ4N7xiazkw55YOSHtq_nIaHPRKOE-g6GwfaNJKM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "leads",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MuetJ4N7xiazkw55YOSHtq_nIaHPRKOE-g6GwfaNJKM/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status hubspot": "={{ $json.status_mapeado }}",
+            "id_hubspot": "={{ $json.deal_id }}"
+          },
+          "matchingColumns": [
+            "id_hubspot"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "nome",
+              "displayName": "nome",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "setor",
+              "displayName": "setor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "e-mail",
+              "displayName": "e-mail",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "contato",
+              "displayName": "contato",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "site",
+              "displayName": "site",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "enriquecimento",
+              "displayName": "enriquecimento",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Categoria 1",
+              "displayName": "Categoria 1",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Categoria 2",
+              "displayName": "Categoria 2",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Patrocinado",
+              "displayName": "Patrocinado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Searchstring",
+              "displayName": "Searchstring",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Posição Pesquisa",
+              "displayName": "Posição Pesquisa",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Quantidade reviews",
+              "displayName": "Quantidade reviews",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Cidade",
+              "displayName": "Cidade",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Estado",
+              "displayName": "Estado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Bairro",
+              "displayName": "Bairro",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "CEP",
+              "displayName": "CEP",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Endereço",
+              "displayName": "Endereço",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "data extração",
+              "displayName": "data extração",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status hubspot",
+              "displayName": "status hubspot",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "mês extração",
+              "displayName": "mês extração",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "score_tecnico",
+              "displayName": "score_tecnico",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ipc",
+              "displayName": "ipc",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "potencial_comercial",
+              "displayName": "potencial_comercial",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "oferta_recomendada",
+              "displayName": "oferta_recomendada",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "dim_saude",
+              "displayName": "dim_saude",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "dim_seo",
+              "displayName": "dim_seo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "dim_autoridade",
+              "displayName": "dim_autoridade",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "dim_conversao",
+              "displayName": "dim_conversao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "dim_engajamento",
+              "displayName": "dim_engajamento",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "dim_conteudo",
+              "displayName": "dim_conteudo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "site_tipo",
+              "displayName": "site_tipo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "nao_reivindicado",
+              "displayName": "nao_reivindicado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "flags_score",
+              "displayName": "flags_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "data_processamento_score",
+              "displayName": "data_processamento_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "id_hubspot",
+              "displayName": "id_hubspot",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Rua/Avenida",
+              "displayName": "Rua/Avenida",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Avaliação",
+              "displayName": "Avaliação",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Quantidade fotos",
+              "displayName": "Quantidade fotos",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Atributos",
+              "displayName": "Atributos",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Horário",
+              "displayName": "Horário",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Agendamento",
+              "displayName": "Agendamento",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Posts",
+              "displayName": "Posts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "hubspot_estagio",
+              "displayName": "hubspot_estagio",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "hubspot_status",
+              "displayName": "hubspot_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "motivo_perda",
+              "displayName": "motivo_perda",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "motivo_ganho",
+              "displayName": "motivo_ganho",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "valor",
+              "displayName": "valor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "via_aquisicao",
+              "displayName": "via_aquisicao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "num_interacoes",
+              "displayName": "num_interacoes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ultimo_contato",
+              "displayName": "ultimo_contato",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "data_criacao_deal",
+              "displayName": "data_criacao_deal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "data_fechamento",
+              "displayName": "data_fechamento",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "dias_no_funil",
+              "displayName": "dias_no_funil",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "probabilidade",
+              "displayName": "probabilidade",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "nba_recomendada",
+              "displayName": "nba_recomendada",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "nba_aceite",
+              "displayName": "nba_aceite",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "abordagem_ia",
+              "displayName": "abordagem_ia",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "acerto_previsao",
+              "displayName": "acerto_previsao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "data_sync_hubspot",
+              "displayName": "data_sync_hubspot",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "enriquecimento_site",
+              "displayName": "enriquecimento_site",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "score_gbp",
+              "displayName": "score_gbp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "analise_gbp_ia",
+              "displayName": "analise_gbp_ia",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "1e139273-3c25-4d46-898d-950907e3bbab",
+      "name": "Atualizar status do lead na planilha",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        2160,
+        -368
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "segmento",
+              "name": "segmento",
+              "value": "={{ $json.segmento }}",
+              "type": "string"
+            },
+            {
+              "id": "tipo_localizacao",
+              "name": "tipo_localizacao",
+              "value": "={{ $json.tipo_localizacao }}",
+              "type": "string"
+            },
+            {
+              "id": "localizacao",
+              "name": "localizacao",
+              "value": "={{ $json.localizacao }}",
+              "type": "string"
+            },
+            {
+              "id": "tem_site",
+              "name": "tem_site",
+              "value": "={{ $json.site }}",
+              "type": "string"
+            },
+            {
+              "id": "avaliacao_minima",
+              "name": "avaliacao_minima",
+              "value": "={{ Number($json.avaliacao_minima) }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "30a7f286-3f21-4090-aedb-a6075b328a4b",
+      "name": "Preparar parametros de re-extracao",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2528,
+        -336
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "vagas-gt-0",
+              "leftValue": "={{ $json.vagas }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "b060a35e-7a76-4f77-bc4c-396b878718bd",
+      "name": "If Quantidade_vagas",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        608,
+        560
+      ],
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ 'Pesquise e analise o seguinte lead para prospecção B2B:\\n\\n' +\n'DADOS DO LEAD:\\n' +\n'- Nome: ' + $json.nome + '\\n' +\n'- Telefone: ' + $json.telefone + '\\n' +\n'- Site: ' + $json.site + '\\n' +\n'- Endereço: ' + $json.endereco + '\\n' +\n'- Categoria: ' + $json.categoria + '\\n' +\n'- Avaliação Google: ' + $json.rating + '\\n\\n' +\n'PESQUISAS OBRIGATÓRIAS:\\n\\n' +\n'1. CAPACIDADE FINANCEIRA\\n' +\n'Pesquise em fontes reconhecidas (Econodata, Serasa, LinkedIn, Receita Federal, notícias de negócios) ' +\n'informações sobre porte da empresa, número de funcionários, faturamento estimado, ' +\n'investimentos recentes, crescimento e presença em contratos ou licitações públicas.\\n\\n' +\n'2. ANÁLISE DO SITE (' + $(\"Normalizar campos do lead1\").item.json.site + ')\\n' +\n'Acesse e analise o site buscando: tempo de funcionamento e histórico da empresa, ' +\n'serviços e produtos oferecidos, possíveis clientes ou segmentos atendidos, ' +\n'como a empresa se posiciona no mercado, qualidade do conteúdo digital ' +\n'(SEO, blog, cases, depoimentos, CTAs) e lacunas de conteúdo que nossos serviços de ' +\n'comunicação e marketing podem sanar.\\n\\n' +\n'3. PRESENÇA EM REDES SOCIAIS\\n' +\n'Busque no Google Business Profile, site da empresa e internet em geral se a empresa possui:\\n' +\n'- Instagram (URL e número aproximado de seguidores)\\n' +\n'- Facebook (URL e engajamento)\\n' +\n'- LinkedIn (URL da página corporativa)\\n' +\n'- YouTube (se tem canal)\\n' +\n'- TikTok (se relevante para o segmento)\\n' +\n'Avalie: Frequência de postagens, qualidade do conteúdo, engajamento, se está ativo ou abandonado.\\n\\n' +\n'4. MATURIDADE DO MERCADO\\n' +\n'Pesquise o setor (' + $json.categoria + ') no Brasil: ' +\n'nível de digitalização, tendências atuais, pressões competitivas e como a maturidade ' +\n'do segmento impacta o comportamento de compra e investimento em marketing.\\n\\n' +\n'ESTRUTURE O RELATÓRIO COM AS SEÇÕES:\\n' +\n'A) Perfil Financeiro — capacidade de investimento (alta/média/baixa) com justificativa e fontes\\n' +\n'B) Análise da Presença Digital — pontos fortes e lacunas identificadas no site\\n' +\n'C) Redes Sociais — quais redes possui, URLs, atividade (ativo/inativo), engajamento e lacunas\\n' +\n'D) Maturidade do Setor — nível (inicial/em desenvolvimento/maduro) e impacto no negócio\\n' +\n'E) Potencial de Prospecção — (alto/médio/baixo) com motivo\\n' +\n'F) Abordagem Recomendada — tom, argumento principal e abertura sugerida para o primeiro contato' }}",
+        "options": {}
+      },
+      "id": "d7daf6af-d8f7-4684-8014-02686c6e42d0",
+      "name": "Agente de Enriquecimento1",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        2176,
+        96
+      ],
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "maxTries": 5,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "options": {},
+        "modelName": "models/gemini-2.5-flash"
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        2160,
+        272
+      ],
+      "id": "f1c72d1f-dac3-4148-a0d1-5cb45ae9508e",
+      "name": "Google Gemini Chat Model1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "place_id",
+              "name": "place_id",
+              "value": "={{ /^ChI[A-Za-z0-9_-]+$/.test(String($json.id || \"\")) ? $json.id : \"\" }}",
+              "type": "string"
+            },
+            {
+              "id": "nome",
+              "name": "nome",
+              "value": "={{ $json.nome }}",
+              "type": "string"
+            },
+            {
+              "id": "telefone",
+              "name": "telefone",
+              "value": "={{ $json.contato }}",
+              "type": "string"
+            },
+            {
+              "id": "site",
+              "name": "site",
+              "value": "={{ $json.site }}",
+              "type": "string"
+            },
+            {
+              "id": "endereco",
+              "name": "endereco",
+              "value": "={{ $json['Endereço'] }}, {{ $json.Cidade }}",
+              "type": "string"
+            },
+            {
+              "id": "categoria",
+              "name": "categoria",
+              "value": "={{ $json.setor }}",
+              "type": "string"
+            },
+            {
+              "id": "status_novo",
+              "name": "status",
+              "value": "={{ $json['status hubspot'] }}",
+              "type": "string"
+            },
+            {
+              "id": "data_extracao",
+              "name": "data_extracao",
+              "value": "={{ $now.toFormat('dd/MM/yyyy') }}",
+              "type": "string"
+            },
+            {
+              "id": "d1d52121-d935-461b-88f4-4c1e9271606e",
+              "name": "bairro",
+              "value": "={{ $json.Bairro }}",
+              "type": "string"
+            },
+            {
+              "id": "6a2c0bb0-bbe3-491f-b0fc-6aa31d6e7d17",
+              "name": "rua_avenida",
+              "value": "={{ $json['Endereço'] }}",
+              "type": "string"
+            },
+            {
+              "id": "21d7e563-d57f-4f85-843a-01b7e97f7370",
+              "name": "cidade",
+              "value": "={{ $json.Cidade }}",
+              "type": "string"
+            },
+            {
+              "id": "4a1c6b7f-9c1d-4c21-8533-edffe5971e6d",
+              "name": "cep",
+              "value": "={{ $json.CEP }}",
+              "type": "string"
+            },
+            {
+              "id": "864f9571-d577-4310-b9d8-978237872344",
+              "name": "estado",
+              "value": "={{ $json.Estado }}",
+              "type": "string"
+            },
+            {
+              "id": "548ccccf-d7cb-4594-832b-ee352a0909f3",
+              "name": "categoria_1",
+              "value": "={{ $json['Categoria 1'] }}",
+              "type": "string"
+            },
+            {
+              "id": "0b01ff37-6a48-445f-86c8-ff656af5eba2",
+              "name": "categoria_2",
+              "value": "={{ $json['Categoria 2'] }}",
+              "type": "string"
+            },
+            {
+              "id": "8d2961fb-1410-4ccd-88c0-e1d4b399ed50",
+              "name": "total_reviews",
+              "value": "={{ $json['Quantidade reviews'] }}",
+              "type": "number"
+            },
+            {
+              "id": "77aab4bf-b4f2-4995-9a3b-f5bac7931a78",
+              "name": "rank",
+              "value": "={{ $json['Posição Pesquisa'] }}",
+              "type": "number"
+            },
+            {
+              "id": "02541296-1df3-4a05-8057-d50eb2ff87ae",
+              "name": "search_string",
+              "value": "={{ $json.Searchstring }}",
+              "type": "string"
+            },
+            {
+              "id": "795b53b8-16ee-4fa7-bb1b-93dd3d1ebb48",
+              "name": "id_hubspot",
+              "value": "={{ $json.id_hubspot }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "66b830ba-83c2-45f1-abe5-f2ef9ddcfbda",
+      "name": "Normalizar campos do lead1",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1968,
+        96
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1MuetJ4N7xiazkw55YOSHtq_nIaHPRKOE-g6GwfaNJKM",
+          "mode": "list",
+          "cachedResultName": "Quantidade de Leads por Mês",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MuetJ4N7xiazkw55YOSHtq_nIaHPRKOE-g6GwfaNJKM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "leads",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MuetJ4N7xiazkw55YOSHtq_nIaHPRKOE-g6GwfaNJKM/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $('Normalizar campos do lead1').item.json.place_id }}",
+            "enriquecimento": "={{ $json.output }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "nome",
+              "displayName": "nome",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "setor",
+              "displayName": "setor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "e-mail",
+              "displayName": "e-mail",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "contato",
+              "displayName": "contato",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "site",
+              "displayName": "site",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "enriquecimento",
+              "displayName": "enriquecimento",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Categoria 1",
+              "displayName": "Categoria 1",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Categoria 2",
+              "displayName": "Categoria 2",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Patrocinado",
+              "displayName": "Patrocinado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Searchstring",
+              "displayName": "Searchstring",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Posição Pesquisa",
+              "displayName": "Posição Pesquisa",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Quantidade reviews",
+              "displayName": "Quantidade reviews",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Cidade",
+              "displayName": "Cidade",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Estado",
+              "displayName": "Estado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Bairro",
+              "displayName": "Bairro",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "CEP",
+              "displayName": "CEP",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Endereço",
+              "displayName": "Endereço",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "data extração",
+              "displayName": "data extração",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status hubspot",
+              "displayName": "status hubspot",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "mês extração",
+              "displayName": "mês extração",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "score_tecnico",
+              "displayName": "score_tecnico",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ipc",
+              "displayName": "ipc",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "potencial_comercial",
+              "displayName": "potencial_comercial",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "oferta_recomendada",
+              "displayName": "oferta_recomendada",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "dim_saude",
+              "displayName": "dim_saude",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "dim_seo",
+              "displayName": "dim_seo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "dim_autoridade",
+              "displayName": "dim_autoridade",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "dim_conversao",
+              "displayName": "dim_conversao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "dim_engajamento",
+              "displayName": "dim_engajamento",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "dim_conteudo",
+              "displayName": "dim_conteudo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "site_tipo",
+              "displayName": "site_tipo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "nao_reivindicado",
+              "displayName": "nao_reivindicado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "flags_score",
+              "displayName": "flags_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "data_processamento_score",
+              "displayName": "data_processamento_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "id_hubspot",
+              "displayName": "id_hubspot",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Rua/Avenida",
+              "displayName": "Rua/Avenida",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Avaliação",
+              "displayName": "Avaliação",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Quantidade fotos",
+              "displayName": "Quantidade fotos",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Atributos",
+              "displayName": "Atributos",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Horário",
+              "displayName": "Horário",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Agendamento",
+              "displayName": "Agendamento",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Posts",
+              "displayName": "Posts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "hubspot_estagio",
+              "displayName": "hubspot_estagio",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "hubspot_status",
+              "displayName": "hubspot_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "motivo_perda",
+              "displayName": "motivo_perda",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "motivo_ganho",
+              "displayName": "motivo_ganho",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "valor",
+              "displayName": "valor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "via_aquisicao",
+              "displayName": "via_aquisicao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "num_interacoes",
+              "displayName": "num_interacoes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ultimo_contato",
+              "displayName": "ultimo_contato",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "data_criacao_deal",
+              "displayName": "data_criacao_deal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "data_fechamento",
+              "displayName": "data_fechamento",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "dias_no_funil",
+              "displayName": "dias_no_funil",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "probabilidade",
+              "displayName": "probabilidade",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "nba_recomendada",
+              "displayName": "nba_recomendada",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "nba_aceite",
+              "displayName": "nba_aceite",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "abordagem_ia",
+              "displayName": "abordagem_ia",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "acerto_previsao",
+              "displayName": "acerto_previsao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "data_sync_hubspot",
+              "displayName": "data_sync_hubspot",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "enriquecimento_site",
+              "displayName": "enriquecimento_site",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "score_gbp",
+              "displayName": "score_gbp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "analise_gbp_ia",
+              "displayName": "analise_gbp_ia",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "81d43071-b283-49c4-ab64-f121bfbce7b4",
+      "name": "Atualizar lead enriquecido na planilha1",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        2560,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "appToken",
+        "resource": "deal",
+        "operation": "search",
+        "filterGroupsUi": {
+          "filterGroupsValues": [
+            {
+              "filtersUi": {
+                "filterValues": [
+                  {
+                    "propertyName": "dealname",
+                    "value": "={{ $json.nome }}"
+                  },
+                  {
+                    "propertyName": "telefone",
+                    "value": "={{ $json.contato || $json.telefone }}"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {}
+      },
+      "id": "acc6501f-e183-42ac-8b71-7e49b8296bb5",
+      "name": "Search deal",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2.2,
+      "position": [
+        864,
+        784
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1MuetJ4N7xiazkw55YOSHtq_nIaHPRKOE-g6GwfaNJKM",
+          "mode": "list",
+          "cachedResultName": "Quantidade de Leads por Mês",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MuetJ4N7xiazkw55YOSHtq_nIaHPRKOE-g6GwfaNJKM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "leads",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MuetJ4N7xiazkw55YOSHtq_nIaHPRKOE-g6GwfaNJKM/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ /^ChI[A-Za-z0-9_-]+$/.test(String($(\"Loop id_deal\").item.json.id || $(\"Loop id_deal\").item.json.place_id || \"\")) ? ($(\"Loop id_deal\").item.json.id || $(\"Loop id_deal\").item.json.place_id) : \"\" }}",
+            "id_hubspot": "={{ $json.id || $json.properties?.hs_object_id || \"\" }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "nome",
+              "displayName": "nome",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "setor",
+              "displayName": "setor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "e-mail",
+              "displayName": "e-mail",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "contato",
+              "displayName": "contato",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "site",
+              "displayName": "site",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "enriquecimento",
+              "displayName": "enriquecimento",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Categoria 1",
+              "displayName": "Categoria 1",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Categoria 2",
+              "displayName": "Categoria 2",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Patrocinado",
+              "displayName": "Patrocinado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Searchstring",
+              "displayName": "Searchstring",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Posição Pesquisa",
+              "displayName": "Posição Pesquisa",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Quantidade reviews",
+              "displayName": "Quantidade reviews",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Cidade",
+              "displayName": "Cidade",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Estado",
+              "displayName": "Estado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Bairro",
+              "displayName": "Bairro",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "CEP",
+              "displayName": "CEP",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Endereço",
+              "displayName": "Endereço",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "data extração",
+              "displayName": "data extração",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status hubspot",
+              "displayName": "status hubspot",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "mês extração",
+              "displayName": "mês extração",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "validacao_manual",
+              "displayName": "validacao_manual",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "classificacao_manual",
+              "displayName": "classificacao_manual",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "potencial_ticket",
+              "displayName": "potencial_ticket",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "motivo_rejeicao",
+              "displayName": "motivo_rejeicao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "notas_validacao",
+              "displayName": "notas_validacao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "data_validacao",
+              "displayName": "data_validacao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "id_hubspot",
+              "displayName": "id_hubspot",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "dc0cb72a-de67-4c40-8c76-93c6d36200f2",
+      "name": "Update id_deal",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        864,
+        976
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1MuetJ4N7xiazkw55YOSHtq_nIaHPRKOE-g6GwfaNJKM",
+          "mode": "list",
+          "cachedResultName": "Quantidade de Leads por Mês",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MuetJ4N7xiazkw55YOSHtq_nIaHPRKOE-g6GwfaNJKM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "leads",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MuetJ4N7xiazkw55YOSHtq_nIaHPRKOE-g6GwfaNJKM/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "id_hubspot"
+            },
+            {
+              "lookupColumn": "validacao_manual"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "cec1e58f-9bf8-49ef-b398-7ce7f1ededa6",
+      "name": "Get lead bruto sem id_deal",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        608,
+        832
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        864,
+        608
+      ],
+      "id": "bcdfacca-a097-4824-9ef5-05979c1a834a",
+      "name": "Loop id_deal"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1824,
+        80
+      ],
+      "id": "1a81f892-41d3-402c-9379-1b4f93372089",
+      "name": "Loop enriquecimento leads"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1MuetJ4N7xiazkw55YOSHtq_nIaHPRKOE-g6GwfaNJKM",
+          "mode": "list",
+          "cachedResultName": "Quantidade de Leads por Mês",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MuetJ4N7xiazkw55YOSHtq_nIaHPRKOE-g6GwfaNJKM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "leads",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MuetJ4N7xiazkw55YOSHtq_nIaHPRKOE-g6GwfaNJKM/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "enriquecimento"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "35aa6460-62dc-46d8-b2f7-5d36dc3ceff4",
+      "name": "Get lead bruto sem id_deal1",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1424,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "appToken",
+        "resource": "deal",
+        "operation": "search",
+        "filterGroupsUi": {
+          "filterGroupsValues": [
+            {
+              "filtersUi": {
+                "filterValues": [
+                  {
+                    "propertyName": "dealname",
+                    "value": "={{ $(\"Normalizar campos do lead1\").item.json.nome }}"
+                  },
+                  {
+                    "propertyName": "telefone",
+                    "value": "={{ $(\"Normalizar campos do lead1\").item.json.telefone }}"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {}
+      },
+      "id": "a445597d-fb60-48d2-9bdb-27006a6daa44",
+      "name": "Search deal no HubSpot",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2.2,
+      "position": [
+        2752,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "appToken",
+        "resource": "deal",
+        "operation": "update",
+        "dealId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "updateFields": {
+          "description": "={{ $(\"Agente de Enriquecimento1\").item.json.output }}"
+        }
+      },
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2.2,
+      "position": [
+        2960,
+        112
+      ],
+      "id": "70235d3c-8786-434e-81eb-f2fdef5daf37",
+      "name": "Update enriquecimento"
+    },
+    {
+      "parameters": {
+        "amount": 2,
+        "unit": "minutes"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        3168,
+        112
+      ],
+      "id": "9ba253f7-1ecd-49d9-9966-21cdef1de349",
+      "name": "Wait1",
+      "webhookId": "ddfab79e-6c61-4972-83c6-e7b790b45472"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "9fe9ecf8-ee96-4345-b8d7-980f83cd10a1",
+              "leftValue": "={{ $json.place_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "fe4298cd-3f7b-4810-8005-3b64354c0617",
+      "name": "If place_id valido",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1584,
+        704
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "appToken",
+        "resource": "deal",
+        "operation": "search",
+        "filterGroupsUi": {
+          "filterGroupsValues": [
+            {
+              "filtersUi": {
+                "filterValues": [
+                  {
+                    "propertyName": "dealname",
+                    "value": "={{ $(\"Normalizar campos do lead\").item.json.nome }}"
+                  },
+                  {
+                    "propertyName": "telefone",
+                    "value": "={{ $(\"Normalizar campos do lead\").item.json.telefone }}"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {}
+      },
+      "id": "af763f44-2769-4b0f-8bf9-49931fd070dd",
+      "name": "Search deal por place_id",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2.2,
+      "position": [
+        2640,
+        464
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "0a6630e1-6ef0-4bc0-bad1-a8f689bc2e92",
+              "leftValue": "={{ $json.id || $json.properties?.hs_object_id || \"\" }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "f00f252a-de07-45c7-972b-120a5040218d",
+      "name": "If deal ja existe",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2864,
+        464
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "4a3239cf-6b1e-454a-b9de-c75a2477cb3a",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "^ChI[A-Za-z0-9_-]+$",
+              "operator": {
+                "type": "string",
+                "operation": "regex"
+              }
+            },
+            {
+              "id": "3c0b88af-51d7-4d4e-bb2a-8123874219ee",
+              "leftValue": "={{ $json.validacao_manual }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "debb0220-231b-4144-b6c8-4a0dd65e9079",
+      "name": "If id valido da planilha",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1648,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1MuetJ4N7xiazkw55YOSHtq_nIaHPRKOE-g6GwfaNJKM",
+          "mode": "list",
+          "cachedResultName": "Quantidade de Leads por Mês",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MuetJ4N7xiazkw55YOSHtq_nIaHPRKOE-g6GwfaNJKM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "leads",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MuetJ4N7xiazkw55YOSHtq_nIaHPRKOE-g6GwfaNJKM/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "id",
+              "lookupValue": "={{ $json.place_id }}"
+            }
+          ]
+        },
+        "options": {
+          "returnFirstMatch": true
+        }
+      },
+      "id": "ec6954f8-4a87-47fa-8c47-7cf0b98ef91b",
+      "name": "Buscar lead por place_id",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1840,
+        688
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "dup-check",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "9447cf35-e394-4828-9bf7-4a0c43327368",
+      "name": "If lead ja existe",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1840,
+        1040
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "appToken",
+        "resource": "deal",
+        "operation": "getRecentlyCreatedUpdated",
+        "filters": {}
+      },
+      "id": "ce5c596f-a31a-4b88-bfc7-017c38331ef7",
+      "name": "Get recently created/updated deals",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2.2,
+      "position": [
+        832,
+        -368
+      ],
+      "alwaysOutputData": true,
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "5j79f7oR8x1Nxs4q",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/5j79f7oR8x1Nxs4q",
+          "cachedResultName": "GBP Scoring - L2 Discovery (Pipeline A)"
+        },
+        "workflowInputs": {
+          "mappingMode": "passthrough",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        2048,
+        -128
+      ],
+      "id": "1e0eabdf-c330-4f31-b7e5-a41416fe77e9",
+      "name": "Call 'GBP Scoring - L2 Discovery (Pipeline A)'"
+    },
+    {
+      "parameters": {
+        "authentication": "appToken",
+        "resource": "deal",
+        "operation": "search",
+        "filterGroupsUi": {
+          "filterGroupsValues": [
+            {
+              "filtersUi": {
+                "filterValues": [
+                  {
+                    "propertyName": "dealstage",
+                    "operator": "NEQ",
+                    "value": "70807682-148b-4914-acd0-97aad8c2a000"
+                  },
+                  {
+                    "propertyName": "hs_lastmodifieddate",
+                    "operator": "GT",
+                    "value": "={{ $json.watermark }}"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {}
+      },
+      "id": "33dd4cf9-1e40-415b-9170-d56ec9a1c72e",
+      "name": "Deals que mudaram de status",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2.2,
+      "position": [
+        1056,
+        -368
+      ],
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1264,
+        -416
+      ],
+      "id": "7374a515-d754-45ce-92d4-e552d8d45dc3",
+      "name": "Loop deals novo status"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "deal_id",
+              "name": "deal_id",
+              "value": "={{ $json.properties.hs_object_id }}",
+              "type": "string"
+            },
+            {
+              "id": "novo_estagio",
+              "name": "novo_estagio",
+              "value": "={{ $json.properties.dealstage }}",
+              "type": "string"
+            },
+            {
+              "id": "891aba18-5bd8-4495-a47a-0ee23b96297d",
+              "name": "deal_name",
+              "value": "={{ $json.properties.dealname }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e63c9c9b-02af-4034-a3fd-9489f09c21ec",
+      "name": "Dados do deal",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1488,
+        -368
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "66066859-25b8-478d-b8cf-c1faf41818da",
+              "leftValue": "={{ $json['Quantidade de Leads por Mês'] }}",
+              "rightValue": 50,
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1152,
+        256
+      ],
+      "id": "73f99af1-a7ee-455f-a640-9c13da5f00be",
+      "name": "If",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1MuetJ4N7xiazkw55YOSHtq_nIaHPRKOE-g6GwfaNJKM",
+          "mode": "list",
+          "cachedResultName": "Quantidade de Leads por Mês",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MuetJ4N7xiazkw55YOSHtq_nIaHPRKOE-g6GwfaNJKM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 624786381,
+          "mode": "list",
+          "cachedResultName": "qtd leads mes",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1MuetJ4N7xiazkw55YOSHtq_nIaHPRKOE-g6GwfaNJKM/edit#gid=624786381"
+        },
+        "options": {
+          "dataLocationOnSheet": {
+            "values": {
+              "rangeDefinition": "specifyRange",
+              "firstDataRow": 7
+            }
+          }
+        }
+      },
+      "id": "fe3e58fa-1ee4-450e-b0c5-58837f5693ec",
+      "name": "Ler contagem de leads1",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1136,
+        576
+      ],
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const staticData = $getWorkflowStaticData('global');\nconst lastRun = staticData.lastRunTimestamp || 0;\nstaticData.lastRunTimestamp = Date.now();\nreturn [{ json: { watermark: String(lastRun) } }];"
+      },
+      "id": "a1b2c3d4-1111-4a2b-9c3d-e4f5a6b7c8d9",
+      "name": "Ler watermark",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        608,
+        -224
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "output-nao-vazio",
+              "leftValue": "={{ $json.output }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "b2c3d4e5-2222-4b3c-8d4e-f5a6b7c8d9e0",
+      "name": "If output preenchido",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2368,
+        96
+      ]
+    }
+  ],
+  "nodeGroups": [],
+  "activeVersion": null,
+  "tags": [],
+  "meta": {
+    "aiBuilderAssisted": true,
+    "templateCredsSetupCompleted": true,
+    "builderVariant": "mcp"
+  },
+  "parentFolderId": null,
+  "description": "Detecta mudança de estágio de deal no HubSpot, atualiza status do lead na planilha e aciona automaticamente nova extração via Apify quando necessário.",
+  "scopes": [
+    "execution:reveal",
+    "workflow:create",
+    "workflow:delete",
+    "workflow:disableRedaction",
+    "workflow:enableRedaction",
+    "workflow:execute",
+    "workflow:execute-chat",
+    "workflow:export",
+    "workflow:import",
+    "workflow:list",
+    "workflow:move",
+    "workflow:publish",
+    "workflow:read",
+    "workflow:share",
+    "workflow:unpublish",
+    "workflow:unshare",
+    "workflow:update"
+  ],
+  "canExecute": true
+}
