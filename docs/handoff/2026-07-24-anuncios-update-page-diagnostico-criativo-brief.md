@@ -159,3 +159,76 @@ Para **cada campo marcado como "A (calcular)"**, precisamos das regras exatas:
 - **Fonte dos diagnósticos (echo hoje):** `Loop Over Items`
 - **Dados ad-level novos:** nó `Code Cálculo Dados Meta` (Track B) — `hook_rate`, `hold_rate`, rankings, vídeo, etc.
 - **Briefs relacionados:** `2026-07-24-meta-metrics-trackA-anuncios-google-fixes-brief.md`, `2026-07-24-meta-metrics-trackB-anuncios-meta-adlevel-brief.md`
+
+---
+
+## 11. Decisão do Estrategista (aprovada por Olavo — 2026-07-24)
+
+> **Princípio (regra 2 — solução mais simples):** `Code classificar status` **já produz** `final_status`,
+> `final_score`, `classe_score` e o gate de significância (`MIN_CLICKS_7D=100`, `MIN_CONV_7D=10`,
+> `LIMITE_CRITICO` por objetivo). Portanto **metade dos campos "A" é religar fio, não fórmula nova.**
+> Apenas **#9 e #10** (criativo) exigem regra genuinamente nova.
+
+### 11.1 Decisão final por campo
+
+| # | Campo | Decisão | Implementação |
+|---|---|---|---|
+| 1 | `ad_score_operacional` | **A — religar** | ← `final_score` (`Code classificar status`). Não criar fórmula nova. |
+| 2 | `ad_prioridade_otimizacao` | **A — derivar** | mapa `final_status`→prioridade, **vocabulário do keystone** (Crítica/Alta/Média/Baixa) |
+| 3 | `ad_diagnostico` | **A — template por regra** | frases-modelo por status/significância (ver 11.4); narrativa de agente fica p/ depois |
+| 4 | `ad_status_operacional` | **A — religar** | ← `final_status` |
+| 5 | `ad_tendencia` | **A — religar** | ← tendência já calculada (`tendencia_3d_vs_7d` / `Code Tendência Real`) |
+| 6 | `ad_ultima_execucao` | **A — `= $now`** | timestamp da execução (echo mantinha data velha, errada) |
+| 7 | `criativo_angulo` | **B — echo** | atributo descritivo manual |
+| 8 | `criativo_cta` | **B — echo** | atributo descritivo manual |
+| 9 | `criativo_fadiga_status` | **A — calcular (novo)** | ver 11.2 |
+| 10 | `criativo_score_operacional` | **A — calcular (novo)** | ver 11.3 |
+
+→ O nó novo `Code Diagnóstico Criativo` calcula **só #9 e #10**. #1/#4/#5 **religam** para produtores existentes; #2 é um mapa; #3 é template; #6 é `$now`.
+
+### 11.2 `criativo_fadiga_status` (select) — regra confirmada
+
+- **Saudável:** frequência < **2.5** E hook_rate não caiu > **20%** vs 7d.
+- **Atenção:** frequência **2.5–3.5** OU hook_rate caiu **20–35%** OU CTR < benchmark.
+- **Saturado:** frequência ≥ **3.5** E (hook_rate caiu > **35%** OU CTR abaixo do crítico).
+- **Sem dados:** abaixo do gate (100 cliques / 10 conv em 7d) ou sem frequência.
+
+### 11.3 `criativo_score_operacional` (0–100) — regra confirmada
+
+- Rankings Meta → pontos: `ABOVE_AVERAGE`=100, `AVERAGE`=60, `BELOW_AVERAGE_35`=40,
+  `BELOW_AVERAGE_20`=25, `BELOW_AVERAGE_10`=10 → **média dos 3 rankings**.
+- Composição: **50% rankings + 25% hook_rate + 25% hold_rate** (hook/hold normalizados vs benchmark).
+- **Rankings vazios** (anúncio antigo) → **50% hook + 50% hold**, e marcar classe `"parcial"`.
+- Sem hook/hold e sem rankings → **0 / "Sem dados"**. Arredondar para inteiro; guardas anti-`NaN`/`Infinity`.
+
+### 11.4 `ad_prioridade_otimizacao` (#2) e `ad_diagnostico` (#3)
+
+- **#2 (derivar):** mapa `final_status`→prioridade, **reusando o vocabulário do Pipeline_v2**
+  (Crítico→`Crítica`, Atenção→`Alta`, Saudável→`Média`, Excelente/OK→`Baixa`;
+  Sem Dados/Dados Insuficientes→`Baixa`). **Confirmar os valores reais de `final_status`** lendo
+  `Code classificar status` e mapear 1:1.
+- **#3 (template):** frases-modelo por faixa, ex.:
+  - Sem/insuf. dados: *"Sem volume suficiente para análise (mín. 100 cliques / 10 conv. em 7d)."*
+  - Dentro da meta: *"Dentro da meta ({métrica-mãe} desvio {X}% em 7d); criativo {fadiga}."*
+  - Atenção/Crítico: *"{Métrica-mãe} {Y}% {acima/abaixo} da meta em 7d; tendência {tendência}; criativo {fadiga}."*
+
+### 11.5 Pré-requisitos ANTES de codar (senão quebra)
+
+1. **Puxar as opções EXATAS dos selects** do DB "Anúncios" no Notion (nomes idênticos) antes de escrever —
+   senão o update dá **400**. Em especial: o select de `ad_status_operacional` **precisa conter os
+   valores que `final_status` emite** (`Sem Dados`, `Dados Insuficientes`, e os de julgamento) —
+   reconciliar os dois. Idem `ad_tendencia`, `criativo_fadiga_status`, `ad_prioridade_otimizacao`.
+2. **Persistir os sinais de criativo TAMBÉM no BigQuery** (`raw_ad_data` / `t28_ad` do Track A), não só
+   no Notion. O Notion é a visão humana; **o cérebro (Módulo 28) lê o BigQuery** — sem isso o agente
+   Diagnóstico não enxerga hook/hold/rankings/fadiga.
+3. **`ad_score_operacional` na mesma escala/bandas do PHI Score** (comparável a
+   CRITICAL/WARNING/GOOD/EXCELLENT). Se `final_score` já é 0–100 alinhado, usar direto.
+
+### 11.6 Verificação (complementa a seção 9)
+
+- Após religar #1/#4/#5: no smoke, esses campos deixam de ecoar o valor antigo e passam a refletir
+  `final_score`/`final_status`/tendência da execução.
+- #9/#10: valores coerentes com a performance; rankings vazios caem no fallback 50/50 sem `NaN`.
+- #2: prioridade bate com o `final_status` do mesmo item (consistência com o keystone).
+- #6: `ad_ultima_execucao` = data da execução atual, não a antiga.
+- Publicar **só** com OK do Olavo; registrar exec IDs + versão em execution-log + ledger.
