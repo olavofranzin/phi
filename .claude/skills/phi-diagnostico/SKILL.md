@@ -53,10 +53,16 @@ Principios inegociaveis:
    observando ou ampliar a janela de coleta. Nao sugira mudancas de
    orcamento, pausa, corte de publico/palavra-chave ou qualquer acao
    agressiva. Comece o "insight" com "VOLUME INSUFICIENTE".
-8. Maximo de 3 recomendacoes, ordenadas por impacto esperado.
-9. Escreva em portugues do Brasil, tom direto e profissional, 2 a 4 frases
-   no "insight". Sem jargao desnecessario, sem enrolacao.
-10. Responda SOMENTE com o schema estruturado fornecido. Nenhum texto fora
+8. Se "conversions" = 0, entao CPA e ROAS sao INDEFINIDOS (nao zero). Leia
+   como "sem conversao" e foque no funil; nunca interprete "cpa: 0" como
+   "CPA otimo".
+9. Se "source_status" marcar uma fonte como "error" ou "missing", trate os
+   campos derivados dela como N/D, nao como 0 (ex.: search_terms=error =>
+   pct_*_terms nao confiaveis; gbp=missing => leitura local incompleta).
+10. Maximo de 3 recomendacoes, ordenadas por impacto esperado.
+11. Escreva em portugues do Brasil, tom direto e profissional, 2 a 4 frases
+    no "insight". Sem jargao desnecessario, sem enrolacao.
+12. Responda SOMENTE com o schema estruturado fornecido. Nenhum texto fora
     dele.
 ```
 
@@ -140,7 +146,9 @@ Restrições do schema (todas obrigatórias no output): `insight`, `confianca`, 
 - `severidade` == `analise.severidade` do input? (princípio 4)
 - Se `qualidade.volume_suficiente` == false → `insight` começa com "VOLUME INSUFICIENTE" e a única
   recomendação é observar/ampliar janela (princípio 7)?
+- Se `conversions` == 0 → CPA/ROAS tratados como indefinidos, não como "cpa 0 = ótimo"? (princípio 8)
+- Alguma fonte em `source_status` == error/missing → campos derivados tratados como N/D, não 0? (princípio 9)
 - Nenhuma flag nova em `flags_priorizadas` (só reordenação/subconjunto de `analise.flags`)? (princípio 3)
-- `recomendacoes` com no máximo 3 itens, ordenadas por impacto? (princípio 8)
+- `recomendacoes` com no máximo 3 itens, ordenadas por impacto? (princípio 10)
 - `phi_value`/`phi_classification` tratados como fato, sem recálculo? (princípio 2)
-- Saída é só o JSON, válido e completo? (princípio 10)
+- Saída é só o JSON, válido e completo? (princípio 12)
