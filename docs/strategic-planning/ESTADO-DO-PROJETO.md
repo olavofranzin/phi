@@ -20,7 +20,8 @@
 >
 > **VERSÃO.** v0.1 (2026-06-04). Atualizado ao final de cada lote
 > entregue + em auditoria quinzenal proposta + qualquer atualização
-> proposta pelo Curador depois que ele estiver vivo.
+> proposta pelo Curador depois que ele estiver vivo. Última
+> atualização: **2026-07-31** (snapshot E1 — Otimização/T28).
 
 ---
 
@@ -125,6 +126,36 @@ Um mês depois do snapshot acima. Quatro mudanças estruturais:
    registro obrigatório dos sub-chats).
 4. **L3.0 §4 framework de análise implementado** (Codex) — o IP da Camada 2
    — mas **BLOQUEADO** na credencial Claude/Anthropic no n8n (ver §3.8).
+   *(Atualização 2026-07-31: credencial destravada — ver snapshot abaixo.)*
+
+### Snapshot 2026-07-31 (atualização — sessão E1 Otimização)
+
+Duas semanas depois. Foco: destravar a **Camada 2 de análise** (Otimização / cérebro
+de análise T28). Quatro mudanças:
+
+1. **Credencial Anthropic destravada.** `list_credentials` confirmou a credencial
+   **`Anthropic account`** (`YifaYCQuGWjdd1Oh`) **já existente** no n8n — o "gargalo
+   único" da Camada 2 (T13) deixou de ser "não configurada". Resta apenas **confirmar
+   o binding** nos nós (`Message a model`/`Maestro`) no editor + rodar o smoke.
+2. **E1 do cérebro de análise construído (rascunho, zero-token).** No
+   `WF-T28-Analise-Campaign` (`fhYmJH0o9BW1IO4i`): nó **`Maestro`** (Agente 0 — triagem
+   rápido/devagar + síntese) + `phi_maestro` (tool de schema) + `Merge Maestro Output`,
+   encadeados após o Diagnóstico **sem quebrar** o `Build Notion Page`. **Persistência
+   preparada**: +5 properties `maestro_*` na DB `PHI - ANÁLISES`, gravadas por
+   `Create`/`Update Analysis Page`. Nada ativado/executado. Restore point `b2cd74ed`.
+3. **Guardrails de dado sincronizados (3 camadas).** `conversions=0 ⇒ CPA/ROAS
+   INDEFINIDOS` (nunca "cpa 0 = ótimo") + `source_status error/missing ⇒ N/D`: no código
+   determinístico (`Build Deterministic Flags`, + flag nova `zero_conversao_com_gasto`),
+   no prompt vivo do Diagnóstico e na skill `phi-diagnostico`.
+4. **Os 7 prompts do Módulo 28 validados por skill** (zero-token) contra payload real
+   (CLI-4): schema-conformes, encadeando na ordem de dependência, honrando os guardrails,
+   degradando com honestidade no caso 0-conversão. Registrado em **ADR-28** + roster
+   atualizado (Maestro: "vazio" → "nó no rascunho").
+
+**Estado da Otimização:** design + build (E1) prontos **até a fronteira do que gasta
+token**. Gates restantes (não-design): confirmar binding da credencial → 1 smoke-test
+real → ativar. **E2** (Julgamento + Hipóteses) destrava quando o payload carregar
+`regime_decisao`/`margem`/`ticket_ltv` (Client Knowledge Pack).
 
 ---
 
@@ -376,7 +407,7 @@ abaixo têm nomes precisos do que cobrem, não do índice agregado final.
 
 | Origem | Pendência | Próxima ação | Bloqueia? |
 |---|---|---|---|
-| 2026-07-19 | **Credencial Claude/Anthropic no n8n (cross-cutting)** — agora BLOQUEIA o L3.0 §4 (framework de análise **já implementado** no `WF-T28-Analise-Campaign`; exec #18711 falhou "Node does not have any credentials set"). Também bloqueia L3.2. | Olavo configura a credencial Claude/Anthropic no n8n e atribui ao node "Message a model"; depois rodar smoke §5 (Orquestrador `8Q5ofmAZju0hTN08` em phi_dev, atualizar as 2 pages de smoke). | **Bloqueia L3.0 §4 + Camada 2 de análise** |
+| 2026-07-19 → **2026-07-31** | **Credencial Claude/Anthropic no n8n (cross-cutting) — REBAIXADO.** A credencial **`Anthropic account`** (`YifaYCQuGWjdd1Oh`) **existe** no n8n (confirmado via `list_credentials` 2026-07-31); deixou de ser "não configurada". O framework está construído: Diagnóstico (Agente 3) **vive** + Maestro (E1) no rascunho. | Confirmar o **binding** da credencial nos nós `Message a model`/`Maestro` (editor) → **1 smoke-test real** da cadeia E1 → ativar. Ver ADR-28 + snapshot 2026-07-31 (§2). | Rebaixado: não mais "sem credencial" — pendente binding + smoke |
 | 2026-07-19 | **Keystone — gap de score 08-16/jul (credencial BQ `UhLRAanVarQeOpQy` expirada)** | **Decisão: apenas REGISTRAR o gap, não recalcular** — não há dado (zero linhas coletadas nesses 10 dias). Também limpar/registrar as linhas antigas v1.1 (=50 constante). | Não bloqueia |
 | 2026-07-19 | **Blast radius da credencial BQ (`UhLRAanVarQeOpQy`)** — verificar quais WFs além do Pipeline_v2 pararam 08-16/jul (Agregador T28 e outros na mesma credencial) | Auditar execuções dos WFs que usam essa credencial na janela 08-16/jul; considerar monitor de "zero linhas/zero logs" (ver §6, T11). | Não bloqueia; investigação |
 | 2026-07-19 | **a03 — `client_id=''` no writer `sw metricas campanhas`** (`W571K320aqIHsdtH`) | Escritor do `raw_campaign_data` grava `client_id` vazio em algumas linhas; corrigir a origem. Segue não iniciado. | Não bloqueia; qualidade de dado |
@@ -459,7 +490,7 @@ Compilação das tensões espalhadas pelos strawmans + novas.
 | T10 | ~~Curador posicionado em "Procedimentos da Operação", mas faz mais sentido em "Documentação e Ferramentas"~~ | Conversa 2026-06-04 | ✅ Resolvido | **ME-20260604 aprovada e aplicada 2026-06-04** ([link](https://www.notion.so/375b65e5c72b8121834fd65d5395b481)). 1ª Mudança de Escopo completa do projeto — dogfood do Curador (Claude no papel de surrogate). Vira input de treino. |
 | T11 | **Falha silenciosa de credencial** — a expiração da credencial BQ (`UhLRAanVarQeOpQy`) passou **10 dias (08-16/jul)** sem alerta: zero linhas, zero logs, zero erro visível. Risco sistêmico para todos os pipelines críticos. | Incidente keystone 2026-07-17 | **Alta** | Considerar um **monitor de "zero linhas / zero logs"** para pipelines críticos (score, Agregador, writers do raw) — alerta quando uma run esperada não produz dado. |
 | T12 | **Fragmentação de branches** — 3+ branches `claude/*` divergentes (`agentic-agency-planning-KwJEw`, `lucid-tesla-ZWcbr`, `affectionate-davinci-Ey2oV`, branch do score) e `main` ~1 mês atrás. Históricos não-relacionados impedem merge git trivial. | 2026-07-19 | Média | Risco de integração + bus-factor. Decidir mecânica de consolidação de árvore com Olavo. |
-| T13 | **Credencial Claude/Anthropic = gargalo único da Camada 2 de análise** — todo o framework de análise densa (L3.0 §4, L3.2) depende de uma credencial n8n ainda não configurada. | 2026-07-19 | Média | Configurar a credencial; sem ela a Camada 2 (análise/otimização) não sai do plumbing. |
+| T13 | **Credencial Claude/Anthropic — REBAIXADO 2026-07-31.** A credencial (`Anthropic account`, `YifaYCQuGWjdd1Oh`) **existe** no n8n; a Camada 2 não está mais bloqueada por ausência de credencial. Resta confirmar o binding nos nós + smoke-test. | 2026-07-19 → 2026-07-31 | Baixa | Confirmar binding + smoke da cadeia E1; ver snapshot 2026-07-31 (§2) e ADR-28. |
 
 ---
 
