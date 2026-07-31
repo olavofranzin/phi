@@ -15,7 +15,7 @@
 >   São **cursos/método**, não specs de build — a spec de build mora **aqui** + no Módulo 28 +
 >   nos briefs de handoff.
 > - **Spec do cérebro de análise:** `docs/modulo-28-analise-cognitiva.md` — Maestro + 6
->   especialistas, BLOCO COMUM, 7 prompts (hoje **vazios**).
+>   especialistas, BLOCO COMUM, 7 prompts (**preenchidos e validados por skill**, v0.2).
 > - **Síntese condensada:** `docs/conhecimento/IA Cognitiva.md` + "The Architecture of the
 >   Agentic Mind" + "Plano de Transformação…" + mapa mental "Segundo Cérebro Estratégico".
 > - **Decisões travadas de forma:** moldura estratégica (autonomia painel-nativo, ordem das
@@ -95,7 +95,7 @@ Frame dos próprios docs (bate com o Tema 27, "OS Cognitivo"):
 | Agente | Frente | Faz (concreto no PHI) | Aut. | Modelo | Realidade · âncora |
 |---|---|---|---|---|---|
 | **Diretor de Estratégia** (humano) | todas | Define Norte, guardrails, regime de decisão; dá o "play" | — | — | VIVE (Olavo) |
-| **Maestro / Orquestrador** | trans. | Roteia por evento→especialista; monta contexto; Router Cognitivo; sintetiza pareceres | 🟢 rotear / 🔴 exec. irrev. | Claude | **PARCIAL** — Orq. determinístico no T28 + `WF-EXEC-Orquestrador` vivo; Maestro LLM = **Agente 0** Módulo 28 (vazio) |
+| **Maestro / Orquestrador** | trans. | Roteia por evento→especialista; monta contexto; Router Cognitivo; sintetiza pareceres | 🟢 rotear / 🔴 exec. irrev. | Claude | **PARCIAL** — Orq. determinístico no T28 + `WF-EXEC-Orquestrador` vivo; Maestro LLM = **Agente 0** — nó `Maestro` criado no rascunho T28 (E1, pré-ativação; ADR-28) |
 | **Curador de Conhecimento / SOPs** | Fundação | Classifica/etiqueta SOPs, estratégias, swipe files; mantém RAG / Knowledge Pack | 🟢 | Haiku/Flash | **PARCIAL** — área Curador Lote 0 (Catálogo) feita; agente LLM não-vivo |
 
 ### Camada 1 — Sense / Percepção (lê sinais)
