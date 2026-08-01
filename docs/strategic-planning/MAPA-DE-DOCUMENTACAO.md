@@ -147,6 +147,7 @@ plano de lotes e padrões inegociáveis:
 | Decomposição do cérebro de análise em estágios (E1 Maestro) | ADR-28 — rascunho git `…/ADR-28-*.md` |
 | Guardião da Métrica-Mãe (portão de qualidade de dado) | ADR-29 — rascunho git `…/ADR-29-*.md` |
 | Cadência (Janelas) no Maestro + Ordem Sagrada no Agente 5 | ADR-30 — rascunho git `…/ADR-30-*.md` |
+| Camada de Conhecimento de Plataforma (Google Ads) + Consultor | ADR-31 — rascunho git `…/ADR-31-*.md` |
 | Loop operacional O.D.A.E. (alerta→tarefa→Log) | **ADR-22** `37db65e5-c72b-8134-8475-f702f1e39ff1` + Espec. `37db65e5-c72b-81a0-a4a3-e47bd562f91e` |
 | Camada 2 — design do Orquestrador campaign | git `saude-digital/L3.0-orquestrador-campaign-design.md` |
 | Framework cognitivo dos agentes de análise | Guia de Agentes `37db65e5-c72b-8164-82c5-e4f246be9f2c` · Arquitetura de IA `342b65e5-c72b-81f8-a05e-dfe05e564105` |
