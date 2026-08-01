@@ -153,6 +153,7 @@ plano de lotes e padrões inegociáveis:
 | Framework cognitivo dos agentes de análise | Guia de Agentes `37db65e5-c72b-8164-82c5-e4f246be9f2c` · Arquitetura de IA `342b65e5-c72b-81f8-a05e-dfe05e564105` |
 | Cérebro de análise T28 — roster + 7 prompts (Maestro + 6) | git `strategic-planning/roster-de-agentes.md` · `docs/modulo-28-analise-cognitiva.md` |
 | Regras de otimização (Método Subido destilado) | git `strategic-planning/regras-otimizacao-metodo-subido.md` |
+| Regras de planejamento (PME Brasil destilado) — camada 3 | git `strategic-planning/regras-planejamento-midia-paga.md` (fonte: `…planejamento-midia-paga-pme-brasil-2023-2026.md`) |
 
 ### 7.3 Workflows n8n por camada
 | Camada | Workflow | id |
