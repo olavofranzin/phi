@@ -21,7 +21,7 @@
 > **VERSÃO.** v0.1 (2026-06-04). Atualizado ao final de cada lote
 > entregue + em auditoria quinzenal proposta + qualquer atualização
 > proposta pelo Curador depois que ele estiver vivo. Última
-> atualização: **2026-07-31** (snapshot E1 — Otimização/T28).
+> atualização: **2026-08-01** (handoff Otimização→Planejamento).
 
 ---
 
@@ -156,6 +156,50 @@ de análise T28). Quatro mudanças:
 token**. Gates restantes (não-design): confirmar binding da credencial → 1 smoke-test
 real → ativar. **E2** (Julgamento + Hipóteses) destrava quando o payload carregar
 `regime_decisao`/`margem`/`ticket_ltv` (Client Knowledge Pack).
+
+### Snapshot 2026-08-01 (handoff — sessão Otimização → Planejamento)
+
+Sessão longa que **fechou o E1 da Otimização**, desenhou a **mitigação de integridade de
+dado**, a **camada de conhecimento**, e **abriu a frente Planejamento com 2 agentes**. Tudo
+**design + validação por skill (zero-token)**, exceto **1 teste real de escrita no Notion**.
+Commits na branch `claude/agentic-agency-planning-KwJEw`; ADRs 28–31.
+
+1. **Otimização (T28) — E1 fechado.** Nó **Maestro** no rascunho + persistência Notion (5
+   props `maestro_*`) + fix `cpa:0` no nó determinístico + **guardrails 8/9 nas 3 camadas** +
+   **7 prompts validados** (**ADR-28**). Maestro sincronizado com o Agente 0 canônico;
+   +regras **JANELA** (Maestro) e **ORDEM SAGRADA** (Agente 5) (**ADR-30**). Doutrina em
+   `regras-otimizacao-metodo-subido.md`.
+2. **Integridade de medição — desenho (ADR-29, Guardião da Métrica-Mãe).** Caso real (Salão
+   PMax) expôs "CPA bom demais" (R$2,49) inflado por conversões soft + config limitada. Portão
+   determinístico na origem + monitor (vs histórico BQ) + selo de confiança no score +
+   tarefa/checklist (loop ADR-22). Composição/config da conversão são **verificáveis via
+   Google Ads API** (`primary_for_goal` + `conversion_action_category`). **Teste real de
+   integração Notion:** criados **Tarefa + 9 itens de Checklist + Log de Otimização** para a
+   Salão (relações resolvidas) — prova a escrita ponta a ponta.
+3. **Camada de conhecimento — ADR-31.** 5 camadas (enums API / `Recommendation` da conta /
+   doutrina git / **memória própria** Notion = maior peso / prosa fetch) com **precedência +
+   selo de validade**. Contrato do **Consultor de Plataforma**. Google Ads primeiro; Meta
+   previsto.
+4. **Planejamento — aberto.** `regras-planejamento-midia-paga.md` (doutrina destilada de D1,
+   com **anexo datado selado**) + fonte D1 trazida da branch `paid-media`. Skills
+   `campaign-plan` + `paid-ads` limpas (originais) com **wrapper de runtime PHI** (`skills/`).
+   **2 agentes montados e validados por skill:** **Planejador** (mapa `PC-xxx`) + **Consultor
+   de Plataforma** (instância do ADR-31). Compõem: Consultor → Planejador; ambos respeitam a
+   precedência (memória própria vence o conselho do vendedor) e amarram no Guardião.
+
+**Gates pendentes (não-design):**
+- **Credencial Anthropic** (n8n): existe; falta **confirmar binding no nó + smoke-test + ativar E1**.
+- **Credencial Google Ads API:** destrava o Guardião (detecção), o Consultor (camadas 1/2) e a
+  camada 2 do ADR-31.
+- **Client Knowledge Pack povoado:** tira Planejador/E2 do `[HIPÓTESE]`.
+- **Wiring n8n** dos agentes de Planejamento + **implementação determinística do Guardião**.
+- **Consolidação de branches (risco T12):** conteúdo trazido da `paid-media`; a árvore ainda
+  precisa reconciliar com o `main` (~1 mês atrás).
+
+**Artefatos novos (git, ver MAPA §7.2):** ADR-28/29/30/31 · `regras-otimizacao-metodo-subido`
+· `regras-planejamento-midia-paga` (+fonte D1) · `skills/` (campaign-plan, paid-ads, README) ·
+`agente-planejador` · `agente-consultor-plataforma` · `CLAUDE.md` (restaurado do main + seção
+T28).
 
 ---
 
