@@ -144,9 +144,14 @@ plano de lotes e padrões inegociáveis:
 | Sub-WFs reutilizáveis Social + GBP | ADR-25 — rascunho git `…/ADR-25-*.md` |
 | Error Handler global (`onError` + sub-WF + `t28_errors`) | **ADR-26** `388b65e5-c72b-8186-aed5-c5fafd65b5f8` (Aceito) |
 | Entrega de análises (DB Análises PHI + write-back) | ADR-27 — rascunho git `…/ADR-27-*.md` |
+| Decomposição do cérebro de análise em estágios (E1 Maestro) | ADR-28 — rascunho git `…/ADR-28-*.md` |
+| Guardião da Métrica-Mãe (portão de qualidade de dado) | ADR-29 — rascunho git `…/ADR-29-*.md` |
+| Cadência (Janelas) no Maestro + Ordem Sagrada no Agente 5 | ADR-30 — rascunho git `…/ADR-30-*.md` |
 | Loop operacional O.D.A.E. (alerta→tarefa→Log) | **ADR-22** `37db65e5-c72b-8134-8475-f702f1e39ff1` + Espec. `37db65e5-c72b-81a0-a4a3-e47bd562f91e` |
 | Camada 2 — design do Orquestrador campaign | git `saude-digital/L3.0-orquestrador-campaign-design.md` |
 | Framework cognitivo dos agentes de análise | Guia de Agentes `37db65e5-c72b-8164-82c5-e4f246be9f2c` · Arquitetura de IA `342b65e5-c72b-81f8-a05e-dfe05e564105` |
+| Cérebro de análise T28 — roster + 7 prompts (Maestro + 6) | git `strategic-planning/roster-de-agentes.md` · `docs/modulo-28-analise-cognitiva.md` |
+| Regras de otimização (Método Subido destilado) | git `strategic-planning/regras-otimizacao-metodo-subido.md` |
 
 ### 7.3 Workflows n8n por camada
 | Camada | Workflow | id |
