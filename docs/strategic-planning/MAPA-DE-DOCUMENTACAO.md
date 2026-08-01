@@ -155,6 +155,7 @@ plano de lotes e padrões inegociáveis:
 | Regras de otimização (Método Subido destilado) | git `strategic-planning/regras-otimizacao-metodo-subido.md` |
 | Regras de planejamento (PME Brasil destilado) — camada 3 | git `strategic-planning/regras-planejamento-midia-paga.md` (fonte: `…planejamento-midia-paga-pme-brasil-2023-2026.md`) |
 | Skills de marketing (uso inline nos agentes; wrapper PHI) | git `strategic-planning/skills/` (README + campaign-plan, paid-ads; fonte `docs/conhecimento/skills marketing.md`) |
+| Agente Planejador (mapa de decisões PC-xxx) | git `strategic-planning/agente-planejador.md` (BLOCO COMUM + prompt + skill campaign-plan inline) |
 
 ### 7.3 Workflows n8n por camada
 | Camada | Workflow | id |
