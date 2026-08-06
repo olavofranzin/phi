@@ -165,7 +165,7 @@ plano de lotes e padrões inegociáveis:
 | 1 · Ingestão raw | sw metricas campanhas ← operador único | `W571K320aqIHsdtH` ← `cLcimNoefTOnVVbd` |
 | Score | PHI - Pipeline_v2 (+ Subworkflow Campanhas) | `ITWG3Ge0asXtUM8U` (+ `b1pbn8qmzCNTufTp`) |
 | 2 · Análise | Orquestrador · Analise-Campaign | `8Q5ofmAZju0hTN08` · `fhYmJH0o9BW1IO4i` |
-| 3 · Entrega/Loop | Loop Alerta · Fechar Otimização · Alerta Erro | `JqPwFD9udCq2hRPw` · `83vfKD8XMYmjZjFQ` · `Oj1RbA0laZTzJZPx` |
+| 3 · Entrega/Loop | ~~Loop Alerta~~ (**aposentado 2026-07-21** — lógica inline no Pipeline_v2) · Fechar Otimização · Alerta Erro | `JqPwFD9udCq2hRPw` (off) · `83vfKD8XMYmjZjFQ` · `Oj1RbA0laZTzJZPx` |
 | 4 · Erro | WF-T28-Error-Handler | `rTS5pE34eElfuMPl` |
 
 > Dump recente do Pipeline_v2 p/ auditoria: git `docs/audits/PHI - Pipeline_v2.json`.
