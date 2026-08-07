@@ -1,0 +1,446 @@
+{
+  "id": "<workflow_id_pending_review_orquestrador>",
+  "name": "WF-EXEC-Orquestrador",
+  "active": false,
+  "isArchived": false,
+  "tags": [
+    {
+      "name": "phi"
+    },
+    {
+      "name": "execucao"
+    },
+    {
+      "name": "lote1"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "exec-orq-schedule",
+      "name": "[Exec Orq] Schedule 08 BR",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        -120
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "daysInterval": 1,
+              "triggerAtHour": 8,
+              "triggerAtMinute": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "exec-orq-manual",
+      "name": "[Exec Orq] Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        120
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "exec-orq-merge-trigger",
+      "name": "[Exec Orq] Merge Triggers",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "mode": "append",
+        "numberInputs": 2
+      }
+    },
+    {
+      "id": "exec-orq-sop",
+      "name": "[Exec Orq] Buscar SOP Vigente",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "bfeb1105-83a6-4e89-8d62-26607ebfcc8c"
+        },
+        "returnAll": true,
+        "simple": false,
+        "filterType": "manual",
+        "filters": {
+          "conditions": [
+            {
+              "key": "area",
+              "condition": "equals",
+              "selectValue": "Execucao"
+            },
+            {
+              "key": "estado",
+              "condition": "equals",
+              "selectValue": "Vigente"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "notionApi": {
+          "id": "<credential_id_redacted>",
+          "name": "Notion account"
+        }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "id": "exec-orq-sop-normalize",
+      "name": "[Exec Orq] Normalizar SOP Vigente",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const pickTitle = (page) => {\n  for (const prop of Object.values(page.properties || {})) {\n    if (prop?.type === 'title') return (prop.title || []).map((part) => part.plain_text || '').join('').trim();\n  }\n  return '';\n};\nconst pickText = (prop) => (prop?.rich_text || []).map((part) => part.plain_text || '').join('').trim();\nconst pickSelect = (prop) => prop?.select?.name || prop?.status?.name || '';\nconst richText = (text) => [{ type: 'text', text: { content: String(text ?? '').slice(0, 1900) } }];\nconst title = (text) => [{ type: 'text', text: { content: String(text ?? '').slice(0, 1900) } }];\nconst brDate = () => new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });\nconst brDue = () => brDate() + 'T23:59:00-03:00';\nconst utcNow = () => new Date().toISOString();\nconst execId = (prefix) => prefix + '-' + $execution.id;\nconst compactJson = (value) => JSON.stringify(value);\nconst sopFromItems = (items) => {\n  const pages = items.map((item) => item.json || {}).filter((page) => !page.archived && !page.is_archived);\n  const vigente = pages.find((page) => {\n    const props = page.properties || {};\n    return pickSelect(props.area) === 'Execucao' && pickSelect(props.estado) === 'Vigente';\n  });\n  if (!vigente) throw new Error('SOP Vigente de area Execucao nao encontrada');\n  return { id: vigente.id, titulo: pickTitle(vigente), versao: pickText((vigente.properties || {}).versao) || 'v1.0' };\n};\nconst eventBody = (event) => ({\n  parent: { database_id: '3423df0d-77df-4834-bdda-c08ddbae40ff' },\n  properties: {\n    tipo: { title: title(event.tipo) },\n    entidade_id: { rich_text: richText(event.entidade_id) },\n    entidade_area: { select: { name: 'Execucao' } },\n    payload_json: { rich_text: richText(compactJson(event.payload)) },\n    timestamp: { date: { start: event.timestamp } },\n    execution_id: { rich_text: richText(event.execution_id) },\n    tenant_id: { rich_text: richText(event.tenant_id) },\n    tier_agente: { select: { name: event.tier_agente } },\n    versao_sop_aplicada: { rich_text: richText(event.versao_sop_aplicada) },\n  },\n});\nconst sop = sopFromItems($input.all());\nreturn [{ json: { sop_vigente: sop, versao_sop_aplicada: sop.id, tenant_id: 'phi-agencia', execution_id: execId('EXEC-EXEC-ORQ') } }];"
+      }
+    },
+    {
+      "id": "exec-orq-open",
+      "name": "[Exec Orq] Buscar Demandas Abertas",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        880,
+        0
+      ],
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "cd1ab757-e4d1-493f-b1e1-b64a95d33d1b"
+        },
+        "returnAll": true,
+        "simple": false,
+        "filterType": "manual",
+        "filters": {
+          "conditions": [
+            {
+              "key": "estado",
+              "condition": "equals",
+              "selectValue": "Aberta"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "notionApi": {
+          "id": "<credential_id_redacted>",
+          "name": "Notion account"
+        }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "id": "exec-orq-gemini",
+      "name": "[Exec Orq] Gemini Pro Sequencia do Dia",
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        1100,
+        160
+      ],
+      "parameters": {
+        "resource": "text",
+        "operation": "message",
+        "modelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "models/gemini-2.5-pro"
+        },
+        "messages": {
+          "values": [
+            {
+              "role": "user",
+              "content": "={{ JSON.stringify($json) }}"
+            }
+          ]
+        },
+        "simplify": true,
+        "options": {
+          "includeMergedResponse": true,
+          "systemMessage": "Voce e o Orquestrador da fila operacional PHI. No Lote 1, apenas confirme a ordenacao por prioridade calculada. Responda JSON curto.",
+          "temperature": 0.1,
+          "maxOutputTokens": 512
+        }
+      },
+      "credentials": {
+        "googlePalmApi": {
+          "id": "<GEMINI_CREDENTIAL_ID_redacted>",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "id": "exec-orq-prioridade",
+      "name": "[Exec Orq] Calcular Prioridade Pro",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1100,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const pickTitle = (page) => {\n  for (const prop of Object.values(page.properties || {})) {\n    if (prop?.type === 'title') return (prop.title || []).map((part) => part.plain_text || '').join('').trim();\n  }\n  return '';\n};\nconst pickText = (prop) => (prop?.rich_text || []).map((part) => part.plain_text || '').join('').trim();\nconst pickSelect = (prop) => prop?.select?.name || prop?.status?.name || '';\nconst richText = (text) => [{ type: 'text', text: { content: String(text ?? '').slice(0, 1900) } }];\nconst title = (text) => [{ type: 'text', text: { content: String(text ?? '').slice(0, 1900) } }];\nconst brDate = () => new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });\nconst brDue = () => brDate() + 'T23:59:00-03:00';\nconst utcNow = () => new Date().toISOString();\nconst execId = (prefix) => prefix + '-' + $execution.id;\nconst compactJson = (value) => JSON.stringify(value);\nconst sopFromItems = (items) => {\n  const pages = items.map((item) => item.json || {}).filter((page) => !page.archived && !page.is_archived);\n  const vigente = pages.find((page) => {\n    const props = page.properties || {};\n    return pickSelect(props.area) === 'Execucao' && pickSelect(props.estado) === 'Vigente';\n  });\n  if (!vigente) throw new Error('SOP Vigente de area Execucao nao encontrada');\n  return { id: vigente.id, titulo: pickTitle(vigente), versao: pickText((vigente.properties || {}).versao) || 'v1.0' };\n};\nconst eventBody = (event) => ({\n  parent: { database_id: '3423df0d-77df-4834-bdda-c08ddbae40ff' },\n  properties: {\n    tipo: { title: title(event.tipo) },\n    entidade_id: { rich_text: richText(event.entidade_id) },\n    entidade_area: { select: { name: 'Execucao' } },\n    payload_json: { rich_text: richText(compactJson(event.payload)) },\n    timestamp: { date: { start: event.timestamp } },\n    execution_id: { rich_text: richText(event.execution_id) },\n    tenant_id: { rich_text: richText(event.tenant_id) },\n    tier_agente: { select: { name: event.tier_agente } },\n    versao_sop_aplicada: { rich_text: richText(event.versao_sop_aplicada) },\n  },\n});\nconst sop = $('[Exec Orq] Buscar SOP Vigente').all();\nconst sopData = sopFromItems(sop);\nconst execution_id = execId('EXEC-EXEC-ORQ');\nconst tenant_id = 'phi-agencia';\nconst demandaPages = $input.all().map((item) => item.json || {}).filter((page) => !page.archived && !page.is_archived);\nconst priorityFor = (classe_sla) => {\n  if (classe_sla === 'Critica') return 100;\n  if (classe_sla === 'Recorrente diaria') return 50;\n  if (classe_sla === 'Recorrente semanal') return 30;\n  if (classe_sla === 'Ad-hoc padrao') return 20;\n  return 20;\n};\nconst out = [];\nfor (const page of demandaPages) {\n  const props = page.properties || {};\n  const tipo = pickSelect(props.tipo);\n  const classe_sla = pickSelect(props.classe_sla);\n  const client_id = pickText(props.client_id);\n  const prioridade = priorityFor(classe_sla);\n  const payload = {\n    tenant_id,\n    client_id,\n    execution_id,\n    versao_sop_aplicada: sopData.id,\n    demanda_id: page.id,\n    tipo,\n    classe_sla,\n    prioridade,\n    prioridade_origem: 'agente',\n    estado: 'Priorizada',\n    tier_agente: 'pro',\n  };\n  const update_body = {\n    properties: {\n      prioridade: { number: prioridade },\n      prioridade_origem: { select: { name: 'agente' } },\n      estado: { select: { name: 'Priorizada' } },\n      versao_sop_aplicada: { rich_text: richText(sopData.id) },\n    },\n  };\n  const event = { tipo: 'demanda.priorizada', entidade_id: page.id, timestamp: utcNow(), execution_id, tenant_id, tier_agente: 'pro', versao_sop_aplicada: sopData.id, payload };\n  out.push({ json: { demanda_id: page.id, update_body, event_body: eventBody(event), payload, prioridade_origem: 'agente' } });\n}\nreturn out;"
+      }
+    },
+    {
+      "id": "exec-orq-restaurar",
+      "name": "[Exec Orq] Restaurar Payload Priorizacao",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1320,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "return $('[Exec Orq] Calcular Prioridade Pro').all().map((item) => ({ json: item.json }));"
+      }
+    },
+    {
+      "id": "exec-orq-update",
+      "name": "[Exec Orq] Atualizar Demanda Priorizada",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1540,
+        0
+      ],
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ \"https://api.notion.com/v1/pages/\" + $json.demanda_id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "notionApi",
+        "sendHeaders": true,
+        "specifyHeaders": "keypair",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Notion-Version",
+              "value": "2022-06-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json",
+              "neverError": false
+            }
+          }
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.update_body }}"
+      },
+      "credentials": {
+        "notionApi": {
+          "id": "<credential_id_redacted>",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "id": "exec-orq-event",
+      "name": "[Exec Orq] Criar Evento demanda.priorizada",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1760,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.notion.com/v1/pages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "notionApi",
+        "sendHeaders": true,
+        "specifyHeaders": "keypair",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Notion-Version",
+              "value": "2022-06-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json",
+              "neverError": false
+            }
+          }
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.event_body }}"
+      },
+      "credentials": {
+        "notionApi": {
+          "id": "<credential_id_redacted>",
+          "name": "Notion account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "[Exec Orq] Schedule 08 BR": {
+      "main": [
+        [
+          {
+            "node": "[Exec Orq] Merge Triggers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Exec Orq] Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "[Exec Orq] Merge Triggers",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "[Exec Orq] Merge Triggers": {
+      "main": [
+        [
+          {
+            "node": "[Exec Orq] Buscar SOP Vigente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Exec Orq] Buscar SOP Vigente": {
+      "main": [
+        [
+          {
+            "node": "[Exec Orq] Normalizar SOP Vigente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Exec Orq] Normalizar SOP Vigente": {
+      "main": [
+        [
+          {
+            "node": "[Exec Orq] Buscar Demandas Abertas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Exec Orq] Buscar Demandas Abertas": {
+      "main": [
+        [
+          {
+            "node": "[Exec Orq] Calcular Prioridade Pro",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Exec Orq] Calcular Prioridade Pro": {
+      "main": [
+        [
+          {
+            "node": "[Exec Orq] Gemini Pro Sequencia do Dia",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Exec Orq] Gemini Pro Sequencia do Dia": {
+      "main": [
+        [
+          {
+            "node": "[Exec Orq] Restaurar Payload Priorizacao",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Exec Orq] Restaurar Payload Priorizacao": {
+      "main": [
+        [
+          {
+            "node": "[Exec Orq] Atualizar Demanda Priorizada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Exec Orq] Atualizar Demanda Priorizada": {
+      "main": [
+        [
+          {
+            "node": "[Exec Orq] Criar Evento demanda.priorizada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true,
+    "timezone": "America/Sao_Paulo"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {}
+}

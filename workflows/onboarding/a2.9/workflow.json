@@ -1,0 +1,709 @@
+{
+  "updatedAt": "2026-06-01T17:49:33.770Z",
+  "createdAt": "2026-05-28T12:18:14.789Z",
+  "id": "Vqxb3G0KLeKerdCy",
+  "name": "Onb - Cobrar Acessos Pos-Kickoff",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "id": "8a9059b6-4cf3-406b-af14-7a3f32056d9c",
+      "name": "[Onb A2.9] Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "daysInterval": 1,
+              "triggerAtHour": 9,
+              "triggerAtMinute": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "6a0751f6-0e8c-4288-9a38-c554cd2845b0",
+      "name": "[Onb A2.9] Buscar Etapas Kickoff Concluidas",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        224,
+        0
+      ],
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "6eb4565b4f1d498c8b2978e0c80880fd"
+        },
+        "returnAll": true,
+        "simple": false,
+        "filterType": "none"
+      },
+      "credentials": {
+        "notionApi": {
+          "id": "<credential_id_redacted>",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "id": "f87a34a2-9fbf-4d57-b83e-a0b8c6bc5b0b",
+      "name": "[Onb A2.9] Filtrar Etapas Elegiveis",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const TARGET_TITLE = 'Conduzir call de kickoff e preencher ata';\nconst TARGET_STATUS = 'Concluído';\nconst ACCESS_MARK = 'acessos pendentes:';\nconst IDEMPOTENCY_MARK = 'A2.9 disparada em';\nconst pickTitle = (page) => {\n  for (const prop of Object.values(page.properties || {})) {\n    if (prop?.type === 'title') return (prop.title || []).map((item) => item.plain_text || '').join('').trim();\n  }\n  return '';\n};\nconst pickSelect = (prop) => prop?.select?.name || '';\nconst pickNumber = (prop) => prop?.number ?? null;\nconst pickPlainText = (prop) => (prop?.rich_text || []).map((item) => item.plain_text || '').join('');\nconst out = [];\nfor (const item of $input.all()) {\n  const page = item.json || {};\n  const props = page.properties || {};\n  const title = pickTitle(page);\n  const status = pickSelect(props.Status);\n  const observacoes_atual = pickPlainText(props['Observações']);\n  const obsLower = observacoes_atual.toLocaleLowerCase('pt-BR');\n  const clienteRelation = props.Cliente?.relation || [];\n  if (title === TARGET_TITLE && status === TARGET_STATUS && obsLower.includes(ACCESS_MARK) && !observacoes_atual.includes(IDEMPOTENCY_MARK) && clienteRelation.length > 0 && !page.archived) {\n    out.push({ json: { etapa_page_id: page.id, etapa_nome: title, etapa_sequencia: pickNumber(props['Sequência']), etapa_status: status, cliente_page_id: clienteRelation[0].id, cliente_relation_count: clienteRelation.length, observacoes_atual } });\n  }\n}\nreturn out;"
+      }
+    },
+    {
+      "id": "c41112e3-aa80-4726-8021-3ac462d615e8",
+      "name": "[Onb A2.9] Obter Cliente da Etapa",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        672,
+        0
+      ],
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "get",
+        "pageId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $json.cliente_page_id }}"
+        },
+        "simple": false
+      },
+      "credentials": {
+        "notionApi": {
+          "id": "<credential_id_redacted>",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "id": "8343f7f9-4e63-4196-8eb8-feb98cdbbe62",
+      "name": "[Onb A2.9] Montar Mensagem",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const activeStatuses = new Set(['Em andamento', 'Não iniciado', 'Bloqueado']);\nconst etapas = $('[Onb A2.9] Extrair Acessos Pendentes').all().map((item) => item.json);\nconst pickTitle = (page) => {\n  for (const prop of Object.values(page.properties || {})) {\n    if (prop?.type === 'title') return (prop.title || []).map((item) => item.plain_text || '').join('').trim();\n  }\n  return '';\n};\nconst pickSelect = (prop) => prop?.select?.name || '';\nconst out = [];\nfor (const [index, item] of $input.all().entries()) {\n  const cliente = item.json || {};\n  const etapa = etapas[index];\n  if (!etapa) continue;\n  const clienteNome = pickTitle(cliente);\n  const clienteStatus = pickSelect(cliente.properties?.Status);\n  if (!activeStatuses.has(clienteStatus)) continue;\n  const number = <OLAVO_PHONE_redacted>;\n  if (!number) throw new Error('OLAVO_PHONE ausente');\n  const text = `[Onb A2.9] Acessos pendentes do cliente ${clienteNome}\\netapa=Conduzir call de kickoff e preencher ata\\ncliente=${clienteNome}\\nstatus_cliente=${clienteStatus}\\nID da etapa=${etapa.etapa_page_id}\\nID do cliente=${etapa.cliente_page_id}\\nAcessos:\\n${etapa.acessos_pendentes}\\nAção: cobrar acessos do cliente off-platform; agendar D+2.`;\n  out.push({ json: { ...etapa, cliente_nome: clienteNome, cliente_status: clienteStatus, number, text } });\n}\nreturn out;"
+      }
+    },
+    {
+      "id": "742fd55c-92db-4c58-9210-804c5465ad00",
+      "name": "[Onb A2.9] Enviar Telegram Olavo",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1344,
+        0
+      ],
+      "parameters": {
+        "chatId": "<TELEGRAM_CHAT_ID_redacted>",
+        "text": "={{ String($json.text || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "<TELEGRAM_CREDENTIAL_ID_redacted>",
+          "name": "Telegram account"
+        }
+      },
+      "continueOnFail": true,
+      "webhookId": "58103f33-e452-42dc-acae-6f13002fc28d"
+    },
+    {
+      "id": "d1ebf798-ca68-4a90-8463-8717adc39f58",
+      "name": "[Onb A2.9] Preparar Update Observacoes",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1568,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const mensagens = $('[Onb A2.9] Montar Mensagem').all().map((item) => item.json);\nconst responses = $input.all();\nconst now = new Date();\nconst brTimestamp = now.toLocaleString('sv-SE', { timeZone: 'America/Sao_Paulo' }).replace(' ', 'T') + '-03:00';\nconst out = [];\nfor (const [index, responseItem] of responses.entries()) {\n  const msg = mensagens[index];\n  if (!msg) continue;\n  const payload = responseItem.json || {};\n  const statusCode = Number(payload.statusCode || payload.response?.statusCode || 0);\n  const failed = Boolean(payload.error || payload.message || (statusCode && (statusCode < 200 || statusCode >= 300)));\n  const evolutionStatus = failed ? 'falhou' : 'ok';\n  const detail = statusCode ? `HTTP ${statusCode}` : (failed ? 'erro sem status HTTP' : '');\n  const linhaNova = `A2.9 disparada em ${brTimestamp}. Status Evolution: ${evolutionStatus}${detail ? ` (${detail})` : ''}.`;\n  const observacoes_atual = msg.observacoes_atual || '';\n  const observacoes_finais = observacoes_atual ? `${observacoes_atual}\\n${linhaNova}` : linhaNova;\n  out.push({ json: { ...msg, evolution_status: evolutionStatus, evolution_detail: detail, linha_nova: linhaNova, observacoes_finais } });\n}\nreturn out;"
+      }
+    },
+    {
+      "id": "1cd4700b-720a-49ef-88e5-7040f04c16c7",
+      "name": "[Onb A2.9] Atualizar Observacoes Etapa",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1792,
+        0
+      ],
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $json.etapa_page_id }}"
+        },
+        "simple": false,
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Observações|rich_text",
+              "textContent": "={{ $json.observacoes_finais }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "credentials": {
+        "notionApi": {
+          "id": "<credential_id_redacted>",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "id": "0e176969-be6b-4e70-9556-33a709350bb6",
+      "name": "[Onb A2.9] Consolidar Resultado",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2016,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const updates = $('[Onb A2.9] Preparar Update Observacoes').all().map((item) => item.json);\nreturn [{ json: { workflow: 'Onb - Cobrar Acessos Pos-Kickoff', etapas_processadas: updates.length, evolution_sucesso: updates.filter((item) => item.evolution_status === 'ok').length, evolution_falha: updates.filter((item) => item.evolution_status === 'falhou').length, etapa_ids: updates.map((item) => item.etapa_page_id), acessos_extraidos: updates.map((item) => item.acessos_pendentes) } }];"
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const etapas = $input.all().map((item) => item.json);\nconst out = [];\nfor (const etapa of etapas) {\n  const obs = etapa.observacoes_atual || '';\n  const match = obs.match(/Acessos\\s+pendentes:\\s*([\\s\\S]*?)(?:\\n\\s*\\n|$)/i);\n  let acessos_pendentes = match ? match[1].trim() : '';\n  if (!acessos_pendentes) acessos_pendentes = '(não especificado na ata)';\n  out.push({ json: { ...etapa, acessos_pendentes } });\n}\nreturn out;"
+      },
+      "id": "a29-extract-access",
+      "name": "[Onb A2.9] Extrair Acessos Pendentes",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "[Onb A2.9] Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.9] Buscar Etapas Kickoff Concluidas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.9] Buscar Etapas Kickoff Concluidas": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.9] Filtrar Etapas Elegiveis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.9] Filtrar Etapas Elegiveis": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.9] Extrair Acessos Pendentes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.9] Obter Cliente da Etapa": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.9] Montar Mensagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.9] Montar Mensagem": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.9] Enviar Telegram Olavo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.9] Preparar Update Observacoes": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.9] Atualizar Observacoes Etapa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.9] Atualizar Observacoes Etapa": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.9] Consolidar Resultado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.9] Extrair Acessos Pendentes": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.9] Obter Cliente da Etapa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.9] Enviar Telegram Olavo": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.9] Preparar Update Observacoes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true,
+    "timezone": "America/Sao_Paulo"
+  },
+  "staticData": {
+    "node:[Onb A2.9] Schedule Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": null,
+  "pinData": null,
+  "versionId": "f67bff63-ca2e-4548-9fa0-0879a5924472",
+  "activeVersionId": "f67bff63-ca2e-4548-9fa0-0879a5924472",
+  "versionCounter": 15,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-05-28T12:18:14.789Z",
+      "createdAt": "2026-05-28T12:18:14.789Z",
+      "role": "workflow:owner",
+      "workflowId": "Vqxb3G0KLeKerdCy",
+      "projectId": "QAumYwlPGm37G3p1",
+      "project": {
+        "updatedAt": "2025-11-29T00:11:17.205Z",
+        "createdAt": "2025-11-29T00:04:49.350Z",
+        "id": "QAumYwlPGm37G3p1",
+        "name": "Olavo Franzin <olavofranzin@franzcomunicacao.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "2f681992-45e6-4ec9-afe2-d79763e3d45b"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-06-01T17:49:33.771Z",
+    "createdAt": "2026-06-01T17:49:33.771Z",
+    "versionId": "f67bff63-ca2e-4548-9fa0-0879a5924472",
+    "workflowId": "Vqxb3G0KLeKerdCy",
+    "nodes": [
+      {
+        "id": "8a9059b6-4cf3-406b-af14-7a3f32056d9c",
+        "name": "[Onb A2.9] Schedule Trigger",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          0,
+          0
+        ],
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "days",
+                "daysInterval": 1,
+                "triggerAtHour": 9,
+                "triggerAtMinute": 0
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "6a0751f6-0e8c-4288-9a38-c554cd2845b0",
+        "name": "[Onb A2.9] Buscar Etapas Kickoff Concluidas",
+        "type": "n8n-nodes-base.notion",
+        "typeVersion": 2.2,
+        "position": [
+          224,
+          0
+        ],
+        "parameters": {
+          "resource": "databasePage",
+          "operation": "getAll",
+          "databaseId": {
+            "__rl": true,
+            "mode": "list",
+            "value": "6eb4565b4f1d498c8b2978e0c80880fd"
+          },
+          "returnAll": true,
+          "simple": false,
+          "filterType": "none"
+        },
+        "credentials": {
+          "notionApi": {
+            "id": "<credential_id_redacted>",
+            "name": "Notion account"
+          }
+        }
+      },
+      {
+        "id": "f87a34a2-9fbf-4d57-b83e-a0b8c6bc5b0b",
+        "name": "[Onb A2.9] Filtrar Etapas Elegiveis",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          448,
+          0
+        ],
+        "parameters": {
+          "mode": "runOnceForAllItems",
+          "jsCode": "const TARGET_TITLE = 'Conduzir call de kickoff e preencher ata';\nconst TARGET_STATUS = 'Concluído';\nconst ACCESS_MARK = 'acessos pendentes:';\nconst IDEMPOTENCY_MARK = 'A2.9 disparada em';\nconst pickTitle = (page) => {\n  for (const prop of Object.values(page.properties || {})) {\n    if (prop?.type === 'title') return (prop.title || []).map((item) => item.plain_text || '').join('').trim();\n  }\n  return '';\n};\nconst pickSelect = (prop) => prop?.select?.name || '';\nconst pickNumber = (prop) => prop?.number ?? null;\nconst pickPlainText = (prop) => (prop?.rich_text || []).map((item) => item.plain_text || '').join('');\nconst out = [];\nfor (const item of $input.all()) {\n  const page = item.json || {};\n  const props = page.properties || {};\n  const title = pickTitle(page);\n  const status = pickSelect(props.Status);\n  const observacoes_atual = pickPlainText(props['Observações']);\n  const obsLower = observacoes_atual.toLocaleLowerCase('pt-BR');\n  const clienteRelation = props.Cliente?.relation || [];\n  if (title === TARGET_TITLE && status === TARGET_STATUS && obsLower.includes(ACCESS_MARK) && !observacoes_atual.includes(IDEMPOTENCY_MARK) && clienteRelation.length > 0 && !page.archived) {\n    out.push({ json: { etapa_page_id: page.id, etapa_nome: title, etapa_sequencia: pickNumber(props['Sequência']), etapa_status: status, cliente_page_id: clienteRelation[0].id, cliente_relation_count: clienteRelation.length, observacoes_atual } });\n  }\n}\nreturn out;"
+        }
+      },
+      {
+        "id": "c41112e3-aa80-4726-8021-3ac462d615e8",
+        "name": "[Onb A2.9] Obter Cliente da Etapa",
+        "type": "n8n-nodes-base.notion",
+        "typeVersion": 2.2,
+        "position": [
+          672,
+          0
+        ],
+        "parameters": {
+          "resource": "databasePage",
+          "operation": "get",
+          "pageId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "={{ $json.cliente_page_id }}"
+          },
+          "simple": false
+        },
+        "credentials": {
+          "notionApi": {
+            "id": "<credential_id_redacted>",
+            "name": "Notion account"
+          }
+        }
+      },
+      {
+        "id": "8343f7f9-4e63-4196-8eb8-feb98cdbbe62",
+        "name": "[Onb A2.9] Montar Mensagem",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1120,
+          0
+        ],
+        "parameters": {
+          "mode": "runOnceForAllItems",
+          "jsCode": "const activeStatuses = new Set(['Em andamento', 'Não iniciado', 'Bloqueado']);\nconst etapas = $('[Onb A2.9] Extrair Acessos Pendentes').all().map((item) => item.json);\nconst pickTitle = (page) => {\n  for (const prop of Object.values(page.properties || {})) {\n    if (prop?.type === 'title') return (prop.title || []).map((item) => item.plain_text || '').join('').trim();\n  }\n  return '';\n};\nconst pickSelect = (prop) => prop?.select?.name || '';\nconst out = [];\nfor (const [index, item] of $input.all().entries()) {\n  const cliente = item.json || {};\n  const etapa = etapas[index];\n  if (!etapa) continue;\n  const clienteNome = pickTitle(cliente);\n  const clienteStatus = pickSelect(cliente.properties?.Status);\n  if (!activeStatuses.has(clienteStatus)) continue;\n  const number = <OLAVO_PHONE_redacted>;\n  if (!number) throw new Error('OLAVO_PHONE ausente');\n  const text = `[Onb A2.9] Acessos pendentes do cliente ${clienteNome}\\netapa=Conduzir call de kickoff e preencher ata\\ncliente=${clienteNome}\\nstatus_cliente=${clienteStatus}\\nID da etapa=${etapa.etapa_page_id}\\nID do cliente=${etapa.cliente_page_id}\\nAcessos:\\n${etapa.acessos_pendentes}\\nAção: cobrar acessos do cliente off-platform; agendar D+2.`;\n  out.push({ json: { ...etapa, cliente_nome: clienteNome, cliente_status: clienteStatus, number, text } });\n}\nreturn out;"
+        }
+      },
+      {
+        "id": "742fd55c-92db-4c58-9210-804c5465ad00",
+        "name": "[Onb A2.9] Enviar Telegram Olavo",
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          1344,
+          0
+        ],
+        "parameters": {
+          "chatId": "<TELEGRAM_CHAT_ID_redacted>",
+          "text": "={{ String($json.text || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }}",
+          "additionalFields": {
+            "parse_mode": "HTML"
+          }
+        },
+        "credentials": {
+          "telegramApi": {
+            "id": "<TELEGRAM_CREDENTIAL_ID_redacted>",
+            "name": "Telegram account"
+          }
+        },
+        "continueOnFail": true,
+        "webhookId": "58103f33-e452-42dc-acae-6f13002fc28d"
+      },
+      {
+        "id": "d1ebf798-ca68-4a90-8463-8717adc39f58",
+        "name": "[Onb A2.9] Preparar Update Observacoes",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1568,
+          0
+        ],
+        "parameters": {
+          "mode": "runOnceForAllItems",
+          "jsCode": "const mensagens = $('[Onb A2.9] Montar Mensagem').all().map((item) => item.json);\nconst responses = $input.all();\nconst now = new Date();\nconst brTimestamp = now.toLocaleString('sv-SE', { timeZone: 'America/Sao_Paulo' }).replace(' ', 'T') + '-03:00';\nconst out = [];\nfor (const [index, responseItem] of responses.entries()) {\n  const msg = mensagens[index];\n  if (!msg) continue;\n  const payload = responseItem.json || {};\n  const statusCode = Number(payload.statusCode || payload.response?.statusCode || 0);\n  const failed = Boolean(payload.error || payload.message || (statusCode && (statusCode < 200 || statusCode >= 300)));\n  const evolutionStatus = failed ? 'falhou' : 'ok';\n  const detail = statusCode ? `HTTP ${statusCode}` : (failed ? 'erro sem status HTTP' : '');\n  const linhaNova = `A2.9 disparada em ${brTimestamp}. Status Evolution: ${evolutionStatus}${detail ? ` (${detail})` : ''}.`;\n  const observacoes_atual = msg.observacoes_atual || '';\n  const observacoes_finais = observacoes_atual ? `${observacoes_atual}\\n${linhaNova}` : linhaNova;\n  out.push({ json: { ...msg, evolution_status: evolutionStatus, evolution_detail: detail, linha_nova: linhaNova, observacoes_finais } });\n}\nreturn out;"
+        }
+      },
+      {
+        "id": "1cd4700b-720a-49ef-88e5-7040f04c16c7",
+        "name": "[Onb A2.9] Atualizar Observacoes Etapa",
+        "type": "n8n-nodes-base.notion",
+        "typeVersion": 2.2,
+        "position": [
+          1792,
+          0
+        ],
+        "parameters": {
+          "resource": "databasePage",
+          "operation": "update",
+          "pageId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "={{ $json.etapa_page_id }}"
+          },
+          "simple": false,
+          "propertiesUi": {
+            "propertyValues": [
+              {
+                "key": "Observações|rich_text",
+                "textContent": "={{ $json.observacoes_finais }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "credentials": {
+          "notionApi": {
+            "id": "<credential_id_redacted>",
+            "name": "Notion account"
+          }
+        }
+      },
+      {
+        "id": "0e176969-be6b-4e70-9556-33a709350bb6",
+        "name": "[Onb A2.9] Consolidar Resultado",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2016,
+          0
+        ],
+        "parameters": {
+          "mode": "runOnceForAllItems",
+          "jsCode": "const updates = $('[Onb A2.9] Preparar Update Observacoes').all().map((item) => item.json);\nreturn [{ json: { workflow: 'Onb - Cobrar Acessos Pos-Kickoff', etapas_processadas: updates.length, evolution_sucesso: updates.filter((item) => item.evolution_status === 'ok').length, evolution_falha: updates.filter((item) => item.evolution_status === 'falhou').length, etapa_ids: updates.map((item) => item.etapa_page_id), acessos_extraidos: updates.map((item) => item.acessos_pendentes) } }];"
+        }
+      },
+      {
+        "parameters": {
+          "mode": "runOnceForAllItems",
+          "language": "javaScript",
+          "jsCode": "const etapas = $input.all().map((item) => item.json);\nconst out = [];\nfor (const etapa of etapas) {\n  const obs = etapa.observacoes_atual || '';\n  const match = obs.match(/Acessos\\s+pendentes:\\s*([\\s\\S]*?)(?:\\n\\s*\\n|$)/i);\n  let acessos_pendentes = match ? match[1].trim() : '';\n  if (!acessos_pendentes) acessos_pendentes = '(não especificado na ata)';\n  out.push({ json: { ...etapa, acessos_pendentes } });\n}\nreturn out;"
+        },
+        "id": "a29-extract-access",
+        "name": "[Onb A2.9] Extrair Acessos Pendentes",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          896,
+          0
+        ]
+      }
+    ],
+    "connections": {
+      "[Onb A2.9] Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "[Onb A2.9] Buscar Etapas Kickoff Concluidas",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[Onb A2.9] Buscar Etapas Kickoff Concluidas": {
+        "main": [
+          [
+            {
+              "node": "[Onb A2.9] Filtrar Etapas Elegiveis",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[Onb A2.9] Filtrar Etapas Elegiveis": {
+        "main": [
+          [
+            {
+              "node": "[Onb A2.9] Extrair Acessos Pendentes",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[Onb A2.9] Obter Cliente da Etapa": {
+        "main": [
+          [
+            {
+              "node": "[Onb A2.9] Montar Mensagem",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[Onb A2.9] Montar Mensagem": {
+        "main": [
+          [
+            {
+              "node": "[Onb A2.9] Enviar Telegram Olavo",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[Onb A2.9] Preparar Update Observacoes": {
+        "main": [
+          [
+            {
+              "node": "[Onb A2.9] Atualizar Observacoes Etapa",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[Onb A2.9] Atualizar Observacoes Etapa": {
+        "main": [
+          [
+            {
+              "node": "[Onb A2.9] Consolidar Resultado",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[Onb A2.9] Extrair Acessos Pendentes": {
+        "main": [
+          [
+            {
+              "node": "[Onb A2.9] Obter Cliente da Etapa",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[Onb A2.9] Enviar Telegram Olavo": {
+        "main": [
+          [
+            {
+              "node": "[Onb A2.9] Preparar Update Observacoes",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Olavo Franzin",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-06-01T17:49:33.819Z",
+        "id": 620,
+        "workflowId": "Vqxb3G0KLeKerdCy",
+        "versionId": "f67bff63-ca2e-4548-9fa0-0879a5924472",
+        "event": "deactivated",
+        "userId": "2f681992-45e6-4ec9-afe2-d79763e3d45b"
+      },
+      {
+        "createdAt": "2026-06-01T17:49:33.832Z",
+        "id": 621,
+        "workflowId": "Vqxb3G0KLeKerdCy",
+        "versionId": "f67bff63-ca2e-4548-9fa0-0879a5924472",
+        "event": "activated",
+        "userId": "2f681992-45e6-4ec9-afe2-d79763e3d45b"
+      },
+      {
+        "createdAt": "2026-06-01T17:49:33.914Z",
+        "id": 622,
+        "workflowId": "Vqxb3G0KLeKerdCy",
+        "versionId": "f67bff63-ca2e-4548-9fa0-0879a5924472",
+        "event": "deactivated",
+        "userId": "2f681992-45e6-4ec9-afe2-d79763e3d45b"
+      },
+      {
+        "createdAt": "2026-06-01T17:49:33.933Z",
+        "id": 623,
+        "workflowId": "Vqxb3G0KLeKerdCy",
+        "versionId": "f67bff63-ca2e-4548-9fa0-0879a5924472",
+        "event": "activated",
+        "userId": "2f681992-45e6-4ec9-afe2-d79763e3d45b"
+      }
+    ]
+  }
+}

@@ -1,0 +1,646 @@
+{
+  "id": "<workflow_id_pending_review_intake>",
+  "name": "WF-EXEC-Intake-Pacing",
+  "active": false,
+  "isArchived": false,
+  "tags": [
+    {
+      "name": "phi"
+    },
+    {
+      "name": "execucao"
+    },
+    {
+      "name": "lote1"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "exec-intake-webhook",
+      "name": "[Exec Intake] Webhook Pacing Alert",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "pacing-alert",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "exec-intake-key",
+      "name": "[Exec Intake] Validar Secret",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const EXEC_WEBHOOK_KEY = '<EXEC_WEBHOOK_KEY_redacted>';\nconst first = $input.first();\nconst headers = first?.json?.headers || {};\nconst lower = {};\nfor (const [key, value] of Object.entries(headers)) lower[String(key).toLowerCase()] = value;\nconst got = String(lower['x-pacing-secret'] || '').trim();\nreturn [{ json: { ...first.json, ok: EXEC_WEBHOOK_KEY !== '<EXEC_WEBHOOK_KEY_redacted>' && got === EXEC_WEBHOOK_KEY, secret_present: !!got, ok_pre_inject: got !== '' && EXEC_WEBHOOK_KEY !== '' } }];"
+      }
+    },
+    {
+      "id": "exec-intake-if-key",
+      "name": "[Exec Intake] Secret Valido?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.ok }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              },
+              "rightValue": true
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "exec-intake-401",
+      "name": "[Exec Intake] Responder 401",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        660,
+        180
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: false, error: \"unauthorized\" } }}",
+        "options": {
+          "responseCode": 401
+        }
+      }
+    },
+    {
+      "id": "exec-intake-payload",
+      "name": "[Exec Intake] Validar Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        -80
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const out = [];\nfor (const item of $input.all()) {\n  const body = item.json.body && typeof item.json.body === 'object' ? item.json.body : item.json;\n  const errors = [];\n  if (!body.client_id || typeof body.client_id !== 'string') errors.push('client_id ausente');\n  if (!body.cliente_nome || typeof body.cliente_nome !== 'string') errors.push('cliente_nome ausente');\n  const payload = {\n    client_id: String(body.client_id || '').trim(),\n    cliente_nome: String(body.cliente_nome || '').trim(),\n    alerta_id: String(body.alerta_id || '').trim(),\n    fonte: String(body.fonte || 'pacing-alert').trim(),\n    diagnostico: String(body.diagnostico || body.motivo || '').trim(),\n    plataforma: String(body.plataforma || '').trim(),\n    campanha: String(body.campanha || '').trim(),\n    gasto_atual: body.gasto_atual ?? null,\n    orcamento_planejado: body.orcamento_planejado ?? null,\n  };\n  out.push({ json: { ...item.json, ...payload, payload_valid: errors.length === 0, payload_errors: errors } });\n}\nreturn out;"
+      }
+    },
+    {
+      "id": "exec-intake-if-payload",
+      "name": "[Exec Intake] Payload Valido?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        880,
+        -80
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.payload_valid }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              },
+              "rightValue": true
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "exec-intake-400",
+      "name": "[Exec Intake] Responder 400",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1100,
+        120
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: false, error: \"invalid_payload\", details: $json.payload_errors } }}",
+        "options": {
+          "responseCode": 400
+        }
+      }
+    },
+    {
+      "id": "exec-intake-sop",
+      "name": "[Exec Intake] Buscar SOP Vigente",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1100,
+        -160
+      ],
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "bfeb1105-83a6-4e89-8d62-26607ebfcc8c"
+        },
+        "returnAll": true,
+        "simple": false,
+        "filterType": "manual",
+        "filters": {
+          "conditions": [
+            {
+              "key": "area",
+              "condition": "equals",
+              "selectValue": "Execucao"
+            },
+            {
+              "key": "estado",
+              "condition": "equals",
+              "selectValue": "Vigente"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "notionApi": {
+          "id": "<credential_id_redacted>",
+          "name": "Notion account"
+        }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "id": "exec-intake-sop-normalize",
+      "name": "[Exec Intake] Normalizar SOP Vigente",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1320,
+        -160
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const pickTitle = (page) => {\n  for (const prop of Object.values(page.properties || {})) {\n    if (prop?.type === 'title') return (prop.title || []).map((part) => part.plain_text || '').join('').trim();\n  }\n  return '';\n};\nconst pickText = (prop) => (prop?.rich_text || []).map((part) => part.plain_text || '').join('').trim();\nconst pickSelect = (prop) => prop?.select?.name || prop?.status?.name || '';\nconst richText = (text) => [{ type: 'text', text: { content: String(text ?? '').slice(0, 1900) } }];\nconst title = (text) => [{ type: 'text', text: { content: String(text ?? '').slice(0, 1900) } }];\nconst brDate = () => new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });\nconst brDue = () => brDate() + 'T23:59:00-03:00';\nconst utcNow = () => new Date().toISOString();\nconst execId = (prefix) => prefix + '-' + $execution.id;\nconst compactJson = (value) => JSON.stringify(value);\nconst sopFromItems = (items) => {\n  const pages = items.map((item) => item.json || {}).filter((page) => !page.archived && !page.is_archived);\n  const vigente = pages.find((page) => {\n    const props = page.properties || {};\n    return pickSelect(props.area) === 'Execucao' && pickSelect(props.estado) === 'Vigente';\n  });\n  if (!vigente) throw new Error('SOP Vigente de area Execucao nao encontrada');\n  return { id: vigente.id, titulo: pickTitle(vigente), versao: pickText((vigente.properties || {}).versao) || 'v1.0' };\n};\nconst eventBody = (event) => ({\n  parent: { database_id: '3423df0d-77df-4834-bdda-c08ddbae40ff' },\n  properties: {\n    tipo: { title: title(event.tipo) },\n    entidade_id: { rich_text: richText(event.entidade_id) },\n    entidade_area: { select: { name: 'Execucao' } },\n    payload_json: { rich_text: richText(compactJson(event.payload)) },\n    timestamp: { date: { start: event.timestamp } },\n    execution_id: { rich_text: richText(event.execution_id) },\n    tenant_id: { rich_text: richText(event.tenant_id) },\n    tier_agente: { select: { name: event.tier_agente } },\n    versao_sop_aplicada: { rich_text: richText(event.versao_sop_aplicada) },\n  },\n});\nconst sop = sopFromItems($input.all());\nconst prev = $('[Exec Intake] Validar Payload').item.json;\nreturn [{ json: { ...prev, sop_vigente: sop, versao_sop_aplicada: sop.id } }];"
+      }
+    },
+    {
+      "id": "exec-intake-existing",
+      "name": "[Exec Intake] Buscar Demandas Existentes",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1540,
+        -160
+      ],
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "cd1ab757-e4d1-493f-b1e1-b64a95d33d1b"
+        },
+        "returnAll": true,
+        "simple": false,
+        "filterType": "none"
+      },
+      "credentials": {
+        "notionApi": {
+          "id": "<credential_id_redacted>",
+          "name": "Notion account"
+        }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "id": "exec-intake-prepare",
+      "name": "[Exec Intake] Preparar Demanda e Evento",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1760,
+        -160
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const pickTitle = (page) => {\n  for (const prop of Object.values(page.properties || {})) {\n    if (prop?.type === 'title') return (prop.title || []).map((part) => part.plain_text || '').join('').trim();\n  }\n  return '';\n};\nconst pickText = (prop) => (prop?.rich_text || []).map((part) => part.plain_text || '').join('').trim();\nconst pickSelect = (prop) => prop?.select?.name || prop?.status?.name || '';\nconst richText = (text) => [{ type: 'text', text: { content: String(text ?? '').slice(0, 1900) } }];\nconst title = (text) => [{ type: 'text', text: { content: String(text ?? '').slice(0, 1900) } }];\nconst brDate = () => new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });\nconst brDue = () => brDate() + 'T23:59:00-03:00';\nconst utcNow = () => new Date().toISOString();\nconst execId = (prefix) => prefix + '-' + $execution.id;\nconst compactJson = (value) => JSON.stringify(value);\nconst sopFromItems = (items) => {\n  const pages = items.map((item) => item.json || {}).filter((page) => !page.archived && !page.is_archived);\n  const vigente = pages.find((page) => {\n    const props = page.properties || {};\n    return pickSelect(props.area) === 'Execucao' && pickSelect(props.estado) === 'Vigente';\n  });\n  if (!vigente) throw new Error('SOP Vigente de area Execucao nao encontrada');\n  return { id: vigente.id, titulo: pickTitle(vigente), versao: pickText((vigente.properties || {}).versao) || 'v1.0' };\n};\nconst eventBody = (event) => ({\n  parent: { database_id: '3423df0d-77df-4834-bdda-c08ddbae40ff' },\n  properties: {\n    tipo: { title: title(event.tipo) },\n    entidade_id: { rich_text: richText(event.entidade_id) },\n    entidade_area: { select: { name: 'Execucao' } },\n    payload_json: { rich_text: richText(compactJson(event.payload)) },\n    timestamp: { date: { start: event.timestamp } },\n    execution_id: { rich_text: richText(event.execution_id) },\n    tenant_id: { rich_text: richText(event.tenant_id) },\n    tier_agente: { select: { name: event.tier_agente } },\n    versao_sop_aplicada: { rich_text: richText(event.versao_sop_aplicada) },\n  },\n});\nconst ctx = $('[Exec Intake] Normalizar SOP Vigente').item.json;\nconst existing = $input.all().map((item) => item.json || {}).filter((page) => !page.archived && !page.is_archived);\nconst demandDate = brDate();\nconst idempotencyKey = 'pacing|' + demandDate + '|' + ctx.client_id;\nconst existingKeys = new Set();\nfor (const page of existing) {\n  const props = page.properties || {};\n  const obs = pickText(props.observacoes) || pickText(props.Observacoes);\n  const titleText = pickTitle(page);\n  if (obs.includes(idempotencyKey) || titleText.includes(ctx.cliente_nome)) existingKeys.add(idempotencyKey);\n}\nconst execution_id = execId('EXEC-EXEC-INTAKE');\nconst tenant_id = 'phi-agencia';\nconst tituloDemanda = 'Pacing critico cliente ' + ctx.cliente_nome;\nconst due = brDue();\nconst payload = {\n  tenant_id,\n  client_id: ctx.client_id,\n  execution_id,\n  versao_sop_aplicada: ctx.versao_sop_aplicada,\n  tipo: 'Pacing/verba',\n  classe_sla: 'Critica',\n  estado: 'Aberta',\n  sla_version: 'v0.3-2026-06-14',\n  prazo: due,\n  idempotency_key: idempotencyKey,\n  alerta_id: ctx.alerta_id,\n  fonte: ctx.fonte,\n  diagnostico: ctx.diagnostico,\n  plataforma: ctx.plataforma,\n  campanha: ctx.campanha,\n  gasto_atual: ctx.gasto_atual,\n  orcamento_planejado: ctx.orcamento_planejado,\n};\nconst demanda_body = {\n  parent: { database_id: 'cd1ab757-e4d1-493f-b1e1-b64a95d33d1b' },\n  properties: {\n    titulo: { title: title(tituloDemanda) },\n    tenant_id: { rich_text: richText(tenant_id) },\n    client_id: { rich_text: richText(ctx.client_id) },\n    tipo: { select: { name: 'Pacing/verba' } },\n    classe_sla: { select: { name: 'Critica' } },\n    estado: { select: { name: 'Aberta' } },\n    prioridade: { number: 100 },\n    prioridade_origem: { select: { name: 'agente' } },\n    prazo: { date: { start: due } },\n    sla_version: { rich_text: richText('v0.3-2026-06-14') },\n    quality_gate: { select: { name: 'pendente' } },\n    versao_sop_aplicada: { rich_text: richText(ctx.versao_sop_aplicada) },\n    observacoes: { rich_text: richText('idempotency_key=' + idempotencyKey + '; execution_id=' + execution_id + '; fonte=' + ctx.fonte) },\n  },\n};\nconst event = {\n  tipo: 'demanda.criada',\n  entidade_id: '',\n  timestamp: utcNow(),\n  execution_id,\n  tenant_id,\n  tier_agente: 'n/a',\n  versao_sop_aplicada: ctx.versao_sop_aplicada,\n  payload,\n};\nreturn [{ json: { ...ctx, execution_id, tenant_id, demanda_titulo: tituloDemanda, idempotency_key: idempotencyKey, ja_existe: existingKeys.has(idempotencyKey), demanda_body, event, text: '<b>Execucao critica</b>\\nPacing/verba aberto para ' + ctx.cliente_nome + '\\nPrazo: hoje 23:59 BRT\\nSOP: ' + ctx.versao_sop_aplicada } }];"
+      }
+    },
+    {
+      "id": "exec-intake-if-exists",
+      "name": "[Exec Intake] Demanda Ja Existe?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1980,
+        -160
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.ja_existe }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              },
+              "rightValue": true
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "exec-intake-idempotent",
+      "name": "[Exec Intake] Responder Idempotente",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        2200,
+        -20
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: true, idempotent: true, idempotency_key: $json.idempotency_key } }}",
+        "options": {
+          "responseCode": 200
+        }
+      }
+    },
+    {
+      "id": "exec-intake-create-demanda",
+      "name": "[Exec Intake] Criar Demanda",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2200,
+        -260
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.notion.com/v1/pages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "notionApi",
+        "sendHeaders": true,
+        "specifyHeaders": "keypair",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Notion-Version",
+              "value": "2022-06-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json",
+              "neverError": false
+            }
+          }
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.demanda_body }}"
+      },
+      "credentials": {
+        "notionApi": {
+          "id": "<credential_id_redacted>",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "id": "exec-intake-event-body",
+      "name": "[Exec Intake] Montar Evento demanda.criada",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2420,
+        -260
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const pickTitle = (page) => {\n  for (const prop of Object.values(page.properties || {})) {\n    if (prop?.type === 'title') return (prop.title || []).map((part) => part.plain_text || '').join('').trim();\n  }\n  return '';\n};\nconst pickText = (prop) => (prop?.rich_text || []).map((part) => part.plain_text || '').join('').trim();\nconst pickSelect = (prop) => prop?.select?.name || prop?.status?.name || '';\nconst richText = (text) => [{ type: 'text', text: { content: String(text ?? '').slice(0, 1900) } }];\nconst title = (text) => [{ type: 'text', text: { content: String(text ?? '').slice(0, 1900) } }];\nconst brDate = () => new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });\nconst brDue = () => brDate() + 'T23:59:00-03:00';\nconst utcNow = () => new Date().toISOString();\nconst execId = (prefix) => prefix + '-' + $execution.id;\nconst compactJson = (value) => JSON.stringify(value);\nconst sopFromItems = (items) => {\n  const pages = items.map((item) => item.json || {}).filter((page) => !page.archived && !page.is_archived);\n  const vigente = pages.find((page) => {\n    const props = page.properties || {};\n    return pickSelect(props.area) === 'Execucao' && pickSelect(props.estado) === 'Vigente';\n  });\n  if (!vigente) throw new Error('SOP Vigente de area Execucao nao encontrada');\n  return { id: vigente.id, titulo: pickTitle(vigente), versao: pickText((vigente.properties || {}).versao) || 'v1.0' };\n};\nconst eventBody = (event) => ({\n  parent: { database_id: '3423df0d-77df-4834-bdda-c08ddbae40ff' },\n  properties: {\n    tipo: { title: title(event.tipo) },\n    entidade_id: { rich_text: richText(event.entidade_id) },\n    entidade_area: { select: { name: 'Execucao' } },\n    payload_json: { rich_text: richText(compactJson(event.payload)) },\n    timestamp: { date: { start: event.timestamp } },\n    execution_id: { rich_text: richText(event.execution_id) },\n    tenant_id: { rich_text: richText(event.tenant_id) },\n    tier_agente: { select: { name: event.tier_agente } },\n    versao_sop_aplicada: { rich_text: richText(event.versao_sop_aplicada) },\n  },\n});\nconst prepared = $('[Exec Intake] Preparar Demanda e Evento').item.json;\nconst demanda = $json || {};\nconst event = { ...prepared.event, entidade_id: demanda.id || '', payload: { ...prepared.event.payload, demanda_id: demanda.id || '' } };\nreturn [{ json: { ...prepared, demanda_id: demanda.id || '', event_body: eventBody(event), text: prepared.text + '\\nDemanda: ' + (demanda.id || '-') } }];"
+      }
+    },
+    {
+      "id": "exec-intake-create-event",
+      "name": "[Exec Intake] Criar Evento demanda.criada",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2640,
+        -260
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.notion.com/v1/pages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "notionApi",
+        "sendHeaders": true,
+        "specifyHeaders": "keypair",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Notion-Version",
+              "value": "2022-06-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json",
+              "neverError": false
+            }
+          }
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.event_body }}"
+      },
+      "credentials": {
+        "notionApi": {
+          "id": "<credential_id_redacted>",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "id": "exec-intake-telegram",
+      "name": "[Exec Intake] Enviar Telegram Critico",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2860,
+        -260
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "<TELEGRAM_CHAT_ID_redacted>",
+        "text": "={{ String($json.text || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }}",
+        "additionalFields": {
+          "parse_mode": "HTML",
+          "appendAttribution": false
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "<TELEGRAM_CREDENTIAL_ID_redacted>",
+          "name": "Telegram account"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "id": "exec-intake-201",
+      "name": "[Exec Intake] Responder 201",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        3080,
+        -260
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: true, demanda_id: $json.demanda_id, event: \"demanda.criada\" } }}",
+        "options": {
+          "responseCode": 201
+        }
+      }
+    }
+  ],
+  "connections": {
+    "[Exec Intake] Webhook Pacing Alert": {
+      "main": [
+        [
+          {
+            "node": "[Exec Intake] Validar Secret",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Exec Intake] Validar Secret": {
+      "main": [
+        [
+          {
+            "node": "[Exec Intake] Secret Valido?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Exec Intake] Secret Valido?": {
+      "main": [
+        [
+          {
+            "node": "[Exec Intake] Validar Payload",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "[Exec Intake] Responder 401",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Exec Intake] Validar Payload": {
+      "main": [
+        [
+          {
+            "node": "[Exec Intake] Payload Valido?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Exec Intake] Payload Valido?": {
+      "main": [
+        [
+          {
+            "node": "[Exec Intake] Buscar SOP Vigente",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "[Exec Intake] Responder 400",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Exec Intake] Buscar SOP Vigente": {
+      "main": [
+        [
+          {
+            "node": "[Exec Intake] Normalizar SOP Vigente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Exec Intake] Normalizar SOP Vigente": {
+      "main": [
+        [
+          {
+            "node": "[Exec Intake] Buscar Demandas Existentes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Exec Intake] Buscar Demandas Existentes": {
+      "main": [
+        [
+          {
+            "node": "[Exec Intake] Preparar Demanda e Evento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Exec Intake] Preparar Demanda e Evento": {
+      "main": [
+        [
+          {
+            "node": "[Exec Intake] Demanda Ja Existe?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Exec Intake] Demanda Ja Existe?": {
+      "main": [
+        [
+          {
+            "node": "[Exec Intake] Responder Idempotente",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "[Exec Intake] Criar Demanda",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Exec Intake] Criar Demanda": {
+      "main": [
+        [
+          {
+            "node": "[Exec Intake] Montar Evento demanda.criada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Exec Intake] Montar Evento demanda.criada": {
+      "main": [
+        [
+          {
+            "node": "[Exec Intake] Criar Evento demanda.criada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Exec Intake] Criar Evento demanda.criada": {
+      "main": [
+        [
+          {
+            "node": "[Exec Intake] Enviar Telegram Critico",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Exec Intake] Enviar Telegram Critico": {
+      "main": [
+        [
+          {
+            "node": "[Exec Intake] Responder 201",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true,
+    "timezone": "America/Sao_Paulo"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {}
+}

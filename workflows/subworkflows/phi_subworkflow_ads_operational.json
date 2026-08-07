@@ -1,0 +1,684 @@
+﻿{
+    "name":  "sw mÃ©tricas e diagnÃ³sticos anÃºncios",
+    "nodes":  [
+                  {
+                      "parameters":  {
+                                         "workflowInputs":  {
+                                                                "values":  [
+                                                                               {
+                                                                                   "name":  "execution_id",
+                                                                                   "type":  "any"
+                                                                               },
+                                                                               {
+                                                                                   "name":  "client_id",
+                                                                                   "type":  "any"
+                                                                               },
+                                                                               {
+                                                                                   "name":  "source_execution_id",
+                                                                                   "type":  "any"
+                                                                               }
+                                                                           ]
+                                                            }
+                                     },
+                      "id":  "04604a51-694a-4c33-8809-d22377b1ac81",
+                      "name":  "Start",
+                      "type":  "n8n-nodes-base.executeWorkflowTrigger",
+                      "typeVersion":  1.1,
+                      "position":  [
+                                       280,
+                                       320
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "databaseId":  {
+                                                            "mode":  "list",
+                                                            "__rl":  true,
+                                                            "value":  "297b65e5-c72b-8061-89b3-f31bd41d7e7f"
+                                                        },
+                                         "resource":  "databasePage",
+                                         "simple":  false,
+                                         "filters":  {
+                                                         "conditions":  [
+                                                                            {
+                                                                                "key":  "Campanha|relation",
+                                                                                "condition":  "is_not_empty"
+                                                                            }
+                                                                        ]
+                                                     },
+                                         "returnAll":  true,
+                                         "options":  {
+
+                                                     },
+                                         "operation":  "getAll",
+                                         "filterType":  "manual"
+                                     },
+                      "id":  "68df2346-6f9f-4d8f-a254-bc6d5be19cb0",
+                      "name":  "Get database Anuncios",
+                      "type":  "n8n-nodes-base.notion",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       520,
+                                       320
+                                   ],
+                      "alwaysOutputData":  true
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const execution_id = $(\"Start\").first().json.execution_id;\nconst source_execution_id = $(\"Start\").first().json.source_execution_id ?? null;\nconst client_id_filter = $(\"Start\").first().json.client_id ?? null;\n\nconst pickPlain = (prop) =\u003e {\n  if (!prop) return null;\n  if (prop.title?.length) return prop.title[0].plain_text?.trim() || null;\n  if (prop.rich_text?.length) return prop.rich_text[0].plain_text?.trim() || null;\n  return null;\n};\n\nconst pickNumber = (prop) =\u003e {\n  const value = prop?.number;\n  return value === null || value === undefined ? null : Number(value);\n};\n\nconst pickScalar = (prop) =\u003e {\n  if (!prop) return null;\n  if (prop.number !== undefined \u0026\u0026 prop.number !== null) return prop.number;\n  if (prop.rich_text?.length) return prop.rich_text[0].plain_text?.trim() || null;\n  if (prop.title?.length) return prop.title[0].plain_text?.trim() || null;\n  if (prop.rollup) {\n    if (prop.rollup.type === \"number\") return prop.rollup.number;\n    if (prop.rollup.type === \"date\") return prop.rollup.date?.start || null;\n    if (prop.rollup.type === \"array\") {\n      const first = prop.rollup.array?.[0];\n      if (!first) return null;\n      if (first.type === \"number\") return first.number;\n      if (first.type === \"rich_text\") return first.rich_text?.[0]?.plain_text?.trim() || null;\n      if (first.type === \"title\") return first.title?.[0]?.plain_text?.trim() || null;\n      if (first.type === \"formula\") {\n        if (first.formula?.type === \"number\") return first.formula.number;\n        if (first.formula?.type === \"string\") return first.formula.string?.trim() || null;\n      }\n    }\n  }\n  if (prop.formula) {\n    if (prop.formula.type === \"number\") return prop.formula.number;\n    if (prop.formula.type === \"string\") return prop.formula.string?.trim() || null;\n  }\n  return null;\n};\n\nconst pickIdString = (prop) =\u003e {\n  const value = pickScalar(prop);\n  if (value === null || value === undefined) return null;\n  const normalized = String(value).trim();\n  if (!normalized) return null;\n  return normalized.replace(/[^\\d]/g, \"\") || normalized;\n};\n\nreturn $input.all().flatMap((item) =\u003e {\n  const props = item.json.properties || {};\n\n  const ad_id_google = pickIdString(props[\"ad_id_google\"]);\n  const ad_id_meta = pickIdString(props[\"ad_id_meta\"]);\n  const customer_id_google = pickIdString(props[\"customer_id_google\"]);\n  const meta_account_id = pickIdString(props[\"meta_account_id\"]);\n  const adset_id_google = pickIdString(props[\"adset_id_google\"]);\n  const adset_id_meta = pickIdString(props[\"adset_id_meta\"]);\n  const client_slug = pickPlain(props[\"Sigla Cliente\"]);\n\n  if (client_id_filter \u0026\u0026 client_slug \u0026\u0026 client_id_filter !== client_slug) {\n    return [];\n  }\n\n  const platform = ad_id_google ? \"google_ads\" : (ad_id_meta ? \"meta_ads\" : null);\n  if (!platform) return [];\n\n  return [{\n    json: {\n      execution_id,\n      source_execution_id,\n      entity_type: \"ad\",\n      notion_page_id: item.json.id,\n      nome: pickPlain(props[\"Nome\"]),\n      campaign_id: pickPlain(props[\"campaign_id\"]),\n      platform,\n      ad_id_google,\n      ad_id_meta,\n      customer_id_google,\n      meta_account_id,\n      adset_id_google,\n      adset_id_meta,\n      cpa_alvo: pickNumber(props[\"CPA Alvo\"]),\n      criativo_base: {\n        ad_criativo: props[\"AD_Criativo\"]?.select?.name || null,\n        ad_formato: (props[\"AD_Formato\"]?.multi_select || []).map((x) =\u003e x.name),\n        hook: pickPlain(props[\"Hook\"]),\n        origem_criativo: props[\"Origem Criativo\"]?.select?.name || null,\n        url_criativo: props[\"URL Criativo\"]?.url || null\n      }\n    }\n  }];\n});"
+                                     },
+                      "id":  "f60c6cd3-cfd5-43d2-b6ca-72888118b9f4",
+                      "name":  "Code Clean Anuncios",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       760,
+                                       320
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "3ec2c628-3176-4e8f-a8fe-d7bef789608d",
+                      "name":  "Loop Anuncios",
+                      "type":  "n8n-nodes-base.splitInBatches",
+                      "typeVersion":  3,
+                      "position":  [
+                                       980,
+                                       320
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "options":  {
+
+                                                     },
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "version":  3,
+                                                                            "typeValidation":  "strict",
+                                                                            "leftValue":  "",
+                                                                            "caseSensitive":  true
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "operator":  {
+                                                                                                    "operation":  "equals",
+                                                                                                    "type":  "string"
+                                                                                                },
+                                                                                   "rightValue":  "google_ads",
+                                                                                   "leftValue":  "={{ $json.platform }}"
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        }
+                                     },
+                      "id":  "f29abe66-72ad-45a3-b621-60b3fa463fce",
+                      "name":  "If Plataforma",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.3,
+                      "position":  [
+                                       1200,
+                                       240
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "options":  {
+
+                                                     },
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "version":  3,
+                                                                            "typeValidation":  "strict",
+                                                                            "leftValue":  "",
+                                                                            "caseSensitive":  true
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "operator":  {
+                                                                                                    "operation":  "true",
+                                                                                                    "type":  "boolean"
+                                                                                                },
+                                                                                   "rightValue":  true,
+                                                                                   "leftValue":  "={{ !!$json.customer_id_google }}"
+                                                                               },
+                                                                               {
+                                                                                   "operator":  {
+                                                                                                    "operation":  "true",
+                                                                                                    "type":  "boolean"
+                                                                                                },
+                                                                                   "rightValue":  true,
+                                                                                   "leftValue":  "={{ !!$json.ad_id_google }}"
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        }
+                                     },
+                      "id":  "4ec31400-832b-4984-aaaa-03c1de9f7f52",
+                      "name":  "If IDs Google",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.3,
+                      "position":  [
+                                       1420,
+                                       160
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "options":  {
+
+                                                     },
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "version":  3,
+                                                                            "typeValidation":  "strict",
+                                                                            "leftValue":  "",
+                                                                            "caseSensitive":  true
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "operator":  {
+                                                                                                    "operation":  "true",
+                                                                                                    "type":  "boolean"
+                                                                                                },
+                                                                                   "rightValue":  true,
+                                                                                   "leftValue":  "={{ !!$json.meta_account_id }}"
+                                                                               },
+                                                                               {
+                                                                                   "operator":  {
+                                                                                                    "operation":  "true",
+                                                                                                    "type":  "boolean"
+                                                                                                },
+                                                                                   "rightValue":  true,
+                                                                                   "leftValue":  "={{ !!$json.ad_id_meta }}"
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        }
+                                     },
+                      "id":  "eb35f940-a6ec-478f-8b6a-424347a0fec5",
+                      "name":  "If IDs Meta",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.3,
+                      "position":  [
+                                       1420,
+                                       420
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "url":  "=https://googleads.googleapis.com/v22/customers/{{ $json.customer_id_google }}/googleAds:search",
+                                         "options":  {
+
+                                                     },
+                                         "specifyBody":  "json",
+                                         "method":  "POST",
+                                         "nodeCredentialType":  "googleAdsOAuth2Api",
+                                         "sendBody":  true,
+                                         "sendHeaders":  true,
+                                         "jsonBody":  "={\n  \"query\": \"SELECT ad_group_ad.ad.id, ad_group_ad.ad.name, metrics.cost_micros, metrics.conversions, metrics.conversions_value, metrics.clicks, metrics.impressions FROM ad_group_ad WHERE ad_group_ad.ad.id = \u0027{{ $json.ad_id_google }}\u0027 AND segments.date DURING YESTERDAY\"\n}",
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "value":  "o0hGRr2vcX3jGF6aI3a_0w",
+                                                                                         "name":  "developer-token"
+                                                                                     },
+                                                                                     {
+                                                                                         "value":  "7595536100",
+                                                                                         "name":  "login-customer-id"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "authentication":  "predefinedCredentialType"
+                                     },
+                      "id":  "81e10cd1-3d0c-4ddf-b77b-282db4afc511",
+                      "name":  "HTTP Request Google Ad Metrics",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.3,
+                      "position":  [
+                                       1640,
+                                       120
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "queryParameters":  {
+                                                                 "parameters":  [
+                                                                                    {
+                                                                                        "value":  "ad_id,ad_name,spend,impressions,clicks,actions,action_values,frequency",
+                                                                                        "name":  "fields"
+                                                                                    },
+                                                                                    {
+                                                                                        "value":  "ad",
+                                                                                        "name":  "level"
+                                                                                    },
+                                                                                    {
+                                                                                        "value":  "={\"since\":\"{{ \\.minus({days: 1}).toFormat(\u0027yyyy-MM-dd\u0027) }}\",\"until\":\"{{ \\.minus({days: 1}).toFormat(\u0027yyyy-MM-dd\u0027) }}\"}",
+                                                                                        "name":  "time_range"
+                                                                                    },
+                                                                                    {
+                                                                                        "value":  "=[{\"field\":\"ad.id\",\"operator\":\"EQUAL\",\"value\":\"{{ $json.ad_id_meta }}\"}]",
+                                                                                        "name":  "filtering"
+                                                                                    }
+                                                                                ]
+                                                             },
+                                         "authentication":  "predefinedCredentialType",
+                                         "options":  {
+
+                                                     },
+                                         "sendQuery":  true,
+                                         "url":  "=https://graph.facebook.com/v21.0/{{ $json.meta_account_id }}/insights",
+                                         "nodeCredentialType":  "facebookGraphApi"
+                                     },
+                      "id":  "a9699cb1-09a2-4b81-83ea-64004d80daf8",
+                      "name":  "HTTP Request Meta Ad Metrics",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.3,
+                      "position":  [
+                                       1640,
+                                       440
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const source = $input.first().json;\nconst fromGoogle = source.results !== undefined || source.fieldMask !== undefined || source.queryResourceConsumption !== undefined;\n\nlet impressions = 0;\nlet clicks = 0;\nlet cost_brl = 0;\nlet conversions = 0;\nlet revenue = 0;\nlet frequency = null;\nlet base;\n\nif (fromGoogle) {\n  base = $(\"If IDs Google\").first().json;\n  const metrics = source.results?.[0]?.metrics || {};\n  impressions = Number(metrics.impressions || 0);\n  clicks = Number(metrics.clicks || 0);\n  cost_brl = Number(metrics.costMicros || 0) / 1000000;\n  conversions = Number(metrics.conversions || 0);\n  revenue = Number(metrics.conversionsValue || 0);\n} else {\n  base = $(\"If IDs Meta\").first().json;\n  const payload = source.data?.[0] || {};\n  impressions = Number(payload.impressions || 0);\n  clicks = Number(payload.clicks || 0);\n  cost_brl = Number(payload.spend || 0);\n  frequency = payload.frequency === undefined ? null : Number(payload.frequency || 0);\n  const actionMap = Object.fromEntries((payload.actions || []).map((entry) =\u003e [entry.action_type, Number(entry.value || 0)]));\n  const valueMap = Object.fromEntries((payload.action_values || []).map((entry) =\u003e [entry.action_type, Number(entry.value || 0)]));\n  conversions = actionMap[\u0027offsite_conversion.fb_pixel_purchase\u0027] || actionMap[\u0027purchase\u0027] || actionMap[\u0027lead\u0027] || actionMap[\u0027omni_purchase\u0027] || 0;\n  revenue = valueMap[\u0027offsite_conversion.fb_pixel_purchase\u0027] || valueMap[\u0027purchase\u0027] || valueMap[\u0027omni_purchase\u0027] || 0;\n}\n\nreturn [{\n  json: {\n    ...base,\n    metrics: {\n      impressions,\n      clicks,\n      cost_brl: Number(cost_brl.toFixed(2)),\n      conversions,\n      revenue: Number(revenue.toFixed(2)),\n      ctr: impressions \u003e 0 ? Number((clicks / impressions).toFixed(6)) : 0,\n      cpc: clicks \u003e 0 ? Number((cost_brl / clicks).toFixed(2)) : 0,\n      cpa: conversions \u003e 0 ? Number((cost_brl / conversions).toFixed(2)) : 0,\n      roas: cost_brl \u003e 0 ? Number((revenue / cost_brl).toFixed(4)) : 0,\n      conversion_rate: clicks \u003e 0 ? Number((conversions / clicks).toFixed(6)) : 0,\n      frequency\n    }\n  }\n}];"
+                                     },
+                      "id":  "5f8a720a-9ba0-4071-9569-8ac7a6db66ba",
+                      "name":  "Code Normalizar Metricas Anuncios",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       1880,
+                                       280
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const d = $json.metrics;\nconst cpaAlvo = Number($json.cpa_alvo || 0);\n\nlet status = \u0027Sem dados\u0027;\nlet prioridade = \u0027Baixa\u0027;\nlet tendencia = \u0027Sem dados\u0027;\nlet emoji = \u0027NO_DATA\u0027;\nlet diagnostico = \u0027Sem volume suficiente para analise.\u0027;\nlet score = 0;\n\nif (d.impressions \u003e= 100 \u0026\u0026 d.clicks \u003e= 5) {\n  status = \u0027Em aprendizado\u0027;\n  prioridade = \u0027MÃ©dia\u0027;\n  tendencia = \u0027EstÃ¡vel\u0027;\n  emoji = \u0027LEARN\u0027;\n  score = 45;\n  diagnostico = \u0027Anuncio com volume inicial, ainda em aprendizado.\u0027;\n\n  if (d.conversions \u003e= 1 || d.cost_brl \u003e= 50) {\n    const ctrOk = d.ctr \u003e= 0.01;\n    const roasOk = d.roas \u003e= 1.5;\n    const cpaOk = cpaAlvo \u003e 0 ? d.cpa \u003e 0 \u0026\u0026 d.cpa \u003c= cpaAlvo : d.conversions \u003e 0;\n\n    if (ctrOk \u0026\u0026 (roasOk || cpaOk)) {\n      status = \u0027Bom\u0027;\n      prioridade = \u0027Baixa\u0027;\n      tendencia = \u0027Melhora\u0027;\n      emoji = \u0027GOOD\u0027;\n      score = 80;\n      diagnostico = \u0027Anuncio com resposta saudavel e sem necessidade imediata de intervencao.\u0027;\n    } else if ((!ctrOk \u0026\u0026 d.cost_brl \u003e= 30) || (!roasOk \u0026\u0026 d.cost_brl \u003e= 50) || (cpaAlvo \u003e 0 \u0026\u0026 d.cpa \u003e cpaAlvo)) {\n      status = \u0027AtenÃ§Ã£o\u0027;\n      prioridade = \u0027Alta\u0027;\n      tendencia = \u0027Piora\u0027;\n      emoji = \u0027WARN\u0027;\n      score = 58;\n      diagnostico = \u0027Queda de eficiencia: CTR fraco, CPA acima do alvo ou ROAS insuficiente.\u0027;\n    }\n\n    if ((d.cost_brl \u003e= 80 \u0026\u0026 d.conversions === 0) || (cpaAlvo \u003e 0 \u0026\u0026 d.cpa \u003e cpaAlvo * 1.5) || (d.ctr \u003c 0.0075 \u0026\u0026 d.impressions \u003e= 1000)) {\n      status = \u0027CrÃ­tico\u0027;\n      prioridade = \u0027Urgente\u0027;\n      tendencia = \u0027Piora\u0027;\n      emoji = \u0027CRIT\u0027;\n      score = 25;\n      diagnostico = \u0027Anuncio com gasto relevante e baixa resposta. Revisar ou pausar.\u0027;\n    }\n  }\n}\n\nreturn [{\n  json: {\n    ...$json,\n    ad_status_operacional: status,\n    ad_prioridade_otimizacao: prioridade,\n    ad_tendencia: tendencia,\n    ad_emoji_status: emoji,\n    ad_diagnostico: diagnostico,\n    ad_score_operacional: score\n  }\n}];"
+                                     },
+                      "id":  "47e2174f-8bb8-4f76-a716-7c0aca02e6e6",
+                      "name":  "Code Diagnostico Operacional Anuncios",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       2140,
+                                       280
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const d = $json.metrics;\n\nlet fadiga = \u0027Sem dados\u0027;\nlet score = 0;\nlet angulo = $json.criativo_base?.hook || null;\nlet cta = null;\n\nif ($json.criativo_base?.hook) {\n  const hook = String($json.criativo_base.hook);\n  cta = hook.split(/[.!?]/)[0]?.slice(0, 80) || null;\n}\n\nif (d.impressions \u003e= 100 \u0026\u0026 d.clicks \u003e= 5) {\n  fadiga = \u0027SaudÃ¡vel\u0027;\n  score = 75;\n\n  if ((d.frequency ?? 0) \u003e= 2.5 \u0026\u0026 d.ctr \u003c 0.012) {\n    fadiga = \u0027AtenÃ§Ã£o\u0027;\n    score = 55;\n  }\n\n  if ((d.frequency ?? 0) \u003e= 3.5 \u0026\u0026 d.ctr \u003c 0.01) {\n    fadiga = \u0027Saturado\u0027;\n    score = 30;\n  }\n}\n\nreturn [{\n  json: {\n    ...$json,\n    criativo_fadiga_status: fadiga,\n    criativo_score_operacional: score,\n    criativo_angulo: angulo,\n    criativo_cta: cta\n  }\n}];"
+                                     },
+                      "id":  "993b4171-857d-4649-8213-a3b96e1c489d",
+                      "name":  "Code Diagnostico Criativo",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       2380,
+                                       280
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "simple":  false,
+                                         "pageId":  "={{ $json.notion_page_id }}",
+                                         "resource":  "databasePage",
+                                         "options":  {
+
+                                                     },
+                                         "operation":  "update",
+                                         "propertiesUi":  {
+                                                              "propertyValues":  [
+                                                                                     {
+                                                                                         "key":  "ImpressÃµes|number",
+                                                                                         "numberValue":  "={{ $json.metrics.impressions }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "Cliques|number",
+                                                                                         "numberValue":  "={{ $json.metrics.clicks }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "CTR|number",
+                                                                                         "numberValue":  "={{ $json.metrics.ctr }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "CPC|number",
+                                                                                         "numberValue":  "={{ $json.metrics.cpc }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "ConversÃµes|number",
+                                                                                         "numberValue":  "={{ $json.metrics.conversions }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "CPA|number",
+                                                                                         "numberValue":  "={{ $json.metrics.cpa }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "Receita|number",
+                                                                                         "numberValue":  "={{ $json.metrics.revenue }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "ROAS|number",
+                                                                                         "numberValue":  "={{ $json.metrics.roas }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "Taxa de ConversÃ£o|number",
+                                                                                         "numberValue":  "={{ $json.metrics.conversion_rate }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "Valor Investido|number",
+                                                                                         "numberValue":  "={{ $json.metrics.cost_brl }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "FrequÃªncia|number",
+                                                                                         "numberValue":  "={{ $json.metrics.frequency }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "ad_status_operacional|select",
+                                                                                         "selectValue":  "={{ $json.ad_status_operacional }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "ad_prioridade_otimizacao|select",
+                                                                                         "selectValue":  "={{ $json.ad_prioridade_otimizacao }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "ad_diagnostico|rich_text",
+                                                                                         "textContent":  "={{ $json.ad_diagnostico }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "ad_tendencia|select",
+                                                                                         "selectValue":  "={{ $json.ad_tendencia }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "date":  "={{ \\.setZone(\u0027America/Sao_Paulo\u0027).toFormat(\u0027yyyy-MM-dd\u0027) }}",
+                                                                                         "key":  "ad_ultima_execucao|date",
+                                                                                         "timezone":  "America/Sao_Paulo",
+                                                                                         "includeTime":  false
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "ad_score_operacional|number",
+                                                                                         "numberValue":  "={{ $json.ad_score_operacional }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "ad_emoji_status|rich_text",
+                                                                                         "textContent":  "={{ $json.ad_emoji_status }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "criativo_fadiga_status|select",
+                                                                                         "selectValue":  "={{ $json.criativo_fadiga_status }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "criativo_score_operacional|number",
+                                                                                         "numberValue":  "={{ $json.criativo_score_operacional }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "criativo_angulo|rich_text",
+                                                                                         "textContent":  "={{ $json.criativo_angulo }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "criativo_cta|rich_text",
+                                                                                         "textContent":  "={{ $json.criativo_cta }}"
+                                                                                     }
+                                                                                 ]
+                                                          }
+                                     },
+                      "id":  "7a4a4ccf-954c-49b6-aed0-ba7681050df6",
+                      "name":  "Update database page Anuncios",
+                      "type":  "n8n-nodes-base.notion",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       2640,
+                                       280
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "return [{ json: { ...$json, status: \"missing_id\", message: \"IDs obrigatÃ³rios ausentes\" } }];"
+                                     },
+                      "id":  "039c2da3-4367-4c6a-9709-2c34f4fc6dc6",
+                      "name":  "Code Missing ID Anuncios",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       1640,
+                                       620
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "return [{ json: { execution_id: $json.execution_id, entity_type: \"ad\", notion_page_id: $json.notion_page_id, platform: $json.platform, status: $json.status || \"success\", message: $json.message || \"AnÃºncio atualizado com mÃ©tricas e diagnÃ³stico\", ad_status_operacional: $json.ad_status_operacional, ad_score_operacional: $json.ad_score_operacional } }];"
+                                     },
+                      "id":  "ced3558f-2ff3-483a-bc48-8cca806f986a",
+                      "name":  "Code Resultado Final Anuncios",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       2900,
+                                       280
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+
+                                     },
+                      "id":  "d53124a2-c60c-41fe-b739-a9cad67d580c",
+                      "name":  "Fim Subworkflow Anuncios",
+                      "type":  "n8n-nodes-base.noOp",
+                      "typeVersion":  1,
+                      "position":  [
+                                       3140,
+                                       320
+                                   ]
+                  }
+              ],
+    "connections":  {
+                        "Start":  {
+                                      "main":  [
+                                                   [
+                                                       {
+                                                           "node":  "Get database Anuncios",
+                                                           "type":  "main",
+                                                           "index":  0
+                                                       }
+                                                   ]
+                                               ]
+                                  },
+                        "If IDs Meta":  {
+                                            "main":  [
+                                                         [
+                                                             {
+                                                                 "node":  "HTTP Request Meta Ad Metrics",
+                                                                 "type":  "main",
+                                                                 "index":  0
+                                                             }
+                                                         ],
+                                                         [
+                                                             {
+                                                                 "node":  "Code Missing ID Anuncios",
+                                                                 "type":  "main",
+                                                                 "index":  0
+                                                             }
+                                                         ]
+                                                     ]
+                                        },
+                        "If IDs Google":  {
+                                              "main":  [
+                                                           [
+                                                               {
+                                                                   "node":  "HTTP Request Google Ad Metrics",
+                                                                   "type":  "main",
+                                                                   "index":  0
+                                                               }
+                                                           ],
+                                                           [
+                                                               {
+                                                                   "node":  "Code Missing ID Anuncios",
+                                                                   "type":  "main",
+                                                                   "index":  0
+                                                               }
+                                                           ]
+                                                       ]
+                                          },
+                        "Code Clean Anuncios":  {
+                                                    "main":  [
+                                                                 [
+                                                                     {
+                                                                         "node":  "Loop Anuncios",
+                                                                         "type":  "main",
+                                                                         "index":  0
+                                                                     }
+                                                                 ]
+                                                             ]
+                                                },
+                        "HTTP Request Google Ad Metrics":  {
+                                                               "main":  [
+                                                                            [
+                                                                                {
+                                                                                    "node":  "Code Normalizar Metricas Anuncios",
+                                                                                    "type":  "main",
+                                                                                    "index":  0
+                                                                                }
+                                                                            ]
+                                                                        ]
+                                                           },
+                        "Code Diagnostico Criativo":  {
+                                                          "main":  [
+                                                                       [
+                                                                           {
+                                                                               "node":  "Update database page Anuncios",
+                                                                               "type":  "main",
+                                                                               "index":  0
+                                                                           }
+                                                                       ]
+                                                                   ]
+                                                      },
+                        "Update database page Anuncios":  {
+                                                              "main":  [
+                                                                           [
+                                                                               {
+                                                                                   "node":  "Code Resultado Final Anuncios",
+                                                                                   "type":  "main",
+                                                                                   "index":  0
+                                                                               }
+                                                                           ]
+                                                                       ]
+                                                          },
+                        "Code Resultado Final Anuncios":  {
+                                                              "main":  [
+                                                                           [
+                                                                               {
+                                                                                   "node":  "Fim Subworkflow Anuncios",
+                                                                                   "type":  "main",
+                                                                                   "index":  0
+                                                                               }
+                                                                           ]
+                                                                       ]
+                                                          },
+                        "HTTP Request Meta Ad Metrics":  {
+                                                             "main":  [
+                                                                          [
+                                                                              {
+                                                                                  "node":  "Code Normalizar Metricas Anuncios",
+                                                                                  "type":  "main",
+                                                                                  "index":  0
+                                                                              }
+                                                                          ]
+                                                                      ]
+                                                         },
+                        "Fim Subworkflow Anuncios":  {
+                                                         "main":  [
+                                                                      [
+                                                                          {
+                                                                              "node":  "Loop Anuncios",
+                                                                              "type":  "main",
+                                                                              "index":  0
+                                                                          }
+                                                                      ]
+                                                                  ]
+                                                     },
+                        "If Plataforma":  {
+                                              "main":  [
+                                                           [
+                                                               {
+                                                                   "node":  "If IDs Google",
+                                                                   "type":  "main",
+                                                                   "index":  0
+                                                               }
+                                                           ],
+                                                           [
+                                                               {
+                                                                   "node":  "If IDs Meta",
+                                                                   "type":  "main",
+                                                                   "index":  0
+                                                               }
+                                                           ]
+                                                       ]
+                                          },
+                        "Loop Anuncios":  {
+                                              "main":  [
+                                                           [
+
+                                                           ],
+                                                           [
+                                                               {
+                                                                   "node":  "If Plataforma",
+                                                                   "type":  "main",
+                                                                   "index":  0
+                                                               }
+                                                           ]
+                                                       ]
+                                          },
+                        "Code Normalizar Metricas Anuncios":  {
+                                                                  "main":  [
+                                                                               [
+                                                                                   {
+                                                                                       "node":  "Code Diagnostico Operacional Anuncios",
+                                                                                       "type":  "main",
+                                                                                       "index":  0
+                                                                                   }
+                                                                               ]
+                                                                           ]
+                                                              },
+                        "Get database Anuncios":  {
+                                                      "main":  [
+                                                                   [
+                                                                       {
+                                                                           "node":  "Code Clean Anuncios",
+                                                                           "type":  "main",
+                                                                           "index":  0
+                                                                       }
+                                                                   ]
+                                                               ]
+                                                  },
+                        "Code Missing ID Anuncios":  {
+                                                         "main":  [
+                                                                      [
+                                                                          {
+                                                                              "node":  "Fim Subworkflow Anuncios",
+                                                                              "type":  "main",
+                                                                              "index":  0
+                                                                          }
+                                                                      ]
+                                                                  ]
+                                                     },
+                        "Code Diagnostico Operacional Anuncios":  {
+                                                                      "main":  [
+                                                                                   [
+                                                                                       {
+                                                                                           "node":  "Code Diagnostico Criativo",
+                                                                                           "type":  "main",
+                                                                                           "index":  0
+                                                                                       }
+                                                                                   ]
+                                                                               ]
+                                                                  }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1"
+                 },
+    "id":  "79463bed-ffbf-4e24-9c52-9a0410b8df8d"
+}

@@ -1,0 +1,1308 @@
+﻿{
+    "name":  "sw metricas campanhas",
+    "nodes":  [
+                  {
+                      "parameters":  {
+                                         "workflowInputs":  {
+                                                                "values":  [
+                                                                               {
+                                                                                   "name":  "execution_id",
+                                                                                   "type":  "any"
+                                                                               },
+                                                                               {
+                                                                                   "name":  "client_id",
+                                                                                   "type":  "any"
+                                                                               },
+                                                                               {
+                                                                                   "name":  "source_execution_id",
+                                                                                   "type":  "any"
+                                                                               }
+                                                                           ]
+                                                            }
+                                     },
+                      "id":  "3d6e3ba4-7e84-41d7-bc9d-7a2875d6f95c",
+                      "name":  "Schedule Trigger",
+                      "type":  "n8n-nodes-base.executeWorkflowTrigger",
+                      "typeVersion":  1.1,
+                      "position":  [
+                                       -16,
+                                       -608
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.splitInBatches",
+                      "typeVersion":  3,
+                      "position":  [
+                                       432,
+                                       -608
+                                   ],
+                      "id":  "2dd128b2-7c43-40e5-be92-bf5b6ba008b0",
+                      "name":  "Loop Over Items",
+                      "alwaysOutputData":  true
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  true,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "strict",
+                                                                            "version":  3
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "d62317fb-c06f-4c4c-b2d4-3905dca228b4",
+                                                                                   "leftValue":  "={{ $json.has_data }}",
+                                                                                   "rightValue":  "True",
+                                                                                   "operator":  {
+                                                                                                    "type":  "boolean",
+                                                                                                    "operation":  "true",
+                                                                                                    "singleValue":  true
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.3,
+                      "position":  [
+                                       2448,
+                                       -160
+                                   ],
+                      "id":  "00e082a6-205e-4811-aa65-f907ca4d428b",
+                      "name":  "If D-2 exist1",
+                      "alwaysOutputData":  true
+                  },
+                  {
+                      "parameters":  {
+                                         "resource":  "databasePage",
+                                         "databaseId":  {
+                                                            "__rl":  true,
+                                                            "value":  "19fb65e5-c72b-8192-8f73-ff7f500a0972",
+                                                            "mode":  "list",
+                                                            "cachedResultName":  "Observações Diárias",
+                                                            "cachedResultUrl":  "https://www.notion.so/19fb65e5c72b81928f73ff7f500a0972"
+                                                        },
+                                         "simple":  false,
+                                         "propertiesUi":  {
+                                                              "propertyValues":  [
+                                                                                     {
+                                                                                         "key":  "Análise de Performance|rich_text",
+                                                                                         "textContent":  "={{ $(\u0027Code classificar status\u0027).item.json.final_status }} {{ $json.properties[\u0027Análise de Performance\u0027].rich_text[0].text.content }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "Campanha|relation",
+                                                                                         "relationValue":  [
+                                                                                                               "={{ $(\u0027Code prepara contexto para observação\u0027).item.json.raw_notion_data.clean_notion_id_camp }}"
+                                                                                                           ]
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "Observação Diária|title",
+                                                                                         "title":  "=📝 Daily Entry {{ DateTime.fromISO($today).toFormat(\u0027dd/MM/yyyy\u0027) }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "Valor Métrica-Mãe 1D|number",
+                                                                                         "numberValue":  "={{ $(\u0027Code Unificar Períodos (D1, 3D, 7D)\u0027).item.json.v_d1 }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "Valor Métrica-Mãe 7D|number",
+                                                                                         "numberValue":  "={{ $(\u0027Code Preparar Payload de Observação\u0027).item.json.properties[\u0027Desvio 7D\u0027].number }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "Emoji Status|rich_text",
+                                                                                         "textContent":  "={{ $(\u0027Code classificar status\u0027).item.json.status_emoji }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "Fonte dos Dados|rich_text",
+                                                                                         "textContent":  "={{ $(\u0027Code Valida Dados\u0027).item.json.data_source }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "id_google_camp|number",
+                                                                                         "numberValue":  "={{ $(\u0027If Plataforma\u0027).item.json.google_ads_id }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "id_google_account|number",
+                                                                                         "numberValue":  "={{ $(\u0027Code prepara contexto para observação\u0027).item.json.raw_notion_data.clean_id_customer_google }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "id_meta_account|number",
+                                                                                         "numberValue":  "={{ $(\u0027If Plataforma\u0027).item.json.raw_notion_data.clean_id_meta_account }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "id_meta_ads|number",
+                                                                                         "numberValue":  "={{ $(\u0027If Plataforma\u0027).item.json.raw_notion_data.clean_id_meta_ads }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "Métrica Principal|select",
+                                                                                         "selectValue":  "={{ $(\u0027Code classificar status\u0027).item.json.sop_config.metric_principal }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "Optimization Score|number",
+                                                                                         "numberValue":  "={{ $(\u0027Code Valida Dados\u0027).item.json.opt_score }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "Classificação PHI|rich_text",
+                                                                                         "textContent":  "={{ $(\u0027Code classificar status\u0027).item.json.classe_score }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "Tendência 3Dvs7D|rich_text",
+                                                                                         "textContent":  "={{ $(\u0027Code Unificar Períodos (D1, 3D, 7D)\u0027).item.json.txt_tendencia_3d }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "Data Execução|date",
+                                                                                         "date":  "={{ $(\u0027Code prepara contexto para observação\u0027).item.json.execution_timestamp }}",
+                                                                                         "timezone":  "America/Sao_Paulo"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "id_workflow|rich_text",
+                                                                                         "textContent":  "={{ $workflow.id }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "Tendência 1Dvs7D|rich_text",
+                                                                                         "textContent":  "={{ $(\u0027Code Unificar Períodos (D1, 3D, 7D)\u0027).item.json.txt_tendencia_1d }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "Criado Por|select",
+                                                                                         "selectValue":  "automation"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "PHI Score|number",
+                                                                                         "numberValue":  "={{ $(\u0027Code classificar status\u0027).item.json.final_score }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "Status da Métrica-Mãe|rich_text",
+                                                                                         "textContent":  "={{ $(\u0027Code classificar status\u0027).item.json.status_meta }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "Valor Métrica-Mãe 3D|number",
+                                                                                         "numberValue":  "={{ $(\u0027Code classificar status\u0027).item.json.v_3d }}"
+                                                                                     }
+                                                                                 ]
+                                                          },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.notion",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       4240,
+                                       -432
+                                   ],
+                      "id":  "44dabf93-5068-4ce7-b02d-a923a41692be",
+                      "name":  "Create a database page Create Observation"
+                  },
+                  {
+                      "parameters":  {
+
+                                     },
+                      "type":  "n8n-nodes-base.merge",
+                      "typeVersion":  3.2,
+                      "position":  [
+                                       2688,
+                                       -240
+                                   ],
+                      "id":  "84cf467b-40cf-4c18-b4e2-5a2deb1898b3",
+                      "name":  "Merge Meta Ads"
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  true,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "strict",
+                                                                            "version":  3
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "6c7a3673-d53c-4902-858b-4c02b78beab1",
+                                                                                   "leftValue":  "={{ $json.platform }}",
+                                                                                   "rightValue":  "Google Ads",
+                                                                                   "operator":  {
+                                                                                                    "type":  "string",
+                                                                                                    "operation":  "equals"
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.3,
+                      "position":  [
+                                       1104,
+                                       -432
+                                   ],
+                      "id":  "caeaa47c-199e-450a-bcf6-9f457479f97b",
+                      "name":  "If Plataforma"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// ⚠️ Este fluxo NÃO executa otimizações - apenas valida dados\n\n// ⚠️ Este fluxo valida se a API do Google Ads retornou dados reais para a campanha\n\nconst items = $input.all();\n\n// 1. Verificar se houve resposta da requisição HTTP\nif (!items || items.length === 0 || !items[0].json) {\n  return {\n    json: {\n      has_data: false,\n      data_source: \u0027google_ads_api\u0027,\n      validation_status: \u0027no_request_response\u0027,\n      reason: \u0027A requisição ao Google Ads falhou ou retornou vazio\u0027\n    }\n  };\n}\n\nconst data = items[0].json;\n\n// 2. Tentar acessar o primeiro resultado do Google Ads\n// O Google retorna um array \u0027results\u0027. Se estiver vazio, não houve atividade no dia.\nconst googleData = data.results \u0026\u0026 data.results.length \u003e 0 ? data.results[0] : null;\n\nif (!googleData) {\n  return {\n    json: {\n      ...data,\n      has_data: false,\n      validation_status: \u0027no_results\u0027,\n      data_source: \u0027google_ads_api\u0027,\n      reason: \u0027O Google Ads retornou 0 resultados para este ID de campanha nesta data\u0027\n    }\n  };\n}\n\n// 3. Validar Campos Obrigatórios dentro da estrutura da API\n// No Google Ads v22, os nomes são camelCase (ex: costMicros)\nconst metrics = googleData.metrics || {};\nconst requiredFields = [\u0027impressions\u0027, \u0027clicks\u0027, \u0027costMicros\u0027];\nconst missingFields = requiredFields.filter(field =\u003e \n  metrics[field] === null || metrics[field] === undefined\n);\n\nif (missingFields.length \u003e 0) {\n  return {\n    json: {\n      ...data,\n      has_data: false,\n      validation_status: \u0027incomplete\u0027,\n      data_source: \u0027google_ads_api\u0027,\n      missing_fields: missingFields,\n      reason: `Campos de métricas ausentes no retorno da API: ${missingFields.join(\u0027, \u0027)}`\n    }\n  };\n}\n\n// 4. Dados válidos e prontos para o cálculo\nreturn {\n  json: {\n    ...data,\n    has_data: true,\n    validation_status: \u0027valid\u0027,\n    // Usamos a data que foi tentada no fluxo (D-1 ou D-2)\n    date_used: data.attempted_date || data.date_d1, \n    data_source: \u0027google_ads_api\u0027,\n    fallback_used: !!data.fallback_active\n  }\n};"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       2448,
+                                       -624
+                                   ],
+                      "id":  "d03c7ccc-0d8e-4cb5-816d-204398daea56",
+                      "name":  "Code Valida Dados"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// Nome: \"Valida Dados - Meta\"\nconst items = $input.all();\n\nif (!items || items.length === 0 || !items[0].json.data || items[0].json.data.length === 0) {\n  return {\n    json: {\n      ...items[0]?.json,\n      has_data: false,\n      data_source: \u0027meta_ads_api\u0027,\n      validation_status: \u0027no_results\u0027,\n      reason: \u0027O Meta Ads retornou 0 resultados para esta data\u0027\n    }\n  };\n}\n\n// Se chegou aqui, existe dado no array \u0027data\u0027\nreturn {\n  json: {\n    ...items[0].json,\n    has_data: true,\n    validation_status: \u0027valid\u0027,\n    data_source: \u0027meta_ads_api\u0027,\n    date_used: items[0].json.date_d1 // ou date_d2 se for fallback\n  }\n};"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       1488,
+                                       -192
+                                   ],
+                      "id":  "ad4780de-e786-409c-a1f1-7e856cdd518d",
+                      "name":  "Code Valida Dados Meta",
+                      "alwaysOutputData":  true
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const items = $input.all();\nconst output = [];\n\nfor (const item of items) {\n  const root = item.json;\n  // No Meta, os dados reais de métricas estão em root.data[0]\n  const data = (root.data \u0026\u0026 root.data.length \u003e 0) ? root.data[0] : null;\n\n  if (!data) {\n    output.push(item);\n    continue;\n  }\n  \n  // 1. Extração de Métricas (Convertendo texto para número)\n  const cost = Number(data.spend || 0);\n  const impressions = Number(data.impressions || 0);\n  const clicks = Number(data.clicks || 0);\n  \n  // 2. Tratamento de Conversões (Array de Actions)\n  let conversions = 0;\n  if (data.actions \u0026\u0026 Array.isArray(data.actions)) {\n    // Procuramos pelo tipo de conversão que você usa (ex: compra ou conversão padrão)\n    const convAction = data.actions.find(a =\u003e \n      a.action_type === \u0027offsite_conversion.fb_pixel_purchase\u0027 || \n      a.action_type === \u0027conversions\u0027 ||\n      a.action_type === \u0027purchase\u0027\n    );\n    conversions = convAction ? Number(convAction.value) : 0;\n  }\n\n  // 3. Cálculos de Performance\n  const ctr = impressions \u003e 0 ? (clicks / impressions) * 100 : 0;\n  const cpc = clicks \u003e 0 ? cost / clicks : 0;\n  const cpa = conversions \u003e 0 ? cost / conversions : 0;\n  const convRate = clicks \u003e 0 ? (conversions / clicks) * 100 : 0;\n\n  output.push({\n    json: {\n      ...root, // Preserva IDs do Notion e contexto\n      calculado: {\n        custo_real: parseFloat(cost.toFixed(2)),\n        impressoes: impressions,\n        cliques: clicks,\n        conversoes: conversions,\n        todas_conversoes: conversions,\n        cpa_atual: parseFloat(cpa.toFixed(2)),\n        cpa_alvo_google: Number(root.meta_valor || 0), // Meta comparativa do Notion\n        taxa_conversao: parseFloat(convRate.toFixed(2)),\n        ctr: parseFloat(ctr.toFixed(2)),\n        cpc: parseFloat(cpc.toFixed(2)),\n        score_otimizacao: \"N/A\", \n        status_aprendizado: data.learning_stage_info?.status || \u0027N/A\u0027\n      }\n    }\n  });\n}\n\nreturn output;"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       2448,
+                                       -352
+                                   ],
+                      "id":  "23466c4d-eafa-4dac-b585-c90d0fafe7ef",
+                      "name":  "Code Cálculo Dados Meta",
+                      "alwaysOutputData":  true
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  true,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "strict",
+                                                                            "version":  3
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "d62317fb-c06f-4c4c-b2d4-3905dca228b4",
+                                                                                   "leftValue":  "={{ $json.has_data }}",
+                                                                                   "rightValue":  "True",
+                                                                                   "operator":  {
+                                                                                                    "type":  "boolean",
+                                                                                                    "operation":  "true",
+                                                                                                    "singleValue":  true
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.3,
+                      "position":  [
+                                       1776,
+                                       -256
+                                   ],
+                      "id":  "dcc5c353-8e33-46f9-bdb3-772a4f8e5fe4",
+                      "name":  "If D-1 Exist Meta Ads",
+                      "alwaysOutputData":  true
+                  },
+                  {
+                      "parameters":  {
+                                         "url":  "=https://graph.facebook.com/v21.0/{{ $json.raw_notion_data.clean_id_meta_account }}/insights",
+                                         "authentication":  "predefinedCredentialType",
+                                         "nodeCredentialType":  "facebookGraphApi",
+                                         "sendQuery":  true,
+                                         "queryParameters":  {
+                                                                 "parameters":  [
+                                                                                    {
+                                                                                        "name":  "fields",
+                                                                                        "value":  "campaign_id,campaign_name,spend,impressions,clicks,actions,action_values,objective"
+                                                                                    },
+                                                                                    {
+                                                                                        "name":  "time_range",
+                                                                                        "value":  "={\"since\":\"{{ $json.fallback_active ? $json.date_d2 : $json.date_d1 }}\",\"until\":\"{{ $json.fallback_active ? $json.date_d2 : $json.date_d1 }}\"}"
+                                                                                    },
+                                                                                    {
+                                                                                        "name":  "level",
+                                                                                        "value":  "campaign"
+                                                                                    }
+                                                                                ]
+                                                             },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.3,
+                      "position":  [
+                                       1248,
+                                       -240
+                                   ],
+                      "id":  "a6d68ae1-4a72-4307-bc91-02fef5684685",
+                      "name":  "HTTP Request Meta Ads"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// ⚠️ Este fluxo NÃO executa otimizações - apenas valida dados\n\n// Nome: \"Valida Dados - Meta\"\nconst items = $input.all();\n\nif (!items || items.length === 0 || !items[0].json.data || items[0].json.data.length === 0) {\n  return {\n    json: {\n      ...items[0]?.json,\n      has_data: false,\n      data_source: \u0027meta_ads_api\u0027,\n      validation_status: \u0027no_results\u0027,\n      reason: \u0027O Meta Ads retornou 0 resultados para esta data\u0027\n    }\n  };\n}\n\n// Se chegou aqui, existe dado no array \u0027data\u0027\nreturn {\n  json: {\n    ...items[0].json,\n    has_data: true,\n    validation_status: \u0027valid\u0027,\n    data_source: \u0027meta_ads_api\u0027,\n    date_used: items[0].json.date_d1 // ou date_d2 se for fallback\n  }\n};"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       2224,
+                                       -160
+                                   ],
+                      "id":  "41b65698-ddf2-4a16-9662-619c9749989f",
+                      "name":  "Code Valida Dados D-2 Meta"
+                  },
+                  {
+                      "parameters":  {
+                                         "url":  "=https://graph.facebook.com/v21.0/{{ $json.raw_notion_data.clean_id_meta_account }}/insights",
+                                         "authentication":  "predefinedCredentialType",
+                                         "nodeCredentialType":  "facebookGraphApi",
+                                         "sendQuery":  true,
+                                         "queryParameters":  {
+                                                                 "parameters":  [
+                                                                                    {
+                                                                                        "name":  "fields",
+                                                                                        "value":  "campaign_id,campaign_name,spend,impressions,clicks,actions,action_values,objective"
+                                                                                    },
+                                                                                    {
+                                                                                        "name":  "time_range",
+                                                                                        "value":  "={\"since\":\"{{ $json.fallback_active ? $json.date_d2 : $json.date_d1 }}\",\"until\":\"{{ $json.fallback_active ? $json.date_d2 : $json.date_d1 }}\"}"
+                                                                                    },
+                                                                                    {
+                                                                                        "name":  "level",
+                                                                                        "value":  "campaign"
+                                                                                    }
+                                                                                ]
+                                                             },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.3,
+                      "position":  [
+                                       2000,
+                                       -160
+                                   ],
+                      "id":  "5298f3ff-4967-42d0-b0b0-544676658a76",
+                      "name":  "HTTP Request Meta Ads D-2"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const items = $input.all();\nconst output = [];\n\nfor (const item of items) {\n  const data = item.json;\n\n  // 1. Pega a Meta e o Tipo que vieram do Notion (estão na raiz do item atual)\n  // Ajustado para os nomes exatos que você tem no seu retorno\n  const metaValor = data.meta_valor || 0;\n  const tipoMetrica = data.sop_config?.metric_principal || \"CPA\";\n\n  // 2. Busca os dados reais olhando para o nó \"D7\" (que é sua base de 7 dias)\n  // Usamos try/catch para evitar erro se o nó não for encontrado\n  let raw = { cost: 0, conversions: 0, convValue: 0, clicks: 0, impressions: 0, optScore: 0, budget: 0, status: \"ESTÁVEL\" };\n\n  try {\n    const d7Node = $(\"HTTP Request Google Ontem (D7)\").first().json;\n    const res = d7Node.results?.[0] || {};\n    const m = res.metrics || {};\n    const c = res.campaign || {};\n    const b = res.campaignBudget || {};\n\n    raw = {\n      cost: Number(m.costMicros || 0) / 1000000,\n      conversions: Number(m.conversions || 0),\n      convValue: Number(m.conversionsValue || 0),\n      clicks: Number(m.clicks || 0),\n      impressions: Number(m.impressions || 0),\n      optScore: Number(c.optimizationScore || 0) * 100,\n      budget: Number(b.amountMicros || 0) / 1000000,\n      status: c.biddingStrategySystemStatus || \"ESTÁVEL\"\n    };\n  } catch (e) {\n    // Se não encontrar o nó D7, ele usará o raw zerado acima\n  }\n\n  // 3. Calculadora de Valor Real\n  const calcular = (r, tipo) =\u003e {\n    if (tipo === \u0027CPA\u0027) return r.conversions \u003e 0 ? (r.cost / r.conversions) : 0;\n    if (tipo === \u0027ROAS\u0027) return r.cost \u003e 0 ? (r.convValue / r.cost) : 0;\n    if (tipo === \u0027CPC\u0027) return r.clicks \u003e 0 ? (r.cost / r.clicks) : 0;\n    if (tipo === \u0027CTR\u0027) return r.impressions \u003e 0 ? (r.clicks / r.impressions) * 100 : 0;\n    return 0;\n  };\n\n  const valorReal = calcular(raw, tipoMetrica);\n\n  // 4. Status da Meta\n  let statusMeta = \"No Alvo ✅\";\n  if (metaValor \u003e 0) {\n    if (tipoMetrica === \"CPA\" || tipoMetrica === \"CPC\") {\n      statusMeta = valorReal \u003c= metaValor ? \"No Alvo ✅\" : \"Acima da Meta ❌\";\n    } else {\n      statusMeta = valorReal \u003e= metaValor ? \"No Alvo ✅\" : \"Abaixo da Meta ❌\";\n    }\n  }\n\n  output.push({\n    json: {\n      ...data,\n      valor_real: parseFloat(valorReal.toFixed(2)),\n      meta_estabelecida: metaValor,\n      status_meta: statusMeta,\n      orcamento_diario: raw.budget,\n      aprendizado: raw.status.replace(/_/g, \" \"),\n      opt_score: parseFloat(raw.optScore.toFixed(2))\n    }\n  });\n}\n\nreturn output;"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       2896,
+                                       -432
+                                   ],
+                      "id":  "470e6d03-61ad-4cb2-9b56-c6d4a5adeec7",
+                      "name":  "Code Cálcula Métricas"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// ⚠️ Este fluxo NÃO executa otimizações - apenas calcula desvio para classificação\n// ⚠️ Este fluxo calcula desvio para classificação e busca dados no histórico se necessário\nconst items = $input.all();\nconst returnData = [];\n\nfor (const item of items) {\n  const data = item.json;\n\n  // 1. Configurações Iniciais\n  const config = data.sop_config || {};\n  const meta = Number(config.meta_valor || data.meta_valor || 0);\n  const tipo = config.metric_principal || data.tipo_metrica || \u0027CPA\u0027;\n\n  // 2. Tenta ler as métricas do Input atual\n  let v_d1 = Number(data.v_d1 ?? data.calc_context?.v_d1 ?? 0);\n  let v_3d = Number(data.v_3d ?? data.calc_context?.v_3d ?? 0);\n  let v_7d = Number(data.v_7d ?? data.calc_context?.v_7d ?? 0);\n\n  // -------------------------------------------------------------\n  // 3. BÓIA DE SALVAÇÃO: Se tudo for zero, busca no nó \"Unificar\"\n  // -------------------------------------------------------------\n  if (v_d1 === 0 \u0026\u0026 v_3d === 0 \u0026\u0026 v_7d === 0) {\n    try {\n      // Tenta buscar no nó que gerou os dados. \n      // Verifique se o nome abaixo é EXATAMENTE o nome do seu nó de unificação\n      const unificado = $(\"Code Unificar Períodos (D1, 3D, 7D)\").first().json;\n      \n      v_d1 = Number(unificado.v_d1 || 0);\n      v_3d = Number(unificado.v_3d || 0);\n      v_7d = Number(unificado.v_7d || 0);\n    } catch (e) {\n      // Se não achar o nó pelo nome, tenta pegar do nó Cálcula Métricas se existir\n      try {\n         const calculo = $(\"Code Cálcula Métricas\").first().json;\n         v_d1 = Number(calculo.v_d1 || 0);\n         v_3d = Number(calculo.v_3d || 0);\n         v_7d = Number(calculo.v_7d || 0);\n      } catch (e2) {}\n    }\n  }\n\n  // 4. Bloqueio de segurança REAL\n  // Só para se realmente a meta for 0 E não tivermos conseguido recuperar os dados\n  if (meta === 0 \u0026\u0026 (v_d1 === 0 \u0026\u0026 v_3d === 0 \u0026\u0026 v_7d === 0)) {\n    returnData.push({\n      json: {\n        ...data,\n        analise_desvios: { error: \"Meta não definida ou dados não encontrados\" },\n        deviation_status: \u0027missing_data_for_calculation\u0027\n      }\n    });\n    continue;\n  }\n\n  // 5. Funções de Cálculo (CPA: Menor é melhor / ROAS: Maior é melhor)\n  const calcDesvio = (valor, meta, tipoMetrica) =\u003e {\n    if (meta === 0 || valor === 0) return 0;\n    \n    // Se for ROAS, CTR, Taxa de Conversão: Maior que a meta é positivo\n    if ([\"ROAS\", \"CTR\", \"Taxa de Conversão\"].includes(tipoMetrica)) {\n       // Ex: Meta 5, Valor 6. ((6-5)/5)*100 = +20% (Bom)\n       return ((valor - meta) / meta) * 100;\n    }\n    \n    // Se for CPA, CPC: Maior que a meta é negativo (ruim)\n    // Ex: Meta 10, Valor 12. Invertemos sinal para indicar que excedeu?\n    // Padrão de Desvio simples: ((Valor - Meta) / Meta) * 100\n    // Ex: Meta 10, Valor 15 = +50% (50% acima da meta, ou seja, ruim)\n    return ((valor - meta) / meta) * 100;\n  };\n\n  const calcTendencia = (v3, v7) =\u003e {\n    if (!v7 || v7 === 0) return 0;\n    return ((v3 - v7) / v7) * 100;\n  };\n\n  // 6. Executa os cálculos\n  const d1_res = calcDesvio(v_d1, meta, tipo);\n  const d3_res = calcDesvio(v_3d, meta, tipo);\n  const d7_res = calcDesvio(v_7d, meta, tipo);\n  const tend_res = calcTendencia(v_3d, v_7d);\n\n  returnData.push({\n    json: {\n      ...data,\n      // Garante que v_d1, v_3d, v_7d passem para o próximo nó\n      v_d1, v_3d, v_7d, \n      analise_desvios: {\n        meta_aplicada: meta,\n        tipo_metric: tipo,\n        d1: { valor: v_d1, desvio: parseFloat(d1_res.toFixed(2)) },\n        d3: { valor: v_3d, desvio: parseFloat(d3_res.toFixed(2)) },\n        d7: { valor: v_7d, desvio: parseFloat(d7_res.toFixed(2)) },\n        tendencia_3d_vs_7d: parseFloat(tend_res.toFixed(2))\n      },\n      deviation_status: \u0027calculated_success\u0027\n    }\n  });\n}\n\nreturn returnData;"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       3344,
+                                       -432
+                                   ],
+                      "id":  "5fd3f6a4-a60a-41ae-951e-b0cebe206ecb",
+                      "name":  "Code calculo desvio meta"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// ⚠️ DECLARAÇÃO EXPLÍCITA: Este fluxo NÃO executa otimizações\n// Classificação é APENAS informativa e serve para registro histórico\nconst items = $input.all();\nconst output = [];\n\nfor (const item of items) {\n  const data = item.json;\n  \n  // 1. Acessar os dados calculados no nó anterior\n  const analise = data.analise_desvios;\n  const config = data.sop_config;\n\n  // Validação de segurança: se não houver análise, define como Sem Dados\n  if (!analise || !analise.d7) {\n    output.push({\n      json: {\n        ...data,\n        final_status: \"Sem Dados\",\n        final_score: 0,\n        classe_score: \"N/A\",\n        status_emoji: \"⚪\"\n      }\n    });\n    continue;\n  }\n\n  const d7 = analise.d7.desvio;\n  const d1 = analise.d1.desvio;\n  const tendencia = analise.tendencia_3d_vs_7d;\n  const meta = config.meta_valor;\n\n  let status = \"OK\";\n  let score = 100;\n\n  // --- REGRA CENTRAL DE STATUS ---\n  \n  // Passo 3: Classificação Base (7D)\n  if (d7 \u003c= 0) {\n    status = \"OK\";\n  } else if (d7 \u003c= 15) {\n    status = \"Atenção\";\n  } else {\n    status = \"Crítico\";\n  }\n\n  // Passo 4: Ajuste por Tendência\n  // Se Status é OK mas tendência piorou \u003e 10%, rebaixa.\n  // Nota: Para CPA \"piorar\" é positivo (subiu), para ROAS \"piorar\" é negativo.\n  // Como nosso nó anterior já padronizou desvios, \"tendencia \u003e 10\" sempre significa \"piorou\".\n  if (status === \"OK\" \u0026\u0026 tendencia \u003e 10) {\n    status = \"Atenção\";\n  }\n\n  // Passo 5: Ajuste por D-1 (Alerta Pontual)\n  if (d1 \u003e 30 \u0026\u0026 status === \"OK\") {\n    status = \"Atenção\";\n  }\n\n  // --- CÁLCULO DO SCORE INTERNO (0-100) ---\n  \n  // Penalidade por desvio 7D (Peso 50%)\n  // Se o desvio for 20%, subtrai 40 pontos. Máximo 40 de penalidade.\n  score -= Math.min(d7 * 2, 40);\n\n  // Penalidade por tendência negativa (Peso 30%)\n  if (tendencia \u003e 0) {\n    score -= Math.min(tendencia, 30);\n  }\n\n  // Penalidade por D-1 extremo (Peso 20%)\n  if (d1 \u003e 20) {\n    score -= 10;\n  }\n\n  // Garantir que o score não seja negativo\n  score = Math.max(Math.round(score), 0);\n\n  // Classificação do Score\n  let classeScore = \"Crítico\";\n  if (score \u003e= 80) classeScore = \"Estável\";\n  else if (score \u003e= 60) classeScore = \"Atenção\";\n  else if (score \u003e= 40) classeScore = \"Instável\";\n\n  // Definir Emoji\n  const emojiMap = { \"OK\": \"✅\", \"Atenção\": \"🟡\", \"Crítico\": \"🔴\", \"Sem Dados\": \"⚪\" };\n\n  output.push({\n    json: {\n      ...data,\n      final_status: status,\n      final_score: score,\n      classe_score: classeScore,\n      status_emoji: emojiMap[status] || \"⚪\"\n    }\n  });\n}\n\nreturn output;"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       3568,
+                                       -432
+                                   ],
+                      "id":  "38e73173-cab0-4405-8b9e-dec2eab253b9",
+                      "name":  "Code classificar status"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const data = $input.first().json;\n\n// Função auxiliar para números\nconst toNum = (val) =\u003e {\n  const n = Number(val);\n  return isNaN(n) ? 0 : parseFloat(n.toFixed(2));\n};\n\nreturn {\n  json: {\n    // Usa o ID da página que veio do Notion\n    page_id: data.notion_page_id || data.id, \n    \n    properties: {\n      // --- CLASSIFICAÇÃO E STATUS ---\n      \"Status Atual\": {\n        \"select\": { \"name\": data.status_meta || \"Sem Dados\" }\n      },\n      \"Score Final\": {\n        \"number\": toNum(data.opt_score) // Usando o Optimization Score como Score Final\n      },\n      \"Análise de Performance\": {\n        \"rich_text\": [{ \n          \"text\": { \n            \"content\": `🎯 Meta: ${data.meta_estabelecida} | Real: ${data.valor_real} (${data.status_meta})` \n          } \n        }]\n      },\n\n      // --- MÉTRICAS DE PERFORMANCE ---\n      \"Meta Métrica-mãe\": {\n        \"number\": toNum(data.meta_estabelecida)\n      },\n      \"Desvio 7D\": {\n        \"number\": toNum(data.valor_real) // Aqui você pode colocar o valor real atual\n      },\n      \"Tendência 3D vs 7D\": {\n        \"number\": toNum(data.v_3d) // Exemplo: Comparativo de tendência\n      },\n\n      // --- DADOS DA CAMPANHA (EXTRAS) ---\n      \"Última Atualização\": {\n        \"date\": { \"start\": new Date().toISOString() }\n      },\n      \"Fonte do Dado\": {\n        \"select\": { \"name\": \"Google Ads\" }\n      }\n      \n      // Caso queira adicionar os campos de Mensagens, Rota, etc., \n      // eles precisam ser calculados no nó anterior primeiro.\n    }\n  }\n};"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       3792,
+                                       -432
+                                   ],
+                      "id":  "48517887-6346-4af7-97c6-c81a00b00648",
+                      "name":  "Code Preparar Payload de Observação"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// Nome: \"Debug Notion Fields\"\n// ⚠️ Foco em validar a estrutura de 3 camadas (D-1, 3D, 7D)\n\nconst data = $input.first().json;\n\nconsole.log(\u0027=== 🚀 INICIANDO DEBUG DO NOVO SOP ===\u0027);\n\n// 1. Campos que agora são essenciais para o novo cálculo\nconst testFields = {\n  // Identificação e Fonte\n  page_id: data.notion_page_id || data.id,\n  platform_detected: data.data_source_detected,\n  \n  // Metas e Contexto (Vindo do Notion)\n  meta_ancora: data.sop_config?.meta_valor,\n  tipo_metrica: data.sop_config?.metric_principal,\n  \n  // Resultados da Análise de Desvio\n  desvio_7d: data.analise_desvios?.d7?.desvio,\n  desvio_d1: data.analise_desvios?.d1?.desvio,\n  tendencia_3d_7d: data.analise_desvios?.tendencia_3d_vs_7d,\n  \n  // Classificação Final\n  final_status: data.final_status,\n  final_score: data.final_score,\n  classe_score: data.classe_score,\n  \n  // Novas Métricas (Exemplo de amostragem)\n  mensagens: data.calc_context?.novasMetricas?.mensagens,\n  seguidores: data.calc_context?.novasMetricas?.seguidores\n};\n\nconsole.log(\u0027=== ANALYSIS BY PROPERTY ===\u0027);\n\nfor (const [key, value] of Object.entries(testFields)) {\n  const isOk = value !== undefined \u0026\u0026 value !== null;\n  const statusIcon = isOk ? \u0027✅\u0027 : \u0027❌\u0027;\n  \n  console.log(`${statusIcon} ${key.padEnd(20)}: ${value} (Type: ${typeof value})`);\n  \n  if (!isOk) {\n    console.error(`🔴 ERRO: O campo ${key} está vazio! Verifique o nó de cálculo anterior.`);\n  }\n}\n\n// 2. Log do Objeto Completo (Para inspeção profunda no console do n8n)\nconsole.log(\u0027=== FULL JSON OBJECT FOR INSPECTION ===\u0027);\nconsole.log(JSON.stringify(data, null, 2));\nconsole.log(\u0027=======================================\u0027);\n\nreturn { json: data };"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       4016,
+                                       -432
+                                   ],
+                      "id":  "dc49b706-778f-4e77-ac21-f0732156d643",
+                      "name":  "Code Debug"
+                  },
+                  {
+                      "parameters":  {
+                                         "resource":  "databasePage",
+                                         "operation":  "update",
+                                         "pageId":  {
+                                                        "__rl":  true,
+                                                        "value":  "={{ $(\u0027Get many database Campanhas\u0027).item.json.id }}",
+                                                        "mode":  "id"
+                                                    },
+                                         "simple":  false,
+                                         "propertiesUi":  {
+                                                              "propertyValues":  [
+                                                                                     {
+                                                                                         "key":  "CPC da Campanha|number",
+                                                                                         "numberValue":  "={{ (Number($(\u0027Code Unificar Períodos (D1, 3D, 7D)\u0027).item.json.results[0].metrics.costMicros) / 1000000) / (Number($(\u0027Code Unificar Períodos (D1, 3D, 7D)\u0027).item.json.results[0].metrics.clicks) || 1) * (Number($(\u0027Code Unificar Períodos (D1, 3D, 7D)\u0027).item.json.results[0].metrics.clicks) \u003e 0 ? 1 : 0) }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "CTR da Campanha|number",
+                                                                                         "numberValue":  "={{ (Number($(\u0027Code Unificar Períodos (D1, 3D, 7D)\u0027).item.json.results[0].metrics.clicks || 0) / Number($(\u0027Code Unificar Períodos (D1, 3D, 7D)\u0027).item.json.results[0].metrics.impressions || 1)) * (Number($(\u0027Code Unificar Períodos (D1, 3D, 7D)\u0027).item.json.results[0].metrics.impressions) \u003e 0 ? 1 : 0) }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "Impressões|number",
+                                                                                         "numberValue":  "={{ Number($(\u0027Code Unificar Períodos (D1, 3D, 7D)\u0027).item.json.results[0].metrics.impressions) }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "Resultado Atual (Métrica-mãe)|number",
+                                                                                         "numberValue":  "={{ $json.properties[\u0027Valor Métrica-Mãe 7D\u0027].number }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "ROAS Campanha|number",
+                                                                                         "numberValue":  "={{ $(\u0027Loop Over Items\u0027).item.json.properties[\u0027ROAS Campanha\u0027].number }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "Taxa de Conversão|number",
+                                                                                         "numberValue":  "={{ (Number($(\u0027Code Unificar Períodos (D1, 3D, 7D)\u0027).item.json.results[0].metrics.conversions || 0) / Number($(\u0027Code Unificar Períodos (D1, 3D, 7D)\u0027).item.json.results[0].metrics.clicks || 1)) * (Number($(\u0027Code Unificar Períodos (D1, 3D, 7D)\u0027).item.json.results[0].metrics.clicks) \u003e 0 ? 1 : 0) }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "CPA da Campanha|number",
+                                                                                         "numberValue":  "={{ \n  (Number($(\u0027HTTP Request Google Ontem (D7)\u0027).item.json.results[0].metrics.costMicros) / 1000000) / \n  (Number($(\u0027HTTP Request Google Ontem (D7)\u0027).item.json.results[0].metrics.conversions) || 1) * (Number($(\u0027HTTP Request Google Ontem (D7)\u0027).item.json.results[0].metrics.conversions) \u003e 0 ? 1 : 0) \n}}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "Orçamento Diário|number",
+                                                                                         "numberValue":  "={{ Number($(\u0027HTTP Request Google Ontem (D7)\u0027).item.json.results[0].campaignBudget.amountMicros) / 1000000 }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "Total Investido Campanha|number",
+                                                                                         "numberValue":  "={{ Number($(\u0027Code Valida Dados\u0027).item.json.results[0].metrics.costMicros) / 1000000 }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "Métrica-Mãe 1D|number",
+                                                                                         "numberValue":  "={{ $(\u0027Code Unificar Períodos (D1, 3D, 7D)\u0027).item.json.v_d1 }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "Métrica-Mãe 3D|number",
+                                                                                         "numberValue":  "={{ $(\u0027Code Unificar Períodos (D1, 3D, 7D)\u0027).item.json.v_3d }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "Score Diário (0-100)|number",
+                                                                                         "numberValue":  "={{ $(\u0027Code classificar status\u0027).item.json.final_score }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "phi_score|number",
+                                                                                         "numberValue":  "={{ $(\u0027Code classificar status\u0027).item.json.final_score }}"
+                                                                                     },
+                                                                                     {
+                                                                                         "key":  "client_id|rich_text",
+                                                                                         "textContent":  "={{ $(\u0027Loop Over Items\u0027).item.json.properties.client_id.rich_text[0].text.content }}"
+                                                                                     }
+                                                                                 ]
+                                                          },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.notion",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       4432,
+                                       -80
+                                   ],
+                      "id":  "39781002-9266-4e3f-8b0b-081107d09e1d",
+                      "name":  "Update a database page"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "\n// Captura o item que vem do loop/notion\nconst item = $input.first();\nconst data = item.json;\nconsole.log(\"Campos disponíveis:\", Object.keys(data));\n// 1. Função de Extração Robusta\n// O Notion pode enviar como: data.prop.number OU data.properties.prop.number\nconst extrairValorNotion = (nomeCampo) =\u003e {\n  const campo = data[nomeCampo] || (data.properties ? data.properties[nomeCampo] : null);\n  \n  if (!campo) return 0;\n  \n  // Se for um campo do tipo \u0027number\u0027 no Notion\n  if (typeof campo === \u0027object\u0027 \u0026\u0026 campo.hasOwnProperty(\u0027number\u0027)) {\n    return Number(campo.number || 0);\n  }\n  \n  // Se for um campo que já veio limpo como número ou string\n  return Number(campo || 0);\n};\n\n// 2. Definição da Meta e Métrica\n//const meta_valor = extrairValorNotion(\"Meta 1ª Numérica\");\n\n// Extrair o Tipo da Métrica (lidando com campos de Select do Notion)\nlet metric_principal = \"CPA\";\nconst campoTipo = data[\"Tipo da Métrica\"] || (data.properties ? data.properties[\"Tipo da Métrica\"] : null);\n\nif (campoTipo) {\n  metric_principal = campoTipo.select ? campoTipo.select.name : (typeof campoTipo === \u0027string\u0027 ? campoTipo : \"CPA\");\n}\nconst meta_valor = $(\u0027Edit Fields\u0027).first().json.meta_valor || 0;\n// 3. Configuração dos Limiares do SOP\nconst sop_thresholds = {\n  \u0027CPA\u0027: { ok_limit: 0, attention_limit: 15, critical_limit: 15, trend_alert: 10, d1_alert: 30 },\n  \u0027ROAS\u0027: { ok_limit: 0, attention_limit: 15, critical_limit: 15, trend_alert: 10, d1_alert: 30 }\n};\n\nreturn {\n  json: {\n    ...data,\n    sop_config: {\n      metric_principal: metric_principal,\n      //meta_valor: meta_valor,\n      meta_valor: meta_valor,\n      thresholds: sop_thresholds[metric_principal] || sop_thresholds[\u0027CPA\u0027]\n    }\n  }\n};"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       3120,
+                                       -432
+                                   ],
+                      "id":  "596763e9-9878-4716-b1fa-dc73a31dae45",
+                      "name":  "Code Recupera Metas p Comparação"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// ⚠️ Este fluxo NÃO executa otimizações - apenas prepara contexto para observação\n\nconst timezone = \u0027America/Sao_Paulo\u0027;\nconst now = new Date();\n\n// ===== CALCULAR DATAS =====\nconst d1 = new Date(now);\nd1.setDate(d1.getDate() - 1);\nd1.setHours(0, 0, 0, 0);\n\nconst d2 = new Date(now);\nd2.setDate(d2.getDate() - 2);\nd2.setHours(0, 0, 0, 0);\n\nfunction formatDate(date) {\n  const year = date.getFullYear();\n  const month = String(date.getMonth() + 1).padStart(2, \u00270\u0027);\n  const day = String(date.getDate()).padStart(2, \u00270\u0027);\n  return `${year}-${month}-${day}`;\n}\n\n// ===== EXTRAIR DADOS LIMPOS =====\nconst data = items[0].json;\n\n// ===== PREPARAR CONTEXTO COMPLETO =====\nreturn {\n  json: {\n    // --- IDENTIFICAÇÃO ---\n    campaign_id: data.clean_id_campanha,\n    campaign_name: data.clean_nome_campanha,\n    notion_page_id: data.clean_notion_id_camp,\n    google_ads_id: data.clean_id_google,\n    campaign_unique_id: data.clean_id_camp_padrao,\n    \n    // --- CLASSIFICAÇÃO ---\n    platform: data.clean_plataforma,\n    sigla_cliente: data.clean_sigla_cliente,\n    estrategia: data.clean_estrategia,\n    objetivo: data.clean_objetivo,\n    produto_servico: data.clean_produto_servico,\n    \n    // --- METAS E MÉTRICAS (SOP) ---\n    metric_principal: data.clean_meta_primaria,\n    meta_valor: data.clean_cpa_alvo, // Este é o valor da meta\n    \n    // --- CONTEXTO OPERACIONAL ---\n    orcamento_diario: data.clean_orcamento_diario,\n    status: data.clean_status,\n    periodo_otimizacao_aberto: data.clean_periodo_otimizacao_aberto,\n    \n    // --- DATAS ---\n    date_d1: formatDate(d1),\n    date_d2: formatDate(d2),\n    date_d1_iso: d1.toISOString(),\n    date_d2_iso: d2.toISOString(),\n    timezone: timezone,\n    \n    // --- CONTROLE ---\n    fallback_active: false,\n    execution_timestamp: now.toISOString(),\n    \n    // --- DADOS BRUTOS (para auditoria, se necessário) ---\n    raw_notion_data: data\n  }\n};"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       880,
+                                       -432
+                                   ],
+                      "id":  "288646dc-8b57-4604-a452-9a4dd55274cc",
+                      "name":  "Code prepara contexto para observação"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// 1. Obter os dados de entrada do nó anterior\nconst items = $input.all();\n\n// 2. Criar um array para armazenar os resultados limpos\nconst outputItems = [];\n\n// --- Funções Auxiliares ---\n\n// Função para extrair texto simples de Rich Text (para Text e Rich Text)\nconst extractRichText = (richTextArray) =\u003e {\n    if (!richTextArray || richTextArray.length === 0) {\n        return \u0027\u0027;\n    }\n    const textSegments = richTextArray.map(segment =\u003e segment.plain_text);\n    return textSegments.join(\u0027\u0027);\n};\n\n// Função para extrair nomes de Multi-Select\nconst extractMultiSelectNames = (multiSelectArray) =\u003e {\n    if (!multiSelectArray || multiSelectArray.length === 0) {\n        return \u0027\u0027;\n    }\n    const names = multiSelectArray.map(option =\u003e option.name);\n    return names.join(\u0027, \u0027); // Retorna os nomes separados por vírgula\n};\n\nfor (const item of items) {\n    const properties = item.json.properties;\n\n    // --- 1. Extração de Fórmulas (Retornam String ou Number) ---\n    const idCampanha = properties[\u0027id_campanha\u0027]?.formula?.string || \u0027\u0027;\n    const nomeCampanha = properties[\u0027Nome Campanha\u0027]?.formula?.string || \u0027\u0027;\n    const notionIdCamp = properties[\u0027notion_id_camp\u0027]?.formula?.string || \u0027\u0027;\n    const tskItensChkList = properties[\u0027tsk_itens_chkList\u0027]?.formula?.number || 0; // Novo\n\n    // --- 2. Extração de Números Simples ---\n    const orcamentoDiario = properties[\u0027Orçamento Diário\u0027]?.number || 0;\n    const cpaAlvo = properties[\u0027CPA Alvo\u0027]?.number || 0;\n    const cpaCampanha = properties[\u0027CPA da Campanha\u0027]?.number || 0;\n    const ctrCampanha = properties[\u0027CTR da Campanha\u0027]?.number || 0;\n    const cpcCampanha = properties[\u0027CPC da Campanha\u0027]?.number || 0; // Novo\n    const impressoes = properties[\u0027Impressões\u0027]?.number || 0; // Novo\n    const resultadoAtual = properties[\u0027Resultado Atual (Métrica-mãe)\u0027]?.number || 0; // Novo\n    const taxaConversao = properties[\u0027Taxa de Conversão\u0027]?.number || 0; // Novo\n    // Nota: Removi a duplicata de metaNumerica que existia no seu código anterior\n    const metaNumerica = properties[\u0027Meta da Métrica-mãe\u0027]?.number || 0;\n    const idGoogle = properties[\u0027id_google_camp\u0027]?.number || 0;\n    const idClientGoogle = properties[\u0027id_google_account\u0027]?.number || 0;\n    const idMetaAccount = properties[\u0027id_meta_account\u0027]?.number || 0;\n    const idMetaCampaign = properties[\u0027id_meta_camp\u0027]?.number || 0;\n    const idMetaAds = properties[\u0027ID Meta Ads\u0027]?.number || 0;\n\n    // --- 3. Extração de Rollups (Campos Calculados/Agregados) ---\n    // O Notion retorna Rollups de formas diferentes (Number, Array, etc.)\n    const totalInvestidoCampanha = properties[\u0027Total Investido Campanha\u0027]?.rollup?.number || 0;\n    \n    // Rollup que retorna array de fórmulas (tsk_itens_concluídos) - pega o primeiro item\n    let tskItensConcluidos = \u00270\u0027;\n    if (properties[\u0027tsk_itens_concluídos\u0027]?.rollup?.array?.[0]?.formula?.string) {\n        tskItensConcluidos = properties[\u0027tsk_itens_concluídos\u0027].rollup.array[0].formula.string;\n    }\n\n    // --- 4. Extração de Select e Status (Seleção Única) ---\n    const estrategia = properties[\u0027Estratégia\u0027]?.select?.name || \u0027\u0027;\n    const objetivo = properties[\u0027Objetivo\u0027]?.select?.name || \u0027\u0027;\n    const estagioFunil = properties[\u0027Estágio do Funil\u0027]?.select?.name || \u0027\u0027;\n    const modeloNegocio = properties[\u0027Modelo de Negócio\u0027]?.select?.name || \u0027\u0027; // Novo\n    const statusAprendizagem = properties[\u0027Status Aprendizagem\u0027]?.select?.name || \u0027\u0027; // Novo\n    // Campo Status é diferente de Select no objeto JSON\n    const status = properties[\u0027Status\u0027]?.status?.name || \u0027\u0027; // Novo\n\n    // --- 5. Extração de Multi-Select (Seleção Múltipla) ---\n    const plataforma = extractMultiSelectNames(properties[\u0027Fonte\u0027]?.multi_select);\n    const metricaPrimaria = extractMultiSelectNames(properties[\u0027Métrica-Mãe\u0027]?.multi_select);\n    const metricaSecundaria = extractMultiSelectNames(properties[\u0027Métrica Secundária\u0027]?.multi_select);\n    const canais = extractMultiSelectNames(properties[\u0027Canais\u0027]?.multi_select);\n    // Atenção: No seu JSON o campo chama \"Tipo de campanha\" (c minúsculo) ou \"Tipo de Campanha\"? \n    // Ajustei para o que veio no JSON: \"Tipo de campanha\"\n    const tipoCampanha = extractMultiSelectNames(properties[\u0027Tipo de campanha\u0027]?.multi_select); \n    const publicoAlvo = extractMultiSelectNames(properties[\u0027Públicos-alvo\u0027]?.multi_select);\n\n    // --- 6. Extração de Texto (Rich Text) ---\n    const produtoServico = extractRichText(properties[\u0027Produto/Serviço\u0027]?.rich_text);\n    const geografia = extractRichText(properties[\u0027Geografia\u0027]?.rich_text);\n    const objetivoCampanha = extractRichText(properties[\u0027Objetivo da Campanha\u0027]?.rich_text);\n    const siglaCliente = extractRichText(properties[\u0027client_slug\u0027]?.rich_text); // Novo\n    const periodoVersao = extractRichText(properties[\u0027Período/Versão\u0027]?.rich_text); // Novo\n\n    // --- 7. Extração de Checkbox (Booleanos) ---\n    const periodoOtimizacaoAberto = properties[\u0027Otimização Ativa?\u0027]?.checkbox || false; // Novo\n    const metaDentroEstabelecido = properties[\u0027Meta dentro do Estabelecido\u0027]?.checkbox || false; // Novo\n\n    // --- 8. Extração de Datas ---\n    const dataInicio = properties[\u0027Data de Inicio\u0027]?.date?.start || \u0027\u0027;\n    const dataConclusao = properties[\u0027Data de conclusão\u0027]?.date?.start || \u0027\u0027;\n    const ultimaOtimizacao = properties[\u0027Última Otimização\u0027]?.date?.start || \u0027\u0027;\n\n    // --- 9. Extração de Unique ID ---\n    // Tratamento seguro para evitar erro de undefined\n    const prefix = properties[\u0027id_camp_padrao\u0027]?.unique_id?.prefix || \u0027\u0027;\n    const number = properties[\u0027id_camp_padrao\u0027]?.unique_id?.number || \u0027\u0027;\n    const idCampPadrao = prefix \u0026\u0026 number ? `${prefix}-${number}` : (prefix + number);\n\n    // --- 10. Criação do novo objeto com as propriedades limpas ---\n    const newItem = {\n        json: {\n            // IDs e Identificadores\n            clean_id_campanha: idCampanha,\n            clean_notion_id_camp: notionIdCamp,\n            clean_id_camp_padrao: idCampPadrao,\n            clean_id_google: idGoogle,\n            clean_id_customer_google: idClientGoogle,\n            clean_id_meta_account: idMetaAccount,\n            clean_id_meta_campaign: idMetaCampaign,\n            clean_id_meta_ads: idMetaAds,\n            clean_client_slug: siglaCliente,\n                      \n            // Informações da Campanha\n            clean_nome_campanha: nomeCampanha,\n            clean_status: status,\n            clean_plataforma: plataforma, // Fonte\n            clean_tipo_campanha: tipoCampanha,\n            clean_estrategia: estrategia,\n            clean_objetivo: objetivo,\n            clean_objetivo_campanha: objetivoCampanha,\n            clean_produto_servico: produtoServico,\n            clean_geografia: geografia,\n            clean_canais: canais,\n            clean_modelo_negocio: modeloNegocio,\n            clean_estagio_funil: estagioFunil,\n            clean_status_aprendizagem: statusAprendizagem,\n            clean_periodo_versao: periodoVersao,\n\n            // Métricas Financeiras\n            clean_orcamento_diario: orcamentoDiario,\n            clean_total_investido: totalInvestidoCampanha,\n            clean_cpa_alvo: cpaAlvo,\n            clean_cpa_campanha: cpaCampanha,\n            clean_cpc_campanha: cpcCampanha,\n            \n            // Métricas de Performance\n            clean_impressoes: impressoes,\n            clean_ctr_campanha: ctrCampanha,\n            clean_taxa_conversao: taxaConversao,\n            clean_resultado_metrica_mae: resultadoAtual,\n            clean_meta_metrica_mae: metaNumerica,\n            clean_metrica_mae: metricaPrimaria,\n            clean_meta_secundaria: metricaSecundaria,\n            \n            // Checkboxes e Tarefas\n            clean_periodo_otimizacao_aberto: periodoOtimizacaoAberto,\n            clean_meta_dentro_estabelecido: metaDentroEstabelecido,\n            clean_tsk_itens_chkList: tskItensChkList,\n            clean_tsk_itens_concluidos: tskItensConcluidos,\n            clean_publico_alvo: publicoAlvo,\n\n            // Datas\n            clean_data_inicio: dataInicio,\n            clean_data_conclusao: dataConclusao,\n            clean_ultima_otimizacao: ultimaOtimizacao,\n        },\n        binary: item.binary,\n    };\n    outputItems.push(newItem);\n}\n\nreturn outputItems;"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       656,
+                                       -432
+                                   ],
+                      "id":  "af4b9426-a2c7-487b-b6b6-36fd689d81db",
+                      "name":  "Code Clean Campanhas",
+                      "alwaysOutputData":  true
+                  },
+                  {
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "=https://googleads.googleapis.com/v22/customers/{{ $json.raw_notion_data.clean_id_customer_google }}/googleAds:search",
+                                         "authentication":  "predefinedCredentialType",
+                                         "nodeCredentialType":  "googleAdsOAuth2Api",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "developer-token",
+                                                                                         "value":  "o0hGRr2vcX3jGF6aI3a_0w"
+                                                                                     },
+                                                                                     {
+                                                                                         "name":  "login-customer-id",
+                                                                                         "value":  "7595536100"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "sendBody":  true,
+                                         "specifyBody":  "json",
+                                         "jsonBody":  "={\n  \"query\": \"SELECT campaign.id, campaign.name, campaign.status, campaign.serving_status, campaign.bidding_strategy_system_status, campaign_budget.amount_micros, campaign.optimization_score, metrics.cost_micros, metrics.conversions, metrics.conversions_value, metrics.clicks, metrics.impressions FROM campaign WHERE campaign.id = \u0027{{ $json.google_ads_id }}\u0027 AND segments.date DURING YESTERDAY\"\n}",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.3,
+                      "position":  [
+                                       1552,
+                                       -624
+                                   ],
+                      "id":  "e728979e-208f-4074-9f93-9f17630644ee",
+                      "name":  "HTTP Request Google Ontem (D1)"
+                  },
+                  {
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "=https://googleads.googleapis.com/v22/customers/{{ $(\u0027Code prepara contexto para observação\u0027).item.json.raw_notion_data.clean_id_customer_google }}/googleAds:search",
+                                         "authentication":  "predefinedCredentialType",
+                                         "nodeCredentialType":  "googleAdsOAuth2Api",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "developer-token",
+                                                                                         "value":  "o0hGRr2vcX3jGF6aI3a_0w"
+                                                                                     },
+                                                                                     {
+                                                                                         "name":  "login-customer-id",
+                                                                                         "value":  "7595536100"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "sendBody":  true,
+                                         "specifyBody":  "json",
+                                         "jsonBody":  "={\n  \"query\": \"SELECT campaign.id, campaign.name, campaign.status, campaign.serving_status, campaign.bidding_strategy_system_status, campaign_budget.amount_micros, campaign.optimization_score, metrics.cost_micros, metrics.conversions, metrics.conversions_value, metrics.clicks, metrics.impressions FROM campaign WHERE campaign.id = \u0027{{ $(\u0027Code prepara contexto para observação\u0027).item.json.raw_notion_data.clean_id_google }}\u0027 AND segments.date DURING LAST_7_DAYS\"\n}",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.3,
+                      "position":  [
+                                       2000,
+                                       -624
+                                   ],
+                      "id":  "b9f6b868-0efd-4bdc-b7f0-1260300e9dda",
+                      "name":  "HTTP Request Google Ontem (D7)"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// 1. Captura os dados dos nós da série\nconst d1 = $(\"HTTP Request Google Ontem (D1)\").first().json;\nconst d3 = $(\"HTTP Request Google Ontem (D3)\").first().json;\nconst d7 = $(\"HTTP Request Google Ontem (D7)\").first().json;\n\nlet d30;\ntry {\n  d30 = $(\"HTTP Request Google (D30)\").first().json;\n} catch (e) {\n  d30 = $(\"v23 Bloco 1 Core\").first().json;\n}\n\n// Função para calcular CPA ou ROAS\nconst calcularValor = (data, tipo) =\u003e {\n  const metrics = data.results?.[0]?.metrics || {};\n  const cost = Number(metrics.costMicros || 0) / 1000000;\n  const conv = Number(metrics.conversions || 0);\n  const val = Number(metrics.conversionsValue || 0);\n\n  if (tipo === \"ROAS\") return cost \u003e 0 ? val / cost : 0;\n  return conv \u003e 0 ? cost / conv : 0;\n};\n\n// Item #7: extrai métricas brutas para BigQuery\nconst extractRaw = (data) =\u003e {\n  const m = data.results?.[0]?.metrics || {};\n  const costMicros = Number(m.costMicros || m.cost_micros || 0);\n  return {\n    cost: costMicros / 1_000_000,\n    costMicros,\n    clicks: Number(m.clicks || 0),\n    conversions: Number(m.conversions || 0),\n    conversionsValue: Number(m.conversionsValue || m.conversions_value || 0),\n    impressions: Number(m.impressions || 0),\n  };\n};\nconst raw_d1 = extractRaw(d1);\nconst raw_d3 = extractRaw(d3);\nconst raw_d7 = extractRaw(d7);\nconst raw_d30 = extractRaw(d30);\n\n// 2. Configurações\nconst config = d7.sop_config || {};\nconst tipo = config.metric_principal || \"CPA\";\n\n// 3. Extrai os valores reais\nconst v_d1 = calcularValor(d1, tipo);\nconst v_3d = calcularValor(d3, tipo);\nconst v_7d = calcularValor(d7, tipo);\n\n// 4. Função mágica de formatação: XX% (YY)\nconst formatarTendencia = (valorAtual, valorBase) =\u003e {\n  if (!valorAtual || !valorBase || valorBase === 0) return \"0.00% (R$0.00)\";\n  const diffAbsoluta = valorAtual - valorBase;\n  const diffPercentual = (diffAbsoluta / valorBase) * 100;\n  return `${diffPercentual.toFixed(2)}% (R$ ${diffAbsoluta.toFixed(2)})`;\n};\n\nconst txt_tendencia_3d = formatarTendencia(v_3d, v_7d);\nconst txt_tendencia_1d = formatarTendencia(v_d1, v_7d);\n\n// 5. Optimization Score\nconst optScoreRaw = d7.results?.[0]?.campaign?.optimizationScore || 0;\nconst optScoreFormatted = parseFloat((optScoreRaw * 100).toFixed(2));\n\n// 6. Retorno final\nreturn {\n  json: {\n    ...d7,\n    v_d1: parseFloat(v_d1.toFixed(2)),\n    v_3d: parseFloat(v_3d.toFixed(2)),\n    v_7d: parseFloat(v_7d.toFixed(2)),\n\n    txt_tendencia_3d,\n    txt_tendencia_1d,\n\n    val_tendencia_3d: parseFloat(((v_3d - v_7d) / (v_7d || 1) * 100).toFixed(2)),\n\n    opt_score: optScoreFormatted,\n\n    calc_context: {\n      v_d1, v_3d, v_7d,\n      txt_tendencia_3d,\n      txt_tendencia_1d,\n    },\n\n    // Métricas brutas para BigQuery (Item #7 corrigido)\n    raw_cost_d1: parseFloat(raw_d1.cost.toFixed(6)),\n    raw_clicks_d1: raw_d1.clicks,\n    raw_impressions_d1: raw_d1.impressions,\n    raw_cost_3d: parseFloat(raw_d3.cost.toFixed(6)),\n    raw_cost_7d: parseFloat(raw_d7.cost.toFixed(6)),\n    raw_clicks_d30: raw_d30.clicks,\n    raw_conversions_value_d30: parseFloat(raw_d30.conversionsValue.toFixed(6)),\n    raw_conversions_d30: raw_d30.conversions,\n    raw_cost_micros_d30: raw_d30.costMicros,\n    raw_cost_brl_d30: parseFloat(raw_d30.cost.toFixed(6)),\n    raw_impressions_d30: raw_d30.impressions,\n  }\n};"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       2224,
+                                       -624
+                                   ],
+                      "id":  "d59492e4-d85a-44df-afce-ce93a38f86ef",
+                      "name":  "Code Unificar Períodos (D1, 3D, 7D)",
+                      "alwaysOutputData":  true
+                  },
+                  {
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "=https://googleads.googleapis.com/v22/customers/{{ $(\u0027Code Clean Campanhas\u0027).item.json.clean_id_customer_google }}/googleAds:search",
+                                         "authentication":  "predefinedCredentialType",
+                                         "nodeCredentialType":  "googleAdsOAuth2Api",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "developer-token",
+                                                                                         "value":  "o0hGRr2vcX3jGF6aI3a_0w"
+                                                                                     },
+                                                                                     {
+                                                                                         "name":  "login-customer-id",
+                                                                                         "value":  "7595536100"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "sendBody":  true,
+                                         "specifyBody":  "json",
+                                         "jsonBody":  "={\n  \"query\": \"SELECT campaign.id, campaign.name, campaign.status, campaign.serving_status, campaign.bidding_strategy_system_status, campaign_budget.amount_micros, campaign.optimization_score, metrics.cost_micros, metrics.conversions, metrics.conversions_value, metrics.clicks, metrics.impressions FROM campaign WHERE campaign.id = \u0027{{ $(\u0027Code prepara contexto para observação\u0027).item.json.google_ads_id }}\u0027 AND segments.date BETWEEN \u0027{{ $now.minus({ days: 3 }).toFormat(\u0027yyyy-MM-dd\u0027) }}\u0027 AND \u0027{{ $now.minus({ days: 1 }).toFormat(\u0027yyyy-MM-dd\u0027) }}\u0027\"\n}",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.3,
+                      "position":  [
+                                       1776,
+                                       -624
+                                   ],
+                      "id":  "45533d29-3c30-4bc0-acc4-5428cbe14282",
+                      "name":  "HTTP Request Google Ontem (D3)"
+                  },
+                  {
+                      "parameters":  {
+                                         "assignments":  {
+                                                             "assignments":  [
+                                                                                 {
+                                                                                     "id":  "7cf637c2-5e0e-4ab5-81cc-41aa9fa6fb82",
+                                                                                     "name":  "meta_valor",
+                                                                                     "value":  "={{ $(\u0027If Plataforma\u0027).item.json.raw_notion_data.clean_meta_metrica_mae }}",
+                                                                                     "type":  "number"
+                                                                                 }
+                                                                             ]
+                                                         },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.set",
+                      "typeVersion":  3.4,
+                      "position":  [
+                                       2672,
+                                       -624
+                                   ],
+                      "id":  "d8649435-944e-411b-9e18-250e8823eceb",
+                      "name":  "Edit Fields"
+                  },
+                  {
+                      "parameters":  {
+                                         "resource":  "databasePage",
+                                         "operation":  "getAll",
+                                         "databaseId":  {
+                                                            "__rl":  true,
+                                                            "value":  "19fb65e5-c72b-8043-a82d-f47ede397928",
+                                                            "mode":  "list",
+                                                            "cachedResultName":  "Campanhas",
+                                                            "cachedResultUrl":  "https://www.notion.so/19fb65e5c72b8043a82df47ede397928"
+                                                        },
+                                         "returnAll":  true,
+                                         "simple":  false,
+                                         "filterType":  "manual",
+                                         "matchType":  "allFilters",
+                                         "filters":  {
+                                                         "conditions":  [
+                                                                            {
+                                                                                "key":  "Status|status",
+                                                                                "condition":  "equals",
+                                                                                "statusValue":  "Em execução"
+                                                                            },
+                                                                            {
+                                                                                "key":  "Fonte|multi_select",
+                                                                                "condition":  "is_not_empty"
+                                                                            },
+                                                                            {
+                                                                                "key":  "Métrica-Mãe|multi_select",
+                                                                                "condition":  "is_not_empty"
+                                                                            }
+                                                                        ]
+                                                     },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.notion",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       208,
+                                       -608
+                                   ],
+                      "id":  "674500a1-6f70-4816-b2bc-08f0df5e6087",
+                      "name":  "Get many database Campanhas"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// ============================================================\n// PHI™ v1.3 — Code Montar SQL (Daily Entry → raw_campaign_data)\n// Versão 4 — Item #7 corrigido: cost/clicks/impressions reais\n// ============================================================\nconst d = $input.first().json;\n\n// ─── HELPERS ────────────────────────────────────────────────\nconst getNum = (v) =\u003e { const n = Number(v); return isNaN(n) ? 0 : n; };\nconst esc    = (v) =\u003e String(v ?? \u0027\u0027).replace(/\u0027/g, \"\u0027\u0027\").trim();\n\nconst prop = (key) =\u003e {\n  const p = d?.properties?.[key];\n  if (!p) return null;\n  if (p.number     !== undefined) return p.number;\n  if (p.select?.name)             return p.select.name;\n  if (p.rich_text?.length)        return p.rich_text[0].plain_text;\n  if (p.multi_select?.length)     return p.multi_select.map(x =\u003e x.name).join(\u0027, \u0027);\n  if (p.checkbox   !== undefined) return p.checkbox;\n  if (p.formula)                  return p.formula.string ?? p.formula.number ?? null;\n  return null;\n};\n\n// ─── IDENTIFICAÇÃO ───────────────────────────────────────────\nconst clientId = esc(prop(\u0027client_id\u0027) || d.client_id || \u0027\u0027);\n\nconst idGoogle = getNum(prop(\u0027id_google_camp\u0027) ?? d.id_google_camp);\nconst idMeta   = getNum(prop(\u0027id_meta_camp\u0027)   ?? d.id_meta_camp);\nlet campaignId = \u0027\u0027;\nif (idGoogle \u003e 0)    campaignId = `GADS-${idGoogle}`;\nelse if (idMeta \u003e 0) campaignId = `META-${idMeta}`;\n\nconst executionId = esc(\n  d.execution_id ||\n  prop(\u0027execution_id\u0027) ||\n  (\u0027EXEC-DE-\u0027 + new Date().toISOString().replace(/[-T:.Z]/g, \u0027\u0027).slice(0, 14))\n);\n\n// ─── MÉTRICAS NUMÉRICAS ──────────────────────────────────────\nconst conversions   = Math.round(getNum(prop(\u0027Métrica-Mãe 1D\u0027) ?? prop(\u0027Valor Métrica-Mãe 1D\u0027)));\nconst conversions3d = Math.round(getNum(prop(\u0027Métrica-Mãe 3D\u0027) ?? prop(\u0027Valor Métrica-Mãe 3D\u0027)));\nconst conversions7d = Math.round(getNum(prop(\u0027Métrica-Mãe 7D\u0027) ?? prop(\u0027Valor Métrica-Mãe 7D\u0027)));\n\n// ─── ITEM #7: cost/clicks/impressions via Code Unificar Períodos ─\n// costMicros já é coletado pela API v22 em D1, D3, D7.\n// Code Unificar Períodos extrai e disponibiliza os valores brutos.\nconst unifiedData = $(\u0027Code Unificar Períodos (D1, 3D, 7D)\u0027).first().json;\nconst cost        = getNum(unifiedData.raw_cost_d1);\nconst clicks      = Math.round(getNum(unifiedData.raw_clicks_d1));\nconst impressions = Math.round(getNum(unifiedData.raw_impressions_d1));\nconst cost3d      = getNum(unifiedData.raw_cost_3d);\nconst cost7d      = getNum(unifiedData.raw_cost_7d);\n\n// ─── CORREÇÃO ITEM 1 ─────────────────────────────────────────\nconst primaryMetricGoal = getNum(\n  prop(\u0027Meta da Métrica-mãe\u0027) ??\n  d.meta_value                ??\n  d.clean_cpa_alvo            ??\n  prop(\u0027CPA Alvo\u0027)            ??\n  0\n);\n\n// ─── STRINGS ─────────────────────────────────────────────────\nconst dataSource = esc(prop(\u0027Fonte dos Dados\u0027) || d.data_source || \u0027google_ads_api\u0027);\n\nconst platform = esc(\n  d.clean_plataforma ||\n  prop(\u0027Fonte\u0027) ||\n  \u0027google_ads\u0027\n).toLowerCase().replace(/\\s+/g, \u0027_\u0027);\n\n// ─── MONTA SQL ───────────────────────────────────────────────\nconst sql = `\nMERGE phi_prod.raw_campaign_data AS target\nUSING (\n  SELECT\n    \u0027${executionId}\u0027        AS execution_id,\n    \u0027${clientId}\u0027           AS client_id,\n    \u0027${campaignId}\u0027         AS campaign_id,\n    DATE_SUB(CURRENT_DATE(\u0027America/Sao_Paulo\u0027), INTERVAL 1 DAY) AS date,\n    CAST(${cost} AS FLOAT64)          AS cost,\n    CAST(${conversions} AS INT64)     AS conversions,\n    CAST(${clicks} AS INT64)          AS clicks,\n    CAST(${impressions} AS INT64)     AS impressions,\n    CAST(${cost3d} AS FLOAT64)        AS cost_3d,\n    CAST(${conversions3d} AS INT64)   AS conversions_3d,\n    CAST(${cost7d} AS FLOAT64)        AS cost_7d,\n    CAST(${conversions7d} AS INT64)   AS conversions_7d,\n    CAST(${primaryMetricGoal} AS FLOAT64) AS primary_metric_goal,\n    \u0027${dataSource}\u0027         AS data_source,\n    \u0027${platform}\u0027           AS platform,\n    \u0027SUCCESS\u0027               AS ingestion_status,\n    \u0027DAILY_ENTRY\u0027           AS ingestion_step,\n    CURRENT_TIMESTAMP()     AS ingested_at\n) AS source\nON  target.client_id   = source.client_id\nAND target.campaign_id = source.campaign_id\nAND target.date        = source.date\nWHEN MATCHED THEN UPDATE SET\n  target.cost                = source.cost,\n  target.conversions         = source.conversions,\n  target.clicks              = source.clicks,\n  target.impressions         = source.impressions,\n  target.cost_3d             = source.cost_3d,\n  target.conversions_3d      = source.conversions_3d,\n  target.cost_7d             = source.cost_7d,\n  target.conversions_7d      = source.conversions_7d,\n  target.primary_metric_goal = source.primary_metric_goal,\n  target.data_source         = source.data_source,\n  target.platform            = source.platform,\n  target.ingestion_status    = source.ingestion_status,\n  target.ingested_at         = source.ingested_at\nWHEN NOT MATCHED THEN INSERT (\n  execution_id, client_id, campaign_id, date,\n  cost, conversions, clicks, impressions,\n  cost_3d, conversions_3d, cost_7d, conversions_7d,\n  primary_metric_goal, data_source, platform,\n  ingestion_status, ingestion_step, ingested_at\n) VALUES (\n  source.execution_id, source.client_id, source.campaign_id, source.date,\n  source.cost, source.conversions, source.clicks, source.impressions,\n  source.cost_3d, source.conversions_3d, source.cost_7d, source.conversions_7d,\n  source.primary_metric_goal, source.data_source, source.platform,\n  source.ingestion_status, source.ingestion_step, source.ingested_at\n);\n`.trim();\n\nreturn [{ json: { ...d, _bq_sql: sql } }];"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       4640,
+                                       -80
+                                   ],
+                      "id":  "a096aa19-496a-4050-88c7-da4e76abb1b9",
+                      "name":  "Code Montar SQL"
+                  },
+                  {
+                      "parameters":  {
+                                         "projectId":  {
+                                                           "__rl":  true,
+                                                           "value":  "project-0e7c58d4-656f-49e8-807",
+                                                           "mode":  "list",
+                                                           "cachedResultName":  "phi-production",
+                                                           "cachedResultUrl":  "https://console.cloud.google.com/bigquery?project=project-0e7c58d4-656f-49e8-807"
+                                                       },
+                                         "sqlQuery":  "{{ $json._bq_sql }}",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.googleBigQuery",
+                      "typeVersion":  2.1,
+                      "position":  [
+                                       4880,
+                                       48
+                                   ],
+                      "id":  "333abf3a-0e17-4c65-98ea-b966795c66c4",
+                      "name":  "Execute SQL inserir daily entry",
+                      "alwaysOutputData":  true
+                  },
+                  {
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "=https://googleads.googleapis.com/v23/customers/{{ $json.raw_notion_data.clean_id_customer_google }}/googleAds:search",
+                                         "authentication":  "predefinedCredentialType",
+                                         "nodeCredentialType":  "googleAdsOAuth2Api",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "developer-token",
+                                                                                         "value":  "o0hGRr2vcX3jGF6aI3a_0w"
+                                                                                     },
+                                                                                     {
+                                                                                         "name":  "login-customer-id",
+                                                                                         "value":  "7595536100"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "sendBody":  true,
+                                         "specifyBody":  "json",
+                                         "jsonBody":  "={\n  \"query\": \"SELECT campaign.id, campaign.name, campaign.status, campaign.bidding_strategy_type, campaign.target_cpa.target_cpa_micros, campaign.target_roas.target_roas, metrics.impressions, metrics.active_view_impressions, metrics.clicks, metrics.ctr, metrics.average_cpc, metrics.average_cpm, metrics.cost_micros, metrics.conversions, metrics.cost_per_conversion, metrics.conversions_from_interactions_rate, metrics.phone_calls, segments.date FROM campaign WHERE segments.date DURING LAST_30_DAYS AND campaign.status = \u0027ENABLED\u0027\"\n}",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.3,
+                      "position":  [
+                                       1216,
+                                       -912
+                                   ],
+                      "id":  "v23_v23_Bloco_1_Core",
+                      "name":  "v23 Bloco 1 Core"
+                  },
+                  {
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "=https://googleads.googleapis.com/v23/customers/{{ $json.raw_notion_data.clean_id_customer_google }}/googleAds:search",
+                                         "authentication":  "predefinedCredentialType",
+                                         "nodeCredentialType":  "googleAdsOAuth2Api",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "developer-token",
+                                                                                         "value":  "o0hGRr2vcX3jGF6aI3a_0w"
+                                                                                     },
+                                                                                     {
+                                                                                         "name":  "login-customer-id",
+                                                                                         "value":  "7595536100"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "sendBody":  true,
+                                         "specifyBody":  "json",
+                                         "jsonBody":  "={\n  \"query\": \"SELECT campaign.id, search_term_view.search_term, metrics.impressions, metrics.clicks, metrics.conversions, metrics.cost_micros FROM search_term_view WHERE segments.date DURING LAST_30_DAYS ORDER BY metrics.clicks DESC LIMIT 50\"\n}",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.3,
+                      "position":  [
+                                       1216,
+                                       -768
+                                   ],
+                      "id":  "v23_v23_Bloco_2_Termos",
+                      "name":  "v23 Bloco 2 Termos"
+                  },
+                  {
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "=https://googleads.googleapis.com/v23/customers/{{ $json.raw_notion_data.clean_id_customer_google }}/googleAds:search",
+                                         "authentication":  "predefinedCredentialType",
+                                         "nodeCredentialType":  "googleAdsOAuth2Api",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "developer-token",
+                                                                                         "value":  "o0hGRr2vcX3jGF6aI3a_0w"
+                                                                                     },
+                                                                                     {
+                                                                                         "name":  "login-customer-id",
+                                                                                         "value":  "7595536100"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "sendBody":  true,
+                                         "specifyBody":  "json",
+                                         "jsonBody":  "={\n  \"query\": \"SELECT campaign.id, segments.ad_network_type, metrics.impressions, metrics.clicks, metrics.conversions, metrics.cost_micros FROM campaign WHERE segments.date DURING LAST_30_DAYS AND campaign.status = \u0027ENABLED\u0027\"\n}",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.3,
+                      "position":  [
+                                       1216,
+                                       -608
+                                   ],
+                      "id":  "v23_v23_Bloco_3_Canais",
+                      "name":  "v23 Bloco 3 Canais"
+                  }
+              ],
+    "connections":  {
+                        "Schedule Trigger":  {
+                                                 "main":  [
+                                                              [
+                                                                  {
+                                                                      "node":  "Get many database Campanhas",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ]
+                                                          ]
+                                             },
+                        "Loop Over Items":  {
+                                                "main":  [
+                                                             [
+
+                                                             ],
+                                                             [
+                                                                 {
+                                                                     "node":  "Code Clean Campanhas",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ]
+                                                         ]
+                                            },
+                        "If D-2 exist1":  {
+                                              "main":  [
+                                                           [
+                                                               {
+                                                                   "node":  "Merge Meta Ads",
+                                                                   "type":  "main",
+                                                                   "index":  1
+                                                               }
+                                                           ],
+                                                           [
+                                                               {
+                                                                   "node":  "Merge Meta Ads",
+                                                                   "type":  "main",
+                                                                   "index":  1
+                                                               }
+                                                           ]
+                                                       ]
+                                          },
+                        "Merge Meta Ads":  {
+                                               "main":  [
+                                                            [
+                                                                {
+                                                                    "node":  "Code Cálcula Métricas",
+                                                                    "type":  "main",
+                                                                    "index":  0
+                                                                }
+                                                            ]
+                                                        ]
+                                           },
+                        "If Plataforma":  {
+                                              "main":  [
+                                                           [
+                                                               {
+                                                                   "node":  "HTTP Request Google Ontem (D1)",
+                                                                   "type":  "main",
+                                                                   "index":  0
+                                                               },
+                                                               {
+                                                                   "node":  "v23 Bloco 1 Core",
+                                                                   "type":  "main",
+                                                                   "index":  0
+                                                               },
+                                                               {
+                                                                   "node":  "v23 Bloco 2 Termos",
+                                                                   "type":  "main",
+                                                                   "index":  0
+                                                               },
+                                                               {
+                                                                   "node":  "v23 Bloco 3 Canais",
+                                                                   "type":  "main",
+                                                                   "index":  0
+                                                               }
+                                                           ],
+                                                           [
+                                                               {
+                                                                   "node":  "HTTP Request Meta Ads",
+                                                                   "type":  "main",
+                                                                   "index":  0
+                                                               }
+                                                           ]
+                                                       ]
+                                          },
+                        "Create a database page Create Observation":  {
+                                                                          "main":  [
+                                                                                       [
+                                                                                           {
+                                                                                               "node":  "Update a database page",
+                                                                                               "type":  "main",
+                                                                                               "index":  0
+                                                                                           }
+                                                                                       ]
+                                                                                   ]
+                                                                      },
+                        "Code Valida Dados":  {
+                                                  "main":  [
+                                                               [
+                                                                   {
+                                                                       "node":  "Edit Fields",
+                                                                       "type":  "main",
+                                                                       "index":  0
+                                                                   }
+                                                               ]
+                                                           ]
+                                              },
+                        "Code Valida Dados Meta":  {
+                                                       "main":  [
+                                                                    [
+                                                                        {
+                                                                            "node":  "If D-1 Exist Meta Ads",
+                                                                            "type":  "main",
+                                                                            "index":  0
+                                                                        }
+                                                                    ]
+                                                                ]
+                                                   },
+                        "Code Cálculo Dados Meta":  {
+                                                        "main":  [
+                                                                     [
+                                                                         {
+                                                                             "node":  "Merge Meta Ads",
+                                                                             "type":  "main",
+                                                                             "index":  0
+                                                                         }
+                                                                     ]
+                                                                 ]
+                                                    },
+                        "If D-1 Exist Meta Ads":  {
+                                                      "main":  [
+                                                                   [
+                                                                       {
+                                                                           "node":  "Code Cálculo Dados Meta",
+                                                                           "type":  "main",
+                                                                           "index":  0
+                                                                       }
+                                                                   ],
+                                                                   [
+                                                                       {
+                                                                           "node":  "HTTP Request Meta Ads D-2",
+                                                                           "type":  "main",
+                                                                           "index":  0
+                                                                       }
+                                                                   ]
+                                                               ]
+                                                  },
+                        "HTTP Request Meta Ads":  {
+                                                      "main":  [
+                                                                   [
+                                                                       {
+                                                                           "node":  "Code Valida Dados Meta",
+                                                                           "type":  "main",
+                                                                           "index":  0
+                                                                       }
+                                                                   ]
+                                                               ]
+                                                  },
+                        "Code Valida Dados D-2 Meta":  {
+                                                           "main":  [
+                                                                        [
+                                                                            {
+                                                                                "node":  "If D-2 exist1",
+                                                                                "type":  "main",
+                                                                                "index":  0
+                                                                            }
+                                                                        ]
+                                                                    ]
+                                                       },
+                        "HTTP Request Meta Ads D-2":  {
+                                                          "main":  [
+                                                                       [
+                                                                           {
+                                                                               "node":  "Code Valida Dados D-2 Meta",
+                                                                               "type":  "main",
+                                                                               "index":  0
+                                                                           }
+                                                                       ]
+                                                                   ]
+                                                      },
+                        "Code Cálcula Métricas":  {
+                                                      "main":  [
+                                                                   [
+                                                                       {
+                                                                           "node":  "Code Recupera Metas p Comparação",
+                                                                           "type":  "main",
+                                                                           "index":  0
+                                                                       }
+                                                                   ]
+                                                               ]
+                                                  },
+                        "Code calculo desvio meta":  {
+                                                         "main":  [
+                                                                      [
+                                                                          {
+                                                                              "node":  "Code classificar status",
+                                                                              "type":  "main",
+                                                                              "index":  0
+                                                                          }
+                                                                      ]
+                                                                  ]
+                                                     },
+                        "Code classificar status":  {
+                                                        "main":  [
+                                                                     [
+                                                                         {
+                                                                             "node":  "Code Preparar Payload de Observação",
+                                                                             "type":  "main",
+                                                                             "index":  0
+                                                                         }
+                                                                     ]
+                                                                 ]
+                                                    },
+                        "Code Preparar Payload de Observação":  {
+                                                                    "main":  [
+                                                                                 [
+                                                                                     {
+                                                                                         "node":  "Code Debug",
+                                                                                         "type":  "main",
+                                                                                         "index":  0
+                                                                                     }
+                                                                                 ]
+                                                                             ]
+                                                                },
+                        "Code Debug":  {
+                                           "main":  [
+                                                        [
+                                                            {
+                                                                "node":  "Create a database page Create Observation",
+                                                                "type":  "main",
+                                                                "index":  0
+                                                            }
+                                                        ]
+                                                    ]
+                                       },
+                        "Update a database page":  {
+                                                       "main":  [
+                                                                    [
+                                                                        {
+                                                                            "node":  "Code Montar SQL",
+                                                                            "type":  "main",
+                                                                            "index":  0
+                                                                        }
+                                                                    ]
+                                                                ]
+                                                   },
+                        "Code Recupera Metas p Comparação":  {
+                                                                 "main":  [
+                                                                              [
+                                                                                  {
+                                                                                      "node":  "Code calculo desvio meta",
+                                                                                      "type":  "main",
+                                                                                      "index":  0
+                                                                                  }
+                                                                              ]
+                                                                          ]
+                                                             },
+                        "Code prepara contexto para observação":  {
+                                                                      "main":  [
+                                                                                   [
+                                                                                       {
+                                                                                           "node":  "If Plataforma",
+                                                                                           "type":  "main",
+                                                                                           "index":  0
+                                                                                       }
+                                                                                   ]
+                                                                               ]
+                                                                  },
+                        "Code Clean Campanhas":  {
+                                                     "main":  [
+                                                                  [
+                                                                      {
+                                                                          "node":  "Code prepara contexto para observação",
+                                                                          "type":  "main",
+                                                                          "index":  0
+                                                                      }
+                                                                  ]
+                                                              ]
+                                                 },
+                        "HTTP Request Google Ontem (D1)":  {
+                                                               "main":  [
+                                                                            [
+                                                                                {
+                                                                                    "node":  "HTTP Request Google Ontem (D3)",
+                                                                                    "type":  "main",
+                                                                                    "index":  0
+                                                                                }
+                                                                            ]
+                                                                        ]
+                                                           },
+                        "HTTP Request Google Ontem (D7)":  {
+                                                               "main":  [
+                                                                            [
+                                                                                {
+                                                                                    "node":  "Code Unificar Períodos (D1, 3D, 7D)",
+                                                                                    "type":  "main",
+                                                                                    "index":  0
+                                                                                }
+                                                                            ]
+                                                                        ]
+                                                           },
+                        "HTTP Request Google Ontem (D3)":  {
+                                                               "main":  [
+                                                                            [
+                                                                                {
+                                                                                    "node":  "HTTP Request Google Ontem (D7)",
+                                                                                    "type":  "main",
+                                                                                    "index":  0
+                                                                                }
+                                                                            ]
+                                                                        ]
+                                                           },
+                        "Code Unificar Períodos (D1, 3D, 7D)":  {
+                                                                    "main":  [
+                                                                                 [
+                                                                                     {
+                                                                                         "node":  "Code Valida Dados",
+                                                                                         "type":  "main",
+                                                                                         "index":  0
+                                                                                     }
+                                                                                 ]
+                                                                             ]
+                                                                },
+                        "Edit Fields":  {
+                                            "main":  [
+                                                         [
+                                                             {
+                                                                 "node":  "Code Cálcula Métricas",
+                                                                 "type":  "main",
+                                                                 "index":  0
+                                                             }
+                                                         ]
+                                                     ]
+                                        },
+                        "Get many database Campanhas":  {
+                                                            "main":  [
+                                                                         [
+                                                                             {
+                                                                                 "node":  "Loop Over Items",
+                                                                                 "type":  "main",
+                                                                                 "index":  0
+                                                                             }
+                                                                         ]
+                                                                     ]
+                                                        },
+                        "Code Montar SQL":  {
+                                                "main":  [
+                                                             [
+                                                                 {
+                                                                     "node":  "Execute SQL inserir daily entry",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ]
+                                                         ]
+                                            },
+                        "Execute SQL inserir daily entry":  {
+                                                                "main":  [
+                                                                             [
+                                                                                 {
+                                                                                     "node":  "Loop Over Items",
+                                                                                     "type":  "main",
+                                                                                     "index":  0
+                                                                                 }
+                                                                             ]
+                                                                         ]
+                                                            }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1"
+                 },
+    "id":  "a8bc8de7-42d9-4948-ace7-e62b01247886"
+}
