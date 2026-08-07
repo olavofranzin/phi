@@ -89,3 +89,22 @@ trabalho pequeno a revisar; **2 são críticas e têm IP não-mesclado:**
 
 Começar pela **FASE 1** (KwJEw ← main) — é a de maior valor e baixo risco (só 7 conflitos
 de doc). Depois a **FASE 2** (o score, que é keystone). As pequenas ficam por último.
+
+---
+
+## 6. Status de execução — branch `claude/consolidacao-2026-08` (2026-08-01)
+
+- ✅ **FASE 1** (KwJEw ← main): 7 conflitos resolvidos (mantendo KwJEw, superset); 209 arquivos
+  do `main` integrados (reorg `workflows/` + skills + `docs/WORKFLOWS.md`); 5 dupes de root removidas.
+- ✅ **FASE 2** (críticas): `saude-digital-phi-midia-score` (keystone, merge limpo) +
+  `wonderful-hawking` (adapter T28: `adaptador-input-t28.code.js`, `normalizador-t28.code.js`,
+  `spec-contrato-agregador-t28.md`).
+- ✅ **FASE 3** (pequenas): absorvidas `affectionate-davinci`, `campaign-analysis-l3`,
+  `claude-md-access`, `create-phi-folder`, `gbp-scoring-motor`, `lucid-tesla`,
+  `n8n-workflow-review`, `paid-media`, `fix-daily-entry` (Meta Ads/HubSpot/métricas). Dedup de root
+  refeito; root limpo (só `CLAUDE.md`, `README.md`, `skills-lock.json`).
+- **Estado:** 360 commits acima do `main` · 544 arquivos. `main` e KwJEw **intocados**.
+- **Arquiváveis** (sem conteúdo único / já absorvidas): `add-find-skills` (redundante com skills do
+  main), `review-technical-docs` e `tender-gates` (contidas), + todas as branches-fonte já
+  mescladas. **Deletar só após a FASE 4 (promoção) e com OK explícito.**
+- ⏳ **FASE 4 (pendente):** PR da integração → `main`. Só abro PR a pedido explícito.
