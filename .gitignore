@@ -15,3 +15,11 @@ workflow_live.json
 # (re-criado a cada run; pode conter valores injetados)
 workflow_sdk_compiled.js
 **/workflow_sdk_compiled.js
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+# OS
+.DS_Store
