@@ -179,6 +179,29 @@ série.** Concretamente:
 > real** (exec `26180`/`26355`). O ramo "com dado" do 2 só com **item Meta sintético** até
 > CHA (ou outra campanha) ter métricas reais — registrar como risco residual.
 
+> **ATUALIZAÇÃO 2026-08-09 — Passo 0-C (arquitetura do `Code Cálcula Métricas` revelada).**
+> Descoberta que **reescreve o Item B** e **fortalece a tese do ADR**:
+> - `Edit Fields` (lado Google) emite **só `{meta_valor: 3.5}`** — a meta, **não** as
+>   métricas. `Code Cálcula Métricas` **não consome as métricas da entrada**: usa o item como
+>   **gatilho magro** e puxa o dado real de nós upstream via `$()`/`aggregateGoogleResponse`,
+>   casado por `campaignId` através do **pareamento de itens do n8n** (paired items).
+> - **Nenhum item carrega identidade no topo — nem o real, nem o fantasma.** O gatilho
+>   Google real tem 1 chave (`meta_valor`); o fantasma Meta `no_results` tem 5. A pipeline
+>   inteira depende do **pareamento** para associar gatilho ↔ dado — exatamente a fragilidade
+>   que este ADR quer matar, e a raiz dos `.first()`/posição das Fases 1–6.
+> - **Impacto nos movimentos 1+3:**
+>   - A **guarda** NÃO pode "dropar item sem identidade" (o real também não tem). O único
+>     fantasma inequívoco é o **`{}` puro (0 chaves)** — esse é 100% seguro dropar.
+>   - O fantasma **Meta `no_results` (5 chaves)** é sinal legítimo "Meta voltou vazio";
+>     virar-linha-zerada-ou-não é **decisão de PRODUTO** (Olavo), não conserto mecânico.
+>   - **Movimento 1 (identidade Meta via `$()`)** depende do mesmo pareamento — **só
+>     verificável dentro do n8n** (pinned smoke), não em sandbox local.
+> - **Conclusão:** o Item B "de verdade" exige **carimbar o Contrato de Identidade nos
+>   próprios gatilhos magros** (`Edit Fields` passar a levar `entity_id`; calculadores Meta
+>   idem) — mudança **mais ampla** que "editar 3 nós". Fica como **design a especificar**,
+>   não patch. O único patch seguro e imediato é a **guarda mínima** (dropar `{}` de 0
+>   chaves), que remove o grosso do ruído em clientes Google-only sem risco.
+
 ---
 
 ## Alternativas consideradas
