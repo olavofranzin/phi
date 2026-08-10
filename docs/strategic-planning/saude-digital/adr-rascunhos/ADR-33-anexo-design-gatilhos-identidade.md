@@ -72,22 +72,26 @@ Meta: `Code clean propriedades` (`clean_id_meta_campaign`, `clean_id_meta_ads`,
 
 ---
 
-## 4. Guarda (movimento 3) — agora possível por-chave
+## 4. Guarda (movimento 3) — *(feito, rascunho)* versão mínima, alinhada à Opção A
 
-Com os gatilhos carimbados, a guarda no `Code Cálcula Métricas` deixa de ser ambígua:
+> **APLICADO 2026-08-09.** Depois de comparar shapes reais, a guarda ficou **mais
+> conservadora** que o rascunho inicial — dropa **só o `{}` de 0 chaves**:
 
 ```js
-// dropar fantasma: sem identidade E sem sinal de origem
-const items = $input.all().filter(it => {
-  const j = it.json || {};
-  if (Object.keys(j).length === 0) return false;           // {} puro (quirk do Merge)
-  if (!j.entity_id && !j.platform && !j.data_source) return false; // fantasma sem origem
-  return true;
-});
+// ADR-33 B3: dropa itens vazios {} (quirk do Merge Meta em cliente sem aquela plataforma).
+const items = $input.all().filter((it) => it && it.json && Object.keys(it.json).length > 0);
 ```
 
-Seguro porque o item **bom** agora tem `entity_id`. (Antes do carimbo, o bom também não
-tinha → guarda dropava dado bom; ver Passo 0-C no ADR.)
+**Por que NÃO usar o clause `!entity_id && !platform && !data_source`:** o `Edit Fields`
+(Set, `includeOtherFields` off) mantém só `meta_valor`+identidade; uma campanha **Google
+configurada sem dado** chega com `entity_id` vazio, `platform` vazio e `data_source`
+**estripado** — o clause a dropava, violando a **Opção A** (sem-dado ⇒ linha, não sumiço).
+A guarda mínima a **preserva** (tem `meta_valor` ⇒ ≠ 0 chaves).
+
+**Limite conhecido:** o fantasma **Meta `no_results` (5 chaves)** em cliente Google-only
+**ainda passa** — separá-lo de um `no_results` de Meta **real** exige identidade no item
+Meta, que só vem na **B2**. Verificado local: dropa os 2 `{}`, mantém Google real,
+Google-sem-dado e Meta `no_results`.
 
 ---
 
@@ -127,7 +131,7 @@ Esta decisão define o comportamento final do coalesce (mov. 2) e da guarda (mov
 | **A** | *(feito, rascunho)* Identidade no `Code Valida Dados` (Google) | ✅ (sandbox) | baixo — no rascunho |
 | **B1** | *(feito, rascunho)* `Edit Fields` carrega `entity_id`/`entity_name`/`platform` + `Code Cálcula Métricas` lê `data.entity_id` (ativa o filtro por-campanha) e carimba identidade na saída | ✅ (sandbox: filtro não regride no caso correto, zera no vizinho errado) | baixo-médio — **maior valor**: ativa filtro por-chave, mata vazamento por pareamento |
 | **B2** | Identidade Meta (secção 3) | ⚠️ só pinned smoke n8n | médio |
-| **B3** | Guarda por-chave (secção 4) | ✅ | baixo |
+| **B3** | *(feito, rascunho)* Guarda mínima: dropa `{}` de 0 chaves (secção 4) | ✅ (sandbox) | baixo — preserva Google-sem-dado (Opção A); `no_results` Google-only aguarda B2 |
 | **B4** | Coalesce (secção 5) | ❌ até haver dado Meta | alto — adiar |
 
 > **Recomendação:** a próxima fase de código é a **B1** — pequena, testável com dado real, e
