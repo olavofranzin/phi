@@ -143,17 +143,41 @@ série.** Concretamente:
 
 ### Parte B — redesenho de `Merge Meta Ads`
 
-1. **Modo explícito, com chave.** Trocar o append cego por **`combine` casando por
-   `entity_id` (+ `date_ref`)**. Assim D-1 e D-2 do **mesmo** anúncio viram **um** item
-   enriquecido — não dois.
-2. **Resolver o fan-in do `If D-2 exist1`.** Se a intenção é "usar D-2 **quando** D-1 não
-   existe", isso é **seleção/fallback**, não merge: modelar como escolha (um caminho por
-   caso), ou coalescer por id num Code. As duas saídas do `If` **não** podem cair na mesma
-   entrada.
-3. **Simplificação a avaliar na implementação:** se a lógica real é só "pegue D-1; se
-   vazio, pegue D-2 do mesmo anúncio", talvez o `Merge` **nem precise existir** — um Code de
-   `coalesce por entity_id` resolve com menos peças. Preferir a versão com menos nós
-   (CLAUDE.md: solução mais simples).
+> **ATUALIZAÇÃO 2026-08-09 — Passo 0-B (branch Meta investigado na execução manual `26180`,
+> que rodou o fluxo COMPLETO com o branch Meta).** Achados:
+> - **Cliente Meta existe:** slug **CHA**, campanha `IG_MENS__PROD.TESTE__`. Identidade Meta
+>   é **rica upstream** (`Code clean propriedades`): `clean_id_meta_campaign`,
+>   `clean_id_meta_ads`, `clean_id_meta_account`, `clean_notion_id_{camp,adset,ads}`,
+>   `platform="Meta Ads"`.
+> - **A identidade é DROPADA** já no `Code Valida Dados Meta` (emite `{data:[],
+>   has_data:false, no_results}`) e some de vez no `Code Cálculo Dados Meta` (emite **`{}`**).
+> - **Fonte do fantasma provada:** `Code Cálculo Dados Meta` → `{}` (in 0) + `If D-2 exist1`
+>   → `{}`/no_results (in 1); o `Merge` (append) empilha os dois ⇒ **2 itens vazios sem
+>   identidade** no `Code Cálcula Métricas`.
+> - **Natureza real do Merge:** é um **fallback D-1/D-2 da MESMA campanha** (tenta ontem; se
+>   vazio, anteontem), não a junção de duas entidades. Logo o certo é **coalescer para UM**.
+> - **Artefato n8n adicional:** em cliente **Google-only** (KIL, exec `26355`) o branch Meta
+>   **não roda**, mas o `Merge` ainda emite `{}` que chega ao `Code Cálcula Métricas` (quirk
+>   de nó multi-entrada). Precisa de **guarda** que dropa itens sem identidade.
+> - **GAP honesto:** **toda** run Meta observável volta `data:[]` — **não há nenhuma execução
+>   Meta com métricas populadas**. O caminho "com dado" só é testável **sinteticamente**; o
+>   caminho "sem dado" (o que gera os fantasmas) é testável 100% com dado real.
+
+**Escopo real da Parte B (corrigido) — 3 movimentos:**
+
+1. **Identidade Meta (espelho do Item A).** Carregar `platform` + `entity_id`
+   (`clean_id_meta_campaign`/`clean_id_meta_ads`) + `entity_name` + `page_id`
+   (`clean_notion_id_*`) **através** de `Code Valida Dados Meta` e `Code Cálculo Dados Meta`,
+   **inclusive no caminho sem dado** — nunca emitir `{}`.
+2. **Coalesce D-1/D-2 (mata o append cego).** Emitir **exatamente 1** item Meta por
+   entidade: D-1 se `has_data`, senão D-2, senão um único item "sem dado Meta" **com
+   identidade** (não dois fantasmas). Resolve também o fan-in das 2 saídas do `If D-2`.
+3. **Guarda no `Code Cálcula Métricas`.** Dropar itens sem `entity_id`/`platform` — mata o
+   `{}` que o quirk do Merge injeta em clientes Google-only.
+
+> **Testabilidade:** movimentos 1 e 3 e o ramo "sem dado" do 2 são **verificáveis com dado
+> real** (exec `26180`/`26355`). O ramo "com dado" do 2 só com **item Meta sintético** até
+> CHA (ou outra campanha) ter métricas reais — registrar como risco residual.
 
 ---
 
