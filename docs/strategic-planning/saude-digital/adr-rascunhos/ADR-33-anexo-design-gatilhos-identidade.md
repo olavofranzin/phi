@@ -130,7 +130,7 @@ Esta decisão define o comportamento final do coalesce (mov. 2) e da guarda (mov
 |---|---|---|---|
 | **A** | *(feito, rascunho)* Identidade no `Code Valida Dados` (Google) | ✅ sandbox **+ n8n end-to-end (exec `26854`)** | baixo — no rascunho |
 | **B1** | *(feito, rascunho)* `Edit Fields` carrega `entity_id`/`entity_name`/`platform` + `Code Cálcula Métricas` lê `data.entity_id` (ativa o filtro por-campanha) e carimba identidade na saída | ✅ sandbox **+ n8n end-to-end (exec `26854`)**: gatilho carrega id, saída carimbada, `cpa_7d=6.17` = campanha certa | baixo-médio — **maior valor**: ativa filtro por-chave, mata vazamento por pareamento |
-| **B2** | *(feito, rascunho)* Identidade Meta nos 2 validadores (`Code Valida Dados Meta` + `... D-2 Meta`) via `$('Code clean propriedades').first()`, em todos os caminhos (secção 3) | ⚠️ aguardando smoke pinado CHA (o `$()` só resolve no n8n) | médio |
+| **B2** | *(feito, rascunho)* Identidade Meta nos 2 validadores (`Code Valida Dados Meta` + `... D-2 Meta`) via `$('Code clean propriedades').first()`, em todos os caminhos (secção 3) | ✅ **n8n (exec `26867`, CHA)**: validadores + `Cálcula Métricas` com `entity_id`/`platform`/`page_id`; linha Opção A (sem-dado com identidade, não `{}`) | médio |
 | **B3** | *(feito, rascunho)* Guarda mínima: dropa `{}` de 0 chaves (secção 4) | ✅ sandbox **+ n8n (exec `26854`: 1 item limpo, sem `{}`)** | baixo — preserva Google-sem-dado (Opção A); `no_results` Google-only aguarda B2 |
 | **B4** | Coalesce (secção 5) | ❌ até haver dado Meta | alto — adiar |
 
@@ -154,5 +154,20 @@ Esta decisão define o comportamento final do coalesce (mov. 2) e da guarda (mov
 
 ---
 
-*Anexo de design. Ordem de aprovação sugerida: decidir a secção 6 (produto) → autorizar a
-Fase B1 → seguir. Item A permanece no rascunho até publicar em lote.*
+## 9. Estado final (2026-08-10) — lote pronto para publicar
+
+**A + B1 + B2 + B3 aplicados e validados end-to-end no n8n** (Google exec `26854`, Meta exec
+`26867`). Rascunho `bc245b0b`; ativo intacto `96dd7975`. A associação métrica↔campanha↔Notion
+passou a ser **por `entity_id`**, nos dois lados; os fantasmas `{}` são dropados; sem-dado
+vira linha com identidade (Opção A). Falta só: **publicar** (com OK de budget) e conferir o
+próximo run agendado, com rollback pronto para `96dd7975`.
+
+> **Nota de processo (aprendizado):** editar via API **enquanto o editor n8n está aberto**
+> gera conflito — um `Ctrl+S` na aba sobrescreve o que a API gravou (aconteceu com a B2 na
+> exec `26863`). Regra: com o editor aberto, mudanças de nó vão **para colar no canvas** (não
+> via API); publicar/salvar é ação do canvas.
+
+---
+
+*Anexo de design. Item A permanece no rascunho até publicar em lote — agora o lote está
+completo e validado.*
