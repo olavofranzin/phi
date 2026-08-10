@@ -109,6 +109,13 @@ Quando o Meta (ou o Google) **volta vazio** para uma campanha configurada:
 - **(B) Nenhuma linha.** Mais limpo no Notion, mas "sem dado" fica invisível (risco T11:
   flatline silencioso).
 
+> **DECIDIDO 2026-08-09 (Olavo): opção (A).** Campanha configurada sem dado ⇒ **linha com
+> identidade + `has_data:false`**, nunca sumir em silêncio nem virar métrica zerada válida.
+> Consequências no design: (1) a **guarda** (secção 4) dropa só `{}`/sem-origem — **preserva**
+> item `no_results` com identidade; (2) o **coalesce** (secção 5) emite, no pior caso, **um**
+> item "sem dado" **com identidade**, não zero itens; (3) o `Code Cálcula Métricas` deve
+> **preservar** `validation_status`/`has_data` na saída para o Guardião ler.
+
 Esta decisão define o comportamento final do coalesce (mov. 2) e da guarda (mov. 3).
 
 ---
@@ -117,8 +124,8 @@ Esta decisão define o comportamento final do coalesce (mov. 2) e da guarda (mov
 
 | Fase | O quê | Testável com dado real? | Risco |
 |---|---|---|---|
-| **A** | *(feito)* Identidade no `Code Valida Dados` (Google) | ✅ (sandbox) | baixo — no rascunho |
-| **B1** | `Edit Fields` carrega `entity_id` + `Code Cálcula Métricas` lê `data.entity_id` e carimba na saída | ✅ (exec real) | baixo-médio — **maior valor**: ativa filtro por-chave, mata vazamento por pareamento |
+| **A** | *(feito, rascunho)* Identidade no `Code Valida Dados` (Google) | ✅ (sandbox) | baixo — no rascunho |
+| **B1** | *(feito, rascunho)* `Edit Fields` carrega `entity_id`/`entity_name`/`platform` + `Code Cálcula Métricas` lê `data.entity_id` (ativa o filtro por-campanha) e carimba identidade na saída | ✅ (sandbox: filtro não regride no caso correto, zera no vizinho errado) | baixo-médio — **maior valor**: ativa filtro por-chave, mata vazamento por pareamento |
 | **B2** | Identidade Meta (secção 3) | ⚠️ só pinned smoke n8n | médio |
 | **B3** | Guarda por-chave (secção 4) | ✅ | baixo |
 | **B4** | Coalesce (secção 5) | ❌ até haver dado Meta | alto — adiar |
