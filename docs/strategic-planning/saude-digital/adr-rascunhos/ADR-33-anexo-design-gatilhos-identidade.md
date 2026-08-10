@@ -128,10 +128,10 @@ Esta decisão define o comportamento final do coalesce (mov. 2) e da guarda (mov
 
 | Fase | O quê | Testável com dado real? | Risco |
 |---|---|---|---|
-| **A** | *(feito, rascunho)* Identidade no `Code Valida Dados` (Google) | ✅ (sandbox) | baixo — no rascunho |
-| **B1** | *(feito, rascunho)* `Edit Fields` carrega `entity_id`/`entity_name`/`platform` + `Code Cálcula Métricas` lê `data.entity_id` (ativa o filtro por-campanha) e carimba identidade na saída | ✅ (sandbox: filtro não regride no caso correto, zera no vizinho errado) | baixo-médio — **maior valor**: ativa filtro por-chave, mata vazamento por pareamento |
+| **A** | *(feito, rascunho)* Identidade no `Code Valida Dados` (Google) | ✅ sandbox **+ n8n end-to-end (exec `26854`)** | baixo — no rascunho |
+| **B1** | *(feito, rascunho)* `Edit Fields` carrega `entity_id`/`entity_name`/`platform` + `Code Cálcula Métricas` lê `data.entity_id` (ativa o filtro por-campanha) e carimba identidade na saída | ✅ sandbox **+ n8n end-to-end (exec `26854`)**: gatilho carrega id, saída carimbada, `cpa_7d=6.17` = campanha certa | baixo-médio — **maior valor**: ativa filtro por-chave, mata vazamento por pareamento |
 | **B2** | Identidade Meta (secção 3) | ⚠️ só pinned smoke n8n | médio |
-| **B3** | *(feito, rascunho)* Guarda mínima: dropa `{}` de 0 chaves (secção 4) | ✅ (sandbox) | baixo — preserva Google-sem-dado (Opção A); `no_results` Google-only aguarda B2 |
+| **B3** | *(feito, rascunho)* Guarda mínima: dropa `{}` de 0 chaves (secção 4) | ✅ sandbox **+ n8n (exec `26854`: 1 item limpo, sem `{}`)** | baixo — preserva Google-sem-dado (Opção A); `no_results` Google-only aguarda B2 |
 | **B4** | Coalesce (secção 5) | ❌ até haver dado Meta | alto — adiar |
 
 > **Recomendação:** a próxima fase de código é a **B1** — pequena, testável com dado real, e
