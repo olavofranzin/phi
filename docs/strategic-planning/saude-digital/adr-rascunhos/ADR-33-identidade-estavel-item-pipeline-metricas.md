@@ -283,5 +283,11 @@ série.** Concretamente:
 
 ---
 
+**Design de implementação (o "como"):** ver anexo
+`ADR-33-anexo-design-gatilhos-identidade.md` — mudança por nó, ordem faseada (A → B1 → B2 →
+B3 → B4), decisão de produto pendente (no-data ⇒ linha ou não) e plano de verificação.
+
+---
+
 *Rascunho de desenho. Não implementar sem: (a) granularidade confirmada, (b) baseline
 salvo, (c) OK de budget do Olavo, (d) smoke em KIL antes de publicar.*
