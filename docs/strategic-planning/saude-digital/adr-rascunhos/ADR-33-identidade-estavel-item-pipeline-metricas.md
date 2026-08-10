@@ -116,15 +116,30 @@ Campos obrigatórios no topo de cada item, do primeiro nó ao último:
 
 ### Parte A — redesenho de `Code Valida Dados` (e irmãos `... Meta`)
 
-1. **Parar de colapsar em `results[0]`.** Se a query retorna N linhas, **emitir N itens**
-   (um por entidade); se retorna 1 linha por item de entrada, **casar por id**, nunca por
-   posição.
-2. **Elevar `entity_id`/`entity_level` a campo de topo** em cada item emitido — lido de
-   dentro de `results[i]` (ex. `campaign.id` / `ad.id` / `adGroupAd`), conforme a query.
-3. **Manter as flags** `has_data`/`validation_status`/`reason` — elas são boas e já são o
-   "selo Camada-0" do ADR-29. Só param de vir **em cima de** um item sem identidade.
-4. **Não espalhar `...data` cru** como verdade; montar um item limpo = identidade +
-   métricas necessárias + flags.
+> **ATUALIZAÇÃO 2026-08-09 — Passo 0 (granularidade confirmada na execução `26355`, KIL).**
+> A suposição inicial ("N linhas = N anúncios") **estava errada** para este workflow. O
+> `results` da query Google é uma **série diária**: 7 linhas = 7 dias da **mesma** campanha
+> (Barbearia `21149189736`), 6 dias (Salão `21116045403`), cada linha com `segments.date`.
+> E o nó anterior (`Code Unificar Períodos`) **já pré-agrega** tudo em campos de topo
+> (`raw_cost_d1`, `v_3d`, `txt_tendencia_*`, …). Logo: `results[0]` é usado **só para
+> validar** que veio dado — e isso está **correto**; **NÃO** se deve "emitir N itens" (isso
+> quebraria a série já agregada). O defeito real é **só o item 2 abaixo (identidade)**.
+> Prova dura: a saída do `Code Valida Dados` carrega, de identidade, apenas `requestId` e
+> `validation_status` — **zero `campaign_id`/nome/`page_id` no topo**; a identidade existe só
+> enterrada em `results[0].campaign.id`. É por isso que o casamento downstream caiu em
+> `.first()`/posição.
+
+**Escopo real da Parte A (corrigido):** **elevar a identidade ao topo, sem restruturar a
+série.** Concretamente:
+
+1. ~~Parar de colapsar em `results[0]` / emitir N itens~~ — **descartado**: as N linhas são
+   dias já agregados upstream; manter **1 item por campanha**.
+2. **Elevar `entity_id`/`entity_name`/`entity_level` a campo de topo** do item, lidos de
+   `results[0].campaign.{id,name}` (ou `resourceName`). Esta é **a** correção.
+3. **Manter as flags** `has_data`/`validation_status`/`reason` — são o "selo Camada-0"
+   (ADR-29). Passam a vir **em cima de** um item **com** identidade.
+4. **Preservar o resto** (`...data`, agregados) — não há motivo para reescrever o item; só
+   **acrescentar** as chaves de identidade (fiel ao princípio "só acrescenta").
 
 ### Parte B — redesenho de `Merge Meta Ads`
 
@@ -171,8 +186,22 @@ Campos obrigatórios no topo de cada item, do primeiro nó ao último:
 
 ## Plano de verificação (obrigatório — CLAUDE.md)
 
-1. **Baseline.** Antes de mexer, rodar o workflow em KIL e **salvar o output atual** de
-   `Code Cálcula Métricas` (referência para comparação).
+> **BASELINE CAPTURADO — execução `26355` (2026-08-09 07:00, KIL, produção).** Fonte do
+> "antes" para o diff pós-conserto:
+> - **Barbearia** (`21149189736`): `cost_7d=208.01`, `conv_7d=50`, `cpa_7d=4.16`,
+>   `cpa_30d=4.11`, `roas=0.13`, `status="Acima da Meta 🚨"`.
+> - **Salão** (`21116045403`): `cost_7d=19.16`, `conv_7d=3`, `cpa_7d=6.39`,
+>   `cpa_30d=10.83`, `status="Acima da Meta 🚨"`.
+> - **Evidência do Item B (duplicata/fantasma):** `Merge Meta Ads` emitiu **[2, 1]** itens
+>   (run 0 duplicou); `Code Cálcula Métricas` emitiu **5 itens para 2 campanhas** (2 reais +
+>   3 zerados/`no_results`) — KIL é Google-only, mas o branch Meta empilha itens vazios.
+> - **Identidade:** **0** campos de id no topo de qualquer nó (só `requestId` +
+>   `validation_status`).
+> Pós-conserto, o alvo é: identidade no topo em 100% dos itens, e **2 itens reais** (um por
+> campanha) sem fantasmas.
+
+1. **Baseline.** ~~Rodar o workflow~~ — **feito** (execução `26355` acima; sem gasto novo de
+   API, leitura de log).
 2. **Confirmar granularidade.** Inspecionar 1 execução real: quantas linhas `results` a API
    devolve por chamada e se `entity_id` está presente na resposta (Google e Meta).
 3. **Pós-ajuste.** Rodar de novo em KIL Barbearia + Salão e conferir:
