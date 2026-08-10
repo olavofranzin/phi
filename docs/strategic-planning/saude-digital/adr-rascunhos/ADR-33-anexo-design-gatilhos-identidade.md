@@ -154,13 +154,24 @@ Esta decisão define o comportamento final do coalesce (mov. 2) e da guarda (mov
 
 ---
 
-## 9. Estado final (2026-08-10) — lote pronto para publicar
+## 9. Estado final (2026-08-10) — PUBLICADO e validado ao vivo ✅
 
-**A + B1 + B2 + B3 aplicados e validados end-to-end no n8n** (Google exec `26854`, Meta exec
-`26867`). Rascunho `bc245b0b`; ativo intacto `96dd7975`. A associação métrica↔campanha↔Notion
-passou a ser **por `entity_id`**, nos dois lados; os fantasmas `{}` são dropados; sem-dado
-vira linha com identidade (Opção A). Falta só: **publicar** (com OK de budget) e conferir o
-próximo run agendado, com rollback pronto para `96dd7975`.
+**A + B1 + B2 + B3 publicados em produção.** Ativo = `ff681a25` (sem pin, todos os escritores
+religados). Validação prévia com pin: Google exec `26854`, Meta exec `26867`. **Validação ao
+vivo pós-publish: exec `26872`** (manual, success, 25s após o publish) — dado fresco real, sem
+pin: Barbearia `entity_id 21149189736` CPA 6,39 / 3 conv; Salão `21116045403` CPA 3,85 / 54
+conv; Meta CHA `120223097134310450` sem entrega → linha com identidade (Opção A); zero
+fantasma (`run0`=0 itens, guarda B3); `Update a database page` escreveu no Notion.
+
+A associação métrica↔campanha↔Notion passou a ser **por `entity_id`**, nos dois lados. Rollback
+disponível para `96dd7975` se necessário.
+
+**Nota sobre `BigQuery Persistir Sinais Criativo` (não rodou em `26872` — por design, não bug):**
+o `Code Montar SQL Criativo` só emite linha com **chave ad-grain completa** (`ad_id` +
+`adset_id` + `campaign_id`) — `if (!adId || !campaignId || !adsetId) continue;`. Em `26872`
+nenhum item qualifica: Meta CHA sem entrega (sem `ad_id`), Barbearia/Salão são **PMax** (sem
+ad-grain — o próprio comentário do código prevê PMAX). Independe de A/B1/B2/B3. Esse escritor
+dispara ao vivo no 1º dia com anúncio Meta **com entrega** — só observar.
 
 > **Nota de processo (aprendizado):** editar via API **enquanto o editor n8n está aberto**
 > gera conflito — um `Ctrl+S` na aba sobrescreve o que a API gravou (aconteceu com a B2 na
