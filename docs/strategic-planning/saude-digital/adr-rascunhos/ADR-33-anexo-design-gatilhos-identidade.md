@@ -180,5 +180,34 @@ dispara ao vivo no 1º dia com anúncio Meta **com entrega** — só observar.
 
 ---
 
+## 10. Checklist de verificação do run diário (durável — para conferir amanhã)
+
+O `sw metricas anuncios` **não tem trigger próprio**: é sub-workflow (`When Executed by Another
+Workflow`), chamado pelo orquestrador pai **todo dia ~07:00 UTC** (mode `integrated`, ~30s).
+Régua confirmada: 07-28→08-09 diários às `07:00:5x` UTC. *(Obs.: o run integrado de 08-10 não
+apareceu na régua — buraco de 1 dia; conferir se foi poda de retenção ou o pai não rodou.)*
+
+Agendado cron one-shot `846acede` p/ **2026-08-11 07:20 UTC** (session-only — morre se a sessão
+cair; então este checklist é o fallback durável).
+
+**Como conferir o run (fresh session ou manual):**
+1. `search_executions` `workflowId=vVAdXAJh6MW2Z5Hp`, `startedAfter=2026-08-11T05:30:00Z`,
+   `status=[success,error]` → achar a execução `integrated` de hoje (~07:00). Sem ela ainda ⇒
+   ainda não rodou. `status=error` ⇒ reportar erro + considerar rollback.
+2. `get_execution` `includeData=true`
+   `nodeNames=['Code Cálcula Métricas','Code Valida Dados','Code Valida Dados Meta']`
+   `truncateData=8` → salvar em arquivo, usar `jq` (output grande).
+3. Validar em `Code Cálcula Métricas` (campos em `.json`):
+   - [ ] cada item tem `entity_id` **e** `platform` (google/meta) — identidade viva (A+B1+B2);
+   - [ ] item sem entrega: `has_data:false` **com** identidade (Opção A), nunca `{}`;
+   - [ ] `run0`/fantasmas dropados (0 itens) — guarda B3;
+   - [ ] métricas coerentes (CPA/conv/impr plausíveis).
+4. **Baseline (exec `26872`):** Barbearia `21149189736` CPA 6,39/3conv · Salão `21116045403`
+   CPA 3,85/54conv · Meta CHA `120223097134310450` sem entrega→linha com identidade.
+5. **Rollback** se destoar: `restore_workflow_version` para `96dd7975`.
+
+---
+
 *Anexo de design. Item A permanece no rascunho até publicar em lote — agora o lote está
-completo e validado.*
+completo, publicado (`ff681a25`) e validado ao vivo (`26872`); resta só a conferência do run
+diário (secção 10).*
