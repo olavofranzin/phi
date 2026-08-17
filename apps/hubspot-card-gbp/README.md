@@ -21,23 +21,23 @@ cd apps/hubspot-card-gbp
 # 1) autenticar com a personal access key da dev account
 hs auth
 
-# 2) criar o profile "dev" apontando pra Developer Test Account
-#    O CLI vai gerar src/hsprofile.dev.json (que está no .gitignore — não commitar)
+# 2) criar um profile apontando pra Developer Test Account
+#    O CLI vai gerar src/hsprofile.<nome>.json (que está no .gitignore — não commitar)
 hs project profile add
-# nome sugerido: dev
-# conta: a Developer Test Account
+# escolha um nome (ex.: CardGbp) e a Developer Test Account
 
 # 3) instalar deps
 npm install
 ```
 
 ## Loop de desenvolvimento
+Passe o nome do profile na linha (o exemplo abaixo usa `CardGbp` — troque pelo seu):
 ```bash
 # sobe + live reload (mudanças no .jsx recarregam sem re-upload)
-hs project dev --profile dev
+hs project dev --profile CardGbp
 
 # ou upload sem watch
-hs project upload --profile dev
+hs project upload --profile CardGbp
 ```
 
 Depois abra qualquer Deal do **Developer Test Account** — o card "Diagnóstico GBP" aparece
