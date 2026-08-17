@@ -1,0 +1,16 @@
+{
+  "name": "phi-hubspot-card-gbp",
+  "version": "0.1.0",
+  "private": true,
+  "description": "App Card do PHI — Diagnóstico GBP no record do Deal (HubSpot). Camada B da spec.",
+  "scripts": {
+    "dev": "hs project dev --profile dev",
+    "upload:dev": "hs project upload --profile dev"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0"
+  },
+  "dependencies": {
+    "@hubspot/ui-extensions": "*"
+  }
+}

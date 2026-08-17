@@ -1,0 +1,28 @@
+{
+  "type": "card",
+  "uid": "gbp-card",
+  "config": {
+    "title": "Diagnóstico GBP",
+    "location": "crm.record.tab",
+    "objectTypes": ["deals"],
+    "module": {
+      "file": "./GbpCard.jsx"
+    },
+    "properties": [
+      "potencial_comercial",
+      "oferta_recomendada",
+      "ipc",
+      "score_tecnico",
+      "dim_saude",
+      "dim_seo",
+      "dim_autoridade",
+      "dim_conversao",
+      "dim_engajamento",
+      "dim_conteudo",
+      "site_tipo",
+      "nao_reivindicado",
+      "flags_score",
+      "proxima_acao_aceite"
+    ]
+  }
+}
