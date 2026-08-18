@@ -1,28 +1,11 @@
 {
+  "uid": "phi_gbp_card",
   "type": "card",
-  "uid": "gbp-card",
   "config": {
-    "title": "Diagnóstico GBP",
+    "name": "Diagnóstico GBP",
+    "description": "Card estratégico GBP no record do Deal (somente leitura).",
+    "entrypoint": "/app/cards/GbpCard.tsx",
     "location": "crm.record.tab",
-    "objectTypes": ["deals"],
-    "module": {
-      "file": "./GbpCard.jsx"
-    },
-    "properties": [
-      "potencial_comercial",
-      "oferta_recomendada",
-      "ipc",
-      "score_tecnico",
-      "dim_saude",
-      "dim_seo",
-      "dim_autoridade",
-      "dim_conversao",
-      "dim_engajamento",
-      "dim_conteudo",
-      "site_tipo",
-      "nao_reivindicado",
-      "flags_score",
-      "proxima_acao_aceite"
-    ]
+    "objectTypes": ["DEAL"]
   }
 }

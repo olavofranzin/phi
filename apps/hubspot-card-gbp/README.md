@@ -1,87 +1,65 @@
 # PHI · Card GBP no HubSpot Deal (Camada B)
 
-Esqueleto do **App Card** que renderiza o Diagnóstico GBP no record do Deal.
-Segue a **spec** [`docs/comercial/card-gbp-record-spec.md`](../../docs/comercial/card-gbp-record-spec.md) §3
-e o brief [`docs/handoff/2026-07-11-hubspot-record-card-gbp-design-build-subchat-brief.md`](../../docs/handoff/2026-07-11-hubspot-record-card-gbp-design-build-subchat-brief.md).
+App Card que renderiza o **Diagnóstico GBP** no record do Deal.
+Segue a **spec** [`docs/comercial/card-gbp-record-spec.md`](../../docs/comercial/card-gbp-record-spec.md) §3.
+Estrutura na **developer platform 2026.03** (confirmada contra o scaffold real do `hs project create`).
 
-> **⚠️ Camada B = protótipo no Developer Test Account.** Não instalar no portal `5633277`
-> enquanto for **Free** — App Card não renderiza em produção antes de Starter+.
+> **⚠️ Camada B = protótipo no Developer Test Account.** Não instalar no portal de produção
+> `5633277` enquanto for **Free** — App Card não renderiza em produção antes de Starter+.
 > A **Camada A (nativo)** é o que vai pra produção agora e é config na UI, não código (spec §2).
 
 ## Pré-requisitos (na sua máquina)
-- Node LTS (18+)
-- **HubSpot CLI:** `npm i -g @hubspot/cli@latest`
-- Conta de desenvolvedor + **Developer Test Account** já criados
+- Node LTS (18+) · **HubSpot CLI:** `npm i -g @hubspot/cli@latest`
+- Conta de desenvolvedor + **Developer Test Account**
 - **Personal access key** da dev account (a credencial n8n `nKntASZQRG3NzatW` é de API, **não serve**)
 
 ## Setup local (uma vez)
 ```bash
 cd apps/hubspot-card-gbp
-
-# 1) autenticar com a personal access key da dev account
-hs auth
-
-# 2) criar um profile apontando pra Developer Test Account
-#    O CLI vai gerar src/hsprofile.<nome>.json (que está no .gitignore — não commitar)
-hs project profile add
-# escolha um nome (ex.: CardGbp) e a Developer Test Account
-
-# 3) instalar deps
-npm install
+hs auth                       # personal access key da dev account
+hs project profile add        # cria src/hsprofile.<nome>.json (fica no .gitignore); aponta p/ a Test Account
+cd src/app/cards && npm install && cd ../../..   # deps do card (@hubspot/ui-extensions, react)
 ```
 
-## Loop de desenvolvimento
-Passe o nome do profile na linha (o exemplo abaixo usa `CardGbp` — troque pelo seu):
+## Rodar
 ```bash
-# sobe + live reload (mudanças no .jsx recarregam sem re-upload)
-hs project dev --profile CardGbp
-
-# ou upload sem watch
-hs project upload --profile CardGbp
+hs project dev --profile <nome-do-seu-profile>
 ```
+Abra um **Deal** no Developer Test Account → aba **"Diagnóstico GBP"**.
 
-Depois abra qualquer Deal do **Developer Test Account** — o card "Diagnóstico GBP" aparece
-como aba do record. Teste de aceitação (spec §5): com Potencial 79 / SVC-ADS / Engajamento 0
-o card deve mostrar Engajamento em vermelho.
-
-## Estrutura (developer platform 2025.2)
+## Estrutura (platform 2026.03)
 ```
 apps/hubspot-card-gbp/
-├── hsproject.json                         # config raiz (srcDir, platformVersion)
-├── package.json                           # deps: @hubspot/ui-extensions
-├── .gitignore                             # bloqueia hsprofile.*.json (segredo)
-├── README.md                              # este arquivo
-└── src/
-    ├── hsprofile.dev.json.example         # TEMPLATE — o real é gerado por `hs project profile add`
-    └── app/
-        ├── app-hsmeta.json                # config do app (distribution: private, scopes)
-        └── cards/
-            ├── gbp-card-hsmeta.json       # config do card: location, objectTypes, properties a carregar
-            └── GbpCard.jsx                # React (@hubspot/ui-extensions) — read-only
+├── hsproject.json                     # srcDir + platformVersion 2026.03
+├── src/
+│   ├── hsprofile.dev.json.example     # TEMPLATE — o real é gerado por `hs project profile add`
+│   └── app/
+│       ├── app-hsmeta.json            # app private, auth static, scopes DEALS (read)
+│       └── cards/
+│           ├── package.json           # @hubspot/ui-extensions + react (o card é seu próprio pacote npm)
+│           ├── gbp-card-hsmeta.json    # entrypoint + location crm.record.tab + objectTypes ["DEAL"]
+│           └── GbpCard.tsx             # React — READ-ONLY, lê via actions.fetchCrmObjectProperties
 ```
 
 ## Read-only por design
-O card **não** escreve propriedade nem move deal. Ele lê `context.crm.properties` (populado
-automaticamente pela lista `properties` do `gbp-card-hsmeta.json`) e apenas renderiza.
+O card **não** escreve propriedade nem move deal. Lê os valores em runtime com
+`actions.fetchCrmObjectProperties([...])` e apenas renderiza (hierarquia spec §3.1, bandas de
+status §4, degradação graciosa §3.5).
 
-## Pontos a confirmar quando o CLI rodar (marcadores)
-Estes 3 pontos podem variar levemente na versão atual da doc — confirmar comparando com o que
-`hs project create` gera de base:
+## ⚠️ Dado no Developer Test Account
+As propriedades GBP (`potencial_comercial`, `dim_*`, …) e os deals com dado **existem no portal
+de produção `5633277`**, não no Test Account. Então, ao rodar no Test Account, o card renderiza a
+**estrutura** mas provavelmente cai no estado **"Sem diagnóstico GBP"** (sem dado). Para ver o card
+**com dado**, é preciso criar no Test Account as propriedades + um deal de exemplo — ou usar o
+[mockup](../../) (artifact `e2c97b96-...`), que já mostra o visual com dado real.
 
-1. **`app-hsmeta.json`** — os nomes exatos das chaves `distribution`, `auth.type` e a
-   forma dos `scopes` podem ter mudado na versão 2025.2 vigente.
-2. **`gbp-card-hsmeta.json`** — o valor de `location` (`crm.record.tab` vs. `crm.deal.tab` vs. outro),
-   a chave `module.file` e se a lista `properties` é `properties` ou `preloadProperties`.
-3. **`GbpCard.jsx`** — o nome exato de alguns componentes (ex.: `StatusTag` vs `Alert`,
-   `ProgressBar` vs `Meter`) e como o `context.crm.properties` chega (algumas versões usam
-   `actions.fetchCrmObjectProperties(...)`).
-
-Se algum falhar no `hs project dev`, o CLI aponta o campo — corrige e o live reload segue.
+## Pontos a confirmar quando o CLI rodar
+Se o `hs project dev` reclamar, os candidatos mais prováveis:
+1. **Props do `ProgressBar`** — `value`/`maxValue` (pode esperar fração 0–1 em vez de 0–100).
+2. **Tokens de `gap` do `Flex`** (`extra-small`/`small`/`medium`/`large`) e variants do `StatusTag`.
+Erros de import de *tipo* (`CrmContext`/`ExtensionPointApiActions`) **não** ocorrem aqui — este card
+não importa esses tipos (foi o que quebrava no boilerplate).
 
 ## Referências
-- Spec: `docs/comercial/card-gbp-record-spec.md`
-- Brief: `docs/handoff/2026-07-11-hubspot-record-card-gbp-design-build-subchat-brief.md`
-- Mockup: artifact `e2c97b96-eaf2-41de-b9d2-5237771eed1b`
-- Docs oficiais: <https://developers.hubspot.com/docs/apps/developer-platform/build-apps/create-an-app> ·
-  <https://developers.hubspot.com/docs/developer-tooling/local-development/build-with-config-profiles> ·
-  <https://developers.hubspot.com/docs/platform/ui-extensions-for-private-apps-quickstart>
+- Spec: `docs/comercial/card-gbp-record-spec.md` · Brief: `docs/handoff/2026-07-11-hubspot-record-card-gbp-design-build-subchat-brief.md`
+- Docs: fetching-data (`fetchCrmObjectProperties`), create-an-app, build-with-config-profiles (developer platform 2026.03)

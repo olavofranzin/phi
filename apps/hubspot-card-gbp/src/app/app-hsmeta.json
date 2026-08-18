@@ -1,19 +1,30 @@
 {
+  "uid": "phi_comercial_app",
   "type": "app",
-  "uid": "phi-comercial-app",
   "config": {
     "name": "PHI · Comercial",
-    "description": "App PHI para o Comercial — carrega o card estratégico GBP no record do Deal.",
+    "description": "App PHI para o Comercial — card estratégico GBP no record do Deal (somente leitura).",
     "distribution": "private",
-    "scopes": [
-      "crm.objects.deals.read",
-      "crm.schemas.deals.read"
-    ],
     "auth": {
-      "type": "oauth",
-      "redirectUrls": [
-        "https://localhost/oauth-callback"
-      ]
+      "type": "static",
+      "requiredScopes": [
+        "oauth",
+        "crm.objects.deals.read",
+        "crm.schemas.deals.read"
+      ],
+      "optionalScopes": [],
+      "conditionallyRequiredScopes": []
+    },
+    "permittedUrls": {
+      "fetch": ["https://api.hubapi.com"],
+      "iframe": [],
+      "img": []
+    },
+    "support": {
+      "supportEmail": "support@example.com",
+      "documentationUrl": "https://example.com/docs",
+      "supportUrl": "https://example.com/support",
+      "supportPhone": "+10000000000"
     }
   }
 }
