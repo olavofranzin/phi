@@ -2,8 +2,8 @@
   "uid": "phi_comercial_app",
   "type": "app",
   "config": {
-    "name": "PHI · Comercial",
-    "description": "App PHI para o Comercial — card estratégico GBP no record do Deal (somente leitura).",
+    "name": "PHI Comercial",
+    "description": "App PHI para o Comercial - card estrategico GBP no record do Deal (somente leitura).",
     "distribution": "private",
     "auth": {
       "type": "static",
