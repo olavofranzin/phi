@@ -14,12 +14,17 @@
 
 - [x] **W1 — Inspeção + escolha da base (ADR).** Concluído 2026-08-21.
       Inspecionados os 2 projetos; base = Projeto B; lista de migração definida.
-- [ ] **W2 — Merge estrutural.** Portar Dossiê do Cliente (9 seções, read-only)
-      do Projeto A para a base; unificar design/rotas/estado; deduplicar.
-      ⚠️ Requer OK de budget do Olavo (send_message gasta créditos).
+- [x] **W2 — Merge estrutural.** Concluído 2026-08-22 (commit Lovable
+      `6c3399478`, 5 créditos). Dossiê do Cliente (9 seções, read-only) portado
+      para a base: `clientTypes`/`sections`/`clientMock`/`useClientData`/
+      `DossierField` + páginas `ClientsList` (`/clientes`) e `ClientDetail`
+      (`/clientes/:client`) + nav "Clientes". Guardrails verificados (view-only,
+      não recalcula score, N/D honesto). Preview:
+      https://id-preview--ff1059aa-df66-44dc-b8b1-9c2c5b09f22e.lovable.app
 - [ ] **W3 — Backend BigQuery.** Edge functions lendo `phi_score_current`,
       `phi_score_history`, `raw_campaign_data`, `t28_campaign`/`t28_meta_campaign`.
       Segredos só no servidor. Trocar `usePhiData` mock → fetch real.
+      ⚠️ Requer OK de budget do Olavo (send_message gasta créditos).
 - [ ] **W4 — Backend Notion.** Edge functions lendo Clientes / Campanhas /
       Projetos / Observações Diárias / PHI-ANÁLISES + `client_config` /
       `client_goal_history`.
