@@ -74,6 +74,30 @@ Manter os campos GBP/IA agrupados no grupo existente (**`ia_enriquecimento`** / 
 ### 2.4. Coluna esquerda (manter enxuta)
 Nome, telefone, pipeline/etapa, botões de ação. **Não** poluir com métricas de IA.
 
+### 2.5. Layout do record — as 3 colunas (DECIDIDO — aplicar, não redecidir)
+
+> Fonte: §1 (mapa campo→coluna) + brief `2026-07-11` §1/§6 + brief de finalização
+> `docs/handoff/2026-08-18-hubspot-cards-finalizacao-subchat-brief.md` §1.1 + mockup `e2c97b96`.
+> Internal names reais (confirmados no recon). O sub-chat **aplica** este layout, não o redecide.
+
+**Coluna ESQUERDA — enxuta (regra: ZERO métrica de IA/GBP aqui).**
+`dealname` · contato (nome / telefone / e-mail) · **pipeline + etapa** (`dealstage`) · botões de ação
+(Ligar / E-mail / Tarefa). Só a identificação do negócio — nenhum scoring, dimensão ou texto de IA.
+
+**Coluna CENTRAL — onde mora o diagnóstico. 3 blocos, de cima para baixo:**
+1. **Destaques de dados** (topo, 3 campos): `potencial_comercial` · `oferta_recomendada` ·
+   `dealstage` (Etapa do negócio). [ver §2.2]
+2. **Card "Diagnóstico GBP"** (Camada B App Card, ou o card nativo) — os **14 campos compactos** na
+   hierarquia (a)–(e) definida em **§3.1**. **Regra de ouro: NENHUM texto longo no card.**
+3. **Aba "IA / Diagnóstico"** (Camada A, nativo) — os **7 textões** na ordem de **§2.1**.
+
+**Coluna DIREITA — apoio:** associações (Contato / Empresa) + métricas secundárias
+`createdate` · última modificação · `nao_reivindicado` · `site_tipo`.
+
+> Resumo: **esquerda = quem é o negócio** (sem IA) · **central = o diagnóstico** (Destaques → card
+> compacto → aba com os textões) · **direita = apoio / associações**. Campos compactos no card;
+> textos longos só na aba.
+
 **Guardrail A:** tudo aqui é **exibição** — nenhuma automação escreve a partir do card/aba.
 
 ---
