@@ -21,7 +21,7 @@
 > **VERSÃO.** v0.1 (2026-06-04). Atualizado ao final de cada lote
 > entregue + em auditoria quinzenal proposta + qualquer atualização
 > proposta pelo Curador depois que ele estiver vivo. Última
-> atualização: **2026-08-01** (handoff Otimização→Planejamento).
+> atualização: **2026-08-18** (Comercial/HubSpot Card GBP + hardening do Agregador).
 
 ---
 
@@ -200,6 +200,40 @@ Commits na branch `claude/agentic-agency-planning-KwJEw`; ADRs 28–31.
 · `regras-planejamento-midia-paga` (+fonte D1) · `skills/` (campaign-plan, paid-ads, README) ·
 `agente-planejador` · `agente-consultor-plataforma` · `CLAUDE.md` (restaurado do main + seção
 T28).
+
+### Snapshot 2026-08-18 (sessão — Comercial/HubSpot Card GBP + hardening do Agregador)
+
+Frente **Comercial / Card GBP no HubSpot** (visualização do scoring GBP no record do Deal). Recon
+read-only da produção `5633277`: **21 propriedades do card + `proxima_acao_aceite_data` JÁ EXISTEM** em
+deals e os **2 produtos** `SVC-IA` (SKU1004)/`SVC-GBP` (SKU1005) foram criados em 09/07 — ou seja, o
+**C1 estrutural do brief 2026-07-05 está CONCLUÍDO** (a nota "C1 aguarda OK" em §Versões está
+**desatualizada**); só falta `transcricao_ia` (Meeting, do C4). Entregas:
+
+1. **Mockup (Claude Design)** — artifact `e2c97b96-eaf2-41de-b9d2-5237771eed1b` (3 estados: Niti forte/ADS,
+   Clínica Guerra fraco/SITE, vazio).
+2. **Spec** `docs/comercial/card-gbp-record-spec.md` — mapa campo→coluna→card/aba, Camada A (nativo) +
+   Camada B (App Card), regras de apresentação, teste de aceitação, guardrails.
+3. **App Card (Camada B) — `apps/hubspot-card-gbp/`** — UI extension na **developer platform 2026.03**;
+   exibe "Diagnóstico GBP" como **aba na coluna central** do Deal (`crm.record.tab`, `objectTypes ["DEAL"]`),
+   **read-only** via `actions.fetchCrmObjectProperties` (14 props compactas). **Compila e renderiza** no
+   Developer Test Account `51728276` (app "PHI Comercial", profile `CardGbp`). Restrição de tier: Free
+   **não renderiza** App Card em produção → Camada B fica protótipo no Test Account até upgrade (Starter+
+   público / Enterprise privado); a Camada A (nativa) é o que vai pra produção agora. Script
+   `scripts/seed-test-account.mjs` semeia dado de exemplo (Service Key beta ou Private App). Commits
+   `52bb533`→`a3c45bf` na `claude/consolidacao-2026-08`.
+4. **Módulo CMS** — 3 blocos (`module.html`+HubL, `module.css`, `module.js`) do card, alternativa de
+   produção que renderiza fora da restrição de tier do App Card.
+5. **2 briefs de sub-chat** (`docs/handoff/2026-08-18-*`): **Webview de métricas** (unificar 2 projetos
+   Lovable lendo BigQuery/Notion) e **finalização dos cards HubSpot**.
+
+**Hardening do Agregador T28** (`4sdG2UKMCBuFq8xn`, aplicado ao vivo, nada executado): (a) **3 guardas de
+ID** (GA4/Google Ads/GBP) — ausência de id ⇒ fonte não é chamada, sem falso alarme; (b) nó **Reclassifica
+IDs** → `source_status='not_configured'` (distinto de missing/error); (c) **fix do carimbo de `client_id`**
+no `[Err] Roteador Payload` (lê do item que errou — mata mais um `.first()`, alinhado ao ADR-33).
+
+**Incidente BigQuery:** credencial `Google BigQuery account` (compartilhada write+read) caiu → **1 dia sem
+ingestão (Ago 10)** no `raw_campaign_data`; reconectada pelo Olavo; **backfill do Ago 10 pendente**.
+Confirmado por SQL de gap: Jul 28→Ago 9 íntegro (domingos zerados = normal, sem gasto).
 
 ---
 
