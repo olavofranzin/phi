@@ -42,9 +42,10 @@ const num = (v: unknown): number | null => {
   return Number.isFinite(n) ? n : null;
 };
 
-// Bandas de status (spec §4): forte ≥70 · médio 40–69 · fraco <40
-const bandVariant = (v: number | null): 'success' | 'warning' | 'danger' | 'default' => {
-  if (v === null) return 'default';
+// Bandas de status (spec §4): forte ≥70 · médio 40–69 · fraco <40.
+// ProgressBar.variant só aceita 'success'|'warning'|'danger' (doc oficial 2026.03 — NÃO tem 'default').
+// Dimensão sem dado (null) não renderiza barra; ver o call-site abaixo.
+const bandVariant = (v: number): 'success' | 'warning' | 'danger' => {
   if (v >= 70) return 'success';
   if (v >= 40) return 'warning';
   return 'danger';
@@ -149,7 +150,7 @@ const GbpCard = ({ actions }: { actions: any }) => {
               <Text>{label}</Text>
               <Text format={{ fontWeight: 'bold' }}>{v ?? '—'}</Text>
             </Flex>
-            <ProgressBar value={v ?? 0} maxValue={100} variant={bandVariant(v)} />
+            {v !== null && <ProgressBar value={v} maxValue={100} variant={bandVariant(v)} />}
           </Flex>
         );
       })}
