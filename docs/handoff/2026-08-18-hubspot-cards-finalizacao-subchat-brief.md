@@ -24,6 +24,34 @@ renderiza App Card). O card **exibe** — nunca escreve propriedade nem move o d
   para copiar num módulo custom do CMS (renderiza fora da restrição de tier do App Card).
 - Commits na `claude/consolidacao-2026-08`: `2fb31ef` (rewrite 2026.03), `a1275ec` (nome do app), `a3c45bf` (seed).
 
+## 1.1. Layout do record — o que vai em cada coluna (DECIDIDO — não é achismo)
+Fonte: **spec §1** (mapa campo→coluna) + brief `2026-07-11` §1/§6 + mockup `e2c97b96`. **O sub-chat NÃO
+redecide isto — aplica.** Legenda de campos abaixo usa os internal names reais (confirmados no recon).
+
+**Coluna ESQUERDA — enxuta (regra: ZERO métrica de IA/GBP aqui).**
+- `dealname`, contato (nome / telefone / e-mail), **pipeline + etapa** (`dealstage`), botões de ação (Ligar/E-mail/Tarefa).
+- É só a identificação do negócio. Nenhum scoring, dimensão ou texto de IA nesta coluna.
+
+**Coluna CENTRAL — onde mora o diagnóstico. 3 blocos, de cima pra baixo:**
+1. **Destaques de dados** (topo, 3 campos): `potencial_comercial` · `oferta_recomendada` · `dealstage` (Etapa do negócio).
+2. **Card "Diagnóstico GBP"** (Camada B App Card, ou o card nativo) — os **14 campos compactos**, na hierarquia:
+   - (a) `potencial_comercial` (número grande + barra) + `oferta_recomendada` (badge por serviço);
+   - (b) `ipc` (oportunidade de venda) + `score_tecnico` (quão otimizado) — **rotular a diferença**;
+   - (c) 6 dimensões `dim_saude`/`dim_seo`/`dim_autoridade`/`dim_conversao`/`dim_engajamento`/`dim_conteudo` (barras + bandas forte≥70/médio40–69/fraco<40, valor sempre visível);
+   - (d) sinais de ouro: `nao_reivindicado` (chip só se true), `site_tipo`, `flags_score` (chips);
+   - (e) NBA: `proxima_acao_aceite`.
+   - **Regra de ouro: NENHUM texto longo no card** — string extensa vai pra aba (bloco 3).
+3. **Aba "IA / Diagnóstico"** (Camada A, nativo) — os **textões**, nesta ordem: `analise_gbp_ia`,
+   `proxima_acao_recomendada`, `abordagem_sugerida_ia`, `analise_site_ia`, `analise_instagram_ia`,
+   `dados_enriquecimento`, `followup`.
+
+**Coluna DIREITA — apoio:** associações (Contato / Empresa) + métricas secundárias
+(`createdate`, última modificação, `nao_reivindicado`, `site_tipo`).
+
+> Resumo da decisão: **esquerda = quem é o negócio** (sem IA) · **central = o diagnóstico** (Destaques →
+> card compacto → aba com os textões) · **direita = apoio/associações**. Campos compactos no card;
+> textos longos só na aba.
+
 ## 2. Dados que ainda faltam integrar (o foco deste sub-chat)
 1. **Semear + validar com dado:** rodar o `seed-test-account.mjs` na Test Account e **conferir o card populado**
    (Niti: Potencial 79, badge SVC-ADS, Engajamento 0 em vermelho). Ajustar props de componente se o CLI reclamar.
