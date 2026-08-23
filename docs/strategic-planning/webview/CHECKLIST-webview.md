@@ -21,11 +21,14 @@
       (`/clientes/:client`) + nav "Clientes". Guardrails verificados (view-only,
       não recalcula score, N/D honesto). Preview:
       https://id-preview--ff1059aa-df66-44dc-b8b1-9c2c5b09f22e.lovable.app
-- [ ] **W3 — Backend BigQuery.** Edge functions lendo `phi_score_current`,
-      `phi_score_history`, `raw_campaign_data`, `t28_campaign`/`t28_meta_campaign`.
-      Segredos só no servidor. Trocar `usePhiData` mock → fetch real.
-      ⚠️ Requer OK de budget do Olavo (send_message gasta créditos).
-- [ ] **W4 — Backend Notion.** Edge functions lendo Clientes / Campanhas /
+- [~] **W3 — Backend BigQuery.** Código pronto no git (self-hosted VPS, NÃO mais
+      Lovable/Supabase — ver ADR-webview-002). Backend Node `webview/server/`
+      autentica na service account, lê `phi_score_current` + `raw_campaign_data`,
+      guardrails aplicados; `usePhiData` agora busca do backend. Build do front e
+      smoke do servidor validados. **Falta o Olavo:** colar `GCP_SA_KEY` no VPS e
+      validar com a KIL (`/api/phi-snapshot?debug=1` → ajustar `COLS` se preciso).
+      Guia: `docs/strategic-planning/webview/GUIA-DEPLOY-VPS.md`.
+- [ ] **W4 — Backend Notion.** Ler Clientes / Campanhas /
       Projetos / Observações Diárias / PHI-ANÁLISES + `client_config` /
       `client_goal_history`.
 - [ ] **W5 — View métricas de campanha.** score+classificação, KPIs, tendência,

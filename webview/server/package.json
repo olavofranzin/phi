@@ -1,0 +1,17 @@
+{
+  "name": "phi-webview-server",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Backend do webview PHI — lê BigQuery (phi_prod) com a service account e serve o build React. View-only.",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
