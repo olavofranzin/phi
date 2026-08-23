@@ -51,23 +51,24 @@ aba **Scopes**, marque exatamente:
 Crie e **copie o Access Token** (formato `pat-na1-...`).
 
 ### 2.2. Rodar o seed
-De dentro de `apps/hubspot-card-gbp`:
 
-**macOS / Linux (bash/zsh):**
-```bash
-cd apps/hubspot-card-gbp
-export HUBSPOT_TEST_TOKEN="pat-na1-....."   # cole o token do Private App da Test Account
-node scripts/seed-test-account.mjs
-unset HUBSPOT_TEST_TOKEN                     # limpa da sessão do shell ao terminar
-```
-
-**Windows (PowerShell):**
+**Windows (PowerShell) — seu caminho real:**
 ```powershell
-cd apps\hubspot-card-gbp
-$env:HUBSPOT_TEST_TOKEN="pat-na1-....."
+cd C:\Users\olavo\phi\apps\hubspot-card-gbp
+$env:HUBSPOT_TEST_TOKEN="pat-na1-....."      # cole o token do Private App da Test Account
 node scripts\seed-test-account.mjs
-Remove-Item Env:\HUBSPOT_TEST_TOKEN
+Remove-Item Env:\HUBSPOT_TEST_TOKEN          # limpa o token do shell ao terminar
 ```
+
+<details><summary>macOS / Linux (bash/zsh)</summary>
+
+```bash
+cd ~/phi/apps/hubspot-card-gbp
+export HUBSPOT_TEST_TOKEN="pat-na1-....."
+node scripts/seed-test-account.mjs
+unset HUBSPOT_TEST_TOKEN
+```
+</details>
 
 ### 2.3. O que esperar
 O script imprime as props criadas (ou "já existe") e, no fim, **os links dos 2 deals**:
@@ -85,17 +86,18 @@ Guarde esses links — é onde você vai conferir o card.
 Faz o card **aparecer** no record do deal na Test Account.
 
 ### 3.1. Autenticar o CLI e apontar o profile para a Test Account
-De dentro de `apps/hubspot-card-gbp`:
-```bash
+No PowerShell, de dentro do projeto:
+```powershell
+cd C:\Users\olavo\phi\apps\hubspot-card-gbp
 hs auth                     # cola a PERSONAL ACCESS KEY da sua dev account
-hs project profile add      # cria src/hsprofile.<nome>.json (fica no .gitignore);
+hs project profile add      # cria src\hsprofile.<nome>.json (fica no .gitignore);
                             # escolha a conta 51728276 (Developer Test Account)
 ```
 O `hsprofile.<nome>.json` guarda o `accountId` da Test Account e **não** vai para o git (está no `.gitignore`).
 
 ### 3.2. Instalar as deps do card
-```bash
-cd src/app/cards && npm install && cd ../../..
+```powershell
+cd src\app\cards ; npm install ; cd ..\..\..
 ```
 
 ### 3.3. Rodar em modo dev (recomendado — hot reload)
