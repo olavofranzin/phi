@@ -1,10 +1,19 @@
 # Plano W3 — Backend BigQuery (edge functions) para o Webview
 
-- **Status:** Proposto (aguarda aprovação do Olavo antes de executar no Lovable)
+- **Status:** Revisado e aprovado nas decisões-chave (2026-08-22). Falta só o
+  OK de budget do Olavo para executar o build no Lovable.
 - **Data:** 2026-08-22
 - **Frente:** Webview · Lote 3
 - **Regra de ouro:** o webview EXIBE. Segredos só no servidor. Score é fato
   (lê `phi_score_current`, nunca recalcula — ADR-003).
+
+## 0. Decisões aprovadas pelo Olavo (revisão de 2026-08-22)
+
+1. **Backend = Supabase** (backend nativo do Lovable + edge functions).
+2. **Fase híbrida aceita:** campanhas puxam do BigQuery real já no W3; o Dossiê
+   do Cliente continua em mock até o W4 (Notion). Entrega valor antes.
+3. **Validação com cliente KIL de referência:** conferir score/KPIs da campanha
+   `GADS-21149189736` no webview contra `phi_score_current`, valor a valor.
 
 ---
 
