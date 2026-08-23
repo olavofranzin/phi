@@ -1,8 +1,9 @@
 # Guia de deploy do Webview no VPS (Hostinger) + credenciais
 
 > Objetivo: subir o webview PHI no seu VPS. Backend Node (guarda o segredo e lê
-> o BigQuery) + build React servido pelo mesmo Node. Tudo por `git pull`.
-> Pré-requisitos no VPS: Node 20+ e git.
+> o BigQuery) + build React servido pelo mesmo Node.
+> Dois caminhos: **Método A — EasyPanel (recomendado, já instalado no seu VPS)**
+> ou **Método B — manual (Node + pm2 + nginx)**.
 
 ## Visão geral
 
@@ -15,8 +16,50 @@ Navegador → (VPS) Node/Express  ──> BigQuery (phi_prod)
 O código vive em `olavofranzin/phi`, pasta `webview/`:
 - `webview/`         → app React (Vite)
 - `webview/server/`  → backend Node/Express
+- `webview/Dockerfile` → imagem única (front + backend) para o EasyPanel
 
 ---
+
+# MÉTODO A — EasyPanel (RECOMENDADO)
+
+> Você já tem EasyPanel no VPS (é onde roda o n8n). Ele builda direto do GitHub,
+> injeta o segredo como variável de ambiente e cuida de domínio + HTTPS.
+
+### A.1 — Gerar a chave (ver Passo 1 abaixo, é igual para os dois métodos).
+
+### A.2 — Criar o App no EasyPanel
+1. EasyPanel → seu projeto → **+ Create → App**.
+2. **Source:** GitHub → repositório `olavofranzin/phi`, branch
+   `claude/webview-metricas-clientes-lxps0l` (depois do merge, use `main`).
+3. **Build:** tipo **Dockerfile**.
+   - **Build context / Root:** `webview`  (a pasta, não a raiz do repo).
+   - **Dockerfile path:** `Dockerfile` (relativo ao context) ou `webview/Dockerfile`.
+4. **Porta:** o container expõe **8080** (aponte o domínio para essa porta).
+
+### A.3 — Variáveis de ambiente (aba Environment do App)
+Cole exatamente:
+- `GCP_SA_KEY` → o **JSON inteiro** da service account, em **uma linha**
+  (o JSON já traz os `\n` escapados dentro de `private_key` — cole como está).
+- `BQ_BILLING_PROJECT` → `phi-production-488720`
+- `BQ_DATA_PROJECT` → `project-0e7c58d4-656f-49e8-807`
+- `PORT` → `8080`
+
+> O segredo fica só no servidor (EasyPanel), nunca no navegador.
+
+### A.4 — Deploy e domínio
+1. Clique **Deploy**. Acompanhe o log de build (Docker).
+2. Em **Domains**, adicione um domínio/subdomínio (ex.: `phi.suaagencia.com.br`)
+   apontando para a porta **8080**; o EasyPanel emite o HTTPS.
+3. Atualizações futuras: `git push` → botão **Deploy** (ou webhook de auto-deploy).
+
+### A.5 — Validar
+Pule para **Passo 7 — Validar (cliente KIL)** no fim deste guia.
+
+---
+
+# MÉTODO B — Manual (Node + pm2 + nginx)
+
+> Use este método se preferir não usar o EasyPanel. Pré-requisitos: Node 20+ e git.
 
 ## Passo 1 — Gerar a chave da service account (Google Cloud)
 
