@@ -19,7 +19,7 @@
 const path = require("path");
 const crypto = require("crypto");
 const express = require("express");
-const { getNameMaps, getClients, clientNum } = require("./notion");
+const { getNameMaps, getClients, clientNum, debugDatabase } = require("./notion");
 
 const PORT = process.env.PORT || 8080;
 // Projeto de billing/execução do job = projeto ao qual a service account pertence.
@@ -337,6 +337,17 @@ app.get("/api/phi-snapshot", async (req, res) => {
     });
   } catch (err) {
     console.error("[phi-snapshot]", err.message);
+    res.status(502).json({ error: err.message });
+  }
+});
+
+// Diagnóstico de uma base do Notion: /api/notion-debug?db=<database_id>
+app.get("/api/notion-debug", async (req, res) => {
+  const db = String(req.query.db || "").trim();
+  if (!db) return res.status(400).json({ error: "parâmetro 'db' (database_id) obrigatório" });
+  try {
+    res.json(await debugDatabase(db));
+  } catch (err) {
     res.status(502).json({ error: err.message });
   }
 });

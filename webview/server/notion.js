@@ -175,4 +175,30 @@ async function getNameMaps() {
   }
 }
 
-module.exports = { getNameMaps, getClients, clientNum };
+/** Diagnóstico: primeiras `limit` linhas de uma base, com nome/tipo/valor das
+ *  properties + a URL da página no Notion. Serve para descobrir os campos reais. */
+async function debugDatabase(dbId, limit = 3) {
+  if (!TOKEN) throw new Error("NOTION_TOKEN ausente no servidor.");
+  const res = await fetch(`https://api.notion.com/v1/databases/${dbId}/query`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${TOKEN}`,
+      "Notion-Version": NOTION_VERSION,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ page_size: Math.min(limit, 5) }),
+  });
+  if (!res.ok) throw new Error(`Notion ${dbId} ${res.status}: ${(await res.text()).slice(0, 300)}`);
+  const data = await res.json();
+  const rows = (data.results || []).map((p) => {
+    const props = {};
+    for (const [k, v] of Object.entries(p.properties || {})) {
+      props[k] = { type: v.type, value: readProp(v) };
+    }
+    return { _url: p.url, _id: p.id, props };
+  });
+  const columns = rows[0] ? Object.keys(rows[0].props) : [];
+  return { database_id: dbId, count: rows.length, columns, rows };
+}
+
+module.exports = { getNameMaps, getClients, clientNum, debugDatabase };
