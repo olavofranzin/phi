@@ -41,11 +41,12 @@ O código vive em `olavofranzin/phi`, pasta `webview/`:
 Cole exatamente:
 - `GCP_SA_KEY` → o **JSON inteiro** da service account, em **uma linha**
   (o JSON já traz os `\n` escapados dentro de `private_key` — cole como está).
-- `BQ_BILLING_PROJECT` → `phi-production-488720`
+- `BQ_BILLING_PROJECT` → `project-0e7c58d4-656f-49e8-807`
 - `BQ_DATA_PROJECT` → `project-0e7c58d4-656f-49e8-807`
 - `PORT` → `8080`
 
-> O segredo fica só no servidor (EasyPanel), nunca no navegador.
+> Use o projeto ao qual a service account pertence (com a `antigravity-agent` é
+> o mesmo do dataset). O segredo fica só no servidor (EasyPanel), nunca no navegador.
 
 ### A.4 — Deploy e domínio
 1. Clique **Deploy**. Acompanhe o log de build (Docker).

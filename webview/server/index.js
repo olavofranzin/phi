@@ -21,7 +21,10 @@ const crypto = require("crypto");
 const express = require("express");
 
 const PORT = process.env.PORT || 8080;
-const BQ_BILLING_PROJECT = process.env.BQ_BILLING_PROJECT || "phi-production-488720";
+// Projeto de billing/execução do job = projeto ao qual a service account pertence.
+// Com a SA antigravity-agent (que vive no mesmo projeto do dataset), billing e
+// dados são o MESMO projeto. Ambos podem ser sobrescritos por env no EasyPanel.
+const BQ_BILLING_PROJECT = process.env.BQ_BILLING_PROJECT || "project-0e7c58d4-656f-49e8-807";
 const BQ_DATA_PROJECT = process.env.BQ_DATA_PROJECT || "project-0e7c58d4-656f-49e8-807";
 const DATASET = "phi_prod";
 
