@@ -32,8 +32,9 @@ O código vive em `olavofranzin/phi`, pasta `webview/`:
 2. **Source:** GitHub → repositório `olavofranzin/phi`, branch
    `claude/webview-metricas-clientes-lxps0l` (depois do merge, use `main`).
 3. **Build:** tipo **Dockerfile**.
-   - **Build context / Root:** `webview`  (a pasta, não a raiz do repo).
-   - **Dockerfile path:** `Dockerfile` (relativo ao context) ou `webview/Dockerfile`.
+   - **Caminho de Build (contexto):** `/`  (raiz do repo).
+   - **Arquivo (Dockerfile):** `webview/Dockerfile`.
+   - (O Dockerfile já referencia a pasta `webview/`, então o contexto fica na raiz.)
 4. **Porta:** o container expõe **8080** (aponte o domínio para essa porta).
 
 ### A.3 — Variáveis de ambiente (aba Environment do App)

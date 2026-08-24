@@ -1,0 +1,8 @@
+# Contexto de build do EasyPanel é a raiz do repo; exclua o que não precisa
+# ir para a imagem do webview.
+**/node_modules
+webview/dist
+webview/server/node_modules
+**/.env
+*.log
+.git

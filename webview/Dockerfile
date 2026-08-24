@@ -1,17 +1,21 @@
 # PHI Webview — imagem única: builda o front (Vite) e roda o backend Node,
 # que serve o build estático (/app/dist) + a API que lê o BigQuery.
-# Feita para o EasyPanel (build context = pasta webview/).
+#
+# Feita para o EasyPanel com:
+#   - Caminho de Build (contexto) = /        (raiz do repositório)
+#   - Arquivo (Dockerfile)        = webview/Dockerfile
+# Por isso os COPY abaixo referenciam a pasta "webview/".
 
 FROM node:20-slim
 
 WORKDIR /app
 
 # 1) Dependências do front (cache de camada)
-COPY package.json package-lock.json ./
+COPY webview/package.json webview/package-lock.json ./
 RUN npm install --no-audit --no-fund
 
 # 2) Código do front + build -> /app/dist
-COPY . .
+COPY webview/ .
 RUN npm run build
 
 # 3) Dependências do backend
