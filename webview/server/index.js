@@ -41,8 +41,8 @@ const COLS = {
   status: ["phi_classification", "status", "classification", "phi_status"],
   score: ["phi_value", "phi_score", "score", "current_score"],
   name: ["campaign_name", "name", "nome", "nome_da_campanha"],
-  // raw_campaign_data (brutos — CPA/CTR/ROAS são derivados)
-  date: ["date", "day", "dt", "data"],
+  // datas (raw usa "date"; phi_score_history usa "calculated_date")
+  date: ["date", "calculated_date", "day", "dt", "data"],
   investment: ["cost", "investment", "spend", "investimento", "custo"],
   conversions: ["conversions", "conversoes", "conv"],
   revenue: ["revenue", "receita"],
@@ -358,17 +358,15 @@ app.get("/api/phi-score-history", async (req, res) => {
   if (!campaign) return res.status(400).json({ error: "parâmetro 'campaign' obrigatório" });
   try {
     const idCol = COLS.campaignId[0];
-    const dateCol = COLS.date[0];
-    const scoreCol = COLS.score[0];
+    // SELECT * e mapeia/ordena em JS — robusto ao nome real da coluna de data.
     const rows = await runBigQuery(
       `SELECT * FROM ${tbl("phi_score_history")} ` +
-        `WHERE CAST(\`${idCol}\` AS STRING) = '${campaign.replace(/'/g, "")}' ` +
-        `ORDER BY \`${dateCol}\``,
+        `WHERE CAST(\`${idCol}\` AS STRING) = '${campaign.replace(/'/g, "")}'`,
     );
-    const series = rows.map((r) => ({
-      date: pick(r, COLS.date),
-      score: num(pick(r, COLS.score)),
-    }));
+    const series = rows
+      .map((r) => ({ date: pick(r, COLS.date), score: num(pick(r, COLS.score)) }))
+      .filter((p) => p.date && p.score !== null)
+      .sort((a, b) => String(a.date).localeCompare(String(b.date)));
     res.json(series);
   } catch (err) {
     console.error("[phi-score-history]", err.message);

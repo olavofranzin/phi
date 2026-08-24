@@ -33,10 +33,13 @@
       Falta: Visão Cliente ler dados REAIS do Notion (hoje o dossiê é mock).
       Projetos / Observações Diárias / PHI-ANÁLISES + `client_config` /
       `client_goal_history`.
-- [ ] **W5 — View métricas de campanha.** score+classificação, KPIs, tendência,
-      status. N/D honesto sempre.
-- [ ] **W6 — View cliente + navegação.** Lista de clientes + dossiê read-only;
-      navegação cliente ⇄ campanha.
+- [x] **W5 — View métricas de campanha.** CONCLUÍDO. score+classificação, KPIs
+      (derivados), status e **tendência real** (gráfico Evolução do Score ligado a
+      `/api/phi-score-history` → `phi_score_history`). N/D honesto.
+- [x] **W6 — View cliente + navegação.** CONCLUÍDO. Lista de clientes reais (com
+      campanhas), página híbrida (cadastro Notion + dossiê a preencher), e
+      navegação cliente ⇄ campanha (cliente clicável no detalhe da campanha;
+      campanhas clicáveis na página do cliente).
 
 ## Guardrails (sempre)
 - Exibe, não escreve. Score é fato (não recalcula — ADR-003).

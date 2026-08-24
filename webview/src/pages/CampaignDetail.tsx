@@ -14,6 +14,7 @@ import {
 } from "recharts";
 
 import { usePhiData } from "@/hooks/usePhiData";
+import { useScoreHistory } from "@/hooks/useScoreHistory";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -31,6 +32,7 @@ import {
   type CampaignStatus,
   type OptimizationResult,
   type Priority,
+  type ScorePoint,
 } from "@/lib/phi/types";
 import { cn } from "@/lib/utils";
 
@@ -80,6 +82,7 @@ export default function CampaignDetail() {
   const { data, isLoading } = usePhiData();
 
   const campaign = data?.campaigns.find((c) => c.id === id);
+  const { data: history } = useScoreHistory(campaign?.id);
   const tasks = useMemo(
     () => (data && id ? data.tasks.filter((t) => t.campaignId === id) : []),
     [data, id],
@@ -127,7 +130,7 @@ export default function CampaignDetail() {
 
       <CampaignHeader campaign={campaign} />
 
-      <ScoreEvolution campaign={campaign} logs={logs} />
+      <ScoreEvolution history={history ?? []} logs={logs} />
 
       <div>
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
@@ -185,6 +188,8 @@ export default function CampaignDetail() {
 /* ------------------------------- subviews ------------------------------- */
 
 function CampaignHeader({ campaign }: { campaign: Campaign }) {
+  const navigate = useNavigate();
+  const hasClient = campaign.client && campaign.client !== "N/D";
   return (
     <Card>
       <CardContent className="flex flex-col gap-6 p-6 md:flex-row md:items-center md:justify-between">
@@ -194,7 +199,18 @@ function CampaignHeader({ campaign }: { campaign: Campaign }) {
             <StatusBadge status={campaign.status} size="lg" />
           </div>
           <p className="text-sm text-muted-foreground">
-            {campaign.client} · {campaign.platform}
+            {hasClient ? (
+              <button
+                type="button"
+                onClick={() => navigate(`/clientes/${encodeURIComponent(campaign.client)}`)}
+                className="text-primary underline underline-offset-4 hover:opacity-80"
+              >
+                {campaign.client}
+              </button>
+            ) : (
+              campaign.client
+            )}{" "}
+            · {campaign.platform}
           </p>
           <p className="font-mono text-xs text-muted-foreground">
             Última atualização PHI · {fmtDate(campaign.lastUpdate)} {fmtTime(campaign.lastUpdate)}
@@ -248,14 +264,14 @@ function ScoreGauge({ score, status }: { score: number; status: CampaignStatus }
 }
 
 function ScoreEvolution({
-  campaign,
+  history,
   logs,
 }: {
-  campaign: Campaign;
+  history: ScorePoint[];
   logs: ReturnType<typeof Object>[];
 }) {
   // Build chart data and overlay optimization markers on matching dates
-  const data = campaign.scoreHistory.map((p) => ({
+  const data = history.map((p) => ({
     date: p.date,
     label: fmtDateShort(p.date),
     score: p.score,
@@ -276,12 +292,10 @@ function ScoreEvolution({
     <Card>
       <CardHeader className="pb-2">
         <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-          <CardTitle className="text-base">Evolução do Score (30 dias)</CardTitle>
+          <CardTitle className="text-base">Evolução do Score</CardTitle>
           <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
             <Info className="h-3 w-3" />
-            {campaign.scoreHistory.length === 0
-              ? "Sem histórico carregado (será conectado no próximo lote)"
-              : "Evolução do score diário"}
+            {data.length === 0 ? "Sem histórico disponível" : "Score diário (phi_score_history)"}
           </div>
         </div>
       </CardHeader>
