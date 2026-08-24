@@ -19,7 +19,7 @@
 const path = require("path");
 const crypto = require("crypto");
 const express = require("express");
-const { getNameMaps, clientNum } = require("./notion");
+const { getNameMaps, getClients, clientNum } = require("./notion");
 
 const PORT = process.env.PORT || 8080;
 // Projeto de billing/execução do job = projeto ao qual a service account pertence.
@@ -337,6 +337,17 @@ app.get("/api/phi-snapshot", async (req, res) => {
     });
   } catch (err) {
     console.error("[phi-snapshot]", err.message);
+    res.status(502).json({ error: err.message });
+  }
+});
+
+// Cadastro real dos clientes (Notion Clientes). Vazio se sem NOTION_TOKEN.
+app.get("/api/clients", async (_req, res) => {
+  try {
+    const clients = await getClients();
+    res.json(clients);
+  } catch (err) {
+    console.error("[clients]", err.message);
     res.status(502).json({ error: err.message });
   }
 });

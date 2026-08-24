@@ -33,9 +33,12 @@ export default function ClientsList() {
     if (!dossiers) return [];
     return dossiers
       .map((d) => {
-        const campaigns = phi?.campaigns.filter((c) => c.client === d.client) ?? [];
-        return { client: d.client, campaigns, ...aggregateClient(campaigns) };
+        const name = d.name ?? "";
+        const campaigns = phi?.campaigns.filter((c) => c.client === name) ?? [];
+        return { client: name, campaigns, ...aggregateClient(campaigns) };
       })
+      // Só clientes que têm campanhas (decisão de escopo do W4).
+      .filter((r) => r.client && r.count > 0)
       .sort((a, b) => a.client.localeCompare(b.client, "pt-BR"));
   }, [dossiers, phi]);
 
@@ -44,7 +47,7 @@ export default function ClientsList() {
       <div>
         <h1 className="font-serif text-2xl tracking-tight md:text-3xl">Clientes</h1>
         <p className="text-sm text-muted-foreground">
-          Dossiê de cada cliente e desempenho agregado das suas campanhas.
+          Clientes com campanhas ativas e o desempenho agregado delas.
         </p>
       </div>
 
@@ -63,7 +66,7 @@ export default function ClientsList() {
             </div>
           ) : rows.length === 0 ? (
             <p className="px-6 py-8 text-center text-sm text-muted-foreground">
-              Nenhum cliente cadastrado ainda.
+              Nenhum cliente com campanhas no momento.
             </p>
           ) : (
             <ul className="divide-y divide-border">

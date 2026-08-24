@@ -1,20 +1,25 @@
 import { useQuery } from "@tanstack/react-query";
-import { CLIENT_DOSSIERS } from "@/lib/phi/clientMock";
-import type { ClientDossier } from "@/lib/phi/clientTypes";
+import type { ClientRecord } from "@/lib/phi/clientTypes";
 
 const STALE_MS = 5 * 60 * 1000;
+const API_BASE = import.meta.env.VITE_PHI_API_BASE ?? "";
 
 /**
- * Single source of truth for client dossier data (read-only).
- * Today: returns static mock dossiers with simulated latency.
- * Tomorrow: swap the queryFn for a Notion/BigQuery-backed fetcher with the same shape.
+ * Cadastro real dos clientes (Notion Clientes), via backend. View-only.
+ * Em erro/sem token, o backend devolve lista vazia (a UI mostra estado vazio).
  */
 export function useClientData() {
-  return useQuery<ClientDossier[]>({
+  return useQuery<ClientRecord[]>({
     queryKey: ["phi", "clients"],
     queryFn: async () => {
-      await new Promise((r) => setTimeout(r, 300));
-      return CLIENT_DOSSIERS;
+      const res = await fetch(`${API_BASE}/api/clients`, {
+        headers: { Accept: "application/json" },
+      });
+      if (!res.ok) {
+        const body = await res.text().catch(() => "");
+        throw new Error(`clients ${res.status}: ${body.slice(0, 200)}`);
+      }
+      return (await res.json()) as ClientRecord[];
     },
     staleTime: STALE_MS,
     refetchOnWindowFocus: false,

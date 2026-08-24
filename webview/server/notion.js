@@ -35,6 +35,91 @@ function clientNum(v) {
   return m ? m[1] : null;
 }
 
+/** Lê uma property do Notion de vários tipos e devolve valor primitivo (ou null). */
+function readProp(prop) {
+  if (!prop) return null;
+  switch (prop.type) {
+    case "title":
+      return (prop.title || []).map((t) => t.plain_text).join("").trim() || null;
+    case "rich_text":
+      return (prop.rich_text || []).map((t) => t.plain_text).join("").trim() || null;
+    case "email":
+      return prop.email || null;
+    case "url":
+      return prop.url || null;
+    case "phone_number":
+      return prop.phone_number || null;
+    case "select":
+      return prop.select ? prop.select.name : null;
+    case "status":
+      return prop.status ? prop.status.name : null;
+    case "multi_select":
+      return (prop.multi_select || []).map((o) => o.name);
+    case "number":
+      return prop.number == null ? null : prop.number;
+    case "date":
+      return prop.date ? prop.date.start : null;
+    case "unique_id":
+      return prop.unique_id
+        ? prop.unique_id.prefix
+          ? `${prop.unique_id.prefix}-${prop.unique_id.number}`
+          : String(prop.unique_id.number)
+        : null;
+    case "formula": {
+      const f = prop.formula;
+      if (!f) return null;
+      if (f.string != null) return f.string;
+      if (f.number != null) return String(f.number);
+      if (f.boolean != null) return String(f.boolean);
+      return null;
+    }
+    default:
+      return null;
+  }
+}
+
+let clientsCache = { rows: null, exp: 0 };
+
+/** Registros reais dos clientes (Notion Clientes). Best-effort (vazio sem token). */
+async function getClients() {
+  const now = Date.now();
+  if (clientsCache.rows && now < clientsCache.exp) return clientsCache.rows;
+  if (!TOKEN) return [];
+  try {
+    const pages = await queryAll(CLIENTS_DB);
+    const rows = pages.map((p) => {
+      const x = p.properties || {};
+      const clientId = readProp(x["client_id"]);
+      return {
+        clientId,
+        num: clientNum(clientId),
+        name: readProp(x["Nome"]) || readProp(x["Nome do Cliente"]) || null,
+        status: readProp(x["Status"]),
+        sla: readProp(x["SLA"]),
+        riscoChurn: readProp(x["Risco de Churn"]),
+        canalAquisicao: readProp(x["Canal de Aquisição"]),
+        email: readProp(x["Email"]),
+        fone: readProp(x["Fone"]),
+        endereco: readProp(x["Endereço"]),
+        site: readProp(x["Site"]),
+        cnpj: readProp(x["CNPJ"]),
+        segmento: readProp(x["Segmento"]),
+        servicos: readProp(x["Serviços Prestados"]) || [],
+        ticketLtv: readProp(x["Ticket/LTV"]),
+        margem: readProp(x["Margem de Contribuição"]),
+        nps: readProp(x["NPS Atual (0-10)"]),
+        inicioContrato: readProp(x["Inicio Contrato"]),
+        terminoContrato: readProp(x["Término Contrato"]),
+      };
+    });
+    clientsCache = { rows, exp: now + TTL_MS };
+    return rows;
+  } catch (e) {
+    console.error("[notion getClients]", e.message);
+    return [];
+  }
+}
+
 async function queryAll(dbId) {
   const rows = [];
   let cursor;
@@ -90,4 +175,4 @@ async function getNameMaps() {
   }
 }
 
-module.exports = { getNameMaps, clientNum };
+module.exports = { getNameMaps, getClients, clientNum };
