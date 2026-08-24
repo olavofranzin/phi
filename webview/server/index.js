@@ -19,6 +19,7 @@
 const path = require("path");
 const crypto = require("crypto");
 const express = require("express");
+const { getNameMaps, clientNum } = require("./notion");
 
 const PORT = process.env.PORT || 8080;
 // Projeto de billing/execução do job = projeto ao qual a service account pertence.
@@ -204,8 +205,11 @@ function platformFrom(id, rawPlatform) {
   return "N/D";
 }
 
-/** Monta o array de campaigns no shape do front (types.ts). */
-function buildCampaigns(scoreRows, rawRows) {
+/** Monta o array de campaigns no shape do front (types.ts).
+ *  `names` = { campaignName: Map, clientName: Map } vindo do Notion (opcional). */
+function buildCampaigns(scoreRows, rawRows, names) {
+  const campaignName = names?.campaignName;
+  const clientName = names?.clientName;
   // índice de raw_campaign_data: linha mais recente por campanha
   const latestByCampaign = new Map();
   for (const r of rawRows) {
@@ -252,10 +256,17 @@ function buildCampaigns(scoreRows, rawRows) {
 
     const scoreRaw = num(pick(s, COLS.score));
 
+    const idStr = id ? String(id) : "";
+    const rawClientId = pick(s, COLS.client);
+    const nomeCampanha =
+      (campaignName && campaignName.get(idStr)) || pick(s, COLS.name) || (idStr || "N/D");
+    const nomeCliente =
+      (clientName && clientName.get(clientNum(rawClientId))) || rawClientId || "N/D";
+
     return {
-      id: id ? String(id) : "",
-      name: pick(s, COLS.name) || (id ? String(id) : "N/D"),
-      client: pick(s, COLS.client) || "N/D",
+      id: idStr,
+      name: nomeCampanha,
+      client: nomeCliente,
       platform: platformFrom(id, pick(s, COLS.platform) || pick(raw, COLS.platform)),
       status: normStatus(pick(s, COLS.status)),
       score: scoreRaw === null ? null : Math.round(scoreRaw),
@@ -284,7 +295,11 @@ function buildCampaigns(scoreRows, rawRows) {
 const app = express();
 
 app.get("/api/health", (_req, res) => {
-  res.json({ ok: true, hasSecret: !!process.env.GCP_SA_KEY });
+  res.json({
+    ok: true,
+    hasSecret: !!process.env.GCP_SA_KEY,
+    hasNotion: !!process.env.NOTION_TOKEN,
+  });
 });
 
 // Snapshot de campanhas (score + KPIs). ?debug=1 devolve colunas cruas.
@@ -309,7 +324,10 @@ app.get("/api/phi-snapshot", async (req, res) => {
         `WHERE \`${pickDateCol()}\` >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY)`,
     ).catch(() => []);
 
-    const campaigns = buildCampaigns(scoreRows, rawRows);
+    // Nomes (Notion) — best-effort; se falhar, cai no id/sigla.
+    const names = await getNameMaps().catch(() => null);
+
+    const campaigns = buildCampaigns(scoreRows, rawRows, names);
     res.json({
       campaigns,
       tasks: [],

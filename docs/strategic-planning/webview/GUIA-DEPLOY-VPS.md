@@ -44,9 +44,17 @@ Cole exatamente:
 - `BQ_BILLING_PROJECT` → `project-0e7c58d4-656f-49e8-807`
 - `BQ_DATA_PROJECT` → `project-0e7c58d4-656f-49e8-807`
 - `PORT` → `8080`
+- `NOTION_TOKEN` → *(opcional)* token de uma integração interna do Notion, para
+  exibir o **nome** da campanha e do cliente no lugar do id/sigla. Sem ele, o
+  webview mostra `GADS-...` e `CLI-4`. Como obter: Notion → Settings →
+  Connections → *Develop or manage integrations* → nova integração interna →
+  copie o *Internal Integration Secret*; depois **compartilhe** as bases
+  **Campanhas** e **Clientes** com essa integração (nas bases: ••• → Connections →
+  adicione a integração). Se você já tem a integração do n8n com acesso a essas
+  bases, pode reusar o token dela.
 
 > Use o projeto ao qual a service account pertence (com a `antigravity-agent` é
-> o mesmo do dataset). O segredo fica só no servidor (EasyPanel), nunca no navegador.
+> o mesmo do dataset). Os segredos ficam só no servidor (EasyPanel), nunca no navegador.
 
 ### A.4 — Deploy e domínio
 1. Clique **Deploy**. Acompanhe o log de build (Docker).
