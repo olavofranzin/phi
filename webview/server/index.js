@@ -35,15 +35,20 @@ const DATASET = "phi_prod";
 const COLS = {
   // phi_score_current
   campaignId: ["campaign_id", "campaignId", "id", "campaign", "campaign_key"],
-  client: ["client_slug", "client", "client_id", "cliente", "client_name"],
+  client: ["client_id", "client_slug", "client", "cliente", "client_name"],
   platform: ["platform", "plataforma", "source", "channel"],
-  status: ["status", "classification", "phi_status", "status_geral", "classificacao"],
-  score: ["phi_score", "score", "current_score", "score_atual"],
+  status: ["phi_classification", "status", "classification", "phi_status"],
+  score: ["phi_value", "phi_score", "score", "current_score"],
   name: ["campaign_name", "name", "nome", "nome_da_campanha"],
-  // raw_campaign_data
+  // raw_campaign_data (brutos — CPA/CTR/ROAS são derivados)
   date: ["date", "day", "dt", "data"],
   investment: ["cost", "investment", "spend", "investimento", "custo"],
   conversions: ["conversions", "conversoes", "conv"],
+  revenue: ["revenue", "receita"],
+  impressions: ["impressions", "impressoes"],
+  clicks: ["clicks", "cliques"],
+  primaryMetricGoal: ["primary_metric_goal", "cpa_alvo", "target"],
+  // colunas prontas (se existirem em alguma fonte)
   ctr: ["ctr"],
   cpa: ["cpa", "cost_per_conversion", "cpa_actual"],
   roas: ["roas"],
@@ -179,6 +184,25 @@ function normStatus(v) {
   const s = String(v).toUpperCase().trim();
   return STATUS_SET.includes(s) ? s : "LEARNING";
 }
+function round(n, d = 2) {
+  if (n === null || n === undefined) return null;
+  const f = Math.pow(10, d);
+  return Math.round(n * f) / f;
+}
+/** Plataforma pelo campo bruto ou pelo prefixo do id (GADS-... / META-...). */
+function platformFrom(id, rawPlatform) {
+  if (rawPlatform) {
+    const p = String(rawPlatform).toLowerCase();
+    if (p.includes("google") || p.includes("gads")) return "Google Ads";
+    if (p.includes("meta") || p.includes("face") || p.includes("fb") || p.includes("insta"))
+      return "Meta Ads";
+  }
+  const s = String(id || "").toUpperCase();
+  if (s.startsWith("GADS") || s.startsWith("GOOG")) return "Google Ads";
+  if (s.startsWith("META") || s.startsWith("MADS") || s.startsWith("FB") || s.startsWith("IG"))
+    return "Meta Ads";
+  return "N/D";
+}
 
 /** Monta o array de campaigns no shape do front (types.ts). */
 function buildCampaigns(scoreRows, rawRows) {
@@ -198,28 +222,49 @@ function buildCampaigns(scoreRows, rawRows) {
     const id = pick(s, COLS.campaignId);
     const raw = (id && latestByCampaign.get(id)) || {};
 
+    const cost = num(pick(raw, COLS.investment));
     const conversions = num(pick(raw, COLS.conversions));
+    const revenue = num(pick(raw, COLS.revenue));
+    const impressions = num(pick(raw, COLS.impressions));
+    const clicks = num(pick(raw, COLS.clicks));
+
+    // KPIs derivados (matemática de exibição — NÃO é o score, que vem pronto).
+    // CTR pronto se existir; senão clicks/impressions.
+    let ctr = num(pick(raw, COLS.ctr));
+    if (ctr === null && impressions !== null && impressions > 0 && clicks !== null) {
+      ctr = clicks / impressions;
+    }
+    // CPA pronto se existir; senão cost/conversions.
     let cpaActual = num(pick(raw, COLS.cpa));
+    if (cpaActual === null && conversions !== null && conversions > 0 && cost !== null) {
+      cpaActual = cost / conversions;
+    }
+    // ROAS pronto se existir; senão revenue/cost.
     let roas = num(pick(raw, COLS.roas));
-    // Guardrail: sem conversões => CPA/ROAS não fazem sentido => N/D
+    if (roas === null && cost !== null && cost > 0 && revenue !== null) {
+      roas = revenue / cost;
+    }
+    // Guardrail: sem conversões => CPA/ROAS = N/D (nunca 0).
     if (conversions === 0) {
       cpaActual = null;
       roas = null;
     }
 
+    const scoreRaw = num(pick(s, COLS.score));
+
     return {
       id: id ? String(id) : "",
       name: pick(s, COLS.name) || (id ? String(id) : "N/D"),
       client: pick(s, COLS.client) || "N/D",
-      platform: pick(s, COLS.platform) || "N/D",
+      platform: platformFrom(id, pick(s, COLS.platform) || pick(raw, COLS.platform)),
       status: normStatus(pick(s, COLS.status)),
-      score: num(pick(s, COLS.score)),
-      investment: num(pick(raw, COLS.investment)),
-      cpaTarget: null,
-      cpaActual,
+      score: scoreRaw === null ? null : Math.round(scoreRaw),
+      investment: cost,
+      cpaTarget: num(pick(raw, COLS.primaryMetricGoal)),
+      cpaActual: round(cpaActual, 2),
       conversions,
-      ctr: num(pick(raw, COLS.ctr)),
-      roas,
+      ctr: round(ctr, 4),
+      roas: round(roas, 2),
       lastUpdate: pick(raw, COLS.date) || null,
       scoreHistory: [],
       deltas: {
@@ -261,7 +306,7 @@ app.get("/api/phi-snapshot", async (req, res) => {
     // janela curta de raw_campaign_data (partição por date) p/ pegar o dia mais recente
     const rawRows = await runBigQuery(
       `SELECT * FROM ${tbl("raw_campaign_data")} ` +
-        `WHERE \`${pickDateCol()}\` >= DATE_SUB(CURRENT_DATE(), INTERVAL 3 DAY)`,
+        `WHERE \`${pickDateCol()}\` >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY)`,
     ).catch(() => []);
 
     const campaigns = buildCampaigns(scoreRows, rawRows);
