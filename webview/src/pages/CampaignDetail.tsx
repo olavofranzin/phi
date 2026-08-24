@@ -48,11 +48,6 @@ function txt(v: unknown): string {
   if (Array.isArray(v)) return v.length ? v.join(", ") : ND;
   return String(v);
 }
-function fmtBRL(v: unknown): string {
-  const n = typeof v === "number" ? v : Number(v);
-  if (v === null || v === undefined || v === "" || Number.isNaN(n)) return ND;
-  return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 2 });
-}
 function fmtNum(v: unknown, digits = 2): string {
   const n = typeof v === "number" ? v : Number(v);
   if (v === null || v === undefined || v === "" || Number.isNaN(n)) return ND;
@@ -62,6 +57,15 @@ function fmtDate(v: unknown): string {
   if (!v) return ND;
   const d = new Date(String(v));
   return Number.isNaN(d.getTime()) ? String(v) : d.toLocaleDateString("pt-BR");
+}
+/** Arredonda quaisquer números decimais dentro de um texto para no máx. 2 casas. */
+function roundNums(s: string): string {
+  if (!s || s === ND) return s;
+  return s.replace(/\d+\.\d+/g, (m) => String(Math.round(parseFloat(m) * 100) / 100));
+}
+function maeNome(v: unknown): string {
+  if (Array.isArray(v)) return (v[0] as string) ?? "Métrica-mãe";
+  return v ? String(v) : "Métrica-mãe";
 }
 
 export default function CampaignDetail() {
@@ -134,9 +138,10 @@ export default function CampaignDetail() {
         </Card>
       </div>
 
-      <DailyEntries entries={bundle?.dailyEntries ?? []} loading={loadingBundle} />
-
-      <AdsSection ads={bundle?.ads ?? []} loading={loadingBundle} />
+      <div className="grid items-start gap-4 lg:grid-cols-2">
+        <DailyEntries entries={bundle?.dailyEntries ?? []} loading={loadingBundle} />
+        <AdsSection ads={bundle?.ads ?? []} loading={loadingBundle} />
+      </div>
     </div>
   );
 }
@@ -234,16 +239,16 @@ function OperationalMetrics({ ops, loading }: { ops: CampaignOps | null; loading
         <Skeleton className="h-24 w-full" />
       ) : (
         <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
-          <MetricCard label="Investido" value={fmtBRL(ops?.investido)} />
-          <MetricCard label="CPA" value={txt(ops?.cpa)} />
-          <MetricCard label="CPC" value={txt(ops?.cpc)} />
-          <MetricCard label="CPM" value={txt(ops?.cpm)} />
+          <MetricCard label="Investido" value={roundNums(txt(ops?.investido))} />
+          <MetricCard label={`${maeNome(ops?.metricaMaeNome)} (métrica-mãe)`} value={roundNums(txt(ops?.metricaMaeValor))} />
+          <MetricCard label="CPC" value={roundNums(txt(ops?.cpc))} />
+          <MetricCard label="CPM" value={roundNums(txt(ops?.cpm))} />
           <MetricCard label="CTR" value={txt(ops?.ctr)} />
-          <MetricCard label="Taxa de conversão" value={txt(ops?.cvr ?? ops?.taxaConversao)} />
-          <MetricCard label="ROAS" value={typeof ops?.roas === "number" ? fmtNum(ops?.roas) : txt(ops?.roas)} />
+          <MetricCard label="Taxa de conversão" value={txt(ops?.taxaConversao)} />
           <MetricCard label="Impressões" value={txt(ops?.impressoes)} />
-          <MetricCard label="Métrica-mãe (7D)" value={fmtNum(ops?.metricaMae7d)} />
+          <MetricCard label="ROAS" value={typeof ops?.roas === "number" ? fmtNum(ops?.roas) : roundNums(txt(ops?.roas))} />
           <MetricCard label="Meta da métrica-mãe" value={fmtNum(ops?.metaMae)} />
+          <MetricCard label="Resultado atual (métrica-mãe)" value={fmtNum(ops?.resultadoMae)} />
         </div>
       )}
     </div>
@@ -444,7 +449,7 @@ function DailyEntries({ entries, loading }: { entries: OpsDaily[]; loading: bool
           <p className="px-6 py-8 text-center text-sm text-muted-foreground">Sem registros diários.</p>
         ) : (
           <ul className="divide-y divide-border">
-            {entries.slice(0, 8).map((e, i) => (
+            {entries.slice(0, 1).map((e, i) => (
               <li key={e.url || i} className="px-6 py-3">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="font-mono text-xs text-muted-foreground">{fmtDate(e.date)}</span>
@@ -475,7 +480,7 @@ function AdKpi({ label, value }: { label: string; value?: string | null }) {
   return (
     <div>
       <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
-      <div className="font-mono text-sm">{txt(value)}</div>
+      <div className="font-mono text-sm">{roundNums(txt(value))}</div>
     </div>
   );
 }
@@ -507,7 +512,7 @@ function AdsSection({ ads, loading }: { ads: OpsAd[]; loading: boolean }) {
                     <NotionLink url={ad.url} />
                   </span>
                 </div>
-                <div className="grid grid-cols-3 gap-3 md:grid-cols-5">
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                   <AdKpi label="Investido" value={ad.kpis.investido} />
                   <AdKpi label="CPA" value={ad.kpis.cpa} />
                   <AdKpi label="CPC" value={ad.kpis.cpc} />

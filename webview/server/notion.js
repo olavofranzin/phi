@@ -221,19 +221,19 @@ async function getCampaignIndex() {
       name: readProp(x["Nome da campanha"]),
       clientId: readProp(x["client_id"]),
       ops: {
-        investido: readProp(x["Total Investido Campanha"]),
-        cpa: readProp(x["CPA Campanha"]),
+        // Nomes de campo do Notion são enganosos: "CPA Campanha" guarda o INVESTIDO
+        // (custo 7d/30d) e "CPL Campanha" guarda a MÉTRICA-MÃE (ex.: CPA) 7d/30d.
+        investido: readProp(x["CPA Campanha"]),
+        metricaMaeNome: readProp(x["Métrica-Mãe"]),
+        metricaMaeValor: readProp(x["CPL Campanha"]),
         cpc: readProp(x["CPC Campanha"]),
         cpm: readProp(x["CPM Campanha"]),
         ctr: readProp(x["CTR Campanha"]),
-        cvr: readProp(x["CVR Campanha"]),
-        cpl: readProp(x["CPL Campanha"]),
-        impressoes: readProp(x["Impressões"]),
         taxaConversao: readProp(x["Taxa de Conversão"]),
+        impressoes: readProp(x["Impressões"]),
         roas: readProp(x["ROAS Campanha"]),
-        metricaMae7d: readProp(x["Métrica-Mãe 7D"]),
         metaMae: readProp(x["Meta da Métrica-mãe"]),
-        metricaMaeNome: readProp(x["Métrica-Mãe"]),
+        resultadoMae: readProp(x["Resultado Atual (Métrica-mãe)"]),
       },
     });
   }

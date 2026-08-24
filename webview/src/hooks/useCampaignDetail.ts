@@ -4,19 +4,17 @@ const STALE_MS = 5 * 60 * 1000;
 const API_BASE = import.meta.env.VITE_PHI_API_BASE ?? "";
 
 export interface CampaignOps {
-  investido?: string | number | null;
-  cpa?: string | null;
+  investido?: string | null;
+  metricaMaeNome?: string | string[] | null;
+  metricaMaeValor?: string | null;
   cpc?: string | null;
   cpm?: string | null;
   ctr?: string | null;
-  cvr?: string | null;
-  cpl?: string | null;
-  impressoes?: string | null;
   taxaConversao?: string | null;
+  impressoes?: string | null;
   roas?: string | number | null;
-  metricaMae7d?: string | number | null;
   metaMae?: string | number | null;
-  metricaMaeNome?: string | string[] | null;
+  resultadoMae?: string | number | null;
 }
 export interface OpsTask {
   name?: string | null;
