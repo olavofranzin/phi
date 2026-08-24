@@ -11,6 +11,15 @@ const TOKEN = process.env.NOTION_TOKEN || "";
 const CAMPAIGNS_DB = process.env.NOTION_CAMPAIGNS_DB || "19fb65e5c72b8043a82df47ede397928";
 const CLIENTS_DB = process.env.NOTION_CLIENTS_DB || "19fb65e5c72b81478aa3c63aa273d205";
 
+// Data sources (coleções) das bases operacionais — consultadas via API de data sources.
+const DS = {
+  tarefas: "19fb65e5-c72b-813f-a6d9-000b8cfd603a",
+  log: "19fb65e5-c72b-8127-8007-000b6634416b",
+  observacoes: "19fb65e5-c72b-81bf-b59f-000b7a5b99c7",
+  anuncios: "297b65e5-c72b-80e9-a1f3-000be92275f6",
+  analises: "38fb65e5-c72b-80ff-9543-000b9a7468af",
+};
+
 const TTL_MS = 10 * 60 * 1000;
 let cache = { maps: null, exp: 0 };
 
@@ -175,6 +184,216 @@ async function getNameMaps() {
   }
 }
 
+/* -------------------------------------------------------------------------- */
+/*  Painel operacional da campanha (W7)                                        */
+/* -------------------------------------------------------------------------- */
+
+/** Consulta uma DATA SOURCE (coleção) do Notion com filtro/sort (API 2025-09-03). */
+async function queryDataSource(dsId, body = {}) {
+  const res = await fetch(`https://api.notion.com/v1/data_sources/${dsId}/query`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${TOKEN}`,
+      "Notion-Version": "2025-09-03",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`Notion DS ${dsId} ${res.status}: ${(await res.text()).slice(0, 200)}`);
+  const data = await res.json();
+  return data.results || [];
+}
+
+let idxCache = { map: null, exp: 0 };
+/** Map campaign_id -> { pageId, name, clientId, ops } a partir da base Campanhas. */
+async function getCampaignIndex() {
+  const now = Date.now();
+  if (idxCache.map && now < idxCache.exp) return idxCache.map;
+  const map = new Map();
+  if (!TOKEN) return map;
+  const pages = await queryAll(CAMPAIGNS_DB);
+  for (const p of pages) {
+    const x = p.properties || {};
+    const cid = readProp(x["campaign_id"]);
+    if (!cid) continue;
+    map.set(cid, {
+      pageId: p.id,
+      name: readProp(x["Nome da campanha"]),
+      clientId: readProp(x["client_id"]),
+      ops: {
+        investido: readProp(x["Total Investido Campanha"]),
+        cpa: readProp(x["CPA Campanha"]),
+        cpc: readProp(x["CPC Campanha"]),
+        cpm: readProp(x["CPM Campanha"]),
+        ctr: readProp(x["CTR Campanha"]),
+        cvr: readProp(x["CVR Campanha"]),
+        cpl: readProp(x["CPL Campanha"]),
+        impressoes: readProp(x["Impressões"]),
+        taxaConversao: readProp(x["Taxa de Conversão"]),
+        roas: readProp(x["ROAS Campanha"]),
+        metricaMae7d: readProp(x["Métrica-Mãe 7D"]),
+        metaMae: readProp(x["Meta da Métrica-mãe"]),
+        metricaMaeNome: readProp(x["Métrica-Mãe"]),
+      },
+    });
+  }
+  idxCache = { map, exp: now + TTL_MS };
+  return map;
+}
+
+const TASK_OPEN_EXCLUI = new Set(["Concluído", "Concluída", "Cancelado", "Cancelada"]);
+
+function mapTask(p) {
+  const x = p.properties || {};
+  return {
+    name: readProp(x["Nome da Tarefa"]),
+    status: readProp(x["Status"]),
+    priority: readProp(x["Prioridade"]),
+    metric: readProp(x["Métrica Afetada"]),
+    hypothesis: readProp(x["Hipótese Sugerida (IA)"]),
+    gravity: readProp(x["Gravidade Detectada"]),
+    url: p.url,
+  };
+}
+function mapLog(p) {
+  const x = p.properties || {};
+  return {
+    acao: readProp(x["Ação Executada"]),
+    date: readProp(x["Data da Ação"]),
+    resultado: readProp(x["Resultado"]),
+    tipo: readProp(x["Tipo de Otimização"]),
+    impacto: readProp(x["Impacto Percebido"]),
+    classificacao: readProp(x["Classificação PHI"]),
+    url: p.url,
+  };
+}
+function mapDaily(p) {
+  const x = p.properties || {};
+  return {
+    title: readProp(x["Observação Diária"]),
+    date: readProp(x["Data Execução"]),
+    analise: readProp(x["Análise de Performance"]),
+    statusMetrica: readProp(x["Status da Métrica-Mãe"]),
+    metricaPrincipal: readProp(x["Métrica Principal"]),
+    v1d: readProp(x["Valor Métrica-Mãe 1D"]),
+    v3d: readProp(x["Valor Métrica-Mãe 3D"]),
+    v7d: readProp(x["Valor Métrica-Mãe 7D"]),
+    tendencia1: readProp(x["Tendência 1Dvs7D"]),
+    tendencia3: readProp(x["Tendência 3Dvs7D"]),
+    optimizationScore: readProp(x["Optimization Score"]),
+    fonte: readProp(x["Fonte dos Dados"]),
+    url: p.url,
+  };
+}
+function mapAnalysis(p) {
+  const x = p.properties || {};
+  return {
+    titulo: readProp(x["titulo"]),
+    diagnostico: readProp(x["maestro_diagnostico"]),
+    decisao: readProp(x["maestro_decisao"]),
+    proximosPassos: readProp(x["maestro_proximos_passos"]),
+    leitura: readProp(x["leitura"]),
+    severidade: readProp(x["severidade"]),
+    flags: readProp(x["flags_ativas"]) || [],
+    janela: readProp(x["janela"]),
+    nivel: readProp(x["nivel"]),
+    score: readProp(x["phi_midia_score"]),
+    data: readProp(x["calculated_date"]),
+    modelo: readProp(x["modelo_llm"]),
+    confianca: readProp(x["maestro_confianca"]),
+    url: p.url,
+  };
+}
+function mapAd(p) {
+  const x = p.properties || {};
+  return {
+    nome: readProp(x["Nome"]),
+    plataforma: readProp(x["Plataforma"]),
+    status: readProp(x["Status do Anúncio"]),
+    statusOperacional: readProp(x["ad_status_operacional"]),
+    scoreOperacional: readProp(x["ad_score_operacional"]),
+    diagnostico: readProp(x["ad_diagnostico"]),
+    tendencia: readProp(x["ad_tendencia"]),
+    metaMae: readProp(x["Meta Métrica-Mãe"]),
+    metricaMae7d: readProp(x["Métrica-Mãe 7D"]),
+    kpis: {
+      investido: readProp(x["Valor Investido"]),
+      cpa: readProp(x["CPA"]),
+      cpc: readProp(x["CPC"]),
+      cpm: readProp(x["CPM"]),
+      ctr: readProp(x["CTR"]),
+      roas: readProp(x["ROAS"]),
+      conversoes: readProp(x["Conversões"]),
+      impressoes: readProp(x["Impressões"]),
+      cliques: readProp(x["Cliques"]),
+      taxaConversao: readProp(x["Taxa de Conversão"]),
+    },
+    url: p.url,
+  };
+}
+
+/** Painel operacional completo de uma campanha (Notion). Best-effort por seção. */
+async function getCampaignDetail(campaignId) {
+  const empty = { ops: null, tasks: [], logs: [], dailyEntries: [], analyses: [], ads: [] };
+  if (!TOKEN || !campaignId) return empty;
+
+  const idx = await getCampaignIndex().catch(() => new Map());
+  const entry = idx.get(campaignId);
+  const pageId = entry ? entry.pageId : null;
+  const ops = entry ? entry.ops : null;
+
+  const relFilter = (prop) => ({ filter: { property: prop, relation: { contains: pageId } } });
+  const textFilter = { filter: { property: "campaign_id", rich_text: { equals: campaignId } } };
+
+  const jobs = {
+    tasks: pageId
+      ? queryDataSource(DS.tarefas, relFilter("Campanha"))
+      : Promise.resolve([]),
+    logs: pageId
+      ? queryDataSource(DS.log, {
+          ...relFilter("Campanhas"),
+          sorts: [{ property: "Data da Ação", direction: "descending" }],
+          page_size: 15,
+        })
+      : Promise.resolve([]),
+    daily: pageId
+      ? queryDataSource(DS.observacoes, {
+          ...relFilter("Campanha"),
+          sorts: [{ property: "Data Execução", direction: "descending" }],
+          page_size: 14,
+        })
+      : Promise.resolve([]),
+    analyses: queryDataSource(DS.analises, {
+      ...textFilter,
+      sorts: [{ property: "calculated_date", direction: "descending" }],
+      page_size: 10,
+    }),
+    ads: queryDataSource(DS.anuncios, { ...textFilter, page_size: 50 }),
+  };
+
+  const [tasksR, logsR, dailyR, analysesR, adsR] = await Promise.allSettled([
+    jobs.tasks,
+    jobs.logs,
+    jobs.daily,
+    jobs.analyses,
+    jobs.ads,
+  ]);
+  const val = (r) => (r.status === "fulfilled" ? r.value : []);
+
+  const tasks = val(tasksR)
+    .map(mapTask)
+    .filter((t) => !TASK_OPEN_EXCLUI.has(t.status || ""));
+
+  return {
+    ops,
+    tasks,
+    logs: val(logsR).map(mapLog),
+    dailyEntries: val(dailyR).map(mapDaily),
+    analyses: val(analysesR).map(mapAnalysis),
+    ads: val(adsR).map(mapAd),
+  };
+}
+
 /** Diagnóstico: primeiras `limit` linhas de uma base, com nome/tipo/valor das
  *  properties + a URL da página no Notion. Serve para descobrir os campos reais. */
 async function debugDatabase(dbId, limit = 3) {
@@ -201,4 +420,4 @@ async function debugDatabase(dbId, limit = 3) {
   return { database_id: dbId, count: rows.length, columns, rows };
 }
 
-module.exports = { getNameMaps, getClients, clientNum, debugDatabase };
+module.exports = { getNameMaps, getClients, clientNum, debugDatabase, getCampaignDetail };

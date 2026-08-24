@@ -19,7 +19,7 @@
 const path = require("path");
 const crypto = require("crypto");
 const express = require("express");
-const { getNameMaps, getClients, clientNum, debugDatabase } = require("./notion");
+const { getNameMaps, getClients, clientNum, debugDatabase, getCampaignDetail } = require("./notion");
 
 const PORT = process.env.PORT || 8080;
 // Projeto de billing/execução do job = projeto ao qual a service account pertence.
@@ -337,6 +337,18 @@ app.get("/api/phi-snapshot", async (req, res) => {
     });
   } catch (err) {
     console.error("[phi-snapshot]", err.message);
+    res.status(502).json({ error: err.message });
+  }
+});
+
+// Painel operacional da campanha (Notion): tarefas, log, daily, análises, anúncios.
+app.get("/api/campaign-detail", async (req, res) => {
+  const campaign = String(req.query.campaign || "").trim();
+  if (!campaign) return res.status(400).json({ error: "parâmetro 'campaign' obrigatório" });
+  try {
+    res.json(await getCampaignDetail(campaign));
+  } catch (err) {
+    console.error("[campaign-detail]", err.message);
     res.status(502).json({ error: err.message });
   }
 });
