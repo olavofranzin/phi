@@ -34,17 +34,30 @@ import {
 } from "@/lib/phi/types";
 import { cn } from "@/lib/utils";
 
+const ND = "N/D";
+/** Formata um número; se for null/NaN, devolve "N/D" (guardrail honesto). */
+function nd(v: number | null | undefined, fmt: (n: number) => string) {
+  return v == null || Number.isNaN(v) ? ND : fmt(v);
+}
 function fmtBRL(n: number) {
   return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 }
-function fmtDate(iso: string) {
-  return new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
+function fmtDate(iso: string | null | undefined) {
+  if (!iso) return ND;
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime())
+    ? ND
+    : d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
 }
 function fmtDateShort(iso: string) {
   return new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
 }
-function fmtTime(iso: string) {
-  return new Date(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+function fmtTime(iso: string | null | undefined) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime())
+    ? ""
+    : d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 }
 
 const PRIORITY_ORDER: Priority[] = ["P0", "P1", "P2"];
@@ -121,26 +134,26 @@ export default function CampaignDetail() {
           Métricas operacionais
         </h2>
         <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
-          <MetricCard label="Investimento" value={fmtBRL(campaign.investment)} delta={campaign.deltas.investment} />
-          <MetricCard label="CPA Alvo" value={fmtBRL(campaign.cpaTarget)} />
+          <MetricCard label="Investimento" value={nd(campaign.investment, fmtBRL)} delta={campaign.deltas.investment} />
+          <MetricCard label="CPA Alvo" value={nd(campaign.cpaTarget, fmtBRL)} />
           <MetricCard
             label="CPA Real"
-            value={fmtBRL(campaign.cpaActual)}
-            delta={-campaign.deltas.cpaActual /* lower is better */}
+            value={nd(campaign.cpaActual, fmtBRL)}
+            delta={campaign.deltas.cpaActual == null ? undefined : -campaign.deltas.cpaActual /* lower is better */}
           />
           <MetricCard
             label="Conversões"
-            value={campaign.conversions.toLocaleString("pt-BR")}
+            value={nd(campaign.conversions, (n) => n.toLocaleString("pt-BR"))}
             delta={campaign.deltas.conversions}
           />
           <MetricCard
             label="CTR"
-            value={`${(campaign.ctr * 100).toFixed(2)}%`}
+            value={nd(campaign.ctr, (n) => `${(n * 100).toFixed(2)}%`)}
             delta={campaign.deltas.ctr}
           />
           <MetricCard
             label="ROAS"
-            value={`${campaign.roas.toFixed(2)}x`}
+            value={nd(campaign.roas, (n) => `${n.toFixed(2)}x`)}
             delta={campaign.deltas.roas}
           />
         </div>
@@ -199,7 +212,8 @@ function ScoreGauge({ score, status }: { score: number; status: CampaignStatus }
   const stroke = 12;
   const radius = (size - stroke) / 2;
   const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (score / 100) * circumference;
+  const hasScore = Number.isFinite(score);
+  const offset = circumference - ((hasScore ? score : 0) / 100) * circumference;
 
   return (
     <div className="relative flex h-[130px] w-[130px] shrink-0 items-center justify-center">
@@ -226,7 +240,7 @@ function ScoreGauge({ score, status }: { score: number; status: CampaignStatus }
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="font-mono text-3xl font-semibold leading-none">{score}</span>
+        <span className="font-mono text-3xl font-semibold leading-none">{hasScore ? score : ND}</span>
         <span className="mt-1 text-[10px] uppercase tracking-wider text-muted-foreground">Score PHI</span>
       </div>
     </div>
@@ -265,7 +279,9 @@ function ScoreEvolution({
           <CardTitle className="text-base">Evolução do Score (30 dias)</CardTitle>
           <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
             <Info className="h-3 w-3" />
-            Histórico mockado — fonte real será conectada na Fase 2
+            {campaign.scoreHistory.length === 0
+              ? "Sem histórico carregado (será conectado no próximo lote)"
+              : "Evolução do score diário"}
           </div>
         </div>
       </CardHeader>
