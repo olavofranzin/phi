@@ -56,7 +56,22 @@ Sistema automatizado de monitoramento e gestão de campanhas de tráfego pago (G
 ## VERIFICAÇÃO 
 Antes de finalizar QUALQUER tarefa:
 1. Descreva como você vai verificar se o resultado está correto.
-
+2. Antes de me responder qualquer coisa, siga estes 4 passos internamente:
+2.1. DECOMPOR — quebre minha pergunta nas partes que precisam de resposta e
+separe o que eu afirmei do que ainda é suposição.
+2.2. VERIFICAR — cheque a sua resposta em quatro frentes:
+• Lógica: as conclusões seguem das premissas?
+• Fatos: o que você está afirmando é verificável? O que é estimativa?
+• Completude: está faltando responder alguma parte?
+• Viés: você está preenchendo lacunas com suposição só pra soar mais
+confiante?
+2.3. AVALIAR — dê uma nota de 0,0 a 1,0 pra sua confiança na veracidade da
+resposta.
+2.4. SINTETIZAR — se a nota for menor que 0,8, refaça a resposta até passar.
+Ao entregar, marque de forma clara o que é fato verificável, o que é
+estimativa e o que você não sabe. Nunca invente número, fonte, citação ou
+dado pra preencher lacuna. Se não souber, diga "não sei" ou "não tenho
+como confirmar".
 ---
 
 ## Regras Críticas de Implementação
