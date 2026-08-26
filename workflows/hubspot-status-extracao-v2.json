@@ -1810,8 +1810,8 @@
                   },
                   {
                       "parameters":  {
-                                         "mode":  "runOnceForEachItem",
-                                         "jsCode":  "const stageMap = {\n  \u002770807682-148b-4914-acd0-97aad8c2a000\u0027: \u0027Prospectado\u0027,\n  \u0027qualifiedtobuy\u0027: \u0027Intera√ß√£o Instagram\u0027,\n  \u002717222650\u0027: \u0027Contato Realizado\u0027,\n  \u0027presentationscheduled\u0027: \u0027Reuni√£o Agendada\u0027,\n  \u0027decisionmakerboughtin\u0027: \u0027Tomada de Decis√£o\u0027,\n  \u0027contractsent\u0027: \u0027Contrato Enviado\u0027,\n  \u0027closedwon\u0027: \u0027Vencido\u0027,\n  \u0027closedlost\u0027: \u0027Perdido\u0027,\n};\n\nconst dealId = $input.item.json.deal_id;\nconst novoEstagio = $input.item.json.novo_estagio;\nconst statusMapeado = stageMap[novoEstagio] || novoEstagio;\n\nreturn {\n  json: {\n    deal_id: dealId,\n    novo_estagio: novoEstagio,\n    status_mapeado: statusMapeado,\n  }\n};"
+                                         "mode":  "runOnceForAllItems",
+                                         "jsCode":  "try {\n  const stageMap = {\n    \u002770807682-148b-4914-acd0-97aad8c2a000\u0027: \u0027Prospectado\u0027,\n    \u0027qualifiedtobuy\u0027: \u0027InteraÁ„o Instagram\u0027,\n    \u002717222650\u0027: \u0027Contato Realizado\u0027,\n    \u0027presentationscheduled\u0027: \u0027Reuni„o Agendada\u0027,\n    \u0027decisionmakerboughtin\u0027: \u0027Tomada de Decis„o\u0027,\n    \u0027contractsent\u0027: \u0027Contrato Enviado\u0027,\n    \u0027closedwon\u0027: \u0027Vencido\u0027,\n    \u0027closedlost\u0027: \u0027Perdido\u0027,\n  };\n\n  const dealId = $input.item.json?.deal_id;\n  const novoEstagio = $input.item.json?.novo_estagio;\n  \n  if (!dealId || !novoEstagio) {\n    return [{json: {error: true, message: \u0027Missing fields\u0027}}];\n  }\n\n  const statusMapeado = stageMap[novoEstagio] || novoEstagio;\n\n  return [{\n    json: {\n      deal_id: dealId,\n      novo_estagio: novoEstagio,\n      status_mapeado: statusMapeado,\n      mapped_at: new Date().toISOString()\n    }\n  }];\n} catch (error) {\n  console.error(\u0027Mapping failed:\u0027, error.message);\n  return [{json: {error: true, error_message: error.message}}];\n}"
                                      },
                       "id":  "84d5fcdf-c6c5-43e7-8d8b-a661e7b919e5",
                       "name":  "Mapear estagio para status",
@@ -4320,7 +4320,7 @@
                   },
                   {
                       "parameters":  {
-                                         "jsCode":  "const staticData = $getWorkflowStaticData(\u0027global\u0027);\nconst lastRun = staticData.lastRunTimestamp || 0;\nstaticData.lastRunTimestamp = Date.now();\nreturn [{ json: { watermark: String(lastRun) } }];"
+                                         "jsCode":  "try {\n  const staticData = $getWorkflowStaticData(\u0027global\u0027);\n  \n  if (!staticData) {\n    return [{json: {watermark: \u00270\u0027, error: \u0027No global static data\u0027}}];\n  }\n  \n  const lastRun = staticData.lastRunTimestamp || 0;\n  staticData.lastRunTimestamp = Date.now();\n  \n  return [{\n    json: {\n      watermark: String(lastRun),\n      current_timestamp: Date.now(),\n      status: \u0027success\u0027\n    }\n  }];\n} catch (error) {\n  console.error(\u0027Watermark read failed:\u0027, error.message);\n  return [{\n    json: {\n      watermark: \u00270\u0027,\n      error: error.message,\n      status: \u0027failed\u0027\n    }\n  }];\n}"
                                      },
                       "id":  "a1b2c3d4-1111-4a2b-9c3d-e4f5a6b7c8d9",
                       "name":  "Ler watermark",
