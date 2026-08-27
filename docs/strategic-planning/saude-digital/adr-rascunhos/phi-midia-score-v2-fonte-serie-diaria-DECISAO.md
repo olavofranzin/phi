@@ -6,6 +6,14 @@
 >
 > **Método:** leitura dos DDLs (`agregador-t28/ddl/`), do writer `daily_entry_v4.json` e do
 > nó de score `Calcular e Persistir PHI Score` (Pipeline_v2). **Sem execução de workflow.**
+>
+> **⚠️ CORREÇÃO 2026-08-27 (verificação ao vivo, execução n8n 32695):** o **GAP 1** abaixo
+> descreve o `daily_entry_v4` (`conversions = round(CPA)`), mas **esse não é o writer que
+> popula `raw_campaign_data` hoje** — quem popula é o **`GADS_INSERT`** ("Subworkflow
+> Campanhas"), que grava uma **contagem real** (INT64, subcontando ~33% vs. export — atribuição/
+> arredondamento). A tabela tem `conversions` **INT64** e `conversions_3d/7d` **FLOAT64** (NULL
+> nas linhas GADS_INSERT). **Conclusão:** o problema é "**writers demais**", não um só bug — ver
+> `docs/handoff/2026-08-27-simplificacao-escrita-dados-subchat-brief.md`.
 
 ---
 

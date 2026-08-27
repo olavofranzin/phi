@@ -1,5 +1,13 @@
 # [Fase 2 — RASCUNHO] Corrigir o writer `daily_entry_v4` — gravar conversões reais
 
+> **⚠️ ALVO ERRADO — NÃO APLICAR (correção 2026-08-27).** A verificação ao vivo (execução n8n
+> 32695) mostrou que `raw_campaign_data` é populado hoje pelo **`GADS_INSERT`** ("Subworkflow
+> Campanhas"), **não** pelo `daily_entry_v4` deste rascunho. O `daily_entry_v4` tem o bug
+> `round(CPA)`, mas não é o writer vivo. A correção real precisa mirar o writer certo — e a
+> decisão do Olavo foi **pausar e simplificar a escrita** (writers demais). Este rascunho fica
+> como referência do padrão de fix; a mira certa é tarefa do sub-chat de simplificação:
+> `docs/handoff/2026-08-27-simplificacao-escrita-dados-subchat-brief.md`.
+
 > **Objetivo:** parar de gravar `round(CPA)` na coluna `conversions` de `raw_campaign_data` e
 > passar a gravar a **contagem real** de conversões (`metrics.conversions` da API), em FLOAT64.
 > Pré-requisito do Score v2 (ADR-34) e do backfill (Fase 3). **Nada aplicado — draft p/ smoke
