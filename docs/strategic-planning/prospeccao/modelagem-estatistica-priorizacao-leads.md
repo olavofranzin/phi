@@ -274,69 +274,104 @@ rótulo continua existindo só para o topo — o viés volta pelo gate 4 em vez 
 É a amostra de controle que responde "o score realmente prevê alguma coisa?". Sem ela, todo lead
 de score baixo permanece um contrafactual não observado.
 
-### 4.3 Estado real do CRM (verificado 2026-08-27)
+### 4.3 A tabela de treino não é o HubSpot — é a planilha
 
-O que **já existe** — e é bem mais do que eu supunha:
+> **Correção (Olavo, 2026-08-27):** as variáveis brutas **existem**, na planilha
+> `Quantidade de Leads por Mês` (`1MuetJ4N7xiazkw55YOSHtq_nIaHPRKOE-g6GwfaNJKM`, aba `leads`).
 
-| | |
+A arquitetura correta já está desenhada e é melhor do que a que eu propus. Os dois lados são
+complementares, não concorrentes:
+
+| Lado | O que guarda | Estado |
+|---|---|---|
+| **Planilha** (63 colunas) | `id` (place_id), features brutas, score, dimensões, roteamento | ✅ existe e roda |
+| **HubSpot** (deal) | o funil e o desfecho — `dealstage`, `closed_lost_reason`, `amount` | ✅ existe e roda |
+| **`id_hubspot`** (coluna da planilha) | o elo entre os dois | ⚠️ declarado, **nunca populado** |
+
+O schema canônico já declara `"join_key": "id_hubspot"` e `"dedup_key": "id"`. O contrato §1.4
+especifica um **bloco de RESULTADO/APRENDIZADO** completo (17 colunas: `hubspot_status`,
+`motivo_perda`, `motivo_ganho`, `valor`, `dias_no_funil`, `acerto_previsao`…), desenhado
+exatamente para receber os rótulos.
+
+**Retiro o que escrevi na versão anterior deste documento.** Não faltam variáveis brutas e não
+falta chave — ambas existem. Falta **uma coisa só**.
+
+#### O elo quebrado
+
+Registrado em `prompts/codex-hubspot-status-extracao.md` (2026-07-15), defeito 4:
+
+> *"`Atualizar status do lead na planilha` casa pela coluna `id_hubspot` **que nenhum nó popula**
+> → cria linha duplicada em vez de atualizar."*
+
+E há ambiguidade de nome não resolvida: o mesmo documento manda casar por `id_deal_hubspot` e
+**não** por `id_hubspot` — enquanto o schema canônico declara `id_hubspot` como `join_key`. Os
+dois nomes coexistem na documentação. **Resolver qual é o campo real é pré-requisito de tudo.**
+
+Consequência: features de um lado, rótulos do outro, e nada os une. Cada lado funciona; o par não.
+É por isso que a base de treino tem zero linhas apesar de os dados existirem.
+
+#### O que a planilha realmente não tem
+
+| Falta | Impacto |
 |---|---|
-| Objeto usado para lead | `DEAL` (sem company/contact associados) |
-| Deals criados em agosto/2026 | 141 |
-| Propriedades PHI já criadas | `score_tecnico`, `potencial_comercial`, `ipc`, `oferta_recomendada`, `site_tipo`, `nao_reivindicado`, `flags_score`, `data_processamento_score`, `enriquecido_profundo`, as 6 dimensões (`dim_*`), campos de IA e `closed_lost_reason` |
+| `id_hubspot` populado | **Bloqueia tudo** — features e rótulos nunca se encontram |
+| Colunas do bloco §1.4 | Marcadas *"(a criar)"* — o destino dos rótulos não existe ainda |
+| `modelo_versao` | Scores de fórmulas diferentes se misturam em silêncio no treino |
+| `origem_fila` | `topo` / `exploracao` — sem isto a amostra de controle da §4.2 não é identificável |
 
-**O esqueleto de captura já está construído.** A tese de que "não há onde guardar" estava errada.
+Só as duas últimas são propriedades novas de verdade. As duas primeiras são trabalho já
+especificado que não foi concluído.
 
-#### Três defeitos medidos em produção
+### 4.4 Os backups diários resolvem o Intent — de graça
+
+Descoberta desta verificação: existe uma pasta com **snapshot diário** da planilha
+(`backup_leads_2026-08-14` … `backup_leads_2026-08-27`, um por dia, gerados ~11h UTC).
+
+Isso muda a §3 materialmente. Eu havia proposto criar colunas `reviews_anterior`/`data_anterior`
+para medir Δ entre execuções. **Desnecessário:** o histórico já está sendo gravado. O eixo Intent
+pode ser calculado **retroativamente**, sobre as ~2 semanas que já existem, comparando o
+`Quantidade reviews` do mesmo `id` entre backups de datas diferentes.
+
+Também resolve parcialmente o `modelo_versao`: dá para reconstruir qual score um lead tinha em uma
+data, mesmo que o upsert tenha sobrescrito a linha viva.
+
+**Passo 9 do roadmap sai da lista de construção e vira análise sobre dado existente.**
+
+### 4.5 O que isso muda no bloqueio
+
+O loop R3 **volta ao caminho crítico** — eu o tinha removido cedo demais. Com as features na
+planilha e os rótulos no HubSpot, a sincronização não é opcional: é o que fecha o circuito.
+
+Mas o escopo é bem menor do que "construir o R3": o workflow existe, com defeitos catalogados
+desde julho. O bloqueio real é **popular `id_hubspot` no momento em que o deal é criado** — um
+campo, escrito uma vez, no nó que já cria o deal.
+
+**O que continua bloqueando de fato:** não há desfecho. Todos os deals de 2026 estão em aberto; os
+únicos `closedwon` são de abril de 2023, anteriores a esta operação, e não há nenhum `closedlost`.
+Ainda que o elo seja consertado hoje, o join produz 226 linhas com rótulo "Aberto". O funil precisa
+rodar até o fim — e é isso que a decisão de mandar todos ao CRM, somada à amostra de exploração,
+finalmente permite medir.
+
+### 4.6 Dois defeitos medidos em produção (2026-08-27)
 
 **(a) O IPC está quebrado.** Distribuição real dos 33 leads pontuados em agosto:
 
 ```
-valor máximo observado : 23     (escala é 0–100)
-concentração           : 0–23, com média ≈ 9
+valor máximo observado : 23      (a escala é 0–100)
+concentração           : 0–23, média ≈ 9
 ```
 
-Nenhum lead passa de 23 numa escala de 0 a 100. O IPC carrega quase nenhuma informação e **nunca
-dispara nenhum limiar calibrado para 0–100**. Investigar antes de usá-lo em qualquer decisão.
+Nenhum lead passa de 23 numa escala de 0 a 100. O IPC **nunca dispara nenhum limiar calibrado para
+0–100** e carrega quase nenhuma informação. Investigar antes de usá-lo em qualquer decisão — ou
+aposentá-lo.
 
 **(b) 60% dos leads chegam sem score.** Dos 82 deals de agosto, **49 estão `Unassigned`** em
-`potencial_comercial`, `oferta_recomendada` e `site_tipo`. Com a decisão de mandar todos, essa
-fração cresce — e lead sem features é linha inútil para treino, ainda que tenha rótulo.
+`potencial_comercial`, `oferta_recomendada` e `site_tipo`. Lead sem features é linha inútil para
+treino mesmo tendo rótulo — e com a decisão de mandar todos ao CRM, essa fração tende a crescer.
 
-**(c) Faltam a chave e as variáveis brutas.** Não existe propriedade `place_id`, nem
-`quantidade_reviews`, `avaliacao`, `cidade`, `searchstring`, `posicao_pesquisa`. **Guardamos o
-score, não os insumos que o produziram.**
-
-Isso é o mais grave para o objetivo declarado. Com só o score armazenado, dá para avaliar *aquele*
-score congelado — mas **não dá para recalibrar contra o histórico**, porque não se pode recalcular
-uma fórmula nova sobre dados que não foram guardados. Cada mudança de modelo zera a base histórica.
-
-### 4.4 O que falta criar no HubSpot
-
-| Propriedade | Tipo | Por quê |
-|---|---|---|
-| `place_id` | string | **Chave de junção.** Nome de deal não é chave — muda e duplica |
-| `quantidade_reviews` | number | Variável bruta do eixo porte |
-| `avaliacao` | number | Variável bruta do eixo qualidade |
-| `cidade` / `categoria` | string | Estratificação e controle |
-| `searchstring` | string | Identifica a coorte de benchmark |
-| `posicao_pesquisa` | number | Rank na busca de origem |
-| `modelo_versao` | string | **Sem isto, scores de fórmulas diferentes se misturam em silêncio** |
-| `origem_fila` | enum | `topo` / `exploracao` — ver §4.2 |
-
-`modelo_versao` é barato e não-óbvio: quando o passo 1 do roadmap trocar `max()` por produto, os
-scores antigos deixam de ser comparáveis com os novos. Sem o carimbo, treinar sobre a mistura
-contamina o modelo sem erro visível.
-
-### 4.5 O que isso muda no bloqueio
-
-Se features **e** rótulo passam a viver no mesmo objeto (o deal), **o HubSpot é a tabela de
-treino** — e o loop R3 (HubSpot → planilha) deixa de ser pré-requisito. Basta consultar o CRM.
-O bloqueio some por mudança de arquitetura, não por trabalho extra.
-
-**O que continua bloqueando:** ainda não há desfecho. Todos os deals de 2026 estão em aberto; os
-únicos `closedwon` são de abril de 2023, anteriores a esta operação, e não há nenhum `closedlost`.
-O funil nunca rodou até o fim uma vez. Sem desfecho não há variável-alvo — e sem variável-alvo
-não há modelo, por mais bem estruturada que a tabela esteja.
+**O que está certo e vale registrar:** o roteamento de oferta funciona sem exceção nos 33 leads
+pontuados — `SVC-SITE` só para `site_tipo = social`, `SVC-ADS`/`SVC-GBP` só para site próprio.
+A decisão de 2026-07-10 está implementada corretamente em produção.
 
 **Regra EPV (10–20 eventos por variável):** um modelo com 5 features precisa de ~50 a 100
 **conversões**, não 100 leads. A uma taxa de fechamento típica de ~3%, seriam ~1.700 leads
@@ -398,27 +433,30 @@ mesmo `false` passa a ser **afirmação de fato não observado** — a violaçã
 
 | # | Passo | Depende de | Efeito |
 |---|---|---|---|
-| 0 | **Criar as 8 propriedades da §4.4 no HubSpot** (`place_id`, brutas, `modelo_versao`, `origem_fila`) | — | **Sem isto, todo lead gravado a partir de hoje é linha inútil para treino** |
+| 0a | **Resolver a ambiguidade `id_hubspot` vs `id_deal_hubspot`** e fixar o nome no schema | — | Pré-requisito de todo o resto |
+| 0b | **Popular esse campo no nó que cria o deal** | 0a | **Fecha o elo.** Sem ele, features e rótulos nunca se encontram |
 | 1 | Trocar `max()` por `fit × oport` no nó `03_scoring_fase1` | — | 6 → 18 valores distintos; fila cai de 90% para 50% |
 | 2 | Trocar comparação com média por rank percentil | 1 | Robustez a outlier; corrige o caso Maria Nina |
 | 3 | Aplicar piso `fit ≥ 0,05` | 1 | Nenhum lead é excluído permanentemente |
-| 4 | Gravar **todos** os leads no HubSpot com features brutas + `modelo_versao` | 0 | Elimina viés de seleção; cria a tabela de treino |
-| 5 | Investigar por que 49 de 82 deals chegam sem score | — | 60% dos leads hoje entram cegos |
-| 6 | Corrigir ou aposentar o IPC (máx 23 numa escala 0–100) | — | Hoje não informa nada |
-| 7 | Deixar `nao_reivindicado` vazio quando origem = Places | migração | Guardrail BLOCO COMUM |
-| 8 | Amostra de exploração: 10–15% da fila sorteados fora do topo | 4 | Contrafactual — sem isto o score não é falseável |
-| 9 | Adicionar `reviews_anterior` / `data_anterior` | — | Habilita eixo Intent longitudinal |
-| 10 | Ativar Intent + Freshness | 9 + 2 execuções | Fecha o framework do documento |
-| 11 | Rótulo de micro-conversão + primeiro modelo | 4 + 8 + ~200 leads com desfecho | Primeiro scoring preditivo real |
+| 4 | Gravar **todos** os leads (planilha + deal), não só os ≥ 60 | 0b | Elimina viés de seleção |
+| 5 | Criar as colunas do bloco §1.4 na planilha | 0a | Destino dos rótulos |
+| 6 | Consertar o loop R3 (6 defeitos catalogados em 2026-07-15) | 0b + 5 | Fecha o circuito de aprendizado |
+| 7 | Investigar por que 49 de 82 deals chegam sem score | — | 60% dos leads hoje entram cegos |
+| 8 | Corrigir ou aposentar o IPC (máx 23 numa escala 0–100) | — | Hoje não informa nada |
+| 9 | Deixar `nao_reivindicado` vazio quando origem = Places | migração | Guardrail BLOCO COMUM |
+| 10 | Adicionar `modelo_versao` e `origem_fila` | — | Evita contaminar o treino; identifica a amostra de controle |
+| 11 | Amostra de exploração: 10–15% da fila sorteados fora do topo | 4 + 10 | Contrafactual — sem isto o score não é falseável |
+| 12 | Calcular Intent **retroativamente** sobre os backups diários | — | Não precisa construir nada — o histórico já existe (§4.4) |
+| 13 | Rótulo de micro-conversão + primeiro modelo | 6 + 11 + ~200 leads com desfecho | Primeiro scoring preditivo real |
 
-**O passo 0 é o mais urgente e o mais barato.** Não melhora nada hoje e não aparece em lugar
-nenhum — mas cada lead gravado sem `place_id` e sem variáveis brutas é dado de treino perdido de
-forma irrecuperável. Fazer depois não recupera o que passou.
+**O passo 0 é o mais urgente e o mais barato: um campo, escrito uma vez, no nó que já cria o
+deal.** Todo o resto da infraestrutura de aprendizado já existe — as features na planilha, os
+rótulos no HubSpot, o histórico nos backups. Falta o elo.
 
 **Os passos 1–3 são independentes de tudo e valem por si.**
 
-O loop R3 (HubSpot → planilha) **saiu do caminho crítico**: com features e rótulo no mesmo deal,
-o HubSpot é a tabela de treino e não há o que sincronizar.
+**O passo 12 é lucro puro:** eu havia planejado construir colunas de histórico para o eixo Intent.
+Os backups diários já as substituem — é análise sobre dado que já está guardado.
 
 ---
 
@@ -426,16 +464,17 @@ o HubSpot é a tabela de treino e não há o que sincronizar.
 
 | Passo | Verificação |
 |---|---|
-| 0 | `search_properties` em `deals` retorna as 8 novas propriedades |
+| 0 | Após uma rodada: **100% das linhas novas da planilha têm o campo de join preenchido**, e cada valor casa com um deal existente |
 | 1–3 | Re-rodar contra os mesmos 20 dentistas: valores distintos ≥ 15, empates no topo ≤ 2, corte 60 retendo ~50% |
 | 1–3 | Nenhum lead com site próprio e porte alto sai do `SVC-ADS` (regressão da decisão 2026-07-10) |
-| 4 | Após uma rodada: nº de deals criados = nº de leads da busca (**não** só os ≥ 60), e 100% com `place_id` e `quantidade_reviews` preenchidos |
-| 5 | `SELECT COUNT(*) FROM DEAL WHERE potencial_comercial IS NULL` cai para ~0 nas rodadas novas |
-| 6 | IPC volta a ocupar a faixa 0–100 — ou é removido das telas |
-| 7 | Deal de origem Places com `enriquecido_profundo = false` tem `nao_reivindicado` **vazio**, não `false` |
-| 8 | ≥10% dos contatos do mês têm `origem_fila = exploracao` |
-| 9–10 | Duas execuções da mesma query produzem `Δreviews` não-nulo para ao menos um lead; lead com Δ no p75 sobe na fila vs. mesmo Fit e Δ zero |
-| 11 | AUC out-of-sample > 0,60 — abaixo disso o modelo não bate a regra determinística e deve ser descartado |
+| 4 | nº de leads gravados = nº de leads da busca (**não** só os ≥ 60) |
+| 5–6 | Um deal movido para `Perdido` no HubSpot aparece na planilha com `hubspot_status` e `motivo_perda` em ≤ 6h, **sem criar linha duplicada** |
+| 7 | `COUNT(*) WHERE potencial_comercial IS NULL` cai para ~0 nas rodadas novas |
+| 8 | IPC volta a ocupar a faixa 0–100 — ou é removido das telas |
+| 9 | Deal de origem Places com `enriquecido_profundo = false` tem `nao_reivindicado` **vazio**, não `false` |
+| 11 | ≥10% dos contatos do mês têm `origem_fila = exploracao` |
+| 12 | Comparar dois backups distantes ≥7 dias produz `Δreviews` não-nulo para ao menos um `id` |
+| 13 | AUC out-of-sample > 0,60 — abaixo disso o modelo não bate a regra determinística e deve ser descartado |
 
 **Verificação transversal (a que responde a pergunta do Olavo):** com ~200 leads rotulados, comparar
 a taxa de resposta entre a faixa `prioridade ≥ 60` e a amostra de exploração abaixo dela. Se as
@@ -450,14 +489,16 @@ O critério do passo 7 é deliberado: **se o modelo não superar a regra, a regr
 
 ## 8. Pendências que este documento revela
 
-- [ ] **Criar as 8 propriedades da §4.4** — urgente, cada dia sem elas é dado perdido
+- [ ] **`id_hubspot` ou `id_deal_hubspot`?** Decidir o nome e popular o campo — bloqueia tudo (§4.3)
+- [ ] Criar as colunas do bloco de RESULTADO/APRENDIZADO (§1.4 do contrato da planilha)
 - [ ] Investigar por que 49 de 82 deals de agosto chegaram sem score
 - [ ] Investigar o IPC (máx 23 numa escala 0–100 em 33 leads)
 - [ ] Ticket por serviço — bloqueia EV/CLV (lacuna #1 de `.agents/product-marketing-context.md`)
-- [ ] Decidir onde guardar histórico do Intent: propriedade no deal vs. aba de snapshots
-- [ ] Definir o rótulo de micro-conversão em termos operacionais (qual estágio do pipeline conta como "respondeu")
-- [x] ~~Loop R3 (HubSpot → planilha)~~ — **saiu do caminho crítico** (§4.5)
+- [ ] Definir o rótulo de micro-conversão em termos operacionais (qual estágio conta como "respondeu")
+- [ ] Padronizar `closed_lost_reason` como dropdown — hoje é texto livre e o motivo de perda é o rótulo mais informativo que temos
 - [x] ~~Corte da fila~~ — **fixado em 60** (Olavo, 2026-08-27)
+- [x] ~~Onde guardar histórico do Intent~~ — **os backups diários já resolvem** (§4.4)
+- [x] ~~Criar propriedades de features brutas no HubSpot~~ — **desnecessário, existem na planilha** (§4.3)
 
 ---
 
