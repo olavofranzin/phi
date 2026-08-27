@@ -23,6 +23,15 @@ mensuráveis**:
 Este documento estabelece a base estatística para corrigir os três, mantendo intactas as decisões
 de negócio já tomadas.
 
+> ⚠️ **Escopo dos defeitos acima — verificado em produção 2026-08-27.** Eles se aplicam à
+> **Fase 1 (descoberta via Places API)**, que é o que a spec do L2b propõe. O `potencial_comercial`
+> que roda hoje em produção usa dados do Apify (`claimThisBusiness`, fotos, atributos) e **não está
+> saturado**: 23 valores distintos em 32 leads de agosto. A saturação é consequência de **perder
+> features na migração para a Places API**, não um defeito do motor atual.
+>
+> Isso reforça, em vez de enfraquecer, a necessidade deste desenho: com menos features de entrada,
+> a fórmula precisa ser mais discriminante — e `max()` não é.
+
 ---
 
 ## 1. Base teórica — o que o documento traz
@@ -232,23 +241,102 @@ suficiente para um delta de uma janela.
 
 ---
 
-## 4. O que bloqueia o *predictive lead scoring*
+## 4. O HubSpot como tabela de treino
 
-O documento trata regressão logística e modelos preditivos. **Ainda não é alcançável, e é
-importante ser direto sobre o porquê.**
+> **Decisão Olavo, 2026-08-27:** *todos* os leads descobertos vão para o HubSpot — não apenas os
+> acima do corte. Corte de enriquecimento fixado em **60**.
 
-Um modelo preditivo precisa de **rótulo**: leads com desfecho conhecido (fechou / não fechou).
-Estado real do CRM, verificado em 2026-08-27:
+### 4.1 Por que enviar todos é estatisticamente obrigatório
 
-| Estágio | Deals |
+A decisão não é só "ajuda a validar" — sem ela **o modelo nunca pode ser refutado**.
+
+Se só os leads acima do corte entram no CRM, só observamos desfecho de leads que o modelo aprovou.
+Os reprovados nunca produzem evidência. O modelo passa a se confirmar por construção: qualquer erro
+sistemático na faixa baixa é invisível para sempre. É o problema clássico de **viés de seleção**
+(em crédito, *reject inference*) — e a única solução barata é não filtrar a entrada.
+
+**A consequência prática:** o corte 60 governa **gasto de Apify**, não entrada no CRM. São gates
+diferentes e independentes:
+
+| Gate | Critério | Custo |
+|---|---|---|
+| 1. Descoberta (Places API) | toda a busca | grátis dentro da cota |
+| 2. Registro no HubSpot | **todos os leads** | grátis |
+| 3. Enriquecimento (Apify + Gemini) | `prioridade ≥ 60` | pago |
+| 4. Contato (tempo humano) | fila por prioridade **+ amostra de exploração** | tempo |
+
+### 4.2 O gate 4 também precisa de exploração
+
+Mandar todos para o HubSpot resolve metade. Se o contato humano seguir só o topo da fila, o
+rótulo continua existindo só para o topo — o viés volta pelo gate 4 em vez do gate 2.
+
+**Regra:** contatar **10–15% da fila sorteados fora do topo**, marcados com origem `exploracao`.
+É a amostra de controle que responde "o score realmente prevê alguma coisa?". Sem ela, todo lead
+de score baixo permanece um contrafactual não observado.
+
+### 4.3 Estado real do CRM (verificado 2026-08-27)
+
+O que **já existe** — e é bem mais do que eu supunha:
+
+| | |
 |---|---|
-| Prospectado | 225 |
-| Qualified to buy | 1 |
-| Closed won | 2 *(ambos de abril de 2023 — anteriores a esta operação)* |
-| **Closed lost** | **0** |
+| Objeto usado para lead | `DEAL` (sem company/contact associados) |
+| Deals criados em agosto/2026 | 141 |
+| Propriedades PHI já criadas | `score_tecnico`, `potencial_comercial`, `ipc`, `oferta_recomendada`, `site_tipo`, `nao_reivindicado`, `flags_score`, `data_processamento_score`, `enriquecido_profundo`, as 6 dimensões (`dim_*`), campos de IA e `closed_lost_reason` |
 
-Os 226 deals criados entre abril e agosto de 2026 estão **todos em aberto**. O funil nunca rodou
-até o fim uma vez sequer. Sem desfecho, não há variável-alvo — e sem variável-alvo não há modelo.
+**O esqueleto de captura já está construído.** A tese de que "não há onde guardar" estava errada.
+
+#### Três defeitos medidos em produção
+
+**(a) O IPC está quebrado.** Distribuição real dos 33 leads pontuados em agosto:
+
+```
+valor máximo observado : 23     (escala é 0–100)
+concentração           : 0–23, com média ≈ 9
+```
+
+Nenhum lead passa de 23 numa escala de 0 a 100. O IPC carrega quase nenhuma informação e **nunca
+dispara nenhum limiar calibrado para 0–100**. Investigar antes de usá-lo em qualquer decisão.
+
+**(b) 60% dos leads chegam sem score.** Dos 82 deals de agosto, **49 estão `Unassigned`** em
+`potencial_comercial`, `oferta_recomendada` e `site_tipo`. Com a decisão de mandar todos, essa
+fração cresce — e lead sem features é linha inútil para treino, ainda que tenha rótulo.
+
+**(c) Faltam a chave e as variáveis brutas.** Não existe propriedade `place_id`, nem
+`quantidade_reviews`, `avaliacao`, `cidade`, `searchstring`, `posicao_pesquisa`. **Guardamos o
+score, não os insumos que o produziram.**
+
+Isso é o mais grave para o objetivo declarado. Com só o score armazenado, dá para avaliar *aquele*
+score congelado — mas **não dá para recalibrar contra o histórico**, porque não se pode recalcular
+uma fórmula nova sobre dados que não foram guardados. Cada mudança de modelo zera a base histórica.
+
+### 4.4 O que falta criar no HubSpot
+
+| Propriedade | Tipo | Por quê |
+|---|---|---|
+| `place_id` | string | **Chave de junção.** Nome de deal não é chave — muda e duplica |
+| `quantidade_reviews` | number | Variável bruta do eixo porte |
+| `avaliacao` | number | Variável bruta do eixo qualidade |
+| `cidade` / `categoria` | string | Estratificação e controle |
+| `searchstring` | string | Identifica a coorte de benchmark |
+| `posicao_pesquisa` | number | Rank na busca de origem |
+| `modelo_versao` | string | **Sem isto, scores de fórmulas diferentes se misturam em silêncio** |
+| `origem_fila` | enum | `topo` / `exploracao` — ver §4.2 |
+
+`modelo_versao` é barato e não-óbvio: quando o passo 1 do roadmap trocar `max()` por produto, os
+scores antigos deixam de ser comparáveis com os novos. Sem o carimbo, treinar sobre a mistura
+contamina o modelo sem erro visível.
+
+### 4.5 O que isso muda no bloqueio
+
+Se features **e** rótulo passam a viver no mesmo objeto (o deal), **o HubSpot é a tabela de
+treino** — e o loop R3 (HubSpot → planilha) deixa de ser pré-requisito. Basta consultar o CRM.
+O bloqueio some por mudança de arquitetura, não por trabalho extra.
+
+**O que continua bloqueando:** ainda não há desfecho. Todos os deals de 2026 estão em aberto; os
+únicos `closedwon` são de abril de 2023, anteriores a esta operação, e não há nenhum `closedlost`.
+O funil nunca rodou até o fim uma vez. Sem desfecho não há variável-alvo — e sem variável-alvo
+não há modelo, por mais bem estruturada que a tabela esteja.
 
 **Regra EPV (10–20 eventos por variável):** um modelo com 5 features precisa de ~50 a 100
 **conversões**, não 100 leads. A uma taxa de fechamento típica de ~3%, seriam ~1.700 leads
@@ -282,8 +370,27 @@ e cada semana de prospecção sem ele é dado de treino perdido para sempre.
 | Benchmark = a própria busca | Só 20 concorrentes por query | Suficiente para percentil; documentar que o universo é a busca, não o mercado |
 | `Posição Pesquisa` ≠ Local Pack | Rank do Text Search não é o rank do Maps | Não comparar com o rank do Apify |
 
-O item mais consequente é o terceiro: `nao_reivindicado` é o sinal mais forte do motor e **não
-existe na Fase 1**. Toda priorização da descoberta opera sem ele, por construção.
+### 5.1 Sobre a perda do `nao_reivindicado` — medida, não estimada
+
+`nao_reivindicado` é descrito no design como "sinal de ouro" e **não existe na Places API**. Hoje
+ele é observado de verdade, porque a descoberta em produção ainda usa Apify. Na migração ele se
+perde.
+
+Duas consequências, uma menor e uma maior do que eu esperava:
+
+**Menor do que parecia.** Prevalência real em agosto/2026: **1 lead em 82** (1,2%). Uma variável
+que dispara em 1,2% dos casos contribui quase nada para um modelo treinado em ~200 leads — seriam
+~2 eventos positivos. Como *feature estatística*, perdê-la custa pouco. Como *gatilho de abordagem
+individual* (regra 🔴 Crítica), continua valiosa nos raros casos em que aparece — e esses são
+recuperados na Fase 2.
+
+**Maior do que parecia.** O nó de escrita hoje grava `false` para todos. Isso está **correto
+enquanto a fonte é o Apify** (é observação real). No dia em que a descoberta virar Places API, o
+mesmo `false` passa a ser **afirmação de fato não observado** — a violação exata do guardrail
+`source_status error/missing ⇒ N/D, não 0`. Não é bug hoje; vira bug silencioso na migração.
+
+**Ação obrigatória na migração:** o nó de escrita para o HubSpot precisa deixar `nao_reivindicado`
+**vazio** quando `enriquecido_profundo = false` e a origem for Places.
 
 ---
 
@@ -291,16 +398,27 @@ existe na Fase 1**. Toda priorização da descoberta opera sem ele, por constru�
 
 | # | Passo | Depende de | Efeito |
 |---|---|---|---|
+| 0 | **Criar as 8 propriedades da §4.4 no HubSpot** (`place_id`, brutas, `modelo_versao`, `origem_fila`) | — | **Sem isto, todo lead gravado a partir de hoje é linha inútil para treino** |
 | 1 | Trocar `max()` por `fit × oport` no nó `03_scoring_fase1` | — | 6 → 18 valores distintos; fila cai de 90% para 50% |
 | 2 | Trocar comparação com média por rank percentil | 1 | Robustez a outlier; corrige o caso Maria Nina |
 | 3 | Aplicar piso `fit ≥ 0,05` | 1 | Nenhum lead é excluído permanentemente |
-| 4 | Adicionar `reviews_anterior` / `data_anterior` à planilha | — | Habilita medição de delta |
-| 5 | Ativar eixo Intent + Freshness | 4 + 2 execuções | Fecha o framework do documento |
-| 6 | **Construir o loop R3 (HubSpot → planilha)** | — | **Destrava toda coleta de rótulo** |
-| 7 | Rótulo de micro-conversão + primeiro modelo | 6 + ~200 leads | Primeiro scoring preditivo real |
+| 4 | Gravar **todos** os leads no HubSpot com features brutas + `modelo_versao` | 0 | Elimina viés de seleção; cria a tabela de treino |
+| 5 | Investigar por que 49 de 82 deals chegam sem score | — | 60% dos leads hoje entram cegos |
+| 6 | Corrigir ou aposentar o IPC (máx 23 numa escala 0–100) | — | Hoje não informa nada |
+| 7 | Deixar `nao_reivindicado` vazio quando origem = Places | migração | Guardrail BLOCO COMUM |
+| 8 | Amostra de exploração: 10–15% da fila sorteados fora do topo | 4 | Contrafactual — sem isto o score não é falseável |
+| 9 | Adicionar `reviews_anterior` / `data_anterior` | — | Habilita eixo Intent longitudinal |
+| 10 | Ativar Intent + Freshness | 9 + 2 execuções | Fecha o framework do documento |
+| 11 | Rótulo de micro-conversão + primeiro modelo | 4 + 8 + ~200 leads com desfecho | Primeiro scoring preditivo real |
 
-**Os passos 1–3 são independentes de tudo e valem por si.** O passo 6 é o mais urgente em termos
-de custo de oportunidade: ele não melhora nada hoje, mas cada semana sem ele é dado perdido.
+**O passo 0 é o mais urgente e o mais barato.** Não melhora nada hoje e não aparece em lugar
+nenhum — mas cada lead gravado sem `place_id` e sem variáveis brutas é dado de treino perdido de
+forma irrecuperável. Fazer depois não recupera o que passou.
+
+**Os passos 1–3 são independentes de tudo e valem por si.**
+
+O loop R3 (HubSpot → planilha) **saiu do caminho crítico**: com features e rótulo no mesmo deal,
+o HubSpot é a tabela de treino e não há o que sincronizar.
 
 ---
 
@@ -308,12 +426,22 @@ de custo de oportunidade: ele não melhora nada hoje, mas cada semana sem ele é
 
 | Passo | Verificação |
 |---|---|
+| 0 | `search_properties` em `deals` retorna as 8 novas propriedades |
 | 1–3 | Re-rodar contra os mesmos 20 dentistas: valores distintos ≥ 15, empates no topo ≤ 2, corte 60 retendo ~50% |
 | 1–3 | Nenhum lead com site próprio e porte alto sai do `SVC-ADS` (regressão da decisão 2026-07-10) |
-| 4 | Duas execuções da mesma query produzem `Δreviews` não-nulo para ao menos um lead |
-| 5 | Lead com Δreviews no p75 sobe na fila vs. lead de mesmo Fit e Δ zero |
-| 6 | Deal marcado `closedwon` no HubSpot aparece na planilha em ≤ 24h |
-| 7 | AUC out-of-sample > 0,60 — abaixo disso o modelo não bate a regra determinística e deve ser descartado |
+| 4 | Após uma rodada: nº de deals criados = nº de leads da busca (**não** só os ≥ 60), e 100% com `place_id` e `quantidade_reviews` preenchidos |
+| 5 | `SELECT COUNT(*) FROM DEAL WHERE potencial_comercial IS NULL` cai para ~0 nas rodadas novas |
+| 6 | IPC volta a ocupar a faixa 0–100 — ou é removido das telas |
+| 7 | Deal de origem Places com `enriquecido_profundo = false` tem `nao_reivindicado` **vazio**, não `false` |
+| 8 | ≥10% dos contatos do mês têm `origem_fila = exploracao` |
+| 9–10 | Duas execuções da mesma query produzem `Δreviews` não-nulo para ao menos um lead; lead com Δ no p75 sobe na fila vs. mesmo Fit e Δ zero |
+| 11 | AUC out-of-sample > 0,60 — abaixo disso o modelo não bate a regra determinística e deve ser descartado |
+
+**Verificação transversal (a que responde a pergunta do Olavo):** com ~200 leads rotulados, comparar
+a taxa de resposta entre a faixa `prioridade ≥ 60` e a amostra de exploração abaixo dela. Se as
+duas taxas forem estatisticamente indistinguíveis, **o score não está prevendo nada** e as métricas
+que usamos hoje precisam ser revistas. Este teste só é possível por causa da decisão de mandar
+todos para o CRM.
 
 O critério do passo 7 é deliberado: **se o modelo não superar a regra, a regra fica.** Princípio
 "REGRAS antes de IA", do design do motor de scoring.
@@ -322,10 +450,14 @@ O critério do passo 7 é deliberado: **se o modelo não superar a regra, a regr
 
 ## 8. Pendências que este documento revela
 
-- [ ] Loop R3 (HubSpot → planilha) — bloqueia §4 inteira
+- [ ] **Criar as 8 propriedades da §4.4** — urgente, cada dia sem elas é dado perdido
+- [ ] Investigar por que 49 de 82 deals de agosto chegaram sem score
+- [ ] Investigar o IPC (máx 23 numa escala 0–100 em 33 leads)
 - [ ] Ticket por serviço — bloqueia EV/CLV (lacuna #1 de `.agents/product-marketing-context.md`)
-- [ ] Decidir onde guardar histórico: coluna na linha (simples) vs. aba de snapshots (completa)
-- [ ] Confirmar corte da fila em 60 com o Olavo — é decisão de orçamento de Apify, não técnica
+- [ ] Decidir onde guardar histórico do Intent: propriedade no deal vs. aba de snapshots
+- [ ] Definir o rótulo de micro-conversão em termos operacionais (qual estágio do pipeline conta como "respondeu")
+- [x] ~~Loop R3 (HubSpot → planilha)~~ — **saiu do caminho crítico** (§4.5)
+- [x] ~~Corte da fila~~ — **fixado em 60** (Olavo, 2026-08-27)
 
 ---
 
