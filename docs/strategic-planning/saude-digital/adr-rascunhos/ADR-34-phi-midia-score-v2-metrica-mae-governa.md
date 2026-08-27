@@ -1,9 +1,11 @@
 # [RASCUNHO] ADR-34 — PHI·Mídia Score v2: a métrica-mãe governa
 
-> **STATUS:** RASCUNHO (git, design-canônico). **Aprovado em princípio por Olavo
-> 2026-08-26** (bandas de tolerância +10%/+50%/−15%, anomalia por IQR, regime de volume,
-> percentil só para anomalia/prioridade — nunca no veredito). Vira **Aceito** quando rodar
-> em `phi_dev` com smoke (Barbearia + Salão) e Olavo aprovar.
+> **STATUS:** RASCUNHO (git, design-canônico). **Aprovado por Olavo 2026-08-26** (bandas de
+> tolerância +10%/+50%/−15%, anomalia por IQR, regime de volume, percentil só p/ anomalia/
+> prioridade — nunca no veredito) e **2026-08-27** (3 decisões de calibração: `conversions`
+> FLOAT64, guarda do EXCELLENT, buracos = dias-zero reais + sinal de entrega/dayparting).
+> Validado na história jan→ago (ver `docs/analises/score-v2-validacao/`). Vira **Aceito**
+> quando rodar em `phi_dev` com smoke (Barbearia + Salão) e Olavo aprovar.
 >
 > **ESCOPO:** *como* o PHI·Mídia Score de campanha classifica. **Fora de escopo** (decisão
 > à parte, ADR-29 Camada 0): *de onde* vem a série diária que alimenta a tendência.
@@ -47,12 +49,19 @@ desvio > 0  ⇒ pior que a meta.   CPA da janela = custo_7d ÷ conversões_7d (r
 ### Peça 0 — Portão de dados (idade × volume)
 ```
 C7 = conversões primárias (hard) na janela 7d ; idade = dias desde o lançamento
-idade ≤ 7 E C7 < 50  → N/D (INSUFFICIENT_DATA): não pontua, não classifica
-senão                → Regime A (C7 ≥ 50)  |  Regime B (C7 < 50)
+idade ≤ 7 E C7 < 50  → N/D (INSUFFICIENT_DATA): campanha nova sem massa — não julga
+idade > 7            → SEMPRE julga:
+     C7 ≥ 10 → Regime A (julga pelo CPA, confiança graduada)
+     C7 < 10 → Regime B (entrega/volume manda)
 ```
-`C7_min = 50`: erro relativo do CPA ≈ `1/√C7` (~14% em 50 conv.); abaixo de ~30–50 é ruído.
+Confiabilidade: erro relativo do CPA ≈ `1/√C7` (~14% em 50 conv.; ~32% em 10). **C7 ≥ 50** =
+confiança plena; **10–49** = julga com IC mais largo; **< 10** = pouco p/ um CPA confiável.
 
-### Regime A (C7 ≥ 50) — a métrica-mãe governa, por **tolerância absoluta**
+> **Buracos no calendário = dias-zero REAIS** (a campanha não entregou), **não** se excluem: o
+> CPA (razão de somas) já mede só os dias ativos, e o C7 é a contagem verdadeira. **Exceção:**
+> dia ausente por **falha de coleta** (`source_status` error) é **N/D**, não zero (guardrail 9).
+
+### Regime A (C7 ≥ 10) — a métrica-mãe governa, por **tolerância absoluta**
 Bandas sobre o `desvio` (verdade de negócio, **não** percentil de vizinhos):
 
 | Faixa | Regra | Ex. Salão (meta CPA 3,50) |
@@ -66,6 +75,10 @@ Bandas sobre o `desvio` (verdade de negócio, **não** percentil de vizinhos):
 (benefício da dúvida de 1 erro-padrão); para **premiar** (EXCELLENT), exige `desvio + ε`
 (só dá crédito com folga). *(Tratamento fino do IC = calibração.)*
 
+**Guarda do EXCELLENT (calibração 2026-08-27):** só EXCELLENT com `desvio ≤ −15%` **E**
+`C7 ≥ 50` (volume) **E** **sem piora** (`piora ≤ 0`). Senão, teto **GOOD**. (Impede "excelente"
+numa semana barata e rala; derrubou EXCELLENT do Salão de 39%→30% na validação.)
+
 **Rebaixamentos (só descem, nunca sobem):**
 ```
 Tendência (janelas 7d NÃO sobrepostas; piora = CPA subindo / ROAS caindo):
@@ -77,20 +90,30 @@ Composição: ação soft (Engajamento/Ver rotas/Visualização) como primary_fo
 ```
 > IQR (não z-score) porque o CPA é **assimétrico** (Salão: média 4,78 > mediana 3,46).
 
-### Regime B (C7 < 50 e idade > 7) — o **volume** manda
-> Aqui a métrica-mãe não é confiável; volume baixo em campanha madura **é o problema**.
+### Regime B (C7 < 10 e idade > 7) — a **entrega** manda
+> Poucas conversões p/ um CPA confiável; numa campanha madura isso **é sinal**, não desculpa.
 ```
 esperado_7d = custo_7d / meta ; cobertura = C7 / esperado_7d ; entrega = custo_7d/(orç.diário×7)
-C7 < 10                        → CRITICAL ("volume crítico: quase não converte")
-10 ≤ C7 < 50 e cobertura < 0,6 → CRITICAL
-10 ≤ C7 < 50 e cobertura ≥ 0,6 → WARNING ("volume baixo p/ julgar com segurança")
-entrega < 0,5                  → flag "subentrega de orçamento"
+entrega < 0,5  OU  cobertura < 0,6  OU  C7 < 5  → CRITICAL ("subentrega / quase não converte")
+senão                                           → WARNING ("volume muito baixo p/ julgar")
 Regime B NUNCA emite GOOD/EXCELLENT.
 ```
 
+### Dia zerado numa campanha ATIVA (0 impr / R$0 / 0 conv) — dois significados
+Separar pelo **agendamento** (dayparting) da campanha:
+- **Fora do agendamento** (ex.: domingo, dayparting) → **neutro**, não penaliza.
+- **Dentro do agendamento** (deveria rodar) e zero entrega → **falha de entrega** = problema
+  (alimenta a subentrega do Regime B).
+Fonte: Google Ads API (`ad_schedule` / criteria) — automatizar se disponível (PMax tem
+agendamento limitado; confirmar campo na v23); senão, config manual por campanha. É o
+**"sinal de entrega"** — campanha ativa que não entrega quando deveria.
+
 ### Saída
-- **FIS (fatia de gasto) sai** do score de saúde (correlaciona com tamanho, não desempenho;
-  paradoxo de Simpson). No máximo vira insumo de **prioridade**.
+- **FIS antigo (fatia de gasto no portfólio) sai** do score (premiava campanha barata; Simpson).
+  O que entra é o **sinal de entrega** (campanha ativa que não entrega quando deveria) — dimensão
+  da subentrega, não a fatia de gasto.
+- **`conversions` em FLOAT64** (conversões fracionárias reais; `INT64 + round` corrompe — 51 dias
+  fracionários só no Salão).
 - **Percentil** só em **anomalia** (IQR) e em **ordenar prioridade** entre CRITICALs — nunca
   no veredito.
 - **Score 0–100** continua existindo (campo Notion) como **transformação de exibição** do
@@ -99,14 +122,16 @@ Regime B NUNCA emite GOOD/EXCELLENT.
 - **"Porquê da nota" (obrigatório):** ex. *"CRITICAL — volume crítico: 1 conv. em 7d (7 em
   60 dias); subentrega 19%; CPA não confiável. Meta 5,20."*
 
-## Testes de aceitação (dado real)
+## Testes de aceitação (validado na história jan→ago 2026)
 
-| Campanha | Regime | Conta | Veredito v2 | (velho) |
+| Campanha | Conv reais | Bandas (dia a dia) | Atual (25/ago) | Score velho |
 |---|---|---|---|---|
-| **Barbearia** (meta 5,20) | B (C7=1, madura) | C7<10 ⇒ CRITICAL; cobertura 1/(14,64/5,2)=0,35; entrega 0,19 | **CRITICAL** | 60 GOOD ❌ |
-| **Salão** (meta 3,50) | A (C7=82) | desvio +5,1% → GOOD no nível; piora +39% → teto WARNING | **WARNING** | 67 GOOD (≈ok) |
+| **Barbearia** (meta 5,20) | 114 em 8 meses (78% dias zerados) | CRITICAL 97%, WARNING 3% | **CRITICAL** (C7=0, entrega 18%) | 60 GOOD ❌ |
+| **Salão** (meta 3,50) | 2.471 (1% dias zerados) | EXC 30% · GOOD 33% · WARNING 35% · CRITICAL 1% | **GOOD** (CPA 3,62; +3,6%) | 67 GOOD |
 
-Corrige o falso-GOOD **sem** punir o Salão injustamente.
+Barbearia = CRITICAL crônico (o "não rodar" **é** o problema); Salão = saudável oscilando. A lógica de
+volume revisada eliminou o Regime B falso do Salão (45→0 dias) sem afrouxar a Barbearia (97% CRITICAL).
+Repro: `scripts/validate_score_v2.py`.
 
 ## Alternativas consideradas
 1. **Percentil no veredito.** Rejeitado: é nota na curva — sempre haveria "top/bottom X%"
