@@ -435,14 +435,55 @@ ainda acumula quatro papéis.
 
 Só renomear. Produz o backup diário que viabiliza o eixo Intent retroativo.
 
-#### `PROSP-08 Dedup CRM`
+#### `PROSP-08 Dedup CRM` — ✅ consertado e medido 2026-08-28
 
-| Mudança | Motivo |
+O diagnóstico anterior estava **incompleto**. Pedir `dealstage` resolveu só metade: o nó HubSpot
+`getAll` devolve o **formato v1**, em que cada propriedade é um **objeto** `{value, timestamp,
+versions}` e o id do deal vem em `json.dealId`, não `json.id`.
+
+```js
+p.dealstage === STAGE      // objeto === string  →  SEMPRE falso
+item.json.id               // sempre undefined
+```
+
+| Correção | Estado |
 |---|---|
-| **Pedir `dealstage` e `createdate`** em `properties` | Hoje filtra por um campo que não pede — **nunca achou uma duplicata** |
-| Trocar a chave: `place_id` → telefone → domínio. Nome por último ou nunca | I4 |
-| Corrigir a faixa de acentos e remover o `slice(0,3)` | Junta negócios diferentes |
-| Primeira execução com `DRY_RUN = true` | Está em execução real e nunca foi validado |
+| Pedir `dealstage`, `createdate`, `telefone` em `properties` | ✅ |
+| Helper `prop()` que aceita v1 e v3 | ✅ |
+| `deal_id` de `dealId` com fallback para `id` | ✅ |
+| Chave: telefone normalizado (10 últimos dígitos) → nome **completo** normalizado | ✅ |
+| Faixa de acentos corrigida; `slice(0,3)` removido | ✅ |
+| `DRY_RUN = true` | ✅ |
+| 🔴 **SyntaxError nos 2 nós de relatório** — quebra de linha literal dentro de string | ✅ |
+
+O último é grave e era invisível: `linhas.join('` + quebra de linha real + `')`. O workflow
+**morria antes de enviar o relatório**. Mesmo que tivesse achado duplicatas, o Telegram nunca
+receberia nada. Dois bugs independentes garantiam silêncio total.
+
+##### O passivo, finalmente medido
+
+```
+deals lidos         : 101
+em Prospectado      :  98   (antes: 0)
+grupos com duplicata:   4
+deals a arquivar    :   8
+```
+
+| Deal a arquivar | Mantido | Chave |
+|---|---|---|
+| Dra. Mariana Aguiar ×3 | o mais antigo | `tel:7991532257` |
+| Dentz Rio Preto ×3 | o mais antigo | `tel:7996605040` |
+| Dr Fabrício Correa | o mais antigo | `tel:7991934797` |
+| Dentista 24h Dr. Rodrigo Belmonte | ODONTOLOGIA 24 HORAS - RIO PRETO | `tel:7981613934` |
+
+⚠️ **Conferir a última antes de sair do DRY_RUN.** Nomes diferentes, telefone igual — pode ser o
+mesmo negócio com dois nomes, ou dois negócios que compartilham telefone.
+
+⚠️ **Só 101 dos ~141 deals foram lidos.** O `getAll` parece truncar a paginação. Pode haver
+duplicata entre os ~40 não lidos. Investigar antes de confiar no número 8 como total.
+
+**Confirma a causa dos duplicados:** 3 dos 4 grupos são o **mesmo lead criado 2–4 vezes** — o padrão
+que a ligação dupla do `Criar deal` (§9.4, correção 4) produzia.
 
 ---
 
