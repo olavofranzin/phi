@@ -339,8 +339,43 @@ variantes um do outro.
 | `PROSP-04` | Agente de enriquecimento **com o guard do I6** |
 | `PROSP-05` | Criação do deal e `id_hubspot`, com as referências corrigidas |
 
-⚠️ **Enquanto não for desmembrado, ele continua produzindo leads envenenados e deals sem nome a
-cada execução.**
+##### ✅ Correções aplicadas 2026-08-28 (`activeVersionId f62f1f21`)
+
+Autorizado pelo Olavo. O workflow segue ativo, mas só dispara por mensagem específica no Telegram.
+
+| # | Correção | Efeito |
+|---|---|---|
+| 1 | `Salvar lead bruto na planilha` lê de **`Normalizar campos do lead`**, não do lookup | **Estanca a raiz** — linhas param de nascer sem identidade |
+| 2 | `Criar deal no HubSpot` → `dealName` vem de `Normalizar` | Para de criar deal sem nome |
+| 3 | `Atualizar status prospectado` grava **`id_hubspot`** com chave `place_id` | **Passa a fechar o elo planilha↔CRM**, que este workflow nunca fechava |
+| 4 | 🔴 Removida a ligação direta `Agente → Criar deal` | O nó tinha **duas entradas** (direta e via `Atualizar lead enriquecido`) e **criava o deal duas vezes** |
+| 5 | Guard do **I6** antes do agente | Não gasta Gemini sem `nome` e (`site` ou `categoria`) |
+| 6 | Os 2 nós de atualização passam a `update` + `onError: continueRegularOutput` | I2 — nunca acrescentam linha |
+| 7 | `Atualizar lead enriquecido` para de gravar `nome` | I1 — é coluna do P2 |
+
+**O item 4 é o achado mais consequente:** explica os deals duplicados que o Olavo relatou. Não era
+falha do deduplicador sozinho — este workflow **produzia** duplicatas na origem, dois deals por lead.
+O deduplicador, quebrado, nunca as removeu.
+
+O fluxo ficou linear:
+
+```
+Salvar lead bruto → [I6] guard ─(sim)→ Agente → Atualizar enriquecido → Criar deal → grava id_hubspot
+                              └─(não)→ NoOp → volta ao loop
+```
+
+⚠️ **Isto estanca, não conclui.** O desmembramento em 01/02/04/05 continua pendente — o workflow
+ainda acumula quatro papéis.
+
+##### Defeitos conhecidos e **não** corrigidos
+
+| Defeito | Por que ficou |
+|---|---|
+| `Endereço` recebe `rua_avenida`; `Rua/Avenida` nunca é escrita | Mapeamento errado, mas mexer exigiria alterar o schema do nó. Corrigir no P2 |
+| `Calcular vagas disponiveis` só copia `total_leads` | Nome mente, comportamento é inofensivo |
+| `Update row(s)` com `filters: [{keyValue: "1"}]` sem `keyName` | Filtro malformado na Data Table `Prospeccao` |
+| Duas contas Apify em uso | Decisão de custo, não de código |
+| Nada escreve `mês extração`, `Avaliação`, `Quantidade fotos`, `Horário` | Colunas do contrato que este workflow ignora — entram no P2 |
 
 #### `PROSP-02 Descoberta (Places API)`
 
