@@ -431,7 +431,28 @@ ainda acumula quatro papéis.
 
 O deal criado passa a carregar `place_id` como propriedade — o que torna a próxima busca eficaz.
 
-##### 🔴 Dependência: backfill de `place_id` nos deals existentes
+##### ✅ Backfill construído e executado 2026-08-28
+
+`PROSP-BF Backfill place_id nos deals` (`nJOHONMffxiO6dxp`, 9 nós, manual). Lê a aba `leads`,
+seleciona as linhas que têm `place_id` **e** `id_hubspot`, e grava o `place_id` no deal
+correspondente. Loop de 1 em 1 com retry, `dry_run` e `limite` no nó `[BF] Config`.
+
+**Dry run mediu — e o número corrige uma estimativa minha:**
+
+```
+linhas lidas na aba leads : 263
+elegiveis (place_id + id_hubspot) :  88
+sem place_id              : 127
+sem id_hubspot            :  48
+```
+
+Eu havia estimado ~289 elegíveis a partir da exportação markdown do Drive. **O número real é 88.**
+A estimativa anterior veio de uma fonte que já sabíamos ser não confiável (nomes com `|`, abas
+concatenadas); esta veio do nó Google Sheets lendo a planilha ao vivo. Vale mais.
+
+⚠️ **127 linhas sem `place_id` na coluna A** é um achado novo e não explicado. Fica como pendência.
+
+##### 🔴 Dependência original: backfill de `place_id` nos deals existentes
 
 A propriedade `place_id` foi criada em 2026-08-28 (grupo *IA / Enriquecimento*). **Os ~98 deals já
 existentes têm o campo vazio.**
