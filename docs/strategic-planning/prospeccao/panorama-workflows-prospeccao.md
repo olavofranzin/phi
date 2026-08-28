@@ -188,9 +188,41 @@ não precisa ser construída: precisa ser *alimentada* com desfechos.
 Agravante: o nó busca **todos** os deals modificados do CRM, não só os de prospecção. Deal de
 cliente ativo também entra e vira linha nova na planilha de leads.
 
-**Sinal empírico a conferir:** os backups diários mostram a planilha saindo de **1,44 MB (18/08)**
-para **2,88 MB (27/08)** — dobrou em 9 dias. Foram ~141 deals criados em agosto, o que não explica
-esse volume. Compatível com poluição por linhas órfãs, mas **não confirmei** abrindo a planilha.
+### ❌ A hipótese das linhas órfãs está errada — verificado 2026-08-28
+
+Eu suspeitei que o `appendOrUpdate` estivesse criando linhas órfãs, com base no crescimento dos
+backups (1,44 MB em 18/08 → 2,88 MB em 27/08). **Abri a planilha e não é isso.**
+
+| Medida | Resultado |
+|---|---|
+| Linhas com `place_id` | **353** |
+| Dessas, com `nome` vazio | **0** |
+| Linhas com dado de aprendizado e sem dado de lead | **0** |
+| Linhas com `id_hubspot` preenchido | 289 |
+| `data_sync_hubspot` preenchido | 220 |
+
+**Nenhuma linha órfã.** O R3 nunca poluiu a base — ele vem gravando aprendizado em 220 linhas
+legítimas. O crescimento dos backups é explicado pelos relatórios de enriquecimento (texto longo
+do Gemini em `enriquecimento` e `enriquecimento_site`), não por linhas novas.
+
+A correção da §6.2 continua valendo como prevenção, mas o dano que eu supunha **não ocorreu**.
+
+### 🔎 O que existe de verdade: 64 leads sem `id_hubspot`
+
+| | |
+|---|---|
+| Leads com `place_id` mas **sem** `id_hubspot` | **64** (18% da base) |
+| Campos preenchidos nessas linhas | ~19–23 de 63 |
+
+São leads descobertos e pontuados que **nunca foram ligados a um deal**. Sem a chave, o R3 não
+tem como escrever aprendizado neles — ficam permanentemente fora da base de treino.
+
+**Causa provável:** o `executeOnce: true` do `1º Enriquecimento` (§2.1), que só grava `id_hubspot`
+para o primeiro lead de cada lote. O caminho de backfill (`Get lead bruto sem id_deal` →
+`Update id_deal`) recupera parte, e esses 64 são o passivo que ele ainda não alcançou.
+
+**Ação:** depois de reativar o `1º Enriquecimento` já sem o `executeOnce`, rodar o backfill até
+zerar esses 64.
 
 ---
 
