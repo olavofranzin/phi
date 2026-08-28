@@ -162,7 +162,7 @@ L3 (é o lugar natural) ou é descartada.
 |---|---|---|---|
 | HubSpot - Atualizar status e disparar extracao | `kED2AlXJjIYgvHXH` | inativo, **48 nós** | **DESMEMBRAR** — ver §4 |
 | Hubspot - Criar deal e atualizar id na planilha | `5VRPLUB3V3YmhjJ5` | inativo | **PROMOVER** — é o desmembramento certo, já começado |
-| Comercial - Deduplicar Leads HubSpot | `izimrLm19H4i6LOq` | ativo | **MANTER** — função própria e bem delimitada |
+| Comercial - Deduplicar Leads HubSpot | `izimrLm19H4i6LOq` | ativo, **quebrado** | **CORRIGIR** — ver §8 |
 
 ---
 
@@ -244,9 +244,16 @@ identidade *antes* do enriquecimento — não foi o enriquecimento que apagou.
 | 7 | Deal não é criado (nome vazio) → linha fica sem `id_hubspot` | idem |
 | 8 | Sem `id_hubspot`, o R3 não tem onde escrever → **fora da base de treino para sempre** | R3 |
 
-**Verificado:** `SELECT ... FROM DEAL WHERE dealname IS NULL` → **0 resultados**. O estrago parou
-antes do CRM; não há deals sem nome. O custo foi em **tokens de Gemini gastos para produzir
-recusas** e em leads perdidos da base.
+> 🔴 **Correção 2026-08-28.** Eu havia concluído que "o estrago parou antes do CRM", porque
+> `SELECT ... FROM DEAL WHERE dealname IS NULL` devolveu 0 resultados. **A conclusão está errada:**
+> o Olavo informou que **apagou manualmente** diversos deals sem nome. A consulta mediu o resultado
+> da limpeza dele, não o comportamento do sistema. **O envenenamento chegou ao HubSpot.**
+>
+> Lição de método: ausência num sistema com intervenção manual não é evidência de que o pipeline
+> não produziu o registro.
+
+O custo foi em **tokens de Gemini gastos para produzir recusas**, em leads perdidos da base e em
+**deals sujos no CRM que precisaram de limpeza manual**.
 
 Isto liga as duas pontas: os **64 leads sem `id_hubspot`** da seção anterior são, provavelmente,
 esses mesmos leads envenenados.
@@ -397,3 +404,56 @@ Honestidade sobre o alcance desta análise:
 ---
 
 *Ponto de partida: a planilha. Critério: uma função, um dono, um contrato de escrita.*
+
+---
+
+## 8. 🔴 Por que o deduplicador nunca dedupica (2026-08-28)
+
+Olavo relatou que há muitos deals duplicados no HubSpot e que o workflow não faz o trabalho.
+Abri `Comercial - Deduplicar Leads HubSpot` (`izimrLm19H4i6LOq`, ativo, roda 17h).
+
+**Não é o `DRY_RUN`** — ele está `false`, ou seja, o workflow *arquivaria* se encontrasse algo.
+
+### A causa raiz
+
+```js
+// Nó "[ComAb] Buscar Deals HubSpot"
+filters: { properties: ["dealname"] }        // ← só pede dealname
+
+// Nó "[ComAb] Calcular Duplicatas"
+const prospectados = items.filter(i => i.json.properties.dealstage === STAGE);
+deals.sort((a,b) => new Date(a.createdate) - new Date(b.createdate));
+```
+
+O código filtra por **`dealstage`** e ordena por **`createdate`** — e **nenhuma das duas
+propriedades é solicitada na busca.** `dealstage` vem `undefined`, o filtro nunca casa,
+`prospectados` fica vazio, e o workflow reporta "nenhuma duplicata encontrada" **todos os dias**.
+
+Ele nunca encontrou uma duplicata sequer. Não é falha de calibração — é uma propriedade não pedida.
+
+### Dois defeitos adicionais na normalização
+
+```js
+.normalize('NFD')
+.replace(/[̀-ͯ]/g, '')        // ← faixa de combining marks escrita como literal
+.replace(/[^a-z0-9 ]/g, ' ')
+.split(' ').slice(0, 3).join(' ')
+```
+
+| Defeito | Efeito |
+|---|---|
+| A faixa de acentos como literal (deveria ser `̀-ͯ`) | Se não casar, `NFD` deixa a marca combinante e o `replace` seguinte a vira **espaço**: `Clínica` → `cli nica`, **duas palavras**. A chave muda conforme o nome tenha acento ou não |
+| `slice(0,3)` — só as 3 primeiras palavras | `Dentista 24 horas Rio Preto` e `Dentista 24 horas Curitiba` colidem na mesma chave → **arquivaria um negócio legítimo** |
+
+Os dois interagem: o bug de acento altera a contagem de palavras, então o corte em 3 recorta em
+lugares diferentes para nomes equivalentes.
+
+### Correção
+
+1. Pedir `dealstage`, `createdate` (e `telefone`, se for usar) em `properties` — **destrava o
+   workflow**
+2. Corrigir a faixa de acentos para `̀-ͯ`
+3. Trocar o `slice(0,3)` por dedup determinística: **`place_id` primeiro**, telefone normalizado e
+   domínio como fallback. Nome é o pior critério e deve ser o último
+4. Rodar uma vez com `DRY_RUN = true` e conferir o relatório **antes** de deixar arquivar — hoje
+   ele está em execução real e nunca foi validado contra dado verdadeiro
