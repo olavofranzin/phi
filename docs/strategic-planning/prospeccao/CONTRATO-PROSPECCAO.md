@@ -254,7 +254,7 @@ não têm padrão (`L2`, `L2b`, `1º Enriquecimento`, `kED2`) e a ordem alfabét
 | 02 | `PROSP-02 Descoberta (Places API)` | `L2b Discovery` `n7Z0xwi1dCDioln1` | Busca, normaliza, cria a linha |
 | 03 | `PROSP-03 Scoring (motor de regras)` | motor extraído do `L2` | Calcula score, dimensões e oferta |
 | 04 | `PROSP-04 Enriquecimento` | `L3` `EFD7Drr0LDMqfDXw` | Apify + IA nos leads acima do corte |
-| 05 | `PROSP-05 CRM-out (deal + id)` | `5VRPLUB3V3YmhjJ5` | Cria o deal, grava `id_hubspot` |
+| 05 | `PROSP-05 CRM-out (deal + id)` | construído do zero `94lSWJfxfu653KdN` | Cria/reusa o deal, grava `id_hubspot` |
 | 06 | `PROSP-06 Aprendizado (HubSpot→planilha)` | `WRFU2NM8rLJU7bRT` | Traz o desfecho de volta |
 | 07 | `PROSP-07 Zeladoria (schema + backup)` | `vUI0pPlDASf64Htn` | Guarda-schema e backup diário |
 | 08 | `PROSP-08 Dedup CRM` | `izimrLm19H4i6LOq` | Remove deals duplicados |
@@ -334,7 +334,7 @@ variantes um do outro.
 
 | Vai para | O quê |
 |---|---|
-| `PROSP-01` | Telegram trigger, formulário, parâmetros, mensagem de confirmação. **Para de escrever na planilha e no CRM** |
+| `PROSP-01` | Telegram trigger, formulário, parâmetros, mensagem de confirmação. **Parou de escrever no CRM em 2026-08-28**; ainda escreve na planilha |
 | `PROSP-02` | Apify/Places, dedup, normalização, gravação da linha — com `$json` vindo do **Normalizar**, não do lookup |
 | `PROSP-04` | Agente de enriquecimento **com o guard do I6** |
 | `PROSP-05` | Criação do deal e `id_hubspot`, com as referências corrigidas |
@@ -411,7 +411,7 @@ ainda acumula quatro papéis.
 | **Parar de gravar** `id_hubspot`, `status hubspot`, `site_tipo` | I1 — são de P5, P6 e P3 |
 | Rodar só na fila `prioridade ≥ 60` | Governa o gasto de Apify/IA, não a entrada (I5) |
 
-#### `PROSP-05 CRM-out` — ✅ **construído 2026-08-28** (`94lSWJfxfu653KdN`, inativo)
+#### `PROSP-05 CRM-out` — ✅ **construído e ligado 2026-08-28** (`94lSWJfxfu653KdN`, publicado)
 
 7 nós, sub-workflow. Recebe `place_id`, `nome`, `telefone`, `descricao`:
 
@@ -452,28 +452,64 @@ concatenadas); esta veio do nó Google Sheets lendo a planilha ao vivo. Vale mai
 
 ⚠️ **127 linhas sem `place_id` na coluna A** é um achado novo e não explicado. Fica como pendência.
 
-##### 🔴 Dependência original: backfill de `place_id` nos deals existentes
+##### ✅ Dependência fechada: backfill de `place_id` nos deals existentes
 
-A propriedade `place_id` foi criada em 2026-08-28 (grupo *IA / Enriquecimento*). **Os ~98 deals já
-existentes têm o campo vazio.**
+A propriedade `place_id` foi criada em 2026-08-28 (grupo *IA / Enriquecimento*). Os deals já
+existentes tinham o campo vazio — e sem ele o P5 não encontraria o deal e criaria um segundo.
 
-Consequência: se o P5 rodar hoje para um lead que **já tem** deal, a busca por `place_id` não acha
-nada e ele **cria um segundo deal**. O P5 só é seguro depois que os deals atuais forem casados com
-os `place_id` da planilha.
+**Execução real `33144` (2026-08-28, 20:37–20:38, `status: success`):**
 
-**Ordem obrigatória:**
+```
+elegiveis                        : 88
+deals com place_id apos o backfill: 86
+```
 
-1. Backfill: para cada linha da planilha com `id_hubspot`, gravar o `place_id` no deal correspondente
-2. Só então ligar o P5 no fluxo
-3. Só então arquivar a criação de deal do `Intake - Telegram API`
+Os **2 restantes não falharam por erro de escrita** — os `id_hubspot` `59548516267` e
+`60039981326` (place_ids `ChIJt32NyfOtvZQR5atsNFCRhsY` e `ChIJ_aWOm5mzvZQRNo_g2GG2JPE`)
+apontam para deals que **não existem mais** no HubSpot: uma busca por `hs_object_id IN (...)`
+retorna `total: 0`. São referências órfãs deixadas na planilha pela exclusão manual de deals.
 
-Enquanto o passo 1 não for feito, o P5 fica **inativo** e a criação de deal continua no Intake.
+Isso não bloqueia nada: o P5 procura o deal por `place_id` **no HubSpot**, não pelo `id_hubspot`
+da planilha. Para essas duas linhas ele simplesmente não vai achar nada, vai criar o deal e vai
+sobrescrever o `id_hubspot` órfão. O elo se conserta sozinho na próxima passagem.
+
+O `[BF] Config` foi devolvido a `dry_run = true` para impedir re-execução acidental.
+
+**Ordem obrigatória — cumprida:**
+
+| # | Passo | Estado |
+|---|---|---|
+| 1 | Backfill do `place_id` nos deals existentes | ✅ execução `33144` |
+| 2 | Ligar o P5 no fluxo | ✅ versão `603c4147` do Intake |
+| 3 | Arquivar a criação de deal do `Intake - Telegram API` | ✅ nós removidos |
+
+##### ✅ Intake passou a delegar o CRM ao P5 (2026-08-28)
+
+Foram **removidos** do `Intake - Telegram API` os nós `Criar deal no HubSpot` e
+`Atualizar status prospectado na planilha`. No lugar entrou um único nó
+`[P5] CRM-out` (`executeWorkflow`, `mode: each`, `waitForSubWorkflow: true`,
+`onError: continueRegularOutput`, retry 2×):
+
+```
+Atualizar lead enriquecido → [P5] CRM-out → Wait → Loop Over Items
+```
+
+Entradas passadas ao P5: `place_id`, `nome` e `telefone` de `Normalizar campos do lead`;
+`descricao` de `Agente de Enriquecimento`.
+
+Com isso o Intake deixa de escrever no HubSpot (**I8**) e deixa de ser dono da coluna
+`id_hubspot` (**I1**). O P5 precisou ser publicado antes — o n8n recusa publicar um workflow
+que referencia sub-workflow não publicado.
+
+O ramo `[I6] Sem identidade - nao enriquece` continua indo direto ao loop, sem CRM. Não é
+exceção a **I5**: uma linha sem nome não é um lead, é um registro quebrado — e foi
+exatamente o que produziu os deals sem nome que o Olavo apagou à mão.
 
 ##### O que ainda falta no P5
 
 | Item | Nota |
 |---|---|
-| Smoke com lead real | Não executado — depende do backfill |
+| Smoke com lead real | Não executado — o gatilho é `executeWorkflowTrigger`, que o MCP não dispara. Roda na próxima prospecção pelo Telegram |
 | Aviso de validação `resource: deal` | Falso positivo do validador; o nó idêntico roda em produção |
 
 ---
