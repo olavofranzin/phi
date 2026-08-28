@@ -201,9 +201,23 @@ backups (1,44 MB em 18/08 → 2,88 MB em 27/08). **Abri a planilha e não é iss
 | Linhas com `id_hubspot` preenchido | 289 |
 | `data_sync_hubspot` preenchido | 220 |
 
-**Nenhuma linha órfã.** O R3 nunca poluiu a base — ele vem gravando aprendizado em 220 linhas
-legítimas. O crescimento dos backups é explicado pelos relatórios de enriquecimento (texto longo
-do Gemini em `enriquecimento` e `enriquecimento_site`), não por linhas novas.
+**Nenhuma linha órfã encontrada.** O R3 não parece ter poluído a base — vem gravando aprendizado em
+220 linhas legítimas. O crescimento dos backups é explicado pelos relatórios de enriquecimento
+(texto longo do Gemini em `enriquecimento` e `enriquecimento_site`), não por linhas novas.
+
+> ⚠️ **Limite deste método.** A leitura foi feita pela exportação do Google Drive, que renderiza a
+> planilha como tabela markdown. Isso tem dois problemas confirmados:
+> 1. **Nomes de lead contêm `|`** (ex.: `Niti Odontologia | Dra. Stella Guerra | Dentista em Rio
+>    Preto`). O export quebra a linha nesses pipes e desloca as colunas à direita.
+> 2. **O arquivo concatena as abas** — há duas tabelas com o schema de 63 colunas (125 e 265
+>    linhas) mais uma aba-resumo de contagem mensal. Numeração de linha vinda do export não
+>    corresponde à da planilha.
+>
+> Olavo relata que **a partir da linha 91 as colunas B, C, E e F (`nome`, `setor`, `contato`,
+> `site`) estão vazias**. Procurei esse padrão nas duas abas, com e sem restrição de outras
+> colunas: **zero ocorrências**. Não consegui reproduzir a observação pelo export — a divergência
+> segue **em aberto** e precisa ser resolvida lendo a planilha pela API (nó Google Sheets), não
+> pelo Drive.
 
 A correção da §6.2 continua valendo como prevenção, mas o dano que eu supunha **não ocorreu**.
 
