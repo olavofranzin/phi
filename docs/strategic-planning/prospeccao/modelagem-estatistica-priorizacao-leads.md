@@ -303,9 +303,30 @@ Registrado em `prompts/codex-hubspot-status-extracao.md` (2026-07-15), defeito 4
 > *"`Atualizar status do lead na planilha` casa pela coluna `id_hubspot` **que nenhum nó popula**
 > → cria linha duplicada em vez de atualizar."*
 
-E há ambiguidade de nome não resolvida: o mesmo documento manda casar por `id_deal_hubspot` e
-**não** por `id_hubspot` — enquanto o schema canônico declara `id_hubspot` como `join_key`. Os
-dois nomes coexistem na documentação. **Resolver qual é o campo real é pré-requisito de tudo.**
+#### ⚠️ Os dois nomes são o mesmo conceito — e é exatamente por isso que há risco
+
+`id_hubspot` e `id_deal_hubspot` significam a mesma coisa: o id do deal no HubSpot
+(Olavo, 2026-08-27). Conceitualmente não há ambiguidade nenhuma.
+
+**Mas o nó Google Sheets do n8n não casa por conceito — casa por string exata do cabeçalho.**
+
+| Fonte | Nome usado | Natureza |
+|---|---|---|
+| `planilha-leads-schema.json` (**AS-BUILT**, 63 colunas reais, 2026-07-13) | `id_hubspot` | cabeçalho real da aba |
+| `prompts/codex-hubspot-status-extracao.md` (2026-07-15) | `id_deal_hubspot` | instrução ao Codex |
+
+**Não existe nenhuma coluna `id_deal_hubspot` no schema AS-BUILT.** O nome aparece só no prompt do
+Codex — que instrui, em quatro pontos, a casar por `id_deal_hubspot` e explicitamente **"não usar
+`id_hubspot`"**.
+
+Se essa instrução for executada contra a planilha atual, `matchingColumns: ["id_deal_hubspot"]`
+não encontra cabeçalho nenhum, o match falha e o nó **cria linha nova** — que é precisamente o
+sintoma do defeito 4 que o prompt pretendia corrigir. O próprio prompt hedgeia ("confirmar o header
+exato"), sinal de que a dúvida já existia quando foi escrito.
+
+**Ação:** conferir o cabeçalho real da aba `leads` e alinhar o prompt do Codex ao nome que existe
+lá — presumivelmente `id_hubspot`. Não é uma decisão de design; é evitar que a correção
+reintroduza o bug.
 
 Consequência: features de um lado, rótulos do outro, e nada os une. Cada lado funciona; o par não.
 É por isso que a base de treino tem zero linhas apesar de os dados existirem.
@@ -433,7 +454,7 @@ mesmo `false` passa a ser **afirmação de fato não observado** — a violaçã
 
 | # | Passo | Depende de | Efeito |
 |---|---|---|---|
-| 0a | **Resolver a ambiguidade `id_hubspot` vs `id_deal_hubspot`** e fixar o nome no schema | — | Pré-requisito de todo o resto |
+| 0a | **Conferir o cabeçalho real da aba `leads`** e alinhar o prompt do Codex a ele (o AS-BUILT diz `id_hubspot`; o prompt manda usar `id_deal_hubspot`, que não existe lá) | — | Impede que a correção reintroduza o bug |
 | 0b | **Popular esse campo no nó que cria o deal** | 0a | **Fecha o elo.** Sem ele, features e rótulos nunca se encontram |
 | 1 | Trocar `max()` por `fit × oport` no nó `03_scoring_fase1` | — | 6 → 18 valores distintos; fila cai de 90% para 50% |
 | 2 | Trocar comparação com média por rank percentil | 1 | Robustez a outlier; corrige o caso Maria Nina |
@@ -489,7 +510,8 @@ O critério do passo 7 é deliberado: **se o modelo não superar a regra, a regr
 
 ## 8. Pendências que este documento revela
 
-- [ ] **`id_hubspot` ou `id_deal_hubspot`?** Decidir o nome e popular o campo — bloqueia tudo (§4.3)
+- [ ] **Conferir o cabeçalho real da aba `leads`** e corrigir o prompt do Codex antes que ele rode — o nome que ele manda usar (`id_deal_hubspot`) não consta do schema AS-BUILT (§4.3)
+- [ ] **Popular o campo de join no nó que cria o deal** — bloqueia todo o aprendizado
 - [ ] Criar as colunas do bloco de RESULTADO/APRENDIZADO (§1.4 do contrato da planilha)
 - [ ] Investigar por que 49 de 82 deals de agosto chegaram sem score
 - [ ] Investigar o IPC (máx 23 numa escala 0–100 em 33 leads)
