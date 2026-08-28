@@ -1,6 +1,32 @@
 # Correções — workflow "HubSpot - Atualizar status e disparar extracao"
 
-- **Workflow n8n:** ID `kED2AlXJjIYgvHXH` — 47 nós, `active: false`
+> ## 🛑 LEIA ANTES DE EXECUTAR — revisão de 2026-08-27
+>
+> **Este brief foi escrito em 2026-07-15. O workflow mudou em 2026-08-26 (48 nós). Duas instruções
+> abaixo estão desatualizadas e uma delas quebraria uma configuração que hoje funciona.**
+>
+> **1. NÃO renomear para `id_deal_hubspot`.** O nome real da coluna é **`id_hubspot`** — é o que
+> consta no schema AS-BUILT (`docs/comercial/planilha-leads-schema.json`, `join_key`) e o que os
+> 4 nós Google Sheets do workflow usam hoje. **`id_deal_hubspot` não existe em nó nenhum nem no
+> cabeçalho da planilha.** Aplicar os itens que mandam usar `id_deal_hubspot` (§ item 1, checklist 5,
+> caso C1, caso C3) faria o `matchingColumns` apontar para um cabeçalho inexistente — que é
+> exatamente o defeito 4 que este brief pretende corrigir. Onde o texto disser `id_deal_hubspot`,
+> **leia `id_hubspot`**.
+>
+> **2. O defeito 4 já foi corrigido.** `id_hubspot` **é** populado hoje, por dois nós:
+> `Atualizar status prospectado na planilha` e `Update id_deal` — ambos casando por `id` (place_id),
+> que é a chave certa. Existe inclusive um caminho de backfill completo:
+> `Get lead bruto sem id_deal` → `Loop id_deal` → `Search deal` → `Update id_deal`.
+>
+> **O defeito que sobra é outro, e o conserto é diferente:** `Atualizar status do lead na planilha`
+> é `appendOrUpdate` casando por `id_hubspot` e grava só 2 colunas. Quando a linha ainda não tem
+> `id_hubspot` preenchido, o match falha e o nó **acrescenta uma linha nova** com apenas
+> `status hubspot` e `id_hubspot` — todas as outras 61 colunas vazias. A correção é **garantir o
+> backfill antes da atualização de status** (ou desviar o item sem match), **não** renomear coluna.
+>
+> Contexto e evidência: `docs/strategic-planning/prospeccao/modelagem-estatistica-priorizacao-leads.md` §4.3.
+
+- **Workflow n8n:** ID `kED2AlXJjIYgvHXH` — 48 nós, `active: false`
 - **Arquivo a editar:** `workflows/hubspot-status-extracao.json` (repo `olavofranzin/phi`)
 
 ---

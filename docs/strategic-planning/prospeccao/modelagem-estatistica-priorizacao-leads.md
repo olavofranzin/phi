@@ -296,37 +296,57 @@ exatamente para receber os rótulos.
 **Retiro o que escrevi na versão anterior deste documento.** Não faltam variáveis brutas e não
 falta chave — ambas existem. Falta **uma coisa só**.
 
-#### O elo quebrado
+#### O elo — inspecionado no workflow vivo (2026-08-27)
 
-Registrado em `prompts/codex-hubspot-status-extracao.md` (2026-07-15), defeito 4:
+O diagnóstico de julho (defeito 4: *"`id_hubspot` que nenhum nó popula"*) **está desatualizado**.
+O workflow `kED2AlXJjIYgvHXH` foi alterado em 2026-08-26 e hoje popula o campo:
 
-> *"`Atualizar status do lead na planilha` casa pela coluna `id_hubspot` **que nenhum nó popula**
-> → cria linha duplicada em vez de atualizar."*
+| Nó | Operação | Casa por | Escreve |
+|---|---|---|---|
+| `Atualizar status prospectado na planilha` | appendOrUpdate | `id` (place_id) | `id_hubspot`, `status hubspot` |
+| `Update id_deal` | update | `id` (place_id) | `id_hubspot` |
 
-#### ⚠️ Os dois nomes são o mesmo conceito — e é exatamente por isso que há risco
+Há inclusive um caminho de **backfill** completo para linhas antigas:
+`Get lead bruto sem id_deal` (filtra onde `id_hubspot` está vazio) → `Loop id_deal` →
+`Search deal` → `Update id_deal`.
 
-`id_hubspot` e `id_deal_hubspot` significam a mesma coisa: o id do deal no HubSpot
-(Olavo, 2026-08-27). Conceitualmente não há ambiguidade nenhuma.
+**`id_deal_hubspot` não aparece em nó nenhum.** O nome real, nos 4 nós que o usam, é `id_hubspot`
+— igual ao schema AS-BUILT.
 
-**Mas o nó Google Sheets do n8n não casa por conceito — casa por string exata do cabeçalho.**
+#### ⚠️ O risco agora é o prompt do Codex, não o workflow
 
-| Fonte | Nome usado | Natureza |
+`id_hubspot` e `id_deal_hubspot` são o mesmo conceito (Olavo, 2026-08-27). Mas o nó Google Sheets
+casa por **string exata do cabeçalho**, e só um dos dois nomes existe:
+
+| Fonte | Nome | Existe de fato? |
 |---|---|---|
-| `planilha-leads-schema.json` (**AS-BUILT**, 63 colunas reais, 2026-07-13) | `id_hubspot` | cabeçalho real da aba |
-| `prompts/codex-hubspot-status-extracao.md` (2026-07-15) | `id_deal_hubspot` | instrução ao Codex |
+| Schema AS-BUILT (63 colunas reais) | `id_hubspot` | ✅ |
+| Workflow `kED2AlXJjIYgvHXH` (4 nós) | `id_hubspot` | ✅ |
+| `prompts/codex-hubspot-status-extracao.md` | `id_deal_hubspot` | ❌ em lugar nenhum |
 
-**Não existe nenhuma coluna `id_deal_hubspot` no schema AS-BUILT.** O nome aparece só no prompt do
-Codex — que instrui, em quatro pontos, a casar por `id_deal_hubspot` e explicitamente **"não usar
-`id_hubspot`"**.
+O prompt do Codex instrui, em quatro pontos, a casar por `id_deal_hubspot` e explicitamente
+**"não usar `id_hubspot`"**. Executar isso apontaria o `matchingColumns` para um cabeçalho
+inexistente e **produziria** o append-de-linha-nova que o próprio brief queria corrigir.
 
-Se essa instrução for executada contra a planilha atual, `matchingColumns: ["id_deal_hubspot"]`
-não encontra cabeçalho nenhum, o match falha e o nó **cria linha nova** — que é precisamente o
-sintoma do defeito 4 que o prompt pretendia corrigir. O próprio prompt hedgeia ("confirmar o header
-exato"), sinal de que a dúvida já existia quando foi escrito.
+**Ação tomada:** bloco de aviso no topo de `prompts/codex-hubspot-status-extracao.md` (2026-08-27),
+marcando as duas instruções desatualizadas sem reescrever o brief.
 
-**Ação:** conferir o cabeçalho real da aba `leads` e alinhar o prompt do Codex ao nome que existe
-lá — presumivelmente `id_hubspot`. Não é uma decisão de design; é evitar que a correção
-reintroduza o bug.
+#### O defeito que de fato sobra
+
+`Atualizar status do lead na planilha` é `appendOrUpdate`, casa por `id_hubspot` e grava **só duas
+colunas** (`status hubspot`, `id_hubspot`). Quando a linha do lead ainda não tem `id_hubspot`
+preenchido, o match falha e o nó **acrescenta uma linha** com essas duas colunas e as outras 61
+vazias — poluindo a base de treino com linhas órfãs.
+
+O conserto é **garantir o backfill antes da atualização de status** (ou desviar o item sem match),
+não renomear coluna. A execução `32384` (2026-08-26) rodou esse nó com 3 itens — vale conferir na
+planilha se gerou linhas órfãs.
+
+#### E o motivo pelo qual nada disso acumula ainda
+
+**O workflow está `active: false`.** Existem 5 execuções no total, todas `manual`, todas de
+2026-08-26 (3 com erro, 2 com sucesso). Ou seja: o elo funciona quando alguém roda à mão, e não
+roda sozinho. Nenhum rótulo está sendo capturado de forma contínua.
 
 Consequência: features de um lado, rótulos do outro, e nada os une. Cada lado funciona; o par não.
 É por isso que a base de treino tem zero linhas apesar de os dados existirem.
@@ -454,8 +474,10 @@ mesmo `false` passa a ser **afirmação de fato não observado** — a violaçã
 
 | # | Passo | Depende de | Efeito |
 |---|---|---|---|
-| 0a | **Conferir o cabeçalho real da aba `leads`** e alinhar o prompt do Codex a ele (o AS-BUILT diz `id_hubspot`; o prompt manda usar `id_deal_hubspot`, que não existe lá) | — | Impede que a correção reintroduza o bug |
-| 0b | **Popular esse campo no nó que cria o deal** | 0a | **Fecha o elo.** Sem ele, features e rótulos nunca se encontram |
+| 0a | ~~Alinhar o nome da coluna~~ — **feito**: aviso no topo do prompt do Codex (2026-08-27) | — | Impede que a correção reintroduza o bug |
+| 0b | ~~Popular `id_hubspot`~~ — **já existe** (2 nós + caminho de backfill) | — | — |
+| 0c | **Ativar o workflow** (`active: false` hoje; 5 execuções manuais no total) | 0d | Sem isto nenhum rótulo é capturado de forma contínua |
+| 0d | Corrigir o append-on-no-match em `Atualizar status do lead na planilha` | — | Impede linhas órfãs com 61 colunas vazias |
 | 1 | Trocar `max()` por `fit × oport` no nó `03_scoring_fase1` | — | 6 → 18 valores distintos; fila cai de 90% para 50% |
 | 2 | Trocar comparação com média por rank percentil | 1 | Robustez a outlier; corrige o caso Maria Nina |
 | 3 | Aplicar piso `fit ≥ 0,05` | 1 | Nenhum lead é excluído permanentemente |
@@ -510,8 +532,11 @@ O critério do passo 7 é deliberado: **se o modelo não superar a regra, a regr
 
 ## 8. Pendências que este documento revela
 
-- [ ] **Conferir o cabeçalho real da aba `leads`** e corrigir o prompt do Codex antes que ele rode — o nome que ele manda usar (`id_deal_hubspot`) não consta do schema AS-BUILT (§4.3)
-- [ ] **Popular o campo de join no nó que cria o deal** — bloqueia todo o aprendizado
+- [ ] **Ativar o workflow `kED2AlXJjIYgvHXH`** — hoje `active: false`, só 5 execuções manuais (§4.3)
+- [ ] Corrigir o append-on-no-match em `Atualizar status do lead na planilha` **antes** de ativar
+- [ ] Conferir na planilha se a execução `32384` (26/08) gerou linhas órfãs
+- [x] ~~Alinhar `id_hubspot` vs `id_deal_hubspot`~~ — **aviso posto no prompt do Codex** (2026-08-27)
+- [x] ~~Popular o campo de join~~ — **já é populado** por 2 nós, com backfill (§4.3)
 - [ ] Criar as colunas do bloco de RESULTADO/APRENDIZADO (§1.4 do contrato da planilha)
 - [ ] Investigar por que 49 de 82 deals de agosto chegaram sem score
 - [ ] Investigar o IPC (máx 23 numa escala 0–100 em 33 leads)
