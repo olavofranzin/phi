@@ -56,11 +56,11 @@ Tudo neste documento decorre disso.
 
 | # | Workflow | Papel — uma frase | Base atual |
 |---|---|---|---|
-| **P1** | Intake | Recebe nicho + região e dispara P2. **Não escreve na planilha.** | `Intake - Telegram API` |
+| **P1** | Intake | Recebe nicho + região e dispara P2. **Não escreve na planilha.** | `Intake - Telegram API` (`kmsaomlIzj48YnCL`) — **decidido D2** |
 | **P2** | Descoberta | Única fonte de identidade e métricas do GBP. Escreve a linha nova. | `L2b (Places API)` |
 | **P3** | Scoring | Motor determinístico. Único a escrever score, dimensões e oferta. | motor de regras do `L2` |
 | **P4** | Enriquecimento | Apify + IA nos leads acima do corte. Escreve só texto de enriquecimento. | `L3` |
-| **P5** | CRM-out | Cria/atualiza o deal e grava `id_hubspot`. **Único a escrever no HubSpot.** | `5VRPLUB3` + parte do `1º Enriquecimento` |
+| **P5** | CRM-out | Cria/atualiza o **DEAL** e grava `id_hubspot`. **Único a escrever no HubSpot.** Não cria Company — ver D1 | `5VRPLUB3` + parte do `1º Enriquecimento` |
 | **P6** | Aprendizado | Lê o HubSpot, escreve as 17 colunas de aprendizado. **Nunca altera o CRM.** | `WRFU2NM8rLJU7bRT` ✅ já correto |
 | **P7** | Zeladoria | Guarda-schema, backup diário, dedup. Não escreve dado de lead. | `vUI0pPlDASf64Htn` + `izimrLm19H4i6LOq` |
 
@@ -111,6 +111,7 @@ Tudo neste documento decorre disso.
 | **I8** | P6 **só lê** o HubSpot. P5 é o único que escreve no CRM | Evita duas fontes alterando o mesmo deal |
 | **I9** | O `Potencial Comercial` roteia oferta, **não** gateia abordagem: `max(gap, prontidão) × viabilidade` | Decisão Olavo 2026-07-10 — perfil forte vira lead de ADS, não é descartado |
 | **I10** | Todo workflow ativo tem descrição **fiel**. Descrição copiada é bug | 3 workflows hoje têm descrição de outro |
+| **I11** | O lead é sempre um **DEAL**. `Company` só é criada quando o lead **vira cliente**, por processo de pós-venda — nunca pela Prospecção | Decisão Olavo 2026-08-28 (D1). Evita 353 companies órfãs no CRM |
 
 ---
 
@@ -192,14 +193,37 @@ negativo e inverter o sinal), Intent multiplicativo (zera prospecção fria), fi
 
 ---
 
-## 8. Decisões em aberto — precisam do Olavo
+## 8. Decisões — Olavo, 2026-08-28
 
-| # | Decisão | Impacto |
+| # | Decisão | Consequência no contrato |
 |---|---|---|
-| **D1** | O lead no HubSpot continua sendo só **DEAL**, ou passa a **Company + Deal**? | Company é o objeto natural para um negócio; Deal é a oportunidade. Hoje há 141 deals e 0 companies novas desde 2023. Muda P5 inteiro |
-| **D2** | Qual intake fica — Telegram, WhatsApp ou formulário? | Define P1 |
-| **D3** | O que fazer com os deals duplicados **já existentes** no CRM | O deduplicador nunca rodou de verdade; o passivo é desconhecido |
-| **D4** | `status hubspot` (legado) pode ser congelada de vez? | Hoje 2 workflows escrevem nela |
+| **D1** | ✅ **O lead continua sendo só DEAL.** Company é criada **apenas quando o lead vira cliente** | P5 cria e atualiza apenas `DEAL`. A criação de Company passa a ser evento de **pós-venda**, fora do escopo da Prospecção. Simplifica P5 e evita a migração |
+| **D2** | ✅ **Telegram.** P1 = `Intake - Telegram API` (`kmsaomlIzj48YnCL`) | Os outros 3 intakes vão para a lista de arquivamento |
+| **D3** | ✅ **Não tratar o passivo agora.** Corrigir o deduplicador e observar se ele resolve | O passivo de duplicatas fica conhecido só depois da 1ª execução real. Rodar em `DRY_RUN = true` primeiro e conferir o relatório antes de deixar arquivar |
+| **D4** | ⬜ pendente — ver §8.1 | |
+
+### 8.1 D4 — a pergunta reformulada
+
+Existem **duas colunas guardando a mesma informação**:
+
+| Coluna | Conteúdo | Quem escreve |
+|---|---|---|
+| `status hubspot` | texto do estágio, ex. `"Prospectado"` | `1º Enriquecimento` (fixo) e `kED2` |
+| `hubspot_estagio` | o mesmo estágio, vindo do CRM | **P6** (R3) |
+
+`status hubspot` é a versão antiga; `hubspot_estagio` é a nova, que o loop de aprendizado mantém
+atualizada a cada 6h. **A antiga pode ficar desatualizada e discordar da nova** — e não há regra
+dizendo qual vence.
+
+**A pergunta:** alguma coisa ainda *lê* a coluna `status hubspot`? Um filtro na planilha, uma
+visão, um relatório, ou você mesmo olhando?
+
+- **Se ninguém lê:** congelar — ninguém escreve mais, o conteúdo histórico fica, e `hubspot_estagio`
+  passa a ser a única fonte. É o recomendado.
+- **Se algo lê:** manter, mas com **um único dono (P6)**, para as duas nunca discordarem.
+
+**Recomendação:** congelar. Duas colunas com a mesma informação e donos diferentes é exatamente o
+tipo de coisa que gerou os problemas deste contrato.
 
 ---
 
