@@ -77,11 +77,84 @@ duplicado, não redundância.
 | Workflow | ID | Estado | Veredicto |
 |---|---|---|---|
 | GBP Scoring - L3 Enriquecimento (Pipeline B/C2) | `EFD7Drr0LDMqfDXw` | ativo | **MANTER** — é o canônico |
-| 1º Enriquecimento | `yrGOYuRQo9QJ6Zvm` | ativo | **INVESTIGAR** — descrição copiada do `kED2`, não descreve o que faz |
-| Enriquecimento Site L4 | `5L3SyzDkZqf1N6vW` | ativo | **DESMEMBRAR ou ARQUIVAR** — a descrição diz que ele *também* extrai 500 leads e cria deals: três funções num workflow só |
+| 1º Enriquecimento | `yrGOYuRQo9QJ6Zvm` | ativo, 15 nós | **MANTER + CORRIGIR** — ver §2.1 |
+| Enriquecimento Site L4 | `5L3SyzDkZqf1N6vW` | ativo, 9 nós | **DESATIVAR HOJE** — ver §2.2 |
 
-`Enriquecimento Site L4` é o caso clássico de workflow que faz demais. Se a parte de site é útil,
-extrair só ela; o resto duplica L2 e a criação de deal.
+---
+
+### 2.1 `1º Enriquecimento` — é o dono real da criação de deal
+
+Abri: 15 nós, roda **9h e 21h**. A descrição está copiada do `kED2` e não descreve nada do que ele
+faz. O que ele faz de verdade:
+
+`lê leads sem enriquecimento` → `Gemini enriquece` → `grava enriquecimento` → `busca deal` →
+`cria deal no HubSpot` → `grava id_hubspot na planilha`
+
+**Correção ao panorama anterior:** eu classifiquei a criação de deal como função do `kED2` (inativo)
+e do `5VRPLUB3` (inativo). Errado — **quem cria os deals em produção é este workflow.** Os 141 deals
+de agosto vieram daqui.
+
+#### 🔴 O bug que explica os deals órfãos
+
+```
+Nó: "Atualizar status prospectado na planilha"   →   executeOnce: true
+```
+
+Ele está **dentro do loop** e grava o `id_hubspot`. Com `executeOnce: true`, **só o primeiro lead
+do lote recebe o `id_hubspot` na planilha.** Todos os demais têm deal criado no HubSpot e a linha
+da planilha fica sem a chave.
+
+É a explicação direta para a base de treino vazia: não é que o campo "nunca é populado" — é que ele
+é populado **uma vez por execução**, não uma vez por lead.
+
+#### Outros defeitos
+
+| Defeito | Efeito |
+|---|---|
+| `Search deal por place_id` busca por `dealname` + `telefone`, não por place_id | Dedup frágil — explica por que existe um workflow só para deduplicar |
+| `Ler watermark` calcula e **não é usado** no filtro seguinte | Código morto |
+| `Normalizar campos do lead` lê `additionalInfo`, `openingHours`, `bookingLinks`, `ownerUpdates` | Campos do **Apify**, inexistentes numa linha lida da planilha → saem vazios |
+| Grava `hubspot_status` e `hubspot_estagio` | Colunas que são território do R3 — duas fontes na mesma coluna |
+
+**Veredicto: manter, corrigir o `executeOnce` primeiro.** É uma flag, e destrava o elo inteiro.
+
+---
+
+### 2.2 `Enriquecimento Site L4` — 🔴 desativar hoje
+
+A descrição diz "extrai até 500 leads via Apify e cria deals". **Não faz nada disso.** São 9 nós:
+lê a planilha → Gemini analisa o site → grava `enriquecimento_site`.
+
+#### O problema destrutivo
+
+O nó `Atualizar site enriquecido na planilha` grava:
+
+```
+enriquecimento_site : {{ $json.output }}     ← correto
+enriquecimento      : "="                    ← 🔴
+site_tipo           : "="                    ← 🔴
+```
+
+Ele **sobrescreve `enriquecimento` e `site_tipo`** com uma expressão vazia, em toda linha que
+processa. São colunas de outros donos: `enriquecimento` é do `1º Enriquecimento`, `site_tipo` é do
+motor de scoring e alimenta o roteamento de oferta.
+
+O contrato da planilha nasceu de um apagamento de colunas
+(*"este é o bloco cujo apagamento motivou este contrato"*). **Este é um mecanismo de apagamento
+ainda ativo.**
+
+#### Outros defeitos
+
+| Defeito | Efeito |
+|---|---|
+| `Atualizar analise site` usa `operation: "get"` | **Não atualiza nada.** Lê o deal e descarta — a análise nunca chega ao HubSpot |
+| `sameAsDraft: false` | Draft ≠ versão ativa; alguém editou sem publicar |
+| No draft, `Analise site` está **sem filtro** | Se publicado, passa a ler a planilha inteira |
+| `const lead = $json.nome` e depois `lead.nome` | `lead` é string → `undefined` no ramo sem site |
+
+**Veredicto: desativar imediatamente.** `triggerCount: 0` — é sub-workflow e ninguém o chama hoje,
+então desativar não quebra fluxo nenhum. Depois decidir se a análise de site vira um nó dentro do
+L3 (é o lugar natural) ou é descartada.
 
 ### 🟡 CRM — criação de deal e status
 
@@ -164,27 +237,30 @@ O item 3 é o ponto: `kED2` e `WRFU2` fazem a mesma coisa, e a versão do `kED2`
 
 | Ação | Quantidade |
 |---|---|
-| Manter | 6 |
-| Promover (já existe, virar oficial) | 1 |
+| Manter | 5 |
+| Manter com correção urgente | 1 (`1º Enriquecimento` — `executeOnce`) |
+| Desativar hoje | 1 (`Site L4` — apaga colunas alheias) |
 | Desmembrar | 1 (`kED2`) |
-| Investigar antes de decidir | 2 (`1º Enriquecimento`, `Site L4`) |
 | Arquivar | 8 |
 
 ---
 
 ## 6. Ordem — do que dá valor primeiro
 
-| # | Ação | Por quê agora |
-|---|---|---|
-| 1 | Conferir linhas órfãs na planilha | Se houver, a base de treino já está contaminada e cresce a cada 6h |
-| 2 | Corrigir o `appendOrUpdate` do R3 (filtrar deals sem match) | É o único workflow ativo que escreve aprendizado |
-| 3 | Escolher 1 intake e desativar os outros 2 ativos | Risco de disparo duplicado, custo zero para resolver |
-| 4 | Arquivar os 8 mortos | Reduz a superfície que precisa ser reentendida |
-| 5 | Promover `5VRPLUB3` e aposentar o status do `kED2` | Elimina a duplicação com o R3 |
-| 6 | Investigar `1º Enriquecimento` e `Site L4` | Ambos ativos e sem descrição fiel |
+| # | Ação | Custo | Por quê agora |
+|---|---|---|---|
+| 1 | **Desativar `Enriquecimento Site L4`** | 1 clique | Apaga `enriquecimento` e `site_tipo` de quem processa. `triggerCount: 0` — desativar não quebra nada |
+| 2 | **Tirar `executeOnce: true`** do nó `Atualizar status prospectado` no `1º Enriquecimento` | 1 flag | Só o 1º lead de cada lote recebe `id_hubspot`. Destrava o elo inteiro |
+| 3 | Escolher 1 intake, desativar os outros 2 ativos | 2 cliques | Risco de disparo duplicado |
+| 4 | Conferir linhas órfãs na planilha | 1 olhada | Se houver, a base já está contaminada e cresce a cada 6h |
+| 5 | Corrigir o `appendOrUpdate` do R3 (desviar itens sem match) | 1 nó | É o único workflow ativo que escreve aprendizado |
+| 6 | Arquivar os 8 mortos | 8 cliques | Reduz a superfície que precisa ser reentendida |
+| 7 | Apagar a parte de status do `kED2`; promover `5VRPLUB3` ou absorver no `1º Enriquecimento` | — | Elimina duplicação com o R3 |
 
-Os passos 3 e 4 não exigem entender nada — são decisão de arquivar. **É o caminho mais curto entre
-onde estamos e parar de gastar energia reentendendo o conjunto.**
+**Os passos 1, 2, 3 e 6 são cliques e flags — não exigem entender nada nem escrever código.**
+Juntos eles param o apagamento de colunas, destravam a chave de junção e eliminam 10 dos 19
+workflows. É o caminho mais curto entre onde estamos e parar de gastar energia reentendendo o
+conjunto.
 
 ---
 
@@ -192,13 +268,14 @@ onde estamos e parar de gastar energia reentendendo o conjunto.**
 
 Honestidade sobre o alcance desta análise:
 
-- Abri **integralmente** apenas `kED2AlXJjIYgvHXH` e `WRFU2NM8rLJU7bRT`
+- Abri **integralmente**: `kED2AlXJjIYgvHXH`, `WRFU2NM8rLJU7bRT`, `yrGOYuRQo9QJ6Zvm`, `5L3SyzDkZqf1N6vW`
 - Os demais foram avaliados por **nome, descrição, estado ativo e data de atualização**
 - **Não confirmei** se os 3 intakes ativos colidem em webhook
 - **Não abri a planilha** — a suspeita de linhas órfãs é inferência a partir do crescimento dos
   backups, não observação direta
-- `1º Enriquecimento` e `Site L4` estão **ativos** e receberam veredicto "investigar", não
-  "arquivar", justamente porque não os abri
+- **Não confirmei o efeito real** de gravar `"="` numa coluna do Google Sheets (se apaga o conteúdo
+  ou grava o literal). Em qualquer um dos casos o dado anterior se perde, mas vale conferir numa
+  linha que já tenha passado pelo L4
 
 ---
 
