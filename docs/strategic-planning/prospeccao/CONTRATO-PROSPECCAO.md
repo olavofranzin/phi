@@ -236,3 +236,134 @@ o que reintroduziria a divergência.
 ---
 
 *Uma coluna, um dono. Sem isso, toda descoberta obriga a reentender o conjunto inteiro.*
+
+---
+
+## 9. O parque final — nomes, ordem e o que muda em cada um
+
+### 9.1 Convenção de nome
+
+`PROSP-NN Nome curto` — o prefixo numérico ordena a lista do n8n na ordem do fluxo. Hoje os nomes
+não têm padrão (`L2`, `L2b`, `1º Enriquecimento`, `kED2`) e a ordem alfabética não diz nada.
+
+### 9.2 Os 8 workflows
+
+| # | Nome novo | Base atual | Papel |
+|---|---|---|---|
+| 01 | `PROSP-01 Intake (Telegram)` | `Intake - Telegram API` `kmsaomlIzj48YnCL` | Recebe nicho + região, dispara o 02 |
+| 02 | `PROSP-02 Descoberta (Places API)` | `L2b Discovery` `n7Z0xwi1dCDioln1` | Busca, normaliza, cria a linha |
+| 03 | `PROSP-03 Scoring (motor de regras)` | motor extraído do `L2` | Calcula score, dimensões e oferta |
+| 04 | `PROSP-04 Enriquecimento` | `L3` `EFD7Drr0LDMqfDXw` | Apify + IA nos leads acima do corte |
+| 05 | `PROSP-05 CRM-out (deal + id)` | `5VRPLUB3V3YmhjJ5` | Cria o deal, grava `id_hubspot` |
+| 06 | `PROSP-06 Aprendizado (HubSpot→planilha)` | `WRFU2NM8rLJU7bRT` | Traz o desfecho de volta |
+| 07 | `PROSP-07 Zeladoria (schema + backup)` | `vUI0pPlDASf64Htn` | Guarda-schema e backup diário |
+| 08 | `PROSP-08 Dedup CRM` | `izimrLm19H4i6LOq` | Remove deals duplicados |
+
+**19 → 8.** As 7 funções da §2 viram 8 workflows porque a Zeladoria tem dois trabalhos distintos
+(planilha e CRM), com cadências diferentes, e juntá-los não traz ganho.
+
+### 9.3 Por que o 03 é sub-workflow e não um bloco dentro do 02
+
+O scoring precisa rodar em **duas** situações: logo após a descoberta, e **sozinho**, quando a
+fórmula mudar e for preciso repontuar a base sem redescobrir. Se ele viver dentro do 02, a
+repontuação obriga a refazer a busca — gasto e risco de sobrescrever dado bom.
+
+**Decisão:** `PROSP-03` é sub-workflow (`executeWorkflowTrigger`), chamado pelo 02 no fluxo normal e
+executável isoladamente para recalibração.
+
+---
+
+### 9.4 O que muda em cada um
+
+#### `PROSP-01 Intake (Telegram)` — ⬜ não inspecionado
+
+| Mudança | Motivo |
+|---|---|
+| Renomear | Convenção |
+| Corrigir a descrição — hoje é cópia do WPP Intake | I10 |
+| **Confirmar que não escreve na planilha** | Se escrever, viola I1. **Não abri este workflow** |
+| Apontar a chamada para o `PROSP-02` | Hoje chama o L2 |
+
+#### `PROSP-02 Descoberta (Places API)`
+
+| Mudança | Motivo |
+|---|---|
+| Re-colar a chave da Places API na credencial | Funciona via curl, falha dentro do n8n |
+| Remover a credencial residual `Evolution API Header Auth` do nó de busca | Sobra de cópia |
+| Reativar os 2 nós desabilitados (`Upsert Planilha`, `Chamar L3`) | Foram desligados no smoke |
+| **Extrair o bloco de scoring para o `PROSP-03`** | I1 — P2 não é dono das colunas de score |
+| Gravar **vazio** em `nao_reivindicado`, `Patrocinado`, `Agendamento`, `Posts` | I3 — a Places não observa esses campos |
+| Rodar os 6 testes de validação contra o L2 | Antes de aposentar o Apify na descoberta |
+| Ser o **único** com `append` (criação de linha) | I2 |
+
+#### `PROSP-03 Scoring` — ⬜ a criar
+
+| Mudança | Motivo |
+|---|---|
+| Extrair o motor de regras do `L2` para sub-workflow próprio | I1 e §9.3 |
+| Trocar `max()` por `fit × oportunidade`, com rank percentil | Fase 3 — 18 valores distintos em 20, contra 6 |
+| Aplicar piso `fit ≥ 0,05` | Nenhum lead sai da fila para sempre |
+| Preservar `max(gap, prontidão)` **dentro** do eixo oportunidade | I9 |
+| Corrigir ou aposentar o `ipc` | Máximo 23 numa escala 0–100 |
+| Único a escrever `site_tipo` | Hoje o `Site L4` também escrevia |
+
+#### `PROSP-04 Enriquecimento`
+
+| Mudança | Motivo |
+|---|---|
+| **Adicionar o guard do I6** — só enriquece com `nome` E (`site` OU `Categoria 1`) | Impede novos leads envenenados |
+| Absorver o enriquecimento do `1º Enriquecimento` | Uma função, um dono |
+| Absorver a análise de site do `Site L4` — **sem** o `"="` | Regra de escrita 3 |
+| **Adicionar extração de e-mail e redes sociais** do site | Contribuição da proposta GBP; a coluna `e-mail` está vazia |
+| **Parar de gravar** `id_hubspot`, `status hubspot`, `site_tipo` | I1 — são de P5, P6 e P3 |
+| Rodar só na fila `prioridade ≥ 60` | Governa o gasto de Apify/IA, não a entrada (I5) |
+
+#### `PROSP-05 CRM-out` — ⬜ não inspecionado
+
+| Mudança | Motivo |
+|---|---|
+| Promover a oficial e absorver a criação de deal do `1º Enriquecimento` | Único escritor do CRM (I8) |
+| **Buscar deal por `place_id`, nunca por `dealname`** | I4 — a busca por nome é a origem das duplicatas |
+| Único a gravar `id_hubspot`, **uma vez por lead** | I1 + regra 4 (nada de `executeOnce` em loop) |
+| Criar apenas **DEAL**, nunca Company | I11 |
+| Backfill dos 64 leads sem `id_hubspot` | Passivo atual |
+| **Não** gravar `status hubspot` | I1 — é de P6 |
+
+#### `PROSP-06 Aprendizado` — ✅ já conforme
+
+| Mudança | Estado |
+|---|---|
+| `update` em vez de `appendOrUpdate` | ✅ feito |
+| Estágio em `status hubspot` | ✅ feito (D4) |
+| Renomear | ⬜ |
+| Conferir na 1ª execução com deals que nenhuma linha nova aparece | ⬜ pendente de verificação |
+
+#### `PROSP-07 Zeladoria` — ✅ conforme
+
+Só renomear. Produz o backup diário que viabiliza o eixo Intent retroativo.
+
+#### `PROSP-08 Dedup CRM`
+
+| Mudança | Motivo |
+|---|---|
+| **Pedir `dealstage` e `createdate`** em `properties` | Hoje filtra por um campo que não pede — **nunca achou uma duplicata** |
+| Trocar a chave: `place_id` → telefone → domínio. Nome por último ou nunca | I4 |
+| Corrigir a faixa de acentos e remover o `slice(0,3)` | Junta negócios diferentes |
+| Primeira execução com `DRY_RUN = true` | Está em execução real e nunca foi validado |
+
+---
+
+### 9.5 Os 11 que saem
+
+| Arquivar | Motivo |
+|---|---|
+| `WPP Intake - Evolution API` · `WPP Intake copy 2` · `Intake - db's apify` | D2 escolheu Telegram |
+| `L2 Discovery (Pipeline A)` | Substituído pelo 02 — **só depois** dos 6 testes |
+| `L2 Discovery (ignora id hubspot)` · `L1 Core Engine (teste)` | Fork e teste |
+| `Automate Scrape Google Maps` · `Apify vide II` · `SCRATCH reviews` | Legado e template |
+| `Enriquecimento Site L4` | Absorvido pelo 04 |
+| `1º Enriquecimento` | Desmembrado em 04 e 05 |
+| `HubSpot - Atualizar status e disparar extracao` (`kED2`, 48 nós) | Desmembrado; a parte de status morre (o 06 já faz melhor) |
+
+⚠️ **Ordem obrigatória:** o `1º Enriquecimento` e o `L2` só são arquivados **depois** que o 04, o 05
+e o 02 estiverem rodando. Hoje o `1º Enriquecimento` é o único que cria deals.
