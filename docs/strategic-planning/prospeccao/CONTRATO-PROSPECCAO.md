@@ -83,8 +83,8 @@ Tudo neste documento decorre disso.
 | **scoring** (16) | `score_tecnico`, `ipc`, `potencial_comercial`, `oferta_recomendada`, 6 × `dim_*`, `site_tipo`, `flags_score`, `data_processamento_score`, `score_gbp` | **P3** | após P2 |
 | | `nao_reivindicado` | **P4** | só Apify observa |
 | | `analise_gbp_ia` | **P4** | após o agente |
-| **aprendizado** (17) | `hubspot_estagio`, `hubspot_status`, `motivo_perda`, `motivo_ganho`, `valor`, `via_aquisicao`, `num_interacoes`, `ultimo_contato`, `data_criacao_deal`, `data_fechamento`, `dias_no_funil`, `probabilidade`, `nba_recomendada`, `nba_aceite`, `abordagem_ia`, `acerto_previsao`, `data_sync_hubspot` | **P6** | a cada 6h |
-| **legado** (1) | `status hubspot` | — | **congelada.** Ninguém escreve. Substituída por `hubspot_estagio` |
+| **aprendizado** (17) | `status hubspot` *(estágio — D4)*, `hubspot_status`, `motivo_perda`, `motivo_ganho`, `valor`, `via_aquisicao`, `num_interacoes`, `ultimo_contato`, `data_criacao_deal`, `data_fechamento`, `dias_no_funil`, `probabilidade`, `nba_recomendada`, `nba_aceite`, `abordagem_ia`, `acerto_previsao`, `data_sync_hubspot` | **P6** | a cada 6h |
+| **descontinuada** | `hubspot_estagio` | — | **D4:** ninguém escreve. O estágio vive em `status hubspot` |
 
 ### Colunas com conflito ativo hoje
 
@@ -92,7 +92,7 @@ Tudo neste documento decorre disso.
 |---|---|---|
 | `enriquecimento` | `1º Enriquecimento` **e** `Site L4` (com `"="`) | **P4**, só |
 | `site_tipo` | motor **e** `Site L4` (com `"="`) | **P3**, só |
-| `hubspot_status`, `hubspot_estagio` | `1º Enriquecimento` **e** R3 | **P6**, só |
+| `status hubspot`, `hubspot_status` | `1º Enriquecimento`, `kED2` **e** R3 | **P6**, só |
 | `id_hubspot` | `1º Enriquecimento`, `Update id_deal`, `kED2` | **P5**, só |
 
 ---
@@ -200,30 +200,38 @@ negativo e inverter o sinal), Intent multiplicativo (zera prospecção fria), fi
 | **D1** | ✅ **O lead continua sendo só DEAL.** Company é criada **apenas quando o lead vira cliente** | P5 cria e atualiza apenas `DEAL`. A criação de Company passa a ser evento de **pós-venda**, fora do escopo da Prospecção. Simplifica P5 e evita a migração |
 | **D2** | ✅ **Telegram.** P1 = `Intake - Telegram API` (`kmsaomlIzj48YnCL`) | Os outros 3 intakes vão para a lista de arquivamento |
 | **D3** | ✅ **Não tratar o passivo agora.** Corrigir o deduplicador e observar se ele resolve | O passivo de duplicatas fica conhecido só depois da 1ª execução real. Rodar em `DRY_RUN = true` primeiro e conferir o relatório antes de deixar arquivar |
-| **D4** | ⬜ pendente — ver §8.1 | |
+| **D4** | ✅ **Manter `status hubspot`; descartar `hubspot_estagio`** | Fica **uma** coluna de estágio, e o dono passa a ser **P6** — ver §8.1 |
 
-### 8.1 D4 — a pergunta reformulada
+### 8.1 D4 — como fica
 
-Existem **duas colunas guardando a mesma informação**:
+Decisão do Olavo, contrária à minha recomendação (eu sugeria o inverso). O critério dele prevalece:
+a coluna que **já existe e é lida** é `status hubspot`; criar dependência de uma coluna nova só
+para renomear a mesma informação não agrega.
 
-| Coluna | Conteúdo | Quem escreve |
+**O que muda:**
+
+| Coluna | Antes | Agora |
 |---|---|---|
-| `status hubspot` | texto do estágio, ex. `"Prospectado"` | `1º Enriquecimento` (fixo) e `kED2` |
-| `hubspot_estagio` | o mesmo estágio, vindo do CRM | **P6** (R3) |
+| `status hubspot` | escrita por `1º Enriquecimento` (fixo `"Prospectado"`) e `kED2` | **dono: P6.** Recebe o estágio real do CRM a cada 6h |
+| `hubspot_estagio` | escrita por P6 | **descontinuada.** Ninguém escreve; conteúdo histórico permanece |
 
-`status hubspot` é a versão antiga; `hubspot_estagio` é a nova, que o loop de aprendizado mantém
-atualizada a cada 6h. **A antiga pode ficar desatualizada e discordar da nova** — e não há regra
-dizendo qual vence.
+O ganho da coluna nova não se perde: o que valia não era o nome, era **ter um dono só e ser
+atualizada de verdade**. Isso passa para a `status hubspot`.
 
-**A pergunta:** alguma coisa ainda *lê* a coluna `status hubspot`? Um filtro na planilha, uma
-visão, um relatório, ou você mesmo olhando?
+**Ação concreta:** no P6 (`WRFU2NM8rLJU7bRT`), o mapeamento `hubspot_estagio` vira `status hubspot`.
+E o `1º Enriquecimento` deixa de gravar `status hubspot` (I1) — hoje ele grava `"Prospectado"` fixo,
+o que reintroduziria a divergência.
 
-- **Se ninguém lê:** congelar — ninguém escreve mais, o conteúdo histórico fica, e `hubspot_estagio`
-  passa a ser a única fonte. É o recomendado.
-- **Se algo lê:** manter, mas com **um único dono (P6)**, para as duas nunca discordarem.
-
-**Recomendação:** congelar. Duas colunas com a mesma informação e donos diferentes é exatamente o
-tipo de coisa que gerou os problemas deste contrato.
+> ⚠️ **Não confundir com `hubspot_status`.** São colunas diferentes:
+>
+> | Coluna | Conteúdo | Situação |
+> |---|---|---|
+> | `status hubspot` | o **estágio** do funil: `Prospectado`, `Reunião Agendada`, `Contrato Enviado`… | **mantida**, dono P6 |
+> | `hubspot_status` | o **desfecho**: `Aberto` / `Vencido` / `Perdido` | **mantida** — é o rótulo mestre do aprendizado e alimenta `acerto_previsao` |
+> | `hubspot_estagio` | duplicava o estágio | **descontinuada** |
+>
+> A decisão D4 remove apenas a terceira. Remover `hubspot_status` quebraria o cálculo de
+> `acerto_previsao` e a variável-alvo do modelo.
 
 ---
 
