@@ -247,15 +247,38 @@ O item 3 é o ponto: `kED2` e `WRFU2` fazem a mesma coisa, e a versão do `kED2`
 
 ## 6. Ordem — do que dá valor primeiro
 
-| # | Ação | Custo | Por quê agora |
-|---|---|---|---|
-| 1 | **Desativar `Enriquecimento Site L4`** | 1 clique | Apaga `enriquecimento` e `site_tipo` de quem processa. `triggerCount: 0` — desativar não quebra nada |
-| 2 | **Tirar `executeOnce: true`** do nó `Atualizar status prospectado` no `1º Enriquecimento` | 1 flag | Só o 1º lead de cada lote recebe `id_hubspot`. Destrava o elo inteiro |
-| 3 | Escolher 1 intake, desativar os outros 2 ativos | 2 cliques | Risco de disparo duplicado |
-| 4 | Conferir linhas órfãs na planilha | 1 olhada | Se houver, a base já está contaminada e cresce a cada 6h |
-| 5 | Corrigir o `appendOrUpdate` do R3 (desviar itens sem match) | 1 nó | É o único workflow ativo que escreve aprendizado |
-| 6 | Arquivar os 8 mortos | 8 cliques | Reduz a superfície que precisa ser reentendida |
-| 7 | Apagar a parte de status do `kED2`; promover `5VRPLUB3` ou absorver no `1º Enriquecimento` | — | Elimina duplicação com o R3 |
+| # | Ação | Status |
+|---|---|---|
+| 1 | Desativar `Enriquecimento Site L4` | ✅ **feito** — `active: false`, `activeVersionId: null` |
+| 2 | Tirar `executeOnce: true` do `1º Enriquecimento` | ✅ feito pelo Olavo (⚠️ ver §6.1) |
+| 3 | Escolher 1 intake, desativar os outros | ✅ feito pelo Olavo |
+| 4 | Conferir linhas órfãs na planilha | ✅ feito pelo Olavo |
+| 5 | Corrigir o `appendOrUpdate` do R3 | ✅ **feito 2026-08-28** — ver §6.2 |
+| 6 | Arquivar os 8 mortos | ⏳ agendado pelo Olavo para depois |
+| 7 | Apagar a parte de status do `kED2`; promover `5VRPLUB3` ou absorver no `1º Enriquecimento` | ⬜ pendente |
+
+### 6.1 ⚠️ `1º Enriquecimento` está `active: false`
+
+Depois da correção do `executeOnce`, o workflow ficou **desativado** (`updatedAt` 2026-08-28 16:55).
+Ele é **o único que cria deals no HubSpot** — enquanto estiver desligado, nenhum lead novo entra no
+CRM. Se a desativação foi só para editar, reativar; se foi intencional, registrar o motivo.
+
+### 6.2 O que foi alterado no R3 (`WRFU2NM8rLJU7bRT`)
+
+| | Antes | Depois |
+|---|---|---|
+| Operação | `appendOrUpdate` | `update` |
+| `onError` | *(padrão: derruba a execução)* | `continueRegularOutput` |
+| Nome do nó | `…(upsert por id_hubspot)` | `…(update por id_hubspot)` |
+
+`update` não cria linha quando não há correspondência — é o comportamento desejado. O `onError`
+cobre o caso de o n8n lançar erro em vez de ignorar silenciosamente: o item é descartado sem
+derrubar o run. Publicado (`activeVersionId 1015cbb3`).
+
+**Verificação — parcial, e vale dizer:** a execução manual `33092` terminou com sucesso, mas
+`Buscar Deals Modificados` devolveu **zero deals** (o cursor havia acabado de avançar às 15:00).
+O caminho de "sem correspondência" **não foi exercitado**. Confirmar na próxima execução agendada
+que traga deals: nenhuma linha nova deve aparecer na aba `leads`.
 
 **Os passos 1, 2, 3 e 6 são cliques e flags — não exigem entender nada nem escrever código.**
 Juntos eles param o apagamento de colunas, destravam a chave de junção e eliminam 10 dos 19
