@@ -214,10 +214,58 @@ backups (1,44 MB em 18/08 → 2,88 MB em 27/08). **Abri a planilha e não é iss
 >    corresponde à da planilha.
 >
 > Olavo relata que **a partir da linha 91 as colunas B, C, E e F (`nome`, `setor`, `contato`,
-> `site`) estão vazias**. Procurei esse padrão nas duas abas, com e sem restrição de outras
-> colunas: **zero ocorrências**. Não consegui reproduzir a observação pelo export — a divergência
-> segue **em aberto** e precisa ser resolvida lendo a planilha pela API (nó Google Sheets), não
-> pelo Drive.
+> `site`) estão vazias**. Procurei esse padrão nas duas abas: **zero ocorrências**. Não consegui
+> reproduzir pelo export — mas a observação está **confirmada por outra via**, ver §7.
+
+---
+
+## 7. 🔴 Leads envenenados — diagnóstico fechado (2026-08-28)
+
+Confirmado pelo próprio dado: nessas linhas a coluna A (`place_id`) está preenchida, B/C/E/F estão
+vazias, e a coluna G (`enriquecimento`) contém **a recusa do Gemini**:
+
+> *"Para realizar uma pesquisa e análise aprofundada do lead, as informações essenciais sobre a
+> empresa (Nome, Site, Categoria) são **obrigatórias**. Sem esses dados, não é possível acessar as
+> fontes e plataformas necessárias para cumprir as pesquisas solicitadas."*
+
+Essa mensagem é a prova: **o agente recebeu os campos vazios.** Ou seja, a linha já estava sem
+identidade *antes* do enriquecimento — não foi o enriquecimento que apagou.
+
+### A cadeia
+
+| # | O que acontece | Onde |
+|---|---|---|
+| 1 | Uma linha é criada só com `place_id`; `nome`/`setor`/`contato`/`site` vazios | origem a confirmar |
+| 2 | O IF do `1º Enriquecimento` testa apenas `enriquecimento` vazio **e** `id` não vazio → a linha **passa** | `1º Enriquecimento` |
+| 3 | `Normalizar campos do lead` mapeia valores vazios | idem |
+| 4 | O prompt vai com `Nome:` , `Site:` , `Categoria:` vazios → **Gemini recusa** | idem |
+| 5 | A recusa é gravada em `enriquecimento` | idem |
+| 6 | 🔴 **A linha passa a contar como "enriquecida" e nunca mais é reprocessada** | idem |
+| 7 | Deal não é criado (nome vazio) → linha fica sem `id_hubspot` | idem |
+| 8 | Sem `id_hubspot`, o R3 não tem onde escrever → **fora da base de treino para sempre** | R3 |
+
+**Verificado:** `SELECT ... FROM DEAL WHERE dealname IS NULL` → **0 resultados**. O estrago parou
+antes do CRM; não há deals sem nome. O custo foi em **tokens de Gemini gastos para produzir
+recusas** e em leads perdidos da base.
+
+Isto liga as duas pontas: os **64 leads sem `id_hubspot`** da seção anterior são, provavelmente,
+esses mesmos leads envenenados.
+
+### Os três consertos
+
+| | Ação | Onde | Efeito |
+|---|---|---|---|
+| **A** | Somar ao IF a condição `nome` **não vazio** (e idealmente `site` ou `Categoria 1`) | `1º Enriquecimento` | Para a produção de novas linhas envenenadas — 1 condição |
+| **B** | Limpar `enriquecimento` nas linhas cujo conteúdo é a recusa | planilha | Devolve as linhas à fila; sem isso ficam marcadas como prontas para sempre |
+| **C** | Achar quem cria linha só com `place_id` | a investigar | Corrige a origem |
+
+**Ordem:** A antes de B. Limpar primeiro só faria o ciclo se repetir e gastar Gemini de novo.
+
+**Sobre C — o suspeito, não confirmado:** o defeito 2 do brief do Codex descreve exatamente este
+sintoma em `Salvar lead bruto na planilha` (`kED2`): *"perde os dados do lead novo — lê `$json` de
+`Buscar lead por place_id` (lookup vazio p/ lead novo) e referencia cabeçalhos da planilha, não os
+campos normalizados"*. Bate com o quadro, mas o `kED2` está inativo — confirmar se as linhas são
+anteriores à desativação ou se há outra origem ativa (`L2 Discovery` também escreve).
 
 A correção da §6.2 continua valendo como prevenção, mas o dano que eu supunha **não ocorreu**.
 
