@@ -416,10 +416,18 @@ ainda acumula quatro papéis.
 7 nós, sub-workflow. Recebe `place_id`, `nome`, `telefone`, `descricao`:
 
 ```
-[P5] Entrada → Buscar deal por place_id → Deal ja existe?
-                                            ├─(sim)→ Reusar deal existente ─┐
-                                            └─(nao)→ Criar deal → Novo ─────┴→ Gravar id_hubspot
+[P5] Entrada (sub-workflow) ─────────────┐
+                                         ├→ [P5] Dados de entrada → Buscar deal por place_id → Deal ja existe?
+[SMOKE] Trigger manual → Lead de teste ──┘                                                       ├─(sim)→ Reusar deal existente ─┐
+                                                                                                 └─(nao)→ Criar deal → Novo ────┴→ Gravar id_hubspot
 ```
+
+**Por que existe o nó `[P5] Dados de entrada`.** Os nós seguintes liam `$('[P5] Entrada')`, que
+só existe quando o P5 é chamado como sub-workflow — pelo caminho manual essas referências
+quebrariam. O `[P5] Dados de entrada` é o **ponto único de leitura das entradas**: as duas portas
+desaguam nele e todas as referências apontam para ele. As duas conexões chegam na mesma entrada,
+mas isso **não** repete a execução como no defeito do Intake: lá as duas pontas traziam dados de
+verdade; aqui só uma das portas produz item por vez.
 
 | Invariante | Como é cumprido |
 |---|---|
@@ -505,11 +513,33 @@ O ramo `[I6] Sem identidade - nao enriquece` continua indo direto ao loop, sem C
 exceção a **I5**: uma linha sem nome não é um lead, é um registro quebrado — e foi
 exatamente o que produziu os deals sem nome que o Olavo apagou à mão.
 
+##### ✅ Smoke executado 2026-08-28 (execução `33170`, `success`)
+
+Foi acrescentado um `[SMOKE] Trigger manual` com um lead de teste escolhido de propósito: a
+**Niti Odontologia** (`ChIJw97SGvGzvZQRtT6_JH7z7T0`), que **já tem** deal `60040868935` com
+`place_id` gravado pelo backfill. Assim o teste exercita o ramo de **reuso** e não cria nada.
+
+Percurso real, nó a nó:
+
+| Nó | Resultado |
+|---|---|
+| `Buscar deal por place_id` | achou `60040868935` |
+| `Deal ja existe?` | saída 0 com 1 item, **saída 1 vazia** — não foi para `Criar deal` |
+| `Reusar deal existente` | `id_hubspot: "60040868935"`, `criado_agora: false` |
+| `Gravar id_hubspot na planilha` | gravou na linha `id = ChIJw97SGvGzvZQRtT6_JH7z7T0` |
+
+Confirmado depois no HubSpot: busca por esse `place_id` devolve **`total: 1`**. Nenhum deal
+duplicado foi criado, e o `dealname` original ficou intacto — o nome do lead de teste não
+sobrescreveu nada, porque o ramo de reuso não toca no deal.
+
+**É a prova de que o defeito central da frente está fechado**: o P5 encontra o deal existente e
+o reaproveita, em vez de criar um segundo como o Intake fazia.
+
 ##### O que ainda falta no P5
 
 | Item | Nota |
 |---|---|
-| Smoke com lead real | Não executado — o gatilho é `executeWorkflowTrigger`, que o MCP não dispara. Roda na próxima prospecção pelo Telegram |
+| Smoke com lead real | ✅ execução `33170` — ver abaixo |
 | Aviso de validação `resource: deal` | Falso positivo do validador; o nó idêntico roda em produção |
 
 ---
