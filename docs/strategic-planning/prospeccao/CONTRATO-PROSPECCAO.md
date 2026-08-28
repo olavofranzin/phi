@@ -411,7 +411,53 @@ ainda acumula quatro papéis.
 | **Parar de gravar** `id_hubspot`, `status hubspot`, `site_tipo` | I1 — são de P5, P6 e P3 |
 | Rodar só na fila `prioridade ≥ 60` | Governa o gasto de Apify/IA, não a entrada (I5) |
 
-#### `PROSP-05 CRM-out` — ⬜ não inspecionado
+#### `PROSP-05 CRM-out` — ✅ **construído 2026-08-28** (`94lSWJfxfu653KdN`, inativo)
+
+7 nós, sub-workflow. Recebe `place_id`, `nome`, `telefone`, `descricao`:
+
+```
+[P5] Entrada → Buscar deal por place_id → Deal ja existe?
+                                            ├─(sim)→ Reusar deal existente ─┐
+                                            └─(nao)→ Criar deal → Novo ─────┴→ Gravar id_hubspot
+```
+
+| Invariante | Como é cumprido |
+|---|---|
+| I8 — único a escrever no CRM | É o único com nó de criação de deal |
+| I1 — único dono de `id_hubspot` | Grava a coluna; ninguém mais deve |
+| I4 — dedup por `place_id` | A busca filtra por `place_id`, nunca por `dealname` |
+| I11 — só DEAL | Não há nó de Company |
+| I2 — nunca append | `operation: update`; se a linha não existir, não cria |
+
+O deal criado passa a carregar `place_id` como propriedade — o que torna a próxima busca eficaz.
+
+##### 🔴 Dependência: backfill de `place_id` nos deals existentes
+
+A propriedade `place_id` foi criada em 2026-08-28 (grupo *IA / Enriquecimento*). **Os ~98 deals já
+existentes têm o campo vazio.**
+
+Consequência: se o P5 rodar hoje para um lead que **já tem** deal, a busca por `place_id` não acha
+nada e ele **cria um segundo deal**. O P5 só é seguro depois que os deals atuais forem casados com
+os `place_id` da planilha.
+
+**Ordem obrigatória:**
+
+1. Backfill: para cada linha da planilha com `id_hubspot`, gravar o `place_id` no deal correspondente
+2. Só então ligar o P5 no fluxo
+3. Só então arquivar a criação de deal do `Intake - Telegram API`
+
+Enquanto o passo 1 não for feito, o P5 fica **inativo** e a criação de deal continua no Intake.
+
+##### O que ainda falta no P5
+
+| Item | Nota |
+|---|---|
+| Smoke com lead real | Não executado — depende do backfill |
+| Aviso de validação `resource: deal` | Falso positivo do validador; o nó idêntico roda em produção |
+
+---
+
+#### `PROSP-05` — plano original (referência)
 
 | Mudança | Motivo |
 |---|---|
