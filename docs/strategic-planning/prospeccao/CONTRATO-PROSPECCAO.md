@@ -275,14 +275,72 @@ executável isoladamente para recalibração.
 
 ### 9.4 O que muda em cada um
 
-#### `PROSP-01 Intake (Telegram)` — ⬜ não inspecionado
+#### `PROSP-01 Intake (Telegram)` — 🔴 inspecionado 2026-08-28: **não é um intake**
 
-| Mudança | Motivo |
+`Intake - Telegram API` (`kmsaomlIzj48YnCL`, **ativo**) contém o pipeline inteiro:
+
+```
+Telegram → formulário → Apify Google Maps → dedup por placeId → normaliza
+   → busca na planilha → salva lead → Gemini enriquece → cria deal → grava status
+```
+
+São **P1 + P2 + P4 + P5 num workflow só**. Ele escreve na planilha em **3 nós** e escreve no
+HubSpot. E é ele que roda de verdade: o `L2 Discovery`, apesar de `active`, tem `triggerCount: 0`.
+
+##### 🔴 É a origem dos leads envenenados — confirmado no código
+
+```
+Normalizar campos do lead  →  Buscar lead por place_id  →  If lead ja existe
+                                                              └─(falso)→ Salvar lead bruto
+```
+
+`Salvar lead bruto na planilha` mapeia `={{ $json.nome }}`, `={{ $json.place_id }}` etc. — mas
+seu `$json` vem do **`Buscar lead por place_id`**, não do `Normalizar campos do lead`. Para lead
+**novo** o lookup não acha nada e (com `alwaysOutputData: true`) emite item vazio. **A linha é
+gravada com os campos de identidade em branco.**
+
+É exatamente o defeito 2 do brief do Codex, agora confirmado no nó. Fecha a cadeia da §7 do
+panorama: linha sem identidade → Gemini recusa → recusa marca a linha como pronta para sempre.
+
+##### 🔴 Duas referências a nós que não existem
+
+| Nó | Referência | Existe? |
+|---|---|---|
+| `Criar deal no HubSpot` | `$('Salvar lead bruto na planilha1')` → `dealName` | ❌ o nó chama-se `…planilha`, sem o `1` |
+| `Atualizar status prospectado na planilha` | `$('Atualizar lead enriquecido na planilha1')` → `id` | ❌ idem |
+
+Consequências diretas:
+
+- `dealName` fica indefinido → **deal criado sem nome** — os que o Olavo apagou à mão
+- `id` fica indefinido no `appendOrUpdate` → não casa → **acrescenta linha** só com
+  `status hubspot: "Prospectado"`
+
+São sobras de cópia do `1º Enriquecimento`, que tem nós com sufixo `1`. Os dois workflows são
+variantes um do outro.
+
+##### Outros defeitos
+
+| Defeito | Efeito |
 |---|---|
-| Renomear | Convenção |
-| Corrigir a descrição — hoje é cópia do WPP Intake | I10 |
-| **Confirmar que não escreve na planilha** | Se escrever, viola I1. **Não abri este workflow** |
-| Apontar a chamada para o `PROSP-02` | Hoje chama o L2 |
+| `Agente de Enriquecimento` sem guarda de identidade | Gasta Gemini em lead sem nome — **é aqui que o I6 tem de entrar** |
+| Agente ligado em paralelo a `Atualizar lead` **e** `Criar deal` | O deal é criado mesmo se o enriquecimento falhar |
+| `Calcular vagas disponiveis` só copia `total_leads` | O nome mente; não calcula vaga nenhuma |
+| `Update row(s)` na Data Table com `filters: [{keyValue: "1"}]` sem `keyName` | Filtro malformado |
+| Credencial Apify diferente da do `L2` (`Apify account gmail`) | Duas contas Apify em uso |
+
+##### O que fazer
+
+**Desmembrar**, não corrigir no lugar. Ele vira:
+
+| Vai para | O quê |
+|---|---|
+| `PROSP-01` | Telegram trigger, formulário, parâmetros, mensagem de confirmação. **Para de escrever na planilha e no CRM** |
+| `PROSP-02` | Apify/Places, dedup, normalização, gravação da linha — com `$json` vindo do **Normalizar**, não do lookup |
+| `PROSP-04` | Agente de enriquecimento **com o guard do I6** |
+| `PROSP-05` | Criação do deal e `id_hubspot`, com as referências corrigidas |
+
+⚠️ **Enquanto não for desmembrado, ele continua produzindo leads envenenados e deals sem nome a
+cada execução.**
 
 #### `PROSP-02 Descoberta (Places API)`
 
