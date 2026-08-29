@@ -439,10 +439,26 @@ Google Cloud e colar na credencial.
 - **`data extração` tinha dois formatos.** O normalizador escrevia ISO (`2026-08-29`) e as 89
   linhas existentes usam `dd/MM/yyyy`. Alinhado ao formato existente — trocar formato no meio de
   uma coluna é pior do que um formato ruim.
-- **`businessStatus` não tem coluna.** A Places informa `CLOSED_PERMANENTLY`, e um negócio fechado
-  não é lead. Sem coluna para registrar, optei por **não filtrar em silêncio**: as linhas entram
-  (I5) e a contagem aparece em `_fechados_permanentemente` no diagnóstico da execução. Criar a
-  coluna é decisão do Olavo.
+##### ✅ Negócio fechado permanentemente é descartado (decisão Olavo, 2026-08-29)
+
+Eu havia deixado o lead com `businessStatus: CLOSED_PERMANENTLY` entrar na planilha, invocando
+**I5**. **Estava errado.** O Olavo decidiu: descartar no próprio código, antes de virar linha.
+
+I5 diz que todo *lead* descoberto entra — não que todo *registro retornado pela API* entra. Um
+negócio permanentemente fechado não é um lead de baixa prioridade; **não é um lead.** Isso é
+validade do registro, não filtro de score, e por isso não cria o viés de seleção que I5 existe
+para impedir: nenhum desfecho comercial deixa de ser observado, porque não há desfecho possível.
+
+Duas escolhas dentro dessa decisão:
+
+- **`CLOSED_TEMPORARILY` continua entrando.** Um negócio temporariamente fechado ainda existe e
+  ainda compra. Contado em `_fechados_temporariamente`.
+- **O descarte não é silencioso.** `_descartados_fechados` traz a contagem e `_descartados_nomes`
+  os nomes, no diagnóstico da execução. Exclusão invisível foi a origem de metade dos defeitos
+  desta frente.
+
+Se a busca não render nenhuma linha válida, o normalizador devolve vazio — o upsert e o P3
+simplesmente não rodam, que é o comportamento correto, e o resumo fica no log.
 
 #### `PROSP-03 Scoring` — ✅ **construído 2026-08-29** (`V0f80LU1ZH8PUtdc`)
 
