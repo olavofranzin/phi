@@ -495,8 +495,38 @@ Nenhum dos 127 `id_hubspot` coincide com alguma das 136 linhas completas, então
 perde vínculo nenhum. Linhas genuinamente em branco abaixo da 264 não são afetadas: o nó do
 Google Sheets nem as devolve.
 
-⚠️ **Pendente:** apagar as linhas 138–264 (por `id_hubspot` casando com a lista, e `id`
-vazio — nunca por número de linha, que se desloca). Aguarda OK do Olavo.
+##### ✅ Linhas órfãs apagadas 2026-08-29
+
+`PROSP-LO Limpar linhas orfas do sync` (`K3nfaJhbzfPW41fC`, 9 nós, manual). Detecta a órfã por
+**guarda tripla** — `id` (place_id) vazio **E** `id_hubspot` preenchido **E** `nome` vazio —,
+agrupa os `row_number` em blocos contíguos e apaga **de baixo para cima**, porque apagar linha
+desloca tudo o que está abaixo.
+
+Dry run (`33360`):
+
+```
+total_linhas        : 263
+linhas_com_place_id : 136
+total_orfas         : 127
+linhas_ignoradas    :   0
+blocos              :   1   (inicio 138, fim 264)
+```
+
+Bloco único e nenhuma linha em estado ambíguo — uma única chamada de exclusão.
+
+Execução real (`33362`): `success: true`.
+
+Conferência (`33363`, de volta em dry run):
+
+```
+total_linhas        : 136
+linhas_com_place_id : 136
+total_orfas         :   0
+```
+
+A planilha ficou com exatamente os 136 leads reais. O `[LO] Config` voltou a `dry_run = true`,
+o que também deixa o workflow utilizável como conferência recorrente: se ele voltar a achar
+órfã, é sinal de que alguém reintroduziu `appendOrUpdate` em escrita por chave (**I2**).
 
 ##### ✅ Dependência fechada: backfill de `place_id` nos deals existentes
 
