@@ -465,11 +465,29 @@ reobservar a identidade. Os scores velhos delas ficam como estão; apagá-los é
 Os 22% não são o alvo de 50%, mas o alvo foi medido noutra base (20 dentistas de Curitiba) e com
 `Avaliação` observada. Comparar as duas taxas só faz sentido depois que o P2 rodar.
 
-##### ⬜ Falta para o P3 gravar
+##### ✅ Gravado — execução `33445` (2026-08-29)
 
-Três colunas não existem na aba `leads`: **`fit`, `oportunidade`, `modelo_versao`**. O nó de
-escrita está com `handlingExtraData: ignoreIt`, então uma execução real hoje gravaria as outras
-seis e **descartaria essas três em silêncio** — por isso o `dry_run` continua `true`.
+O Olavo criou as três colunas (`fit` BL, `oportunidade` BM, `modelo_versao` BN). Antes de gravar,
+conferi os cabeçalhos na leitura da execução `33444`: chegaram com os nomes exatos. A conferência
+não era zelo excessivo — o nó de escrita está com `handlingExtraData: ignoreIt`, então um
+cabeçalho com um caractere diferente seria **descartado em silêncio**, sem erro.
+
+Execução real `33445`: sucesso. Conferência `33446`, de volta em `dry_run`:
+
+```
+_pontuados                : 89
+_ja_gravados_nesta_versao : 89
+_sem_identidade           : 47
+```
+
+**89 de 89** — nenhuma linha perdida. As 47 sem identidade seguem sem score novo, como projetado.
+O contador `_ja_gravados_nesta_versao` ficou permanente: uma execução em `dry_run` agora serve de
+conferência do que já foi gravado por versão de modelo.
+
+⚠️ **O vocabulário de `site_tipo` mudou.** O motor antigo gravava `site`; o P3 grava `own`,
+`social` ou `none` — o vocabulário do desenho e do L2b. Quem consumir essa coluna precisa saber:
+`site` e `own` são o mesmo conceito, escritos por motores diferentes. Linhas ainda não repontuadas
+podem carregar o valor antigo.
 
 ---
 
