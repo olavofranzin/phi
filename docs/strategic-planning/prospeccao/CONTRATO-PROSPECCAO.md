@@ -377,17 +377,72 @@ ainda acumula quatro papéis.
 | Duas contas Apify em uso | Decisão de custo, não de código |
 | Nada escreve `mês extração`, `Avaliação`, `Quantidade fotos`, `Horário` | Colunas do contrato que este workflow ignora — entram no P2 |
 
-#### `PROSP-02 Descoberta (Places API)`
+#### `PROSP-02 Descoberta (Places API)` — ✅ **reestruturado 2026-08-29** (`n7Z0xwi1dCDioln1`)
 
-| Mudança | Motivo |
+O `L2b Discovery` virou `PROSP-02 Descoberta (Places API)`, publicado (`0b40a434`).
+
+| Mudança do plano | Estado |
 |---|---|
-| Re-colar a chave da Places API na credencial | Funciona via curl, falha dentro do n8n |
-| Remover a credencial residual `Evolution API Header Auth` do nó de busca | Sobra de cópia |
-| Reativar os 2 nós desabilitados (`Upsert Planilha`, `Chamar L3`) | Foram desligados no smoke |
-| **Extrair o bloco de scoring para o `PROSP-03`** | I1 — P2 não é dono das colunas de score |
-| Gravar **vazio** em `nao_reivindicado`, `Patrocinado`, `Agendamento`, `Posts` | I3 — a Places não observa esses campos |
-| Rodar os 6 testes de validação contra o L2 | Antes de aposentar o Apify na descoberta |
-| Ser o **único** com `append` (criação de linha) | I2 |
+| Remover a credencial residual `Evolution API Header Auth` do nó de busca | ✅ |
+| **Extrair o bloco de scoring para o `PROSP-03`** | ✅ nó removido; P2 chama o P3 |
+| Gravar **vazio** em `nao_reivindicado`, `Patrocinado`, `Agendamento`, `Posts` | ✅ já estava certo |
+| Reativar os nós desabilitados | ✅ upsert religado |
+| Ser o **único** com `append` | ✅ `appendOrUpdate` por `id`, a exceção legítima de **I2** |
+| Re-colar a chave da Places API | 🔴 **do Olavo** — ver abaixo |
+| Rodar os 6 testes de validação contra o L2 | ⬜ depende da chave |
+
+Fluxo depois da reestruturação:
+
+```
+[P2] Inicio manual ─┐
+                    ├→ Set Parametros → Places Text Search → Separar Leads
+[P2] Entrada ───────┘                                            │
+                                                                 ▼
+                              Chamar PROSP-03 ← Upsert Planilha ← Normalizar
+```
+
+**O que saiu, e por quê.** Removi o nó de scoring, o IF de fila e a chamada ao L3:
+
+- score, dimensões e oferta são colunas do **P3** (I1) — o P2 não é dono delas;
+- a fila por `prioridade ≥ 60` é critério do **P4**, não da descoberta. Deixá-la aqui misturava
+  "quem descobre" com "quanto gastamos com quem".
+
+##### 🔴 O mesmo defeito do `new URL()` estava aqui
+
+Como eu havia previsto ao construir o P3, o `classificarSite` do L2b tinha o mesmo código:
+`try { new URL(url) } catch { return 'none' }`. A função não existe no sandbox do Code node, então
+**toda URL caía no catch e todo lead sairia como `none`** — e como o L2b nunca rodou em produção,
+o defeito nunca apareceu. Corrigido com extração de host por regex, igual ao P3. Corrigi também o
+casamento de domínio, que usava `includes` e faria `phoenix.com.br` casar com `x.com`.
+
+##### O que o smoke provou — execução `33451`
+
+A execução falhou, e a falha é informativa. A requisição sai **bem formada**: o header
+`X-Goog-Api-Key` é injetado pela credencial templated, o `X-Goog-FieldMask` e o corpo estão
+corretos. A resposta foi:
+
+```
+400 API_KEY_INVALID — "API key not valid. Please pass a valid API key."
+```
+
+**Isso corrige o diagnóstico anterior.** O contrato registrava *"funciona via curl, falha dentro
+do n8n"*, o que sugeria problema de como o n8n envia a chave. Não é: o mecanismo de injeção
+funciona. O que está inválido é **o valor guardado na credencial** `Google Places API`
+(`wTDtqdkU2IpqFVf8`).
+
+Isso converge com a pendência de segurança já aberta: a chave foi exposta em texto claro e
+precisa ser rotacionada de qualquer forma. **Uma ação resolve as duas:** gerar chave nova no
+Google Cloud e colar na credencial.
+
+##### Dois pontos menores registrados
+
+- **`data extração` tinha dois formatos.** O normalizador escrevia ISO (`2026-08-29`) e as 89
+  linhas existentes usam `dd/MM/yyyy`. Alinhado ao formato existente — trocar formato no meio de
+  uma coluna é pior do que um formato ruim.
+- **`businessStatus` não tem coluna.** A Places informa `CLOSED_PERMANENTLY`, e um negócio fechado
+  não é lead. Sem coluna para registrar, optei por **não filtrar em silêncio**: as linhas entram
+  (I5) e a contagem aparece em `_fechados_permanentemente` no diagnóstico da execução. Criar a
+  coluna é decisão do Olavo.
 
 #### `PROSP-03 Scoring` — ✅ **construído 2026-08-29** (`V0f80LU1ZH8PUtdc`)
 
