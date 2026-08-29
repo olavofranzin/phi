@@ -484,6 +484,39 @@ _sem_identidade           : 47
 O contador `_ja_gravados_nesta_versao` ficou permanente: uma execução em `dry_run` agora serve de
 conferência do que já foi gravado por versão de modelo.
 
+##### 🔴 Corrigido: `flags_score` estava misturando dois assuntos
+
+Apontado pelo Olavo em 2026-08-29. Eu havia colocado na `flags_score` dois tipos de informação:
+
+| Tipo | Exemplos | Sobre o quê |
+|---|---|---|
+| Sinal comercial | `SEM_SITE`, `SITE_REDE`, `POUCAS_FOTOS`, `SEM_TELEFONE`, `VOLUME_FRACO` | **o lead** |
+| Observabilidade | `AVALIACAO_NAO_OBSERVADA`, `HORARIO_NAO_OBSERVADO` | **o nosso dado** |
+
+Como `Avaliação` e `Horário` estão em 0/136, as flags de observabilidade apareciam em **100% das
+89 linhas**. Uma coluna constante não informa nada — e pior, escondia o sinal que importa: um lead
+com site próprio e sem problema nenhum não recebe `SEM_SITE`, então só sobrava o ruído.
+
+`flags_score` sempre foi sobre o lead — o motor antigo gravava `sem-site`, `site=rede`,
+`não-reivind.`, `vol(N)`. Restaurado esse papel.
+
+A observabilidade não se perdeu: virou `_sinais_nao_observados` e `_cobertura_sinais` (fração dos
+4 sinais efetivamente observados), campos internos visíveis na execução e **não gravados** na
+planilha. Hoje a cobertura é 0,25 ou 0,50 — nenhum lead tem os 4 sinais.
+
+Regravado na execução `33448`. Amostra:
+
+```
+Clínica Padovani     POUCAS_FOTOS     cobertura 0,50
+Clinica Guerra       SITE_REDE        cobertura 0,25
+p9.digital           SEM_TELEFONE     cobertura 0,25
+OrthoDontic          (vazio)          cobertura 0,25
+```
+
+**Lição:** uma coluna tem um assunto. Misturar diagnóstico do lead com diagnóstico do pipeline na
+mesma célula é o mesmo erro de dono múltiplo que o **I1** existe para impedir — só que dentro de
+uma coluna em vez de entre workflows.
+
 ⚠️ **O vocabulário de `site_tipo` mudou.** O motor antigo gravava `site`; o P3 grava `own`,
 `social` ou `none` — o vocabulário do desenho e do L2b. Quem consumir essa coluna precisa saber:
 `site` e `own` são o mesmo conceito, escritos por motores diferentes. Linhas ainda não repontuadas
