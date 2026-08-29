@@ -962,3 +962,109 @@ agora impede.
 
 ⚠️ **Ordem obrigatória:** o `1º Enriquecimento` e o `L2` só são arquivados **depois** que o 04, o 05
 e o 02 estiverem rodando. Hoje o `1º Enriquecimento` é o único que cria deals.
+
+---
+
+## `PROSP-04 Enriquecimento` — construído 2026-08-29 (`EFD7Drr0LDMqfDXw`, publicado)
+
+Reconstruído em cima do `L3`, que já tinha o esqueleto certo mas fazia coisas que
+hoje são de outros donos. 14 nós:
+
+```
+[P4] Entrada (sub-workflow) ─┐
+[SMOKE] Trigger manual ──────┴→ [P4] Buscar leads → [P4] Fila → [P4] Tem lead na fila?
+                                                                    │(sim)
+                                                                    ▼
+   ┌──────────────────────────────────────────── Loop Over Items ───┘
+   │(loop)
+   ▼
+[P4] Apify deep-dive → [P4] Sinais do Apify → [P4] Agente de enriquecimento
+   → [P4] Ler resposta do agente → [P4] Gravar enriquecimento → Wait ──┐
+                                                                       │
+   └───────────────────────────────────────────────────────────────────┘
+```
+
+### O que saiu do L3
+
+| Nó removido | Por quê |
+|---|---|
+| `02+03+04 Motor de Regras` | O scoring é do **P3** desde 2026-08-29. Dois motores = dois números diferentes para a mesma coisa |
+| `Montar Campos HubSpot` | Montava `score_tecnico`, `ipc`, as 6 `dim_*`, `site_tipo` e `flags_score` — todas do P3 (I1) |
+| `Atualizar Deal (HubSpot)` | **I8:** só o P5 escreve no CRM |
+| `Call 'Enriquecimento Site L4'` | Estava na saída 0 do `splitInBatches` (= *done*) e **sem saída** — disparava uma vez, no fim, e o resultado não ia a lugar nenhum. A análise de site nunca chegava à planilha por esse caminho |
+
+O `Site L4` foi absorvido pelo agente único, **sem** o `"="` que ele gravava em
+`enriquecimento` e `site_tipo`, e sem o `appendOrUpdate` (I2).
+
+### A fila (`[P4] Fila`)
+
+Guard do **I6** — só enriquece com `nome` **E** (`site` **OU** `Categoria 1`) — mais o
+corte `potencial_comercial ≥ 60` e o descarte de quem já tem `analise_gbp_ia`.
+A fila governa o **gasto** de Apify e IA; não governa a entrada de lead (I5).
+
+**Por que o IF continua existindo.** Fila vazia devolve um item sem `id`, e o IF manda
+esse item para o ramo falso: o loop não roda e o diagnóstico continua visível na
+execução. Sem o IF, fila vazia seria uma execução muda.
+
+### Dry-run 33517 — sem gastar Apify nem Gemini
+
+O IF foi desligado do loop, a execução rodou até a fila e a conexão foi religada.
+
+| | |
+|---|---|
+| `_total_lidos` | 136 |
+| `_na_fila` | **14** |
+| `_fora_sem_nome` | 47 |
+| `_fora_sem_ancora_i6` | 0 |
+| `_fora_sem_prioridade` | 0 |
+| `_fora_abaixo_do_corte` | 47 |
+| `_fora_ja_enriquecido` | 28 |
+
+14 + 47 + 0 + 0 + 47 + 28 = **136**. A conta fecha — nenhum lead sumiu no caminho.
+
+Os 47 sem nome são exatamente as 47 linhas sem identidade já registradas em §
+`PROSP-03`. `_fora_sem_ancora_i6 = 0` diz que, entre os leads **com** nome, nenhum está
+sem site e sem categoria: o I6 hoje não barra ninguém além do que a falta de nome já
+barra. Ele é uma trava para o que vier, não uma peneira do que já existe.
+
+### Decisões do Olavo (2026-08-29)
+
+**Um agente só, não dois.** Uma chamada por lead devolve JSON com `analise_gbp`,
+`analise_site` e `resumo_comercial`. Custa 1/3 do token de três chamadas e — o que
+importa mais — o agente vê a ficha do Google e o site **juntos**. No desenho antigo o
+`L3` lia a ficha e o `Site L4` lia o site, e nenhum dos dois enxergava o outro.
+
+**Corte fica em 60.** Volta ao normal sozinho quando o P2 povoar `Avaliação` e
+`Horário` e o teto da prioridade subir de 80 para 100. Não há número mágico para
+corrigir depois.
+
+### Se a resposta não vier em JSON
+
+O `[P4] Ler resposta do agente` procura o primeiro `{` e o último `}`. Se ainda assim
+não parsear, **a análise não é jogada fora**: o texto cru vai para `enriquecimento` e
+`_resposta_em_json: false` fica na execução. Perder o trabalho do agente por causa de
+uma cerca de código seria pior que gravá-lo no lugar aproximado.
+
+### Colunas que o P4 escreve — e só
+
+`e-mail`, `Patrocinado`, `Atributos`, `Agendamento`, `Posts`, `nao_reivindicado`,
+`enriquecimento`, `enriquecimento_site`, `analise_gbp_ia`. Nove, todas dele na matriz
+do §3. Não escreve `id_hubspot` (P5), `status hubspot` (P6) nem `site_tipo` (P3).
+
+**Redes sociais não ganharam coluna.** O contrato pede extração de e-mail *e* redes; a
+coluna `e-mail` existe, a de redes não. Em vez de inventar a 64ª coluna, os perfis
+encontrados entram no fim do texto de `enriquecimento`, sob `Redes:`. Se virarem
+critério de score, aí sim viram coluna.
+
+### Apify — `scrapeContacts`
+
+O `customBody` do L3 pedia só `scrapeSocialMediaProfiles: { instagrams: true }`. Sem
+`scrapeContacts: true` o ator não devolve `emails`, e a coluna `e-mail` continuaria
+vazia para sempre — o P4 escreveria vazio corretamente (I3) sobre um dado que ninguém
+pediu. Corrigido junto com as demais redes.
+
+### O que falta para o P4 rodar de verdade
+
+O caminho do lead (Apify → agente → planilha) **ainda não foi executado** — isso gasta
+Apify e Gemini nos 14 leads da fila e depende do OK de budget. A fila está provada; o
+corpo do loop, não.
