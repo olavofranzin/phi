@@ -593,7 +593,9 @@ O último é grave e era invisível: `linhas.join('` + quebra de linha real + `'
 **morria antes de enviar o relatório**. Mesmo que tivesse achado duplicatas, o Telegram nunca
 receberia nada. Dois bugs independentes garantiam silêncio total.
 
-##### O passivo, finalmente medido
+##### O passivo, medido — e depois medido de novo
+
+Primeira medição (2026-08-28, `DRY_RUN`):
 
 ```
 deals lidos         : 101
@@ -602,21 +604,73 @@ grupos com duplicata:   4
 deals a arquivar    :   8
 ```
 
-| Deal a arquivar | Mantido | Chave |
+Segunda medição, execução `33177`, algumas horas depois:
+
+```
+deals lidos         :  93
+em Prospectado      :  90
+grupos com duplicata:   1
+```
+
+O portal tem **8 deals a menos**. Dos 4 grupos, sobrou **1** — exatamente o ambíguo. Os grupos
+inequívocos (Mariana Aguiar, Dentz, Fabrício Correa) foram removidos à mão entre as duas
+medições, mesmo padrão de intervenção manual já registrado na §7.
+
+##### ❌ Correção: não havia truncamento de paginação
+
+Eu havia registrado que *"só 101 dos ~141 deals foram lidos; o `getAll` parece truncar a
+paginação"*. **Está errado e o número ~141 não tinha fonte.** A API devolve `total: 93` para
+todos os deals do portal, e a execução `33177` leu exatamente 93. O `returnAll: true` lê tudo.
+
+##### ✅ O grupo ambíguo resolvido: são dois negócios, não uma duplicata
+
+| | `60167122736` | `60050259305` |
 |---|---|---|
-| Dra. Mariana Aguiar ×3 | o mais antigo | `tel:7991532257` |
-| Dentz Rio Preto ×3 | o mais antigo | `tel:7996605040` |
-| Dr Fabrício Correa | o mais antigo | `tel:7991934797` |
-| Dentista 24h Dr. Rodrigo Belmonte | ODONTOLOGIA 24 HORAS - RIO PRETO | `tel:7981613934` |
+| Nome | Dentista 24 horas Rio Preto Dr. Rodrigo Belmonte | ODONTOLOGIA 24 HORAS - RIO PRETO |
+| Telefone | +55 17 98161-3934 | +55 17 98161-3934 |
+| Endereço | R. Raul de Carvalho, 2244 – sala 3 | R. Adibo Bassitt, 790 |
+| Site | `sites.google.com/view/dentist24hrp` | `sites.google.com/view/dentista24hriopreto` |
+| Instagram | `@dentista24hrp` (~1.300) | `@odontologia24h_riopreto` (~1.900) |
+| `place_id` | `ChIJf0GTCguzvZQRH6HrbkuQWRs` | `ChIJ6_xUXSBNvJQRqT7XC3oV9Kk` |
 
-⚠️ **Conferir a última antes de sair do DRY_RUN.** Nomes diferentes, telefone igual — pode ser o
-mesmo negócio com dois nomes, ou dois negócios que compartilham telefone.
+Telefone igual, **todo o resto diferente**. Duas fichas distintas no Google Business.
+Arquivar uma delas apagaria um lead real.
 
-⚠️ **Só 101 dos ~141 deals foram lidos.** O `getAll` parece truncar a paginação. Pode haver
-duplicata entre os ~40 não lidos. Investigar antes de confiar no número 8 como total.
+##### ✅ `place_id` vira a autoridade do dedup (execução `33211`)
 
-**Confirma a causa dos duplicados:** 3 dos 4 grupos são o **mesmo lead criado 2–4 vezes** — o padrão
-que a ligação dupla do `Criar deal` (§9.4, correção 4) produzia.
+Telefone e nome continuam sendo a chave de **recall** — é o que agrupa candidatos. O `place_id`
+entra como **veto**: dentro de um grupo, `place_id`s distintos significam leads distintos, o
+grupo é marcado **ambíguo** e nada é arquivado dele. Dentro de um mesmo `place_id` a duplicata
+continua sendo tratada normalmente.
+
+É a leitura correta de **I4**. A regra não podia ser aplicada antes porque nenhum deal tinha
+`place_id` — só o backfill de hoje tornou o campo utilizável.
+
+Resultado da execução `33211`:
+
+```
+duplicatas a arquivar : 0
+grupos ambiguos       : 1   (tel:7981613934, corretamente barrado)
+```
+
+##### ✅ Arquivamento parou de destruir o enriquecimento
+
+O nó `[ComAb] Arquivar Deal HubSpot` sobrescrevia a propriedade `description` com um carimbo
+de auditoria. Essa propriedade guarda **a análise do agente de enriquecimento** — sobrescrever
+apagava esse dado de forma irrecuperável, num workflow cujo papel é limpeza, não escrita de
+conteúdo. Removido: agora ele só muda o estágio para `closedlost`, que é reversível. O rastro
+do arquivamento fica no relatório do Telegram e no log de execução.
+
+##### ✅ Fora do `DRY_RUN` (versão `5b2a55fe`)
+
+A conferência exigida pela decisão **D3** foi feita. `DRY_RUN = false`, publicado, e executado
+uma vez em modo real (`33213`): seguiu o ramo de execução e produziu **0 itens para arquivar**,
+como esperado. O IF de saída passou a considerar `duplicatas + ambíguos`, para que o relatório
+não se perca quando não há nada a arquivar mas há algo a revisar.
+
+**Confirma a causa dos duplicados:** 3 dos 4 grupos originais eram o **mesmo lead criado 2–4
+vezes** — o padrão que a ligação dupla do `Criar deal` (§9.4, correção 4) produzia e que o P5
+agora impede.
 
 ---
 
