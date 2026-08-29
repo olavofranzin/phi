@@ -458,7 +458,45 @@ Eu havia estimado ~289 elegíveis a partir da exportação markdown do Drive. **
 A estimativa anterior veio de uma fonte que já sabíamos ser não confiável (nomes com `|`, abas
 concatenadas); esta veio do nó Google Sheets lendo a planilha ao vivo. Vale mais.
 
-⚠️ **127 linhas sem `place_id` na coluna A** é um achado novo e não explicado. Fica como pendência.
+##### ✅ As 127 linhas sem `place_id`, explicadas
+
+**Não são linhas em branco esperando novos leads.** Analisando as 263 linhas que a execução
+`33144` leu da planilha:
+
+| | |
+|---|---|
+| Linhas com `place_id` (leads reais) | 136 |
+| Linhas órfãs | 127 (`row_number` 138 → 264, contíguas) |
+| Delas totalmente vazias | **0** |
+
+Todas as 127 têm exatamente as **mesmas 7 colunas** preenchidas, e só elas:
+
+```
+id_hubspot · hubspot_estagio · hubspot_status · data_criacao_deal
+dias_no_funil · probabilidade · data_sync_hubspot
+```
+
+Sem `nome`, sem `contato`, sem `site`, sem `id`. **São exatamente as colunas do P6** — e todas
+as 127 carregam o mesmo `data_sync_hubspot`: `2026-08-26T21:00:26`. Uma única execução do sync
+escreveu as 127 de uma vez.
+
+**Causa:** o P6 usava `appendOrUpdate` com chave `id_hubspot`. Em 26/08 o Intake criou um lote
+de deals, e naquele momento quase nenhuma linha da planilha tinha `id_hubspot` — o Intake só
+passou a gravar essa coluna depois da correção de 28/08. Sem encontrar linha para casar, o
+`appendOrUpdate` **acrescentou uma linha nova por deal**. É a violação de **I2** em estado puro.
+
+Já corrigido: o P6 passou a `update` (versão `a4c3f6f7`) e não consegue mais acrescentar linha.
+
+**Os 127 deals não existem mais.** Consultei os 127 `id_hubspot` no HubSpot em dois lotes:
+`total: 0` nos dois. Todos apontam para deals excluídos. São referências mortas — resíduo, não
+espaço reservado.
+
+Nenhum dos 127 `id_hubspot` coincide com alguma das 136 linhas completas, então apagá-las não
+perde vínculo nenhum. Linhas genuinamente em branco abaixo da 264 não são afetadas: o nó do
+Google Sheets nem as devolve.
+
+⚠️ **Pendente:** apagar as linhas 138–264 (por `id_hubspot` casando com a lista, e `id`
+vazio — nunca por número de linha, que se desloca). Aguarda OK do Olavo.
 
 ##### ✅ Dependência fechada: backfill de `place_id` nos deals existentes
 
