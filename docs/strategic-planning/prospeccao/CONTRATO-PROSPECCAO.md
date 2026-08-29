@@ -389,7 +389,91 @@ ainda acumula quatro papéis.
 | Rodar os 6 testes de validação contra o L2 | Antes de aposentar o Apify na descoberta |
 | Ser o **único** com `append` (criação de linha) | I2 |
 
-#### `PROSP-03 Scoring` — ⬜ a criar
+#### `PROSP-03 Scoring` — ✅ **construído 2026-08-29** (`V0f80LU1ZH8PUtdc`)
+
+Sub-workflow com dois gatilhos: `executeWorkflowTrigger` (chamado pelo P2) e manual (repontuação
+da base sem redescobrir — a razão de ser sub-workflow, §9.3). Lê a aba `leads`, pontua e grava.
+
+**Decisões do Olavo (2026-08-29):** PRIORIDADE grava em `potencial_comercial`, preservando o corte
+60; criar `fit`, `oportunidade` e `modelo_versao`; `score_tecnico` e `dim_*` ficam vazias (I3) e o
+`ipc` é **mantido** — não aposentado — para ser calculado quando o P4 povoar `Atributos`/`Posts`.
+
+##### 🔴 Dois defeitos meus, pegos pelo dry run `33377`
+
+**1. `new URL()` não funciona no sandbox do Code node.** O classificador de site fazia
+`try { new URL(url) } catch { return 'none' }`. Toda URL caía no catch: **os 89 leads com site
+saíram como `site_tipo: none`**, incluindo `http://www.orthodonticbrasil.com.br/`. Com todos em
+`none`, o `gap` virava 1,0 para a base inteira e a oferta virava `SVC-SITE` para todo mundo —
+o modelo teria trocado uma saturação por outra. Trocado por extração de host via regex.
+
+⚠️ **O `L2b` tem exatamente o mesmo código** (`try { new URL(url) } ... catch { return 'none' }`).
+A classificação de site dele está quebrada do mesmo jeito e precisa da mesma correção antes de
+virar P2.
+
+**2. Casamento de domínio por `indexOf`.** `host.indexOf('x.com') !== -1` casa `phoenix.com.br`.
+Trocado por igualdade ou sufixo (`host === d || host.endsWith('.' + d)`).
+
+##### ❌ O documento de modelagem está desatualizado num ponto
+
+A última linha da modelagem estatística afirma: *"O código do L2b implementa este desenho"*.
+**Não implementa.** O `[L2b] Scoring Fase 1` calcula `max(gap, prontidão) × viabilidade` com
+termos aditivos e comparação contra a **média** — o modelo antigo. Não há eixo `fit`, não há
+percentil, não há `100 · fit · oport`. Pela regra de precedência do próprio documento, isso é
+bug do código. O P3 é a primeira implementação real do desenho.
+
+##### O que o dry run revelou sobre a base
+
+| Coluna que o modelo usa | Preenchimento |
+|---|---|
+| `Quantidade reviews` | 89/136 |
+| `contato` | 87/136 |
+| `site` | 89/136 |
+| `Quantidade fotos` | 41/136 |
+| **`Avaliação`** | **0/136** |
+| **`Horário`** | **0/136** |
+
+Duas das quatro entradas do modelo **nunca foram povoadas**. Consequências medidas:
+
+- `qual` fica constante em 0,5 para todos ⇒ `fit ≤ 0,8` ⇒ **o teto da prioridade hoje é 80, não
+  100**. O corte 60 se comporta como um corte 75 na escala pretendida.
+- O termo de gap por horário nunca dispara. Por **I3** ele não dispara *como ausência* — vazio é
+  `HORARIO_NAO_OBSERVADO`, não "não tem horário". Tratar o vazio como ausência daria +0,15 de gap
+  a 136 leads por um fato que ninguém observou.
+
+**Isso inverte uma dependência que eu havia assumido.** O P3 não destrava o P2 — é o P2 (Places
+API) que precisa rodar para o P3 sair da meia-força, porque `Avaliação` e `Horário` só vêm de lá.
+
+##### 47 linhas sem identidade
+
+Das 136, **47 têm `id`, `score_tecnico`, `ipc`, `potencial_comercial` e as 6 `dim_*` preenchidas
+— e mais nada.** Sem `nome`, sem `site`, sem `contato`, sem reviews. São os leads envenenados
+(§7) com o score do motor antigo por cima: pontuação sem lead atrás.
+
+O P3 **não pontua** essas linhas e as tira do benchmark de percentil — 47 linhas com 0 reviews
+puxariam o percentil de todos os outros para cima. Elas voltam a ser pontuáveis quando o P2
+reobservar a identidade. Os scores velhos delas ficam como estão; apagá-los é decisão do Olavo.
+
+##### Distribuição — execução `33379`, 89 leads pontuados
+
+| Critério (§7 da modelagem) | Exigido | Medido |
+|---|---|---|
+| Valores distintos | ≥ 15 | **53** |
+| Empates no topo | ≤ 2 | **2** |
+| Site próprio + porte alto fora do `SVC-ADS` | nenhum | **nenhum** |
+| Fila com corte 60 | ~50% | 20/89 (**22%**) |
+
+Os 22% não são o alvo de 50%, mas o alvo foi medido noutra base (20 dentistas de Curitiba) e com
+`Avaliação` observada. Comparar as duas taxas só faz sentido depois que o P2 rodar.
+
+##### ⬜ Falta para o P3 gravar
+
+Três colunas não existem na aba `leads`: **`fit`, `oportunidade`, `modelo_versao`**. O nó de
+escrita está com `handlingExtraData: ignoreIt`, então uma execução real hoje gravaria as outras
+seis e **descartaria essas três em silêncio** — por isso o `dry_run` continua `true`.
+
+---
+
+#### `PROSP-03 Scoring` — plano original (referência)
 
 | Mudança | Motivo |
 |---|---|
