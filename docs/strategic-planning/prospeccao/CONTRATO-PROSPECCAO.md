@@ -84,7 +84,7 @@ Tudo neste documento decorre disso.
 | | `nao_reivindicado` | **P4** | só Apify observa |
 | | `analise_gbp_ia` | **P4** | após o agente |
 | **aprendizado** (17) | `status hubspot` *(estágio — D4)*, `hubspot_status`, `motivo_perda`, `motivo_ganho`, `valor`, `via_aquisicao`, `num_interacoes`, `ultimo_contato`, `data_criacao_deal`, `data_fechamento`, `dias_no_funil`, `probabilidade`, `nba_recomendada`, `nba_aceite`, `abordagem_ia`, `acerto_previsao`, `data_sync_hubspot` | **P6** | a cada 6h |
-| **descontinuada** | `hubspot_estagio` | — | **D4:** ninguém escreve. O estágio vive em `status hubspot` |
+| **reaproveitada** | `redes_sociais` (coluna AR, antiga `hubspot_estagio`) | **P4** | perfis achados pelo Apify — ver D5 |
 
 ### Colunas com conflito ativo hoje
 
@@ -1068,3 +1068,49 @@ pediu. Corrigido junto com as demais redes.
 O caminho do lead (Apify → agente → planilha) **ainda não foi executado** — isso gasta
 Apify e Gemini nos 14 leads da fila e depende do OK de budget. A fila está provada; o
 corpo do loop, não.
+
+---
+
+## D5 — `redes_sociais` reaproveita a coluna AR (2026-08-30)
+
+**Decisão do Olavo:** as redes sociais encontradas pelo Apify ganham coluna própria, e essa
+coluna é a **AR** — a antiga `hubspot_estagio`, que o **D4** havia declarado descontinuada
+(ninguém escreve; o estágio vive em `status hubspot`).
+
+Reaproveitar é melhor que criar a 64ª coluna: a planilha já tinha uma coluna morta ocupando
+espaço e confundindo quem lê. O D4 não é revogado — `hubspot_estagio` continua não existindo
+como conceito. A célula é que foi reciclada.
+
+Isso muda o que eu tinha escrito na seção do `PROSP-04`. Lá dizia que os perfis entrariam no
+fim do texto de `enriquecimento`, sob `Redes:`, "em vez de inventar a 64ª coluna". O raciocínio
+estava certo quanto a não inventar coluna nova, e errado quanto à saída: havia uma coluna
+disponível que eu não considerei. Agora `enriquecimento` carrega só o resumo comercial e
+`redes_sociais` carrega os perfis — cada informação no seu lugar, pesquisável.
+
+### Verificação — dry-run 33561
+
+O header real da planilha foi lido antes de qualquer gravação, com o IF desligado do loop
+(zero gasto de Apify e Gemini). A coluna AR volta como `redes_sociais`: o rename já estava
+feito na planilha. Sem essa conferência, um header divergente produziria **gravação parcial
+sem erro nenhum** — a falha silenciosa que já nos custou tempo antes.
+
+### ⚠️ A coluna veio com o conteúdo antigo
+
+O rename preservou os valores. Hoje a AR guarda os estágios do HubSpot sob o nome novo:
+
+```
+"redes_sociais": "Prospectado"
+```
+
+Ou seja: a coluna diz "redes sociais" e contém "Prospectado". O P4 corrige isso conforme
+enriquece, mas **só nas linhas que passarem pela fila** — as demais seguem mentindo. Limpar a
+coluna inteira antes do primeiro lote é o certo, e é ação destrutiva: aguarda o OK do Olavo.
+
+### Dívida menor registrada
+
+O esquema (`columns.schema`) do nó `[P4] Gravar enriquecimento` ainda lista `hubspot_estagio`
+na posição 43. O esquema é metadado de interface — quem grava de fato é o `columns.value`, que
+já diz `redes_sociais` — então **não afeta a execução**. A API do n8n recusa `setNodeParameter`
+com índice dentro de array (`cannot descend into non-object at '/columns/schema'`), e trocar o
+esquema inteiro por causa de uma entrada cosmética não se paga. Fica anotado para quem abrir o
+nó e estranhar.
