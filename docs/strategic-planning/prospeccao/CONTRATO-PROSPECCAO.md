@@ -1311,3 +1311,51 @@ dessas frases é opinião do modelo: todas saem de campo medido.
 Corte de volta em **60**. Seis leads já enriquecidos (os 4 do lote + Ipê Park + Michelangelo);
 **9 continuam na fila**, e não foram rodados de propósito: rodá-los antes de o PageSpeed
 funcionar só aumentaria a passada corretiva de 6 para 15.
+
+---
+
+## A chave do Google é inválida — não é restrição de API (2026-08-30)
+
+O Olavo incluiu a PageSpeed Insights API nas restrições da chave e autorizou rodar os nove
+leads restantes. Antes de gastar Apify, testei o PageSpeed isolado — e ele continuou
+recusando. Testei então a **mesma credencial contra a Places**, para separar as hipóteses:
+
+```
+service: places.googleapis.com          → API_KEY_INVALID
+service: pagespeedonline.googleapis.com → API_KEY_INVALID
+```
+
+Execução 33867, sem escrever nada e sem gastar Apify nem Gemini.
+
+**Meu diagnóstico anterior estava errado.** Eu disse que restrição de API era "quase certa",
+apoiado no campo `service` do erro. O formato do erro já dizia o contrário e eu não li:
+
+| Erro do Google | Significado |
+|---|---|
+| `PERMISSION_DENIED` — *"requests to this API are blocked"* | chave **existe**, mas a API não está liberada nela → restrição |
+| `API_KEY_INVALID` — *"API key not valid"* | chave **não é reconhecida** |
+
+O que voltou nas duas chamadas foi o segundo. Incluir a PageSpeed nas restrições não tinha
+como resolver, porque nunca foi esse o problema.
+
+**O valor guardado na credencial `Google Places API` (`wTDtqdkU2IpqFVf8`) não é uma chave
+válida.** Causas usuais: chave regenerada no console (o valor antigo morre na hora), chave
+excluída, valor colado com espaço/quebra/truncado, ou chave de outro projeto.
+
+Isso reabre o registro anterior deste contrato, que atribuía a falha do P2 a "credencial
+reconfigurada". A reconfiguração não deixou uma chave válida no lugar.
+
+### Um workflow de diagnóstico ficou de pé
+
+`DIAG - Conferir chave Google (Places + PageSpeed)` (`u0EODAKSXHBJkAKX`): bate nos dois
+serviços com a credencial e devolve `places_ok` e `ok`. Roda em ~3 segundos, não escreve em
+lugar nenhum e não gasta Apify nem Gemini. É o teste a rodar **antes** de qualquer lote,
+depois de mexer na chave. Não entra na conta dos 8 workflows do §9 — é ferramenta, não etapa
+do pipeline.
+
+### Os nove não foram rodados
+
+A autorização do Olavo veio apoiada em o PageSpeed estar funcionando. Não está. Rodar agora
+gravaria nove leads sem Core Web Vitals e levaria a passada corretiva de 6 para 15 — o mesmo
+desperdício que já havia sido evitado uma vez. Fica esperando ou a chave, ou uma decisão
+explícita de aceitar a análise de site incompleta.
