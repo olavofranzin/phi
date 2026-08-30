@@ -1114,3 +1114,111 @@ já diz `redes_sociais` — então **não afeta a execução**. A API do n8n rec
 com índice dentro de array (`cannot descend into non-object at '/columns/schema'`), e trocar o
 esquema inteiro por causa de uma entrada cosmética não se paga. Fica anotado para quem abrir o
 nó e estranhar.
+
+---
+
+## Primeiro lote real do P4 (2026-08-30) — o que ele ensinou
+
+O Olavo autorizou o lote. Ele rodou duas vezes e parou nas duas — nenhuma das duas
+por defeito de lógica do fluxo.
+
+| Execução | Onde parou | Causa |
+|---|---|---|
+| 33564 | lead 1 | Gemini `503 — high demand`. Corrigido com repetição automática (5 tentativas, 5 s) |
+| 33566 | lead 5 | **Apify sem crédito**: `402 — exceeds your remaining usage of $0.213216` |
+
+**4 de 14 gravados:** MundiDents, OdontoNeo, Oral Sin, OrthoDontic.
+
+### Dois defeitos meus que só dado real revelou
+
+**`Agendamento` gravou `[object Object]`** no Oral Sin e no OrthoDontic. O `bookingLinks`
+do Apify é array de **objetos**, não de strings; o `String(obj)` produziu o literal. Agora
+existe um `urlDe()` que extrai a URL de dentro do objeto.
+
+**`redes_sociais` do OdontoNeo colheu 9 URLs `youtube.com/embed/`** — vídeo incorporado na
+página, não canal da empresa. O regex era largo demais. Agora `/embed/`, `/watch` e `/share`
+são descartados e repetições removidas.
+
+Os dois têm a mesma forma: eu supus o formato do dado em vez de olhar. Nenhum apareceria
+num dry-run com fila vazia — só com resposta real do Apify na mão.
+
+### O `scrapeContacts` funcionou
+
+A coluna `e-mail` estava vazia na base inteira. Voltou preenchida em 3 dos 4:
+`odontoneoriopreto@gmail.com`, `sjriopreto@oralsin.com.br`, `sjriopreto@orthodonticbrasil.com.br`.
+
+### A análise de site nunca funcionou — nem antes, nem comigo
+
+O `chainLlm` **não navega**. Nunca teve acesso à internet. Absorvi a "análise de site" do
+`Site L4` sem notar que lá ela também não funcionava: o relatório legado na planilha afirma
+*"~13,5 mil seguidores (verificado em 20/05/2024)"* — número e data que o modelo não tinha
+como saber. E o OrthoDontic, neste lote, recebeu *"A página **deve conter** informações
+detalhadas sobre os serviços"* — especulação escrita com cara de observação.
+
+Meu `enriquecimento_site` dizia "não foi observado", o que é honesto e melhor que inventar,
+mas não é a função que o contrato pede.
+
+**Decisão do Olavo (2026-08-30):** medir o site de verdade, incluindo velocidade, SEO e GEO.
+
+### `[P4] Medir o site` — o agente para de adivinhar
+
+Nó novo entre `[P4] Sinais do Apify` e o agente. Baixa o HTML e mede:
+
+| Bloco | Campos |
+|---|---|
+| Velocidade | `resposta_ms`, `peso_kb`, `scripts_externos`, `css_externos` |
+| SEO | `titulo` e tamanho, `meta_description_tamanho`, `h1_qtd`, `canonical`, `lang`, `imagens_sem_alt` |
+| GEO | `schema_localbusiness`, `endereco_no_site`, `telefone_no_site`, `cidade_no_site` |
+| Conversão | `formulario`, `whatsapp`, `viewport_mobile`, `https` |
+| Mídia | `ga4`, `gtm`, `meta_pixel` — se o negócio já mede o que gasta |
+| Contato | `mailto:` alimenta `e-mail`; links de rede completam `redes_sociais` |
+
+Mais a **API PageSpeed Insights**: `psi_performance`, `psi_seo`, `psi_acessibilidade`,
+`psi_lcp`, `psi_cls`, `psi_tbt`, `psi_fcp`, `psi_speed_index`, `psi_resposta_servidor`.
+
+O prompt do agente foi reescrito para citar o número medido em cada afirmação. Ele não
+navega e não pesquisa: tudo o que existe está no JSON.
+
+### Verificação — workflow descartável, zero gasto de Apify e Gemini
+
+Criado, usado e arquivado (`rJfKgCQBVKj1uz55`). Foi a decisão certa: **o desenho estava
+errado de duas maneiras que nenhuma leitura de código pegaria.**
+
+**Sonda 33579** — `$helpers is not defined`. O sandbox do Code node **não** expõe `$helpers`,
+e também não tem `fetch`. Tem `this.helpers.httpRequest`. É a mesma armadilha do `new URL()`:
+código plausível que morre em silêncio dentro do sandbox.
+
+**Teste 33580** — a medição funciona, e achou mais dois problemas:
+
+```
+Zelo Odontologia · ok · 784 ms · 40 KB · https sim
+titulo 64 · meta description 206 (teto 160) · h1 1 · canonical nao
+13 imagens, 0 sem alt · schema LocalBusiness NAO
+formulario nao · whatsapp sim · GA4 nao · GTM nao · Meta Pixel NAO
+```
+
+O bloco de mídia é argumento comercial direto, e é **fato medido**, não opinião.
+
+1. **`cidade_no_site: nao`** — mas o título do site diz "São José do Rio Preto". A planilha
+   guarda sem acento e o site escreve com. Falso negativo por acento. Agora os dois lados
+   passam por `normalize('NFD')` antes de comparar.
+2. **PageSpeed devolveu `429`.** Sem chave, o Google limita. A constante `CHAVE_PAGESPEED`
+   está no topo do nó, vazia; sem ela as métricas de velocidade ficam vazias (I3) e o resto
+   da medição continua funcionando.
+
+### O que trava agora
+
+| Bloqueio | De quem |
+|---|---|
+| **Apify sem crédito** — trava o P4 **e** o P2 | Olavo |
+| **Chave do PageSpeed** — sem ela, sem Core Web Vitals | Olavo |
+| **Chave da Places** — exposta e inválida; trava os 6 testes do P2 | Olavo |
+
+As duas chaves do Google saem do **mesmo lugar**: uma chave do Google Cloud com Places API
+e PageSpeed Insights API habilitadas resolve as duas de uma vez.
+
+### Os 4 já gravados
+
+Ficaram com `analise_gbp_ia` boa e `enriquecimento_site` especulativa, e a fila pula quem
+tem `analise_gbp_ia`. O Olavo escolheu **passada corretiva**: depois que o crédito voltar,
+rodar uma vez com o critério de "já feito" trocado para `enriquecimento_site`.
