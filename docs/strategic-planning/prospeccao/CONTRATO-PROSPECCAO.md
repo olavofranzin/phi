@@ -1222,3 +1222,92 @@ e PageSpeed Insights API habilitadas resolve as duas de uma vez.
 Ficaram com `analise_gbp_ia` boa e `enriquecimento_site` especulativa, e a fila pula quem
 tem `analise_gbp_ia`. O Olavo escolheu **passada corretiva**: depois que o crédito voltar,
 rodar uma vez com o critério de "já feito" trocado para `enriquecimento_site`.
+
+---
+
+## PageSpeed pela credencial, sem chave em texto (2026-08-30)
+
+O Olavo trocou a conta do Apify, reconfigurou a credencial da Places e ativou a API do
+PageSpeed — **no mesmo projeto do Google Cloud**.
+
+Esse "mesmo projeto" muda o desenho para melhor. Eu ia pedir o valor da chave para colar
+numa constante `CHAVE_PAGESPEED` dentro do código do nó, porque a regra 14 do CLAUDE.md diz
+que o n8n self-hosted não aceita esse tipo de token em credencial ou variável. Sendo a mesma
+chave da Places, **não preciso do valor**: a chamada virou um nó `HTTP Request` usando a
+credencial `Google Places API` (`wTDtqdkU2IpqFVf8`) que já existe, com o mesmo
+`genericAuthType: httpTemplatedCustomAuth` do `[P2] Places Text Search`.
+
+O segredo fica onde já estava. Uma chave a menos exposta em texto.
+
+```
+[P4] Medir o site → [P4] PageSpeed → [P4] Juntar PageSpeed → [P4] Agente
+```
+
+O `[P4] PageSpeed` roda com `onError: continueRegularOutput` e a URL só é montada quando
+`_site_site_status === 'ok'` — site inexistente ou fora do ar não gasta chamada. O
+`[P4] Juntar PageSpeed` só aceita métrica quando o site respondeu: sem isso, a métrica não
+existe e grava vazio (I3), nunca zero.
+
+### Credencial do Apify — reapontada pelo Olavo
+
+O nó estava preso na `Apify account yahoo`, que estourou o crédito. Agora está na
+`Apify account gmail` (`JnC3lvdmcqxngZy1`). Existem **quatro** credenciais de Apify na
+instância; vale saber que trocar de conta no Apify não reaponta o nó sozinho.
+
+### Smoke 33856 — a costura completa, um lead
+
+Corte subido a 80 de propósito, para gastar **uma** chamada de Apify em vez de dez. Passou
+só o Ipê Park Hotel. Apify → medição → agente → planilha, `_resposta_em_json: true`.
+
+A diferença na coluna `enriquecimento_site` é a razão de todo este trabalho. Antes:
+*"O conteúdo do site não foi observado para análise."* Agora, com número em cada afirmação:
+sem HTTPS, 2 H1 quando o certo é 1, meta description com 0 caracteres, 3 imagens sem alt,
+sem schema LocalBusiness, sem viewport mobile, sem GA4, sem GTM, sem Meta Pixel.
+
+**`e-mail` capturado: `meuemail@email.com.br`.** Não é defeito da extração — é o que está no
+site do hotel, texto de modelo que ninguém trocou. Um endereço assim não é contato: agora
+uma lista de padrões (`seuemail`, `meuemail`, `exemplo@`, `example.com`, `noreply@`…) mantém
+a coluna `e-mail` limpa e o achado vira `_site_email_de_modelo`, que o agente pode citar.
+Site que publica e-mail de modelo é argumento comercial, não lixo.
+
+### Smoke 33858 — a credencial chega, a chave é recusada
+
+Corte em 78, um lead: Hotel Michelangelo.
+
+```
+_site_psi_status: indisponivel
+_site_psi_erro: 400 — "API key not valid. Please pass a valid API key."
+                reason: API_KEY_INVALID
+                service: pagespeedonline.googleapis.com
+```
+
+Isto **não** é o `429` de antes. O `429` era ausência de chave; agora a credencial injeta uma
+chave e o Google a recusa **para esse serviço específico** — o campo `service` nomeia o
+`pagespeedonline`. Ativar a API no projeto e permitir a API **na chave** são coisas
+diferentes: uma chave do Google Cloud pode ter *Restrições de API* limitando-a a uma lista,
+e uma chave restrita a "Places API" devolve exatamente esse erro no PageSpeed.
+
+**Ação:** console → APIs e Serviços → Credenciais → a chave → *Restrições de API* → incluir
+**PageSpeed Insights API**.
+
+Isso também deixa uma pergunta em aberto que vale checar junto: se a chave estiver
+igualmente inválida (e não só restrita), o P2 continua travado pelo mesmo motivo. O erro do
+P2 registrado antes era o mesmo `400 API_KEY_INVALID`, com `service` apontando para a Places.
+
+### Hotel Michelangelo — o que a medição achou
+
+```
+1.930 avaliações · 4,4 · 1.974 fotos
+site: titulo "HWEB" (4 caracteres) · 2 KB · 0 H1 · meta description 0
+sem HTTPS · sem endereco, telefone ou cidade no site
+sem formulario · sem WhatsApp · sem GA4, GTM ou Meta Pixel
+```
+
+Um hotel com quase duas mil avaliações e um site de 2 KB que não diz onde ele fica. Nenhuma
+dessas frases é opinião do modelo: todas saem de campo medido.
+
+### Estado da fila
+
+Corte de volta em **60**. Seis leads já enriquecidos (os 4 do lote + Ipê Park + Michelangelo);
+**9 continuam na fila**, e não foram rodados de propósito: rodá-los antes de o PageSpeed
+funcionar só aumentaria a passada corretiva de 6 para 15.
