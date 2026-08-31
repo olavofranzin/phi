@@ -1359,3 +1359,76 @@ A autorização do Olavo veio apoiada em o PageSpeed estar funcionando. Não est
 gravaria nove leads sem Core Web Vitals e levaria a passada corretiva de 6 para 15 — o mesmo
 desperdício que já havia sido evitado uma vez. Fica esperando ou a chave, ou uma decisão
 explícita de aceitar a análise de site incompleta.
+
+---
+
+## Lote 33884 — o P4 rodando inteiro, com PageSpeed (2026-08-31)
+
+O Olavo corrigiu a chave e rodou o `DIAG - Conferir chave Google`: `places_ok` e `ok`
+verdadeiros. **A causa era o valor da chave, como o teste 33867 indicava — não a restrição
+de API que eu havia diagnosticado.**
+
+Lote de 8 leads, 29 minutos, execução com status `success`. A espera entre leads foi de 5
+para **2 minutos**: ela existe contra limite de Apify e Gemini, e o próprio PageSpeed já
+gasta de 20 a 60 s por lead — 5 minutos davam 45 minutos de espera parada.
+
+### A conta fecha
+
+```
+_total_lidos 136 = _na_fila 8 + _fora_sem_nome 47 + _fora_abaixo_do_corte 47
+                 + _fora_ja_enriquecido 34
+_fora_sem_ancora_i6 = 0 · _fora_sem_prioridade = 0
+```
+
+Os 34 já enriquecidos são os 28 antigos + os 6 dos smokes. 8 gravações, 8 sucessos.
+
+### PageSpeed real, 7 dos 8
+
+| Lead | perf | SEO | LCP | CLS | pixel/GA4/GTM | schema |
+|---|---|---|---|---|---|---|
+| Zelo Odontologia | **100** | 100 | 0,8 s | 0 | não/não/não | não |
+| Dr. Fábio Pantaleão | 83 | 100 | 4,2 s | 0 | **sim/sim/não** | sim |
+| Urologista Dr. Alexandre | 69 | 85 | 8,6 s | 0,068 | não/não/sim | não |
+| DR. Saúde Eldorado | 67 | 85 | 7,5 s | 0,065 | não/não/não | não |
+| Clínica Veterinária Petiatria | 61 | 100 | 5,7 s | 0,011 | não/não/sim | não |
+| Dra. Ana Valéria Ramirez | 49 | 92 | 3,3 s | **0,179** | não/não/sim | sim |
+| Unimed — Sede | 48 | 77 | **31,4 s** | 0,122 | não/não/sim | não |
+| Clínica Padovani | — | — | — | — | — | — |
+
+O oitavo, Padovani, deu `inacessivel`: `getaddrinfo ENOTFOUND www.clinicapadovani.com.br`.
+O agente tratou como **achado comercial**, que é o desenho: *"o site está inacessível... uma
+falha crítica para a presença online do negócio."* Domínio que não resolve é a conversa mais
+fácil da lista, e antes ele teria virado um parágrafo inventado.
+
+O limite recomendado de LCP é 2,5 s. **Sete dos sete o estouram menos o Zelo.** A Unimed leva
+**31,4 segundos** — não é lentidão, é site quebrado. Apenas um lead (Fábio Pantaleão) tem
+Meta Pixel e GA4: os outros seis gastam em mídia sem nada que meça.
+
+### Mais um defeito meu, mesma família
+
+**2 dos 8 gravaram o literal `[object Object]` em `enriquecimento_site`** — Zelo e Urologista.
+O agente devolveu `analise_site` como **objeto** (as quatro seções viraram chaves) em vez de
+string, e o `String()` produziu isso.
+
+É exatamente o bug do `bookingLinks`, uma camada acima: eu supus o formato em vez de tratá-lo.
+Duas vezes o mesmo erro na mesma frente. A correção agora é geral — objeto e array viram texto
+legível, e `_formato_inesperado` registra quando o agente saiu do contrato de três strings,
+para que isso não passe despercebido depois de o texto já estar salvo bonito.
+
+Vale notar o que se perdeu: **nada**. As duas análises existiam e foram descartadas na
+serialização. Um `String()` sobre tipo não verificado apagou trabalho já pago.
+
+### Passada corretiva — agora 8 leads
+
+| Motivo | Leads |
+|---|---|
+| Análise de site especulativa (antes da medição) | 4 do lote 33566 + Ipê Park + Michelangelo |
+| `[object Object]` em `enriquecimento_site` | Zelo + Urologista |
+
+Os 6 primeiros também ganham Core Web Vitals, que não existiam quando rodaram. O critério de
+"já feito" da passada deve ser `enriquecimento_site`, não `analise_gbp_ia`.
+
+### Estado da fila
+
+`_na_fila` = 0. Todos os leads com nome e `potencial_comercial >= 60` estão enriquecidos.
+Os 47 sem nome e os 47 abaixo do corte seguem fora, por desenho.
