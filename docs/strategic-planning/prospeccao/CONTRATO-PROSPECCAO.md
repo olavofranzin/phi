@@ -1432,3 +1432,99 @@ Os 6 primeiros também ganham Core Web Vitals, que não existiam quando rodaram.
 
 `_na_fila` = 0. Todos os leads com nome e `potencial_comercial >= 60` estão enriquecidos.
 Os 47 sem nome e os 47 abaixo do corte seguem fora, por desenho.
+
+---
+
+## Teste do P2 contra o L2 (2026-08-31) — e dois defeitos no P3
+
+Busca escolhida: `Clinica odontologica São José do Rio Preto`, a maior que o `L2` já havia
+rodado (47 linhas). O contrato pede "na mesma busca", e usar uma busca já existente também
+evita despejar leads de outro segmento na base.
+
+### Antes de rodar: um default que prospectava a cidade errada
+
+O `[P2] Set Parametros` tinha:
+
+```
+textQuery = {{ $json.textQuery || "dentista em Curitiba, PR" }}
+```
+
+O gatilho manual entrega `{}`. **Qualquer clique em "executar" no P2 sairia prospectando
+dentistas em Curitiba** e criando ~60 linhas de outra cidade — e o P2 é o único workflow
+autorizado a criar linha (I2). Um default que prospecta a cidade errada é pior que default
+nenhum.
+
+Corrigido: o gatilho manual passa pelo `[P2] Busca manual`, que carrega a busca
+explicitamente; a entrada de sub-workflow usa a busca recebida; e o `[P2] Tem busca?` faz
+nada rodar sem busca.
+
+### Resultado da descoberta
+
+| | antes | depois |
+|---|---|---|
+| linhas na base | 136 | **179** |
+| `Clinica odontologica…` | 47 | 90 |
+| com `Avaliação` | **0** | 60 |
+| com `Horário` | **0** | 60 |
+
+O P2 gerou **60 leads** contra os **47** do `L2` na mesma busca. Criou **43 linhas novas**
+(179 − 136), logo apenas **17 dos 60 bateram** com place_ids que o `L2` já tinha.
+
+Os quatro campos do I3 (`nao_reivindicado`, `Posts`, `Agendamento`, `Patrocinado`, `Atributos`)
+vieram **todos vazios**, como devem: a Places não os observa.
+
+### ⚠️ Aberto: o P2 não é superconjunto do L2
+
+**30 dos 47 leads do `L2` não foram reencontrados pelo P2.** Nenhum sumiu da base — eles
+continuam lá como linha —, mas isso desmonta a suposição de que o `02` simplesmente substitui
+o `L2`. Hipóteses não testadas: a Places Text Search está limitada a 60 resultados (20 × 3
+páginas) e ranqueia diferente do Apify; e as linhas do `L2` são de maio, então parte pode ter
+mudado de ficha.
+
+**Isto precisa ser resolvido antes de arquivar o `L2`.** O §9.5 condiciona o arquivamento aos
+testes, e o teste devolveu uma pergunta, não um aval.
+
+### Dois defeitos no P3, achados por este teste
+
+**1. `dry_run` ficou `true` desde a construção.** O P3 lia, calculava certo e **não gravava**.
+Por isso as 43 linhas novas apareceram sem score. Eu construí o P3 em 29/08 com o modo de
+teste ligado e nunca voltei para religá-lo.
+
+**2. O P3 lia a planilha uma vez por item de entrada.** O P2 entrega 60 itens; o nó de leitura
+não tinha `executeOnce`. Os contadores denunciaram:
+
+```
+_pontuados 7920 + _sem_identidade 2820 = 10.740 = 179 × 60
+```
+
+A planilha inteira foi lida 60 vezes e cada linha pontuada 60 vezes. É o padrão N×M que a
+própria referência do SDK do n8n descreve: nó que busca dado por conta própria, encadeado
+depois de outra fonte.
+
+Depois do `executeOnce`:
+
+```
+_pontuados 132 + _sem_identidade 47 = 179          motor: 117 ms (era 29.471 ms)
+                                                   execução: 4 s (era 88 s)
+```
+
+### O teto da prioridade caiu — o payoff do P2
+
+Com `Avaliação` e `Horário` finalmente preenchidos, o `qual` deixou de ser constante 0,5:
+
+```
+Dentista 24 horas Rio Preto Dr. Rodrigo Belmonte
+  _qual 1 · _porte 0,98 · fit 0,99 · oportunidade 1 · potencial_comercial 99
+```
+
+**99, não 80.** Era exatamente isto que o P2 destravava, e é por isso que ele vinha antes da
+passada corretiva na ordem recomendada.
+
+Verificação final: `_sem_score: 0` nas 179 linhas.
+
+### Ferramenta de diagnóstico
+
+`DIAG - Buscas ja rodadas na base` (`W0Rx5xLLIWAp1eDt`): lê a aba `leads` e devolve buscas
+distintas, cobertura de `Avaliação`/`Horário`/score e linhas sem score. Não escreve nada. Foi
+o que permitiu comparar antes e depois sem abrir a planilha na mão. Como o `DIAG` da chave,
+é ferramenta, não etapa do pipeline.
