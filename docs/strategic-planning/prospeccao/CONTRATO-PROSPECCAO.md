@@ -1586,3 +1586,72 @@ máximo 60 resultados por busca — se sim, o `L2` cobre mais fundo e isso decid
 (2) os leads do `L2` são de maio e parte pode ter mudado de ficha. O workflow
 `DIAG - Lacuna P2 vs L2` (`G5msnvZXjNRJso8H`) já está montado para responder assim que a
 credencial voltar.
+
+---
+
+## A lacuna dos 30 respondida: a Places para em 60 (2026-09-01)
+
+### A credencial: existiam duas, e a errada estava ligada
+
+O Olavo esclareceu: a credencial certa é **`Google Places`** (`O66L35GGMYXRDlAM`, tipo
+`httpHeaderAuth`). A `Google Places API` (`wTDtqdkU2IpqFVf8`, `httpTemplatedCustomAuth`) havia
+sido **substituída mas não deletada** — e era a que estava ligada no P2 e nos diagnósticos.
+Era ela que injetava o `X-Goog-FieldMask: id,displayName` inválido.
+
+O erro seguinte que o Olavo viu — *"FieldMask is a required parameter"* — **era esperado**: na
+minha última sonda eu havia desligado os cabeçalhos do nó de propósito, para provar que a
+máscara vinha da credencial. Com a credencial nova (que corretamente só carrega a chave) e sem
+header no nó, ninguém informava a máscara. É a confirmação do diagnóstico, não um problema novo.
+
+O **P2 foi reapontado** para a credencial correta e republicado. Sem isso ele estava quebrado.
+
+**Lição de arquitetura:** credencial carrega **identidade**, não conteúdo de requisição. Uma
+máscara de campos dentro da credencial ou quebra a chamada ou empobrece a resposta em silêncio
+— e, por ser invisível no nó, custa horas para achar.
+
+### O experimento (execução 34527)
+
+```
+_paginas_pedidas          5
+_paginas_recebidas        3
+_por_pagina               20 +token | 20 +token | 20 SEM token
+_ultima_pagina_tem_token  nao
+_places_distintos         60
+_planilha_tem             90
+_nos_dois                 57
+_so_na_planilha           33
+_so_na_places              3
+```
+
+**A terceira página volta sem `nextPageToken`.** O limite de 60 resultados por busca é da
+Places API, não da nossa configuração — aumentar `maxRequests` não traz mais nada. A hipótese
+(1) está confirmada; a (2), leads desatualizados, não é necessária para explicar a lacuna.
+
+### O que isso decide
+
+**O P2 sozinho não substitui o `L2` em cobertura.** Nesta busca, 33 negócios reais que o
+Apify achou não voltam da Places nem pedindo tudo o que ela dá. Os nomes dizem o tipo:
+`Dr. Gabriel Nunes`, `Dra. Jéssica Fernanda`, `Consultório Odontológico Dra Mayle Coelho` —
+consultórios individuais —, mas também clínicas claramente no alvo, como
+`ODONTOLOGIA 24 HORAS - RIO PRETO` e `OdontoNeo Implantes Dentários`.
+
+Isso **não** condena o P2. O teto é por *busca*, então mais buscas, mais estreitas, multiplicam
+a cobertura: por especialidade (`implantes dentários`, `ortodontista`, `harmonização facial`)
+ou por região. Cada uma tem seus próprios 60.
+
+### Decisão que fica com o Olavo
+
+| Caminho | O que custa |
+|---|---|
+| **Várias buscas estreitas no P2** | Nada de Apify. Exige montar e manter a lista de buscas por segmento/região. Cobertura cresce por multiplicação, não por profundidade |
+| **Manter uma descoberta Apify ao lado** | Cobertura profunda numa busca só, mas mantém dois caminhos vivos — exatamente o que esta reformulação veio eliminar |
+
+Enquanto isso não for decidido, **o `L2` não é arquivado**, e o §9.5 continua com a ordem
+obrigatória de pé.
+
+### Correção de um erro meu de medição
+
+A primeira versão do indicador marcava `_sobrou_next_page_token: sim` se **qualquer** página
+trouxesse token — o que não responde nada, já que as páginas 1 e 2 sempre trazem. A pergunta é
+sobre a **última**. Corrigido antes de eu afirmar qualquer coisa: um indicador que sempre diz
+"sim" não é medida, é enfeite.
