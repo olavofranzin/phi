@@ -1528,3 +1528,61 @@ Verificação final: `_sem_score: 0` nas 179 linhas.
 distintas, cobertura de `Avaliação`/`Horário`/score e linhas sem score. Não escreve nada. Foi
 o que permitiu comparar antes e depois sem abrir a planilha na mão. Como o `DIAG` da chave,
 é ferramenta, não etapa do pipeline.
+
+---
+
+## 🔴 A credencial da Places carrega um FieldMask inválido (2026-09-01)
+
+Ao investigar a lacuna dos 30 leads, o experimento não chegou a rodar: toda chamada à
+`places:searchText` passou a voltar `400`.
+
+```
+"field": "id,displayName"
+"description": "Error expanding 'fields' parameter. Cannot find matching fields for path 'id'."
+```
+
+### Como foi isolado
+
+O erro não mudou quando troquei a máscara do nó, nem quando tirei a paginação. O dump da
+requisição (execução 34519) mostrou **dois** cabeçalhos de máscara:
+
+```
+"x-goog-fieldmask": "places.id,places.displayName,…,nextPageToken"   ← do no
+"X-Goog-FieldMask": "**hidden**"                                     ← da CREDENCIAL
+```
+
+Desligando `sendHeaders` por completo (execução 34520), a requisição **ainda** saiu com
+`X-Goog-FieldMask` e **ainda** deu o mesmo `400`. Prova direta: a máscara vem da credencial,
+e ela é `id,displayName` — sem o prefixo `places.` que o `searchText` exige.
+
+### O conserto é na credencial — ação do Olavo
+
+A credencial `Google Places API` (`wTDtqdkU2IpqFVf8`) deve carregar **apenas a chave**
+(`X-Goog-Api-Key`). O `X-Goog-FieldMask` **não pode** estar nela: cada chamada pede campos
+diferentes, e uma máscara fixa na credencial ou quebra a chamada ou empobrece a resposta em
+silêncio. Remover o `X-Goog-FieldMask` do template resolve.
+
+### O "ok" que eu dei ao DIAG da chave era falso
+
+Na execução 34517 o `DIAG - Conferir chave Google` devolveu `places_ok: true` — mas o objeto
+veio com **apenas `id` e `displayName`**, embora o nó pedisse seis campos. Eu li o `true` e
+não olhei o conteúdo. Uma verificação que só checa "respondeu?" não é verificação: **tinha de
+conferir se veio o que foi pedido.** O DIAG passou a olhar o conteúdo, não só o status.
+
+### Consequência para o P2
+
+O P2 rodou bem em 34195 (60 leads, todos os campos), **antes** desta edição da credencial. Do
+jeito que está agora, ele volta a falhar com o mesmo `400`, ou — pior — poderia gravar linhas
+com quase tudo vazio se a máscara fosse válida porém curta. As 60 linhas já gravadas estão
+íntegras.
+
+**Enquanto a credencial não for corrigida, o P2 está parado** e a lacuna dos 30 leads segue
+sem resposta.
+
+### O que a lacuna ainda espera
+
+Hipóteses não testadas, na ordem em que eu testaria: (1) a Places Text Search entrega no
+máximo 60 resultados por busca — se sim, o `L2` cobre mais fundo e isso decide o arquivamento;
+(2) os leads do `L2` são de maio e parte pode ter mudado de ficha. O workflow
+`DIAG - Lacuna P2 vs L2` (`G5msnvZXjNRJso8H`) já está montado para responder assim que a
+credencial voltar.
