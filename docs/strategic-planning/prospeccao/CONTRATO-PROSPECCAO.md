@@ -1724,3 +1724,91 @@ da Places é de 10.000 requisições por mês. Cinquenta buscas por mês custam 
 Com a cobertura resolvida por multiplicação de buscas, **o `L2` pode ser arquivado** e o §9.5
 sai do bloqueio. A ordem obrigatória foi cumprida: o `02` provou fazer o trabalho, com um
 método diferente do `L2` e um resultado maior.
+
+---
+
+## `PROSP-01 Intake` reconstruído — a conversa que dá o play (2026-09-01)
+
+**Desenho do Olavo:** a mensagem chega no Telegram, um agente propõe como ampliar a busca,
+ele concorda ou ajusta, o agente devolve o resumo do que vai ser buscado, e só depois de um
+botão de "iniciar prospecção" o fluxo segue.
+
+Isso é o princípio do PHI aplicado à prospecção: **o sistema propõe, o humano dá o play.**
+
+### O problema de estado se resolveu sozinho
+
+Eu tinha listado três dificuldades — botão do Telegram limitado a 64 bytes, memória entre
+turnos, e escutar `callback_query`. **Nenhuma existe.** O `sendAndWait` do nó Telegram
+**bloqueia a execução** e o n8n guarda o estado. O Intake já usava isso no formulário antigo e
+eu não tinha reparado.
+
+Melhor ainda, o modo `approval` traz de fábrica o que faltava:
+
+| Recurso do nó | Resolve |
+|---|---|
+| `chatApproval: true` | botão **dentro do chat**, um toque, sem abrir navegador |
+| `approverIds` | trava **quem pode aprovar** — apontado para o chat que iniciou |
+| `limitWaitTime` | desiste em 12h, para não deixar execução pendurada |
+| `postDecisionBehavior` | a mensagem mostra o desfecho depois do toque |
+
+Lição: **ler o nó antes de projetar em volta dele.** Eu ia construir gestão de estado que já
+vinha pronta.
+
+### O fluxo
+
+```
+[P1] Telegram Trigger → [P1] Config → [P1] Chat autorizado?
+   ├─(nao)→ [P1] Nao autorizado
+   └─(sim)→ [P1] Briefing (formulario) → [P1] Montar pedido → [P1] Agente propoe buscas
+          → [P1] Ler proposta → [P1] Proposta valida?
+              ├─(nao)→ [P1] Proposta falhou
+              └─(sim)→ [P1] Aprovar prospeccao?  ← BOTAO
+                     → [P1] Aprovado?
+                         ├─(nao)→ [P1] Cancelado
+                         └─(sim)→ [P1] Uma busca por item → [P1] Loop buscas
+                                       ├─(done)→ [P1] Prospeccao concluida
+                                       └─(loop)→ [P2] Descoberta → espera → volta
+```
+
+### A trava de acesso se apresenta sozinha
+
+Não achei o `chat_id` do Olavo nas execuções guardadas — são todas manuais e não têm dado do
+Telegram. Em vez de travar o trabalho numa pergunta, o `[P1] Config` tem a constante
+`CHAT_AUTORIZADO` vazia e, **enquanto ela estiver vazia, nada dispara**: o bot responde
+dizendo o `chat_id` de quem escreveu, para colar na configuração. Uma mensagem resolve.
+
+Fechado por padrão, não aberto por padrão. Disparar prospecção gasta cota de API e cria linha
+na planilha — o custo de errar para o lado aberto é maior.
+
+### O agente propõe só as frases
+
+Decisão do Olavo. Tipo de negócio e região seguem como estão, o que manteve o contrato de
+entrada do P2 intacto (`textQuery` e nada mais). O prompt carrega o motivo do exercício — o
+teto de 60 — e a regra que veio do experimento 34601: **variar por especialidade e serviço,
+não por sinônimo.** `clinica odontologica` e `consultorio odontologico` trazem gente
+diferente; `dentista` e `odontologista` trazem quase os mesmos.
+
+O `[P1] Ler proposta` remove frases repetidas antes de mostrar: frase repetida gasta cota e
+não traz lead novo. E se o agente não devolver JSON válido, **a proposta não é inventada** — o
+fluxo avisa e para.
+
+### O Intake deixou de ser quatro workflows num só
+
+Saíram 22 nós: a descoberta via Apify, a normalização, a gravação de lead, o guard I6, o
+agente de enriquecimento e a chamada do P5. Tudo isso vive hoje no P2, P3 e P4. O §9.4 do
+contrato pedia exatamente isso.
+
+### ⚠️ O P5 perdeu o chamador — e ganhou outro
+
+O Intake era **o único** que chamava o P5. Removê-lo sem mais nada faria lead novo parar de
+virar deal no HubSpot. O `[P5] CRM-out` foi ligado no **P4**, que é o lugar natural: é ele que
+tem o texto de enriquecimento que vira a descrição do deal.
+
+O `[P4] Sinais do Apify` passou a carregar `telefone` (de `a.phone`), que o P5 usa e que não
+existia no caminho do P4.
+
+### O que ainda não foi testado
+
+O fluxo inteiro depende de mensagem real no Telegram — não dá para exercitar por execução
+manual. **Nada disto foi rodado ponta a ponta.** O primeiro teste é o Olavo mandar uma
+mensagem ao bot e colar o `chat_id` que ele responder.
