@@ -1655,3 +1655,72 @@ A primeira versão do indicador marcava `_sobrou_next_page_token: sim` se **qual
 trouxesse token — o que não responde nada, já que as páginas 1 e 2 sempre trazem. A pergunta é
 sobre a **última**. Corrigido antes de eu afirmar qualquer coisa: um indicador que sempre diz
 "sim" não é medida, é enfeite.
+
+---
+
+## Buscas estreitas: a estratégia testada, não suposta (2026-09-01)
+
+**Decisão do Olavo:** cobrir o mercado com várias buscas estreitas no P2, sem manter uma
+descoberta Apify em paralelo.
+
+Antes de montar a lista, duas perguntas dele mereciam resposta com dado, não com teoria.
+
+### "Dá para rejeitar um lead e a API trazer outro?"
+
+**Não.** A Places não tem parâmetro de exclusão. Ela decide os 60 do lado dela, a partir da
+busca; nós filtramos depois que chegam. Descartar um repetido deixa 59 — não puxa substituto.
+
+### "O limite é por pesquisa. Duas pesquisas trazem 120?"
+
+**Duas pesquisas *diferentes*, sim. A mesma pesquisa duas vezes, não.** O teto é por *busca*,
+não por chamada. Isso já tinha sido medido sem querer: entre duas execuções da mesma busca,
+57 dos 60 vieram idênticos e 3 mudaram por variação de ranking.
+
+### O experimento (execução 34601)
+
+Cinco buscas do mesmo segmento, sendo a primeira a larga que já usávamos:
+
+```
+Clinica odontologica São José do Rio Preto      => 60
+implantes dentários São José do Rio Preto       => 60
+ortodontista São José do Rio Preto              => 60
+consultório odontológico São José do Rio Preto  => 60
+dentista 24 horas São José do Rio Preto         => 48
+```
+
+| | |
+|---|---|
+| união de leads distintos | **180** |
+| só a busca larga | 60 |
+| **ganho** | **+120 — o triplo** |
+| dos 33 que a larga perdia, recuperados | **12** |
+| ainda perdidos | 21 |
+
+Entre os 12 recuperados estão justamente os dois que eu havia apontado como claramente no
+alvo: **`ODONTOLOGIA 24 HORAS - RIO PRETO`** e **`OdontoNeo Implantes Dentários`**.
+
+A busca `dentista 24 horas` devolveu **48**, não 60 — ela esgotou o universo dela. Prova de
+que o teto não é uma cota artificial: quando existe menos, vem menos.
+
+### Os 21 que restam dizem qual é a próxima busca
+
+`Drª Lilian Amêndola | Harmonização Facial`, `Dra. Andrieli Castro Harmonização facial e
+Facetas em Resina` — falta uma busca por **harmonização facial**. O mesmo raciocínio vale para
+clareamento, prótese, odontopediatria, periodontia.
+
+E pelo menos um dos 21 não é perda: `Mirassol Hospitalar – Distribuidora de Produtos Médicos
+e Farmacêuticos` não é consultório. Era ruído que o Apify trouxe.
+
+**A lista de buscas se autocorrige:** o que sobra na lacuna nomeia o segmento que falta.
+
+### Custo
+
+5 buscas gastaram 13 requisições (3 páginas cada, menos a que esgotou em 3). A cota gratuita
+da Places é de 10.000 requisições por mês. Cinquenta buscas por mês custam ~130 requisições —
+**1,3% da cota**. O caminho A é gratuito na prática.
+
+### O que isso libera
+
+Com a cobertura resolvida por multiplicação de buscas, **o `L2` pode ser arquivado** e o §9.5
+sai do bloqueio. A ordem obrigatória foi cumprida: o `02` provou fazer o trabalho, com um
+método diferente do `L2` e um resultado maior.
