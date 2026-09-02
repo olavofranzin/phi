@@ -1852,3 +1852,51 @@ resolve em todos os workflows de uma vez e elimina o risco de alguém religá-la
 
 - **Rotacionar a chave da Places** — foi exposta em texto claro numa conversa anterior.
 - **Arquivar os 11 workflows mortos** (19 → 8), agora desbloqueado.
+
+---
+
+## Teste do fluxo, e a fila que era sete vezes maior (2026-09-02)
+
+### O P1 não pode ser testado por fora
+
+O `[P1] Telegram Trigger` não é executável por execução manual: o n8n só dispara por fora
+triggers de agenda, webhook, formulário e chat. Mensagem de Telegram só chega do Telegram, e o
+botão de aprovação espera um toque humano. **Essa metade do fluxo só o Olavo testa.**
+
+### P2 → P3 rodou ponta a ponta
+
+Busca nova `clinica de implante dentario em Sao Jose do Rio Preto` (execução 34808):
+60 leads lidos, 60 linhas geradas, nenhum descarte, nenhum sem `place_id`. O P3 (34809)
+pontuou **163 leads em 5 s** com `dry_run: false` e gravou. O `executeOnce` continua segurando
+o tempo — antes disto eram 29 s e 10.740 linhas pontuadas à toa.
+
+### ⚠️ Eu disse 8 leads na passada corretiva. São 30.
+
+A sonda de fila (execução 34810, com o `Loop Over Items` desligado de propósito para **medir
+sem gastar Apify**) devolveu:
+
+```
+_na_fila: 56   _na_fila_passada_corretiva: 30   _fora_ja_enriquecido: 12
+```
+
+O erro foi meu: contei só os 8 leads do lote 33884 e esqueci que **o pipeline antigo (L2/L3)
+gravou `analise_gbp_ia` em dezenas de leads que nunca tiveram o site medido**. Trocar o
+critério para `enriquecimento_site` trouxe todos eles de volta — o que está correto, e é sete
+vezes o que eu tinha anunciado.
+
+Rodar os 56 seriam mais de 3 horas de Apify e IA. **A sonda existiu exatamente para isso não
+acontecer por clique.** Medir antes de gastar deixou de ser zelo e passou a ser o
+procedimento: o `[P4] Fila` só lê planilha, então a sonda custa ~1 s.
+
+### `LIMITE_LOTE` — o teto que faltava
+
+O P4 ganhou `LIMITE_LOTE` no `[P4] Fila`. `0` = sem teto. A fila é ordenada por prioridade
+decrescente **antes** de cortar, então o lote leva sempre os leads mais valiosos e o corte cai
+sobre o menos valioso. O diagnóstico separa o que é elegível do que entrou:
+
+- `_elegiveis` — quantos passariam
+- `_na_fila` — quantos entraram neste lote
+- `_adiados_pelo_limite` — quantos ficaram para a próxima
+
+Sem esse teto, uma busca nova no P2 (até 60 leads, quase todos acima do corte) transformava um
+clique no P4 em horas de gasto sem ninguém ter decidido isso.
