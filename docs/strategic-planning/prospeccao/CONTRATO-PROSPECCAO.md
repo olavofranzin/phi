@@ -1936,3 +1936,43 @@ conteúdo, não o status. Se eu tivesse aceitado "execução: success", os três
   prioridade primeiro. Sobram 53 elegíveis; subir esse número é decisão de gasto do Olavo.
 - `[P2] Busca manual` está com `clinica de implante dentario em Sao Jose do Rio Preto`.
 - P1 continua **sem teste** — depende de mensagem real no Telegram.
+
+---
+
+## Primeiro teste real do P1 no Telegram (execução 34822)
+
+O Olavo mandou "Iniciar prospecção" às 11:17. O que funcionou, funcionou inteiro:
+
+| Etapa | Resultado |
+|---|---|
+| Trava de acesso | passou — `chat_id 930549271`, `autorizado: true` |
+| Briefing (`sendAndWait`) | botão apareceu no chat e voltou preenchido: `Clínica odontológica` / `São José do Rio Preto/SP` |
+| Agente propõe buscas | **503 do Gemini** — "this model is currently experiencing high demand" |
+
+A conversa em si está de pé: a trava, o formulário dentro do Telegram e o retorno do
+`sendAndWait` são exatamente o que o desenho previa. Quebrou no serviço externo.
+
+### ⚠️ Dois defeitos meus, e o segundo é o grave
+
+**Primeiro:** pus `retryOnFail` no agente do P4 e **esqueci do agente do P1**. Uma tentativa
+única contra um serviço que cai. Agora são 5 tentativas com 5 s entre elas.
+
+**Segundo, e pior:** o Olavo preencheu o briefing e **não recebeu resposta nenhuma**. A
+execução morreu calada. O nó `[P1] Proposta falhou` existia, mas só é alcançado quando o
+agente responde e o JSON vem torto — quando o nó *estoura*, a execução termina em erro e o
+caminho de aviso nunca roda.
+
+Corrigido com `onError: continueRegularOutput`: a falha passa a fluir para o
+`[P1] Ler proposta`, que não acha frase nenhuma, marca `proposta_valida: false` e cai no aviso
+já existente. O texto passou a dizer que costuma ser o modelo fora do ar por alguns minutos, e
+que **nada foi buscado e nada entrou na planilha** — porque depois de preencher um formulário,
+silêncio é indistinguível de "está rodando".
+
+**A regra que sai daqui:** todo ponto do fluxo onde o humano já investiu uma ação (respondeu
+formulário, tocou botão) precisa de um caminho de aviso que sobreviva ao nó estourar. Não
+basta tratar a resposta ruim; é preciso tratar a resposta que não vem.
+
+### Ainda não testado
+
+O botão **Iniciar prospecção** e o disparo do P2 pelo loop de frases. A execução parou antes
+de chegar lá. O próximo "Iniciar prospecção" no Telegram exercita esse trecho.
