@@ -1976,3 +1976,40 @@ basta tratar a resposta ruim; é preciso tratar a resposta que não vem.
 
 O botão **Iniciar prospecção** e o disparo do P2 pelo loop de frases. A execução parou antes
 de chegar lá. O próximo "Iniciar prospecção" no Telegram exercita esse trecho.
+
+---
+
+## O botão não chegava porque o bot nunca pediu para recebê-lo (execução 34864)
+
+Segundo teste real. O agente passou (o 503 era temporário mesmo), a proposta foi montada, e o
+`[P1] Aprovar prospeccao?` recusou:
+
+> The Telegram Trigger claiming this bot was activated before one-tap approval support.
+> Re-activate that workflow (or update the trigger to the latest version) so callback buttons
+> reach n8n.
+
+Causa: o `[P1] Telegram Trigger` estava inscrito **só em `message`**. O toque num botão dentro
+do chat chega como `callback_query` — um tipo de atualização que o bot nunca pediu ao Telegram.
+O `sendAndWait` verifica isso antes de montar o botão e se recusa a prometer uma resposta que
+não teria como voltar.
+
+### ⚠️ Correção do que eu afirmei antes
+
+Eu escrevi que o `sendAndWait` dispensava lidar com `callback_query`. **Dispensa o código, não
+a inscrição.** O n8n roteia o toque para a execução parada sozinho — mas só se o toque entrar
+no n8n, e ele só entra se o gatilho estiver inscrito nesse tipo de atualização. Eu li o que o
+nó de aprovação faz e não li do que ele depende.
+
+### O que mudou
+
+- `updates: ["message", "callback_query"]` no gatilho, e o workflow foi **desativado e
+  reativado** — é a reativação que faz o Telegram registrar a nova inscrição. Editar sem
+  reativar não teria efeito nenhum.
+- O `[P1] Config` ganhou guarda: agora chegam atualizações **sem campo `message`**. Sem a
+  guarda, o `chat_id` sairia vazio, o IF cairia no ramo de recusa e o bot tentaria responder a
+  ninguém. Atualização que não é mensagem agora não produz item e nada roda — quem cuida dela é
+  o nó de aprovação, que está esperando.
+
+**A regra que sai daqui:** ao ligar um novo tipo de evento num gatilho, todo nó a jusante que
+lê o formato antigo passa a receber um formato que não previa. A inscrição nova não é só uma
+porta que abre; é uma forma nova de dado entrando por uma porta que já existia.
