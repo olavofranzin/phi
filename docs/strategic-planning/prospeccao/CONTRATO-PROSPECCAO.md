@@ -1812,3 +1812,43 @@ existia no caminho do P4.
 O fluxo inteiro depende de mensagem real no Telegram — não dá para exercitar por execução
 manual. **Nada disto foi rodado ponta a ponta.** O primeiro teste é o Olavo mandar uma
 mensagem ao bot e colar o `chat_id` que ele responder.
+
+---
+
+## Trava de acesso fechada e passada corretiva armada (2026-09-02)
+
+### O bot já tem dono
+
+`CHAT_AUTORIZADO = '930549271'` no `[P1] Config`. A partir daqui qualquer outro chat que
+escreva ao bot recebe recusa e **nada dispara** — sem busca na Places, sem linha na planilha.
+
+### O critério de "já enriquecido" estava olhando para a coluna errada
+
+A fila do P4 pulava o lead que tivesse `analise_gbp_ia`. Isso dava **falso positivo em duas
+situações reais**, e as duas escondiam trabalho que não foi feito:
+
+- os 6 primeiros leads rodaram **antes** de o site passar a ser medido: têm análise de GBP,
+  não têm análise de site nem Core Web Vitals;
+- Zelo e Urologista gravaram o literal `[object Object]` em `enriquecimento_site` — a coluna
+  está preenchida e o conteúdo não existe.
+
+O critério passou a ser `enriquecimento_site` **válido**, e `[object Object]` conta como
+inválido. Os 8 leads voltam para a fila sozinhos; quem já está completo continua fora e não
+paga token de novo. O diagnóstico da execução ganhou `_na_fila_passada_corretiva`, que conta
+quantos entraram por esse motivo — se vier diferente de 8, alguma premissa aqui está errada e
+é para olhar antes de gastar Apify.
+
+**Como verificar:** rodar o P4 pelo `[SMOKE] Trigger manual` e ler o `[P4] Fila` **antes** de
+deixar o loop seguir. `_na_fila_passada_corretiva: 8` confirma; qualquer outro número, parar.
+
+### ⚠️ Credencial velha ainda existe no n8n
+
+`Google Places API` (`wTDtqdkU2IpqFVf8`, `httpTemplatedCustomAuth`) — a que injetava o
+FieldMask inválido — foi substituída mas **não deletada**, e continua pendurada como metadado
+no nó `[P4] PageSpeed`. Hoje é inerte, porque o nó usa `httpHeaderAuth`. Deletá-la no n8n
+resolve em todos os workflows de uma vez e elimina o risco de alguém religá-la sem querer.
+
+### Continua pendente
+
+- **Rotacionar a chave da Places** — foi exposta em texto claro numa conversa anterior.
+- **Arquivar os 11 workflows mortos** (19 → 8), agora desbloqueado.
