@@ -2097,3 +2097,43 @@ que todos os outros nós usam. A mensagem sairia de outro bot, ou não sairia. C
 
 Fica o registro: **nó novo com credencial preenchida sozinha precisa ser conferido.** Ela vem
 plausível, e plausível é o que engana.
+
+---
+
+## Limpeza e tamanho de lote (2026-09-02, decisões do Olavo)
+
+### `LIMITE_LOTE` de 3 para 10
+
+3 era tamanho de teste. Com 10, a fila de 53 se esvazia em 6 rodadas de ~35 min. A mudança
+vale a partir da próxima execução — a que estava rodando usa a versão já carregada.
+
+### Workflows mortos arquivados (6 dos 11)
+
+Arquivados: `1º Enriquecimento` · `Automate Scrape Google Maps Business Leads` ·
+`Enriquecimento Site L4` · `GBP Scoring - L1 Core Engine (teste)` ·
+**`GBP Scoring - L2 Discovery (Pipeline A)`** · `HubSpot - Atualizar status e disparar extracao`.
+
+O L2 sai de cena com a cobertura já provada superior pelo P2 com buscas estreitas
+(180 leads contra 60, experimento 34601). Arquivar é reversível: nada foi apagado.
+
+### ⚠️ 5 não pude arquivar — e o motivo importa
+
+`💥 Automate Scrape ... vide II` · `GBP Scoring - L2 Discovery (ignora id hubspot)` ·
+`Hubspot - Criar deal e atualizar id na planilha` · `Intake - db's apify` ·
+`Intake - Telegram API copy segurança`
+
+Todos com `availableInMCP: false` — o n8n recusa: *"Workflow is not available in MCP. Enable
+MCP access from the workflow card."* Não é permissão de arquivar; é acesso ao workflow.
+
+**Só o Olavo consegue arquivá-los, pela interface.** São 3 cliques cada, na lista de
+workflows. Dois deles (`L2 Discovery (ignora id hubspot)` e `Hubspot - Criar deal`) escrevem
+na mesma planilha e criam linha — são os que mais valem tirar do caminho, porque violam I2 se
+alguém clicar.
+
+### Pendências que continuam abertas
+
+1. **Rotacionar a chave da Places** — exposta em texto claro. Nada foi feito ainda.
+2. **Apagar a credencial `Google Places API`** (`wTDtqdkU2IpqFVf8`) — inerte hoje, mas viva.
+3. **Chamada do P4 pelo P1** — criada, ainda não exercitada.
+4. **Decisões comerciais** — ticket por serviço, 3 objeções, ação de conversão. Sem elas o
+   score prioriza mas não estima valor esperado.
