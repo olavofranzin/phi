@@ -2013,3 +2013,52 @@ nó de aprovação faz e não li do que ele depende.
 **A regra que sai daqui:** ao ligar um novo tipo de evento num gatilho, todo nó a jusante que
 lê o formato antigo passa a receber um formato que não previa. A inscrição nova não é só uma
 porta que abre; é uma forma nova de dado entrando por uma porta que já existia.
+
+---
+
+## Um sublinhado derrubou a mensagem inteira (execução 34868)
+
+O `callback_query` resolveu: o erro anterior sumiu e o fluxo avançou. O agente respondeu (o 503
+era temporário mesmo) e a proposta saiu **exatamente no padrão certo** — 8 buscas por
+especialidade, não por sinônimo:
+
+```
+clínica odontológica · ortodontia · implantodontia · odontopediatria
+estética dental · endodontia · periodontia · prótese dentária
+```
+
+Aí o Telegram recusou o envio:
+
+```
+Bad Request: can't parse entities: Can't find end of the entity starting at byte offset 1017
+```
+
+O `sendAndWait` manda a mensagem como Markdown. O resumo tinha **um único sublinhado**, em
+`place_id`, na última linha. Em Markdown `_` abre itálico; sem par para fechar, o Telegram
+rejeita a mensagem **inteira**. O byte 1017 cai ali.
+
+Trocar `place_id` por outra palavra resolveria este caso e deixaria a armadilha montada: o
+`racional` vem do agente e é texto livre — um `*` ou `_` sozinho derrubaria o envio de novo, e
+só na hora. Então a limpeza (`semMarcacao`) vale para o resumo todo, incluindo o que o modelo
+escreveu.
+
+### ⚠️ Terceira vez que uma falha morre calada
+
+O nó de aprovação estourou e o Olavo **não recebeu nada** — de novo, depois de já ter
+preenchido o briefing. É o mesmo defeito que consertei no agente uma execução antes, no nó ao
+lado, e eu não olhei em volta.
+
+Agora o nó tenta 3 vezes e, se falhar, segue para o caminho de decisão. O `[P1] Cancelado`
+passa a distinguir os dois casos: **cancelamento** ("você cancelou") e **falha de envio** ("não
+consegui te mandar o botão"). Dizer "cancelada" quando na verdade não consegui perguntar seria
+trocar silêncio por mentira.
+
+**Regra, agora aplicada em todos os nós que falam com fora:** em fluxo com humano no meio, todo
+nó que pode estourar precisa de saída de aviso — e o aviso precisa dizer a verdade sobre *qual*
+falha aconteceu.
+
+### Ainda não exercitado
+
+O toque no botão e o loop que dispara o P2 uma vez por frase. A proposta tem 8 buscas, teto de
+480 leads na planilha — o P2 e o P3 são baratos, e o gasto de Apify continua contido pelo
+`LIMITE_LOTE = 3` do P4.
