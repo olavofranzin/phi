@@ -2062,3 +2062,38 @@ falha aconteceu.
 O toque no botão e o loop que dispara o P2 uma vez por frase. A proposta tem 8 buscas, teto de
 480 leads na planilha — o P2 e o P3 são baratos, e o gasto de Apify continua contido pelo
 `LIMITE_LOTE = 3` do P4.
+
+---
+
+## A corrente parava no P3 — o P4 não tinha quem o chamasse
+
+Achado do Olavo depois de uma execução que chegou até o P3 e acabou ali. Está certo, e a
+lacuna é minha: quando o Intake foi reduzido a P1, o P4 **perdeu o único chamador que tinha** e
+ficou só com o gatilho manual. Eu tinha registrado esse mesmo risco para o P5 e religado o P5
+no P4 — e não olhei quem chamava o próprio P4.
+
+### Por que no fim do P1 e não a partir do P3
+
+O P3 é chamado **uma vez por busca**. Com 8 frases, ele roda 8 vezes. Pendurar o P4 nele daria
+8 lotes de enriquecimento na mesma prospecção — gasto multiplicado por um detalhe de
+encadeamento, que é exatamente o defeito que o `executeOnce` já tinha corrigido no P3.
+
+Uma sessão de prospecção deve render **um** lote. Então:
+
+```
+[P1] Loop buscas (done) → [P1] Prospeccao concluida → [P4] Enriquecer fila
+                                                    → [P1] Enriquecimento concluido
+```
+
+O aviso de "leads entraram" vai **antes** do enriquecimento de propósito: o P4 leva minutos por
+lead, e o Olavo não precisa esperar por ele para saber que a busca funcionou. Quantos leads
+entram no lote continua sendo decisão do `LIMITE_LOTE` do próprio P4 — o P1 não opina sobre
+gasto, só chama.
+
+### ⚠️ O n8n atribuiu sozinho a credencial errada
+
+Ao criar o nó de aviso, o n8n vinculou `Telegram account` — **não** a `Telegram phi_prospeccao`
+que todos os outros nós usam. A mensagem sairia de outro bot, ou não sairia. Corrigido no ato.
+
+Fica o registro: **nó novo com credencial preenchida sozinha precisa ser conferido.** Ela vem
+plausível, e plausível é o que engana.
