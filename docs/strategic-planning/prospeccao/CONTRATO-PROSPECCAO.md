@@ -1900,3 +1900,39 @@ sobre o menos valioso. O diagnóstico separa o que é elegível do que entrou:
 
 Sem esse teto, uma busca nova no P2 (até 60 leads, quase todos acima do corte) transformava um
 clique no P4 em horas de gasto sem ninguém ter decidido isso.
+
+### P4 → P5 rodou de verdade (execução 34811, lote de 3)
+
+| Lead | site | PSI performance | LCP | SEO | JSON | deal HubSpot |
+|------|------|-----------------|-----|-----|------|--------------|
+| Dentista 24 horas Dr. Rodrigo Belmonte | ok | **38** | 13,0 s | 83 | válido | 60167122736 |
+| Mariani Odontologia | ok | **53** | 11,2 s | 100 | válido | 60042979863 |
+| OrthoDontic | ok | **87** | 2,6 s | 92 | válido | 64574424718 (novo) |
+
+Nenhum `[object Object]`, nenhum `_formato_inesperado`. A correção do `paraTexto()` segurou.
+A cadeia inteira fechou: Apify → medição do site → PageSpeed → agente → planilha → HubSpot.
+
+Os números têm valor comercial imediato: **LCP de 13 s e 11,2 s** em dois dos três sites. É
+argumento medido, não opinião — exatamente o que a narração antiga não entregava.
+
+### ⚠️ E a telemetria mentiu — no sentido tranquilizador, que é o pior
+
+`_psi_status` voltou **vazio nos três**, o que parecia PageSpeed quebrado. Não estava: o PSI
+funcionou nos três. O `[P4] Ler resposta do agente` lia `_site_psi_status` de
+`[P4] Medir o site`, que roda **antes** do PageSpeed e nunca teve esse campo.
+
+O agente sempre recebeu o PSI (ele lê de `[P4] Juntar PageSpeed`), então nenhuma análise saiu
+pobre. Só o indicador estava cego. Corrigido para ler do nó certo, e agora carrega também
+`_psi_performance`, para o indicador mostrar um número em vez de só dizer "ok".
+
+**É o terceiro defeito desta frente na mesma família:** um campo lido do lugar errado que
+falha em silêncio. `bookingLinks`, `analise_site` e agora `_psi_status`. Nos três, o dado
+existia e a leitura é que estava errada — e nos três só apareceu porque alguém foi conferir o
+conteúdo, não o status. Se eu tivesse aceitado "execução: success", os três teriam passado.
+
+### Estado ao fim do teste
+
+- `LIMITE_LOTE = 3` continua posto. **Cada execução do P4 processa 3 leads**, os de maior
+  prioridade primeiro. Sobram 53 elegíveis; subir esse número é decisão de gasto do Olavo.
+- `[P2] Busca manual` está com `clinica de implante dentario em Sao Jose do Rio Preto`.
+- P1 continua **sem teste** — depende de mensagem real no Telegram.
