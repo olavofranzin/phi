@@ -2137,3 +2137,70 @@ alguém clicar.
 3. **Chamada do P4 pelo P1** — criada, ainda não exercitada.
 4. **Decisões comerciais** — ticket por serviço, 3 objeções, ação de conversão. Sem elas o
    score prioriza mas não estima valor esperado.
+
+---
+
+## Lote 34942: três defeitos meus e um dado bom (2026-09-02)
+
+O Olavo notou colunas vazias na planilha. Estava certo em três dos quatro casos.
+
+### ⚠️ 1. `Posts` nunca foi gravado — nome de campo errado
+
+Eu lia `a.updatesFromCustomers`. O ator do Apify chama esse campo de **`ownerUpdates`**. O
+campo que eu lia **não existe na resposta**, então `Posts` gravou vazio em *todo lead desde a
+construção do P4*.
+
+No lote 34942 a **Gonçalves Odontologia tinha 3 posts** e foi para a planilha como se não
+tivesse nenhum. E `Posts` alimenta a dimensão de engajamento — o dado não só sumiu, ele
+empobreceu o score.
+
+É a **quarta** vez nesta frente: `bookingLinks`, `analise_site`, `_psi_status` e agora
+`ownerUpdates`. Todas iguais: campo lido do lugar errado, coluna vazia ou torta, nenhum erro.
+Vazio parece I3 funcionando ("não observado grava vazio") e é justamente por isso que passa.
+
+Corrigido, e com telemetria: `_apify_tem_campo_posts` e `_apify_tem_campo_emails` dizem se o
+ator devolveu o campo, para a próxima vez não ser preciso deduzir de coluna vazia.
+
+### ⚠️ 2. `redes_sociais` capturou página de busca do YouTube
+
+Entraram `youtube.com/results` e `youtube.com/results?search_query=Dra.%20Mariana...` — páginas
+de **busca**, não perfis. Meu `ehPerfil()` filtrava `/embed/`, `/watch` e `/share`; faltava
+`/results`, `/search`, `search_query=` e o caso do domínio nu sem caminho.
+
+Mesma função, mesmo bug, segunda vez. Da primeira eu tratei o caso que vi em vez da classe.
+
+### ⚠️ 3. "Site fora do ar" quando talvez fôssemos nós barrados
+
+Dois dos três sites deram `inacessivel`, por causas **opostas**:
+
+| Site | Erro | O que é de verdade |
+|---|---|---|
+| `dentzriopreto.com.br` | `ENOTFOUND` | domínio não resolve — achado comercial real |
+| `goncalvesodontologia.com` | socket TLS derrubado em 190 ms | provavelmente **nós** fomos barrados |
+
+O prompt mandava tratar os dois como "site fora do ar, achado comercial". Isso põe na boca do
+vendedor uma acusação sobre o lead que pode ser falsa — e o site da Gonçalves abre num
+navegador comum.
+
+Agora são estados separados: `dominio_nao_existe` (pode afirmar) e `sem_resposta` (não afirma;
+diz que não conseguimos medir). A medição ganhou cabeçalho de navegador (`Accept`,
+`Accept-Language` — a falta deles derruba conexão em servidor com proteção) e uma segunda
+tentativa trocando `www`, que só roda quando o DNS existe.
+
+### 4. `e-mail` vazio — este pode ser honesto
+
+O Apify devolveu `emails: []` nos três, com `leadsEnrichment: []` também vazio. Dois dos três
+sites não abriram, então nem o site pôde suprir. **Não afirmo que está quebrado**: a telemetria
+nova dirá, no próximo lote, se o ator devolve o campo e vem vazio ou se não devolve o campo.
+
+### O dado bom, e uma pendência que ele cria
+
+`_total_lidos: 315` — as 8 buscas do P1 rodaram e entraram ~152 linhas novas. O fluxo do
+Telegram funcionou de ponta a ponta. Mas a fila subiu para **146 elegíveis**, não 53.
+
+### ⚠️ O lote rodou com 3, não com 10
+
+`_limite_lote: 3` nesta execução, embora a versão publicada tenha 10 e o `versionId` bata com o
+meu publish. O `updatedAt` do workflow é 21:19, **durante** a execução iniciada 21:15. A
+explicação mais provável é execução disparada de uma aba do editor aberta antes da mudança —
+o editor roda a cópia que tem em memória. Antes de rodar de novo, recarregar a aba do P4.
