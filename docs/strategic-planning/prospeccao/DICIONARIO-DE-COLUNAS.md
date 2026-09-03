@@ -168,3 +168,33 @@ velho é pior que qualquer das duas: parecem atuais e não são.
 
 *Verificado em 2026-09-02 lendo o JSON dos workflows `n7Z0xwi1dCDioln1`, `V0f80LU1ZH8PUtdc`,
 `EFD7Drr0LDMqfDXw`, `94lSWJfxfu653KdN` e `WRFU2NM8rLJU7bRT`.*
+
+---
+
+## Adendo 2026-09-03
+
+### `Quantidade fotos` passou para o P4, com o número real
+
+O P4 agora grava `imagesCount` do Apify por cima do `>=10` da Places. O dado já chegava até o
+fim do fluxo e era descartado; agora é gravado.
+
+A coluna passa a ter **dois tipos de valor**, e isso é proposital: `>=10` se lê a olho nu como
+"ainda não medido com precisão". É a diferença entre isto e as colunas órfãs — um valor
+autodeclarado como incompleto não engana ninguém; um número velho sem etiqueta, sim.
+
+### Custo do Apify: a API responde, e o número é `usageTotalUsd`
+
+Verificado com a sonda `DIAG - Custo das execuções do Apify` (`CprF1aeBAJouF95T`), que só lê
+metadados e não roda ator nenhum:
+
+- O objeto de execução traz **`usageTotalUsd`** — custo real em dólar, por execução.
+- `stats` (e portanto `computeUnits`) **não vem** na listagem; exigiria `Get run` por ID.
+- Também existe **`maxTotalChargeUsd`** como parâmetro do nó: teto de gasto por execução,
+  que aborta a run ao atingir o limite.
+
+Nas 16 execuções bem-sucedidas mais recentes: **US$ 3,8788 no total**, variando de
+**US$ 0,024 a US$ 0,824 por lead** — 34× entre o mais barato e o mais caro. Média
+**≈ US$ 0,24 por lead enriquecido**.
+
+Como cada execução do ator corresponde a um lead do P4, a fila de 146 elegíveis custaria
+**≈ US$ 35** para esvaziar, e um lote de 10 sai por **≈ US$ 2,40**.
