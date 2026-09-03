@@ -198,3 +198,86 @@ Nas 16 execuções bem-sucedidas mais recentes: **US$ 3,8788 no total**, variand
 
 Como cada execução do ator corresponde a um lead do P4, a fila de 146 elegíveis custaria
 **≈ US$ 35** para esvaziar, e um lote de 10 sai por **≈ US$ 2,40**.
+
+---
+
+## Adendo 2026-09-03 (2): as órfãs não seguram o score, mas a falta delas segura o argumento
+
+### Apagar as órfãs empobrece o score? **Não.**
+
+O motor atual (`fit-oport-v1`) **não lê nenhuma delas**. Ele calcula `porte`, `qual`, `viab`,
+`gap` e `prontidão` a partir de `Quantidade reviews`, `Avaliação`, `Horário`,
+`Quantidade fotos`, `site_tipo` e afins — e produz `potencial_comercial`, `fit` e
+`oportunidade`. Apagar `score_tecnico`, `ipc`, `score_gbp` e as seis `dim_*` **não muda um
+único número**. Elas são inertes.
+
+### Mas o que a pergunta acerta é outra coisa
+
+O empobrecimento não vem de apagar a coluna. Vem de **ninguém calcular a decomposição** — e
+isso já é verdade hoje, com as colunas lá.
+
+Vale relembrar o que o experimento anterior mostrou: enquanto `Avaliação` e `Horário` estavam
+vazios, o fator `qual` ficava constante em **0,5** para todo mundo, e o teto de prioridade da
+base inteira era **80**. Preenchidos os campos em 60 linhas, `qual` voltou a variar e o
+primeiro colocado saltou para **99**.
+
+A lição é a régua desta decisão: **um sinal constante não discrimina nada.** Ele ocupa lugar na
+fórmula e não separa ninguém de ninguém. Hoje `potencial_comercial` é um número único: serve
+para **ordenar**, não para **explicar**. E argumento comercial precisa de explicação, não de
+ordem.
+
+### O que o comparativo setorial exige — e o que já existe
+
+| Ingrediente | Estado |
+|---|---|
+| Grupo de comparação (setor + cidade) | ✅ existe — o P3 já agrupa por `Categoria 1` + `Cidade` |
+| Posição na busca | ⚠️ existe e **está sendo destruída** — ver abaixo |
+| Notas por dimensão | ❌ não existe — é o que precisa ser reconstruído |
+| Percentil dentro do grupo | ❌ não existe — é o que transforma nota em argumento |
+
+Nota crua não vende: "seu SEO é 42" não diz nada a um dono de clínica. **Percentil vende:**
+"das 60 clínicas odontológicas de Rio Preto que medimos, você está entre as 15% mais lentas."
+
+### ⚠️ A busca estreita está apagando a posição — e é a minha estratégia que faz isso
+
+O `[P2] Upsert Planilha Leads` casa por `id` e sobrescreve. `Searchstring` e
+`Posição Pesquisa` são regravados a **cada** busca que reencontra o lead. Com 8 frases por
+prospecção, um lead achado em cinco delas **guarda só a última**.
+
+Confirmado na base: a Niti Odontologia está no HubSpot desde **06/05**, foi descoberta por
+`Clinica odontologica São José do Rio Preto`, e hoje a linha diz
+`Searchstring: clinica de implante dentario em Sao Jose do Rio Preto`, `Posição Pesquisa: 39`.
+A descoberta original foi sobrescrita.
+
+Isso importa exatamente para o argumento que se quer construir. Duas razões:
+
+1. **Posição só significa alguma coisa junto da busca que a gerou.** Ser 39º em "implante
+   dentário" e ser 39º em "clínica odontológica" são fatos comerciais diferentes.
+2. **Aparecer em muitas buscas é, por si, um sinal de visibilidade** — e a contagem se perde
+   junto com o histórico.
+
+O caso mais vendável é justamente o que somem: um lead que aparece **mal colocado em várias
+buscas** é o retrato do problema que tráfego pago resolve. Hoje a planilha guarda uma foto só,
+e a mais recente.
+
+### ⚠️ E um limite estatístico honesto do comparativo
+
+Benchmark exige o **grupo** medido, não só o alvo.
+
+- **Dimensões do GBP** (ficha, reputação, posição): cobertura ~100% — o P2 mede todo mundo.
+- **Dimensões do site** (PageSpeed, SEO, schema, pixel): cobertura **~8%** — só quem passou
+  pelo P4, e enviesado para os de maior prioridade, porque é assim que a fila ordena.
+
+Uma "mediana de SEO do setor" calculada sobre os 8% mais prioritários **não é a mediana do
+setor** — é a mediana da elite da fila, e vai fazer todo lead novo parecer pior do que é.
+
+Regra a adotar: o comparativo de site só se publica quando a cobertura do grupo passar de um
+piso (sugestão: 30 leads medidos **e** 40% do grupo), e sempre rotulado com o `n`. Abaixo
+disso, comparar só o que tem cobertura total.
+
+### Pendência registrada
+
+**Aviso de gasto do Apify em US$ 4,50.** ⚠️ O acumulado hoje é **US$ 3,88** — a US$ 0,24 por
+lead, o limite cai em **cerca de 3 leads**. Antes de implementar, definir se são US$ 4,50 de
+teto acumulado da conta, ou orçamento por período (mês/semana) — a implementação é diferente,
+e no primeiro caso o aviso dispara já no próximo lote.
