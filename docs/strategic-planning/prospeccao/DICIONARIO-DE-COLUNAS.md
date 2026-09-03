@@ -281,3 +281,80 @@ disso, comparar só o que tem cobertura total.
 lead, o limite cai em **cerca de 3 leads**. Antes de implementar, definir se são US$ 4,50 de
 teto acumulado da conta, ou orçamento por período (mês/semana) — a implementação é diferente,
 e no primeiro caso o aviso dispara já no próximo lote.
+
+---
+
+## Adendo 2026-09-03 (3): as dimensões voltaram, como percentil do setor
+
+Rodado de verdade na execução **35258**: 315 leads, sete colunas órfãs voltaram a ter dono.
+
+### A decisão de desenho: percentil, não nota
+
+`dim_*` e `score_gbp` deixam de ser nota absoluta e passam a ser **percentil 0–100 dentro do
+grupo setor + cidade**. A frase de venda já vem pronta no número:
+
+> `dim_seo: 10` quer dizer, literalmente, **"90% das clínicas odontológicas de Rio Preto
+> aparecem melhor que você na busca"**.
+
+O primeiro caso real que o motor produziu é o argumento inteiro numa linha só:
+
+| Gonçalves Odontologia | valor | leitura comercial |
+|---|---|---|
+| `dim_autoridade` | **99** | reputação no topo do setor |
+| `dim_saude` | **100** | ficha impecável |
+| `dim_seo` | **10** | aparece em **57º** — 90% do setor à frente |
+| `flags_score` | `MAL_COLOCADO` | |
+
+Reputação excelente, ficha completa, e ninguém a encontra. É o retrato exato do problema que
+tráfego pago resolve — e não é opinião, é percentil sobre 123 concorrentes medidos.
+
+### O grupo de comparação mudou, e os scores mudaram junto
+
+Era `Searchstring`. Mas o P2 regrava a Searchstring a cada busca que reencontra o lead, então
+**o grupo mudava de composição sozinho a cada prospecção** — e com ele o `porte` de todo mundo.
+Agora é `Categoria 1 + Cidade`. Os grupos reais: `dental_clinic @ SJRP` (n=123),
+`dentist @ SJRP` (n=112), `doctor @ SJRP` (n=17).
+
+Os scores mudaram de propósito: os antigos vinham de um agrupamento instável por construção.
+
+### ⚠️ Um defeito meu, achado pelo teste em seco
+
+Escrevi no comentário que "percentil com n=3 é ruído" e depois guardei **só o tamanho do
+grupo**. Uma dimensão observada em 3 leads dentro de um grupo de 123 saía como percentil
+confiante — o `dim_engajamento` da Gonçalves veio **100** assim.
+
+Corrigido com um segundo piso: cada dimensão exige `MIN_AMOSTRA = 8` observações **dela
+própria**. Depois da correção, `dim_engajamento` virou vazio em toda a base — `_amostra_eng: 0`.
+Honesto: `Posts` só começou a funcionar agora e `Agendamento` só existe onde o P4 passou.
+
+### A exclusão dos ganhos: verificada, não suposta
+
+Não bastava escrever a regra. O diagnóstico `_status_vistos` mostrou o que existe na planilha:
+
+```
+Aberto | Prospectado = 89 ; Aberto | Interação Instagram = 1 ; (vazio) | (vazio) = 225
+```
+
+**Não há nenhum lead ganho na base hoje.** A regra está no lugar e não exclui ninguém ainda —
+o que só se sabe porque foi medido. Quando o primeiro deal fechar, ele sai do denominador
+sozinho.
+
+### Cobertura das dimensões, hoje
+
+| Dimensão | Cobertura | Depende de |
+|---|---|---|
+| `dim_autoridade` | alta | Avaliação + reviews (P2, todo mundo) |
+| `dim_seo` | alta | Posição Pesquisa (P2, todo mundo) |
+| `dim_saude` | alta | Horário, telefone, site, avaliação |
+| `dim_conversao` | alta | telefone, site próprio, e-mail, agendamento |
+| `dim_conteudo` | **parcial** — 61 leads com contagem exata | Apify via P4; `>=10` é censura e não entra |
+| `dim_engajamento` | **vazia** — amostra 0 | Posts e Agendamento, só onde o P4 passou |
+
+As duas parciais enchem sozinhas conforme o P4 roda. É a razão de o P4 valer o custo: ele não
+só enriquece o lead dele, **ele melhora a régua de todos os outros**.
+
+### `score_tecnico` e `ipc` continuam órfãs, de propósito
+
+`ipc` duplica `potencial_comercial` e `score_tecnico` não tem definição nova. Preencher coluna
+só porque ela existe é exatamente o defeito que este trabalho corrigiu. Recomendação: aposentar
+as duas.
