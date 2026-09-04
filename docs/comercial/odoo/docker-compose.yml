@@ -1,0 +1,45 @@
+# PHI CRM — Odoo Community + PostgreSQL (F1 do plano de substituição de CRM)
+# Uso: easypanel (importar como serviço "Compose") OU VPS com `docker compose up -d`.
+# No easypanel, o proxy reverso + HTTPS + domínio são do próprio painel — NÃO subir Traefik aqui.
+# Numa VPS crua, adicionar Traefik/Nginx na frente do serviço `odoo`.
+#
+# SEGREDOS: troque os ${...} por variáveis de ambiente do easypanel (ou um .env fora do git).
+# NUNCA commitar senhas reais.
+
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: postgres          # Odoo gerencia seus próprios bancos; mantenha 'postgres'
+      POSTGRES_USER: ${DB_USER:-odoo}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?defina DB_PASSWORD}
+    volumes:
+      - odoo-db-data:/var/lib/postgresql/data
+    restart: unless-stopped
+    # NÃO publicar porta do Postgres para a internet (só rede interna do compose).
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-odoo}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  odoo:
+    image: odoo:18                    # confirmar versão (18 recomendado; 19 existe)
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      HOST: db
+      USER: ${DB_USER:-odoo}
+      PASSWORD: ${DB_PASSWORD:?defina DB_PASSWORD}
+    volumes:
+      - odoo-web-data:/var/lib/odoo   # filestore (anexos) — ENTRA no backup junto com o db
+      - ./config:/etc/odoo            # odoo.conf (admin_passwd, proxy_mode, list_db)
+      - ./addons:/mnt/extra-addons    # módulo custom PHI (F2) — versionado em git
+    ports:
+      - "8069:8069"                   # no easypanel, mapear o domínio para esta porta
+    restart: unless-stopped
+
+volumes:
+  odoo-db-data:
+  odoo-web-data:

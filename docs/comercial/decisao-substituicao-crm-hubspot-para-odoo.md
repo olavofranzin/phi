@@ -95,11 +95,13 @@ VPS/host (4 vCPU / 8 GB / 80 GB NVMe) — ou easypanel atual (já roda o n8n)
 - **Simplificação de writers** (sub-chat) → o destino passa a ser **Odoo**, não o HubSpot; a decisão de
   writer canônico agora inclui "quem escreve no Odoo".
 
-## 7. Decisões abertas (bloqueiam a F1) — preciso de você
-1. **Modelo Odoo:** confirmar **Community self-hosted** (autonomia + DevOps) vs **Odoo Online/One App
-   Free** (gerenciado, menos flexível). *(Recomendo Community, pelo §1.)*
-2. **Onde hospedar:** **easypanel atual** (já roda n8n) vs **VPS nova dedicada**. *(Recomendo easypanel p/ começar.)*
-3. **Versão do Odoo** (ex.: 17/18 LTS).
+## 7. Decisões (2026-09-04)
+1. ✅ **Modelo Odoo:** **Community self-hosted** (decidido).
+2. ✅ **Onde hospedar:** **easypanel atual** (`1unqx7.easypanel.host`, junto do n8n) — decidido.
+   Pré-check: confirmar recursos livres (Odoo confortável em ~4 GB RAM; +Postgres).
+
+**Ainda abertas (não bloqueiam F1):**
+3. **Versão do Odoo** (recomendo **18**; 19 já existe). *A confirmar.*
 4. **ESP de e-mail** (SES / Mailgun / Brevo / SendGrid / Postmark).
 5. **Domínio/subdomínio** de envio + quem controla o DNS.
 6. **Caminho WhatsApp** (Cloud API direta vs BSP — Take Blip/Zenvia/360dialog/Twilio).
