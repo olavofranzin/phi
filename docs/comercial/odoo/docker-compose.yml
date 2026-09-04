@@ -17,7 +17,7 @@ services:
     environment:
       POSTGRES_DB: postgres
       POSTGRES_USER: odoo
-      POSTGRES_PASSWORD: ${DB_PASSWORD:3VhQ2VatN80WyTowGc8vSww4XaCNFef2wynGVDNligc}
+      POSTGRES_PASSWORD: "3VhQ2VatN80WyTowGc8vSww4XaCNFef2wynGVDNligc"
     volumes:
       - odoo-db:/var/lib/postgresql/data
     restart: unless-stopped
@@ -25,11 +25,11 @@ services:
   odoo:
     image: odoo:19                       # versão 19; troque para odoo:18 se preferir
     depends_on:
-      - odoo-db
+      - crm_odoo-db
     environment:
-      HOST: odoo-db
+      HOST: crm_odoo-db
       USER: odoo
-      PASSWORD: ${DB_PASSWORD:3VhQ2VatN80WyTowGc8vSww4XaCNFef2wynGVDNligc}
+      PASSWORD: "3VhQ2VatN80WyTowGc8vSww4XaCNFef2wynGVDNligc"
     command: odoo --proxy-mode --workers=0 --max-cron-threads=1
     # SEM 'ports:' — no EasyPanel a exposição é via Domains (Traefik alcança o container
     # na porta interna 8069 e faz o HTTPS). Publicar porta na mão gera aviso/conflito.
