@@ -1,38 +1,46 @@
-# PHI CRM — Odoo Community + PostgreSQL
-# Feito para DEPLOY VIA GIT no EasyPanel (Fonte = Git → docker-compose.yml).
+# PHI CRM — Odoo Community + PostgreSQL (AUTOSSUFICIENTE)
+# Deploy VIA GIT no EasyPanel (Fonte = Git → docker-compose.yml).
 #
 # Preencher no EasyPanel:
 #   URL do Repositório : git@github.com:olavofranzin/phi.git   (SSH — repo é privado)
 #   Ramo               : claude/consolidacao-2026-08
 #   Caminho de Build   : docs/comercial/odoo
 #   Arquivo Compose    : docker-compose.yml
-#   (clicar "Gerar Chave SSH" e adicionar a chave em GitHub → repo phi → Settings → Deploy keys)
 #
-# DB user = 'odoo' (NÃO 'postgres') — evita o erro "Using the database user 'postgres' is a security risk".
-# DB_PASSWORD tem um default de TESTE; troque em produção (o Postgres NÃO fica exposto à internet).
+# IMPORTANTE (o que mudou e por quê):
+# - O PRÓPRIO compose sobe o banco (serviço `db`). NÃO usar o Postgres separado do painel
+#   (aquele com usuário `postgres`) — o Odoo RECUSA o usuário `postgres`. Aqui o banco já
+#   nasce com o usuário `odoo`.
+# - Volume `odoo-db-v2` é NOVO de propósito: garante que o Postgres inicialize do zero com o
+#   usuário/senha abaixo (o volume antigo tinha a senha "presa" e dava "password auth failed").
+# - Se você criou um serviço Postgres separado no EasyPanel (crm_odoo-db), pode APAGAR depois
+#   que isto subir — libera RAM. Este compose não depende dele.
+# - Segurança: senha em texto = provisória (repo é privado, Postgres não fica exposto). Depois
+#   trocamos por variável de ambiente do EasyPanel + senha nova.
 
 services:
-  odoo-db:
+  db:
     image: postgres:16
     environment:
       POSTGRES_DB: postgres
       POSTGRES_USER: odoo
       POSTGRES_PASSWORD: "3VhQ2VatN80WyTowGc8vSww4XaCNFef2wynGVDNligc"
     volumes:
-      - odoo-db:/var/lib/postgresql/data
+      - odoo-db-v2:/var/lib/postgresql/data
     restart: unless-stopped
 
   odoo:
     image: odoo:19                       # versão 19; troque para odoo:18 se preferir
     depends_on:
-      - crm_odoo-db
+      - db
     environment:
-      HOST: crm_odoo-db
+      HOST: db                           # nome do serviço do banco NESTE compose
+      PORT: "5432"
       USER: odoo
       PASSWORD: "3VhQ2VatN80WyTowGc8vSww4XaCNFef2wynGVDNligc"
     command: odoo --proxy-mode --workers=0 --max-cron-threads=1
     # SEM 'ports:' — no EasyPanel a exposição é via Domains (Traefik alcança o container
-    # na porta interna 8069 e faz o HTTPS). Publicar porta na mão gera aviso/conflito.
+    # na porta interna 8069 e faz o HTTPS).
     expose:
       - "8069"
     volumes:
@@ -41,5 +49,5 @@ services:
     restart: unless-stopped
 
 volumes:
-  odoo-db:
+  odoo-db-v2:
   odoo-web:
