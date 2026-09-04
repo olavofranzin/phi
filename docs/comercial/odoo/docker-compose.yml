@@ -1,45 +1,43 @@
-# PHI CRM — Odoo Community + PostgreSQL (F1 do plano de substituição de CRM)
-# Uso: easypanel (importar como serviço "Compose") OU VPS com `docker compose up -d`.
-# No easypanel, o proxy reverso + HTTPS + domínio são do próprio painel — NÃO subir Traefik aqui.
-# Numa VPS crua, adicionar Traefik/Nginx na frente do serviço `odoo`.
+# PHI CRM — Odoo Community + PostgreSQL
+# Feito para DEPLOY VIA GIT no EasyPanel (Fonte = Git → docker-compose.yml).
 #
-# SEGREDOS: troque os ${...} por variáveis de ambiente do easypanel (ou um .env fora do git).
-# NUNCA commitar senhas reais.
+# Preencher no EasyPanel:
+#   URL do Repositório : git@github.com:olavofranzin/phi.git   (SSH — repo é privado)
+#   Ramo               : claude/consolidacao-2026-08
+#   Caminho de Build   : docs/comercial/odoo
+#   Arquivo Compose    : docker-compose.yml
+#   (clicar "Gerar Chave SSH" e adicionar a chave em GitHub → repo phi → Settings → Deploy keys)
+#
+# DB user = 'odoo' (NÃO 'postgres') — evita o erro "Using the database user 'postgres' is a security risk".
+# DB_PASSWORD tem um default de TESTE; troque em produção (o Postgres NÃO fica exposto à internet).
 
 services:
-  db:
-    image: postgres:17
+  odoo-db:
+    image: postgres:16
     environment:
-      POSTGRES_DB: postgres          # Odoo gerencia seus próprios bancos; mantenha 'postgres'
-      POSTGRES_USER: ${DB_USER:-odoo}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:?defina DB_PASSWORD}
+      POSTGRES_DB: postgres
+      POSTGRES_USER: odoo
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-phi_odoo_test_pw}
     volumes:
-      - odoo-db-data:/var/lib/postgresql/data
+      - odoo-db:/var/lib/postgresql/data
     restart: unless-stopped
-    # NÃO publicar porta do Postgres para a internet (só rede interna do compose).
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-odoo}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   odoo:
-    image: odoo:19                    # confirmar versão (18 recomendado; 19 existe)
+    image: odoo:19                       # versão 19; troque para odoo:18 se preferir
     depends_on:
-      db:
-        condition: service_healthy
+      - odoo-db
     environment:
-      HOST: db
-      USER: ${DB_USER:-odoo}
-      PASSWORD: ${DB_PASSWORD:?defina DB_PASSWORD}
-    volumes:
-      - odoo-web-data:/var/lib/odoo   # filestore (anexos) — ENTRA no backup junto com o db
-      - ./config:/etc/odoo            # odoo.conf (admin_passwd, proxy_mode, list_db)
-      - ./addons:/mnt/extra-addons    # módulo custom PHI (F2) — versionado em git
+      HOST: odoo-db
+      USER: odoo
+      PASSWORD: ${DB_PASSWORD:-phi_odoo_test_pw}
+    command: odoo --proxy-mode --workers=0 --max-cron-threads=1
     ports:
-      - "8069:8069"                   # no easypanel, mapear o domínio para esta porta
+      - "8069:8069"                      # no EasyPanel, apontar o domínio crm. para esta porta
+    volumes:
+      - odoo-web:/var/lib/odoo           # filestore (anexos)
+      - ./addons:/mnt/extra-addons       # módulo custom PHI (F2) — viaja junto pelo Git
     restart: unless-stopped
 
 volumes:
-  odoo-db-data:
-  odoo-web-data:
+  odoo-db:
+  odoo-web:
