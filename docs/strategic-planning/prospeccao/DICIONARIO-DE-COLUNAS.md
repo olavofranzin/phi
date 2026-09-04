@@ -112,8 +112,8 @@ horas — troca latência média de 3 h por segundos, e some com a varredura int
 
 | Coluna | Função na prospecção |
 |---|---|
-| `status hubspot` | Rótulo do estágio (ex.: "Prospectado"). Onde o lead está no funil. |
-| `hubspot_status` | Aberto / Vencido / Perdido — o desfecho, em três estados. |
+| `status_crm` | Rótulo do estágio traduzido (Prospectado, Reunião Agendada, **Vencido**, **Perdido**). Onde o lead está no funil, e como ele terminou. |
+
 | `motivo_perda` | **Por que perdemos.** É o dado que ensina o score a não priorizar quem não fecha. |
 | `motivo_ganho` | Por que ganhamos. Mesma função, do lado bom. |
 | `valor` | Valor do deal. Sem ele o score prioriza, mas não estima **valor esperado**. |
@@ -358,3 +358,69 @@ só enriquece o lead dele, **ele melhora a régua de todos os outros**.
 `ipc` duplica `potencial_comercial` e `score_tecnico` não tem definição nova. Preencher coluna
 só porque ela existe é exatamente o defeito que este trabalho corrigiu. Recomendação: aposentar
 as duas.
+
+---
+
+## Adendo 2026-09-03 (4): três colunas saem, e `status hubspot` vira `status_crm`
+
+Decisão do Olavo. A planilha ele edita à mão; os workflows já estão prontos.
+
+### O que sai
+
+| Coluna | Referências em workflows | Veredicto |
+|---|---|---|
+| `score_tecnico` | **zero** | some sem consequência |
+| `ipc` | **zero** | some sem consequência |
+| `hubspot_status` | **3, no Sync** | tratadas — ver abaixo |
+
+### ⚠️ Eu levantei uma objeção que o código desmentiu
+
+Argumentei que apagar `hubspot_status` perderia o desfecho, porque era a única coluna com
+Aberto / Vencido / Perdido. Ler o `Derivar Campos de Aprendizado` mostrou que não:
+
+```js
+'closedwon': 'Vencido',
+'closedlost': 'Perdido',
+```
+
+O `STAGE_LABELS` **já traduz o estágio para as mesmas palavras**, e é isso que vai para
+`status_crm`. O desfecho não se perde. A objeção não se aplicava — e só dá para saber lendo o
+código, não o nome da coluna.
+
+### O que mudou nos workflows
+
+**Sync (`WRFU2NM8rLJU7bRT`)** — `hubspot_status` saiu do mapeamento e do schema;
+`status hubspot` virou **`status_crm`**, recebendo o mesmo `hubspot_estagio` de antes. O Code
+node continua derivando o desfecho internamente, porque `acerto_previsao` e `dias_no_funil`
+dependem dele.
+
+**P3 (`V0f80LU1ZH8PUtdc`)** — a regra que tira os ganhos do denominador lia as duas colunas;
+agora lê `status_crm`, com `motivo_ganho` como segunda evidência para o caso de alguém mudar o
+rótulo no HubSpot sem avisar. O diagnóstico virou `_status_crm_vistos`.
+
+### ⚠️ Ordem importa, e há uma janela de silêncio
+
+O nó de gravação do Sync tem `onError: continueRegularOutput`. Entre agora e o momento em que
+a planilha for renomeada, **ele vai tentar escrever numa coluna `status_crm` que ainda não
+existe — e não vai reclamar.** A cada 6 h, sem erro visível.
+
+Fazer as edições da planilha logo. E vale considerar trocar esse `onError` para
+`stopWorkflow`: escrita que falha calada é a família de defeito que esta frente passou a
+sessão inteira eliminando.
+
+### ⚠️ O guarda-schema vai alarmar todo dia às 08:00
+
+Ele compara o cabeçalho real com uma lista canônica guardada na Data Table
+`gbp_leads_schema_canonico` (`QIrDCkhppfc0FfOH`) e manda Telegram para cada coluna faltante.
+Só alerta — não aborta, não restaura. Mas se `score_tecnico`, `ipc`, `hubspot_status` ou
+`status hubspot` estiverem naquela lista, o alerta chega **todo dia, para sempre**.
+
+Não tenho ferramenta para editar linhas de Data Table: isso é na interface do n8n.
+
+### Roteiro para o Olavo
+
+1. n8n → Data Table `gbp_leads_schema_canonico`: apagar as linhas `score_tecnico`, `ipc`,
+   `hubspot_status`; trocar `status hubspot` por `status_crm`.
+2. Planilha: renomear `status hubspot` → `status_crm`, e apagar as três colunas.
+3. Rodar o P3 na mão e conferir `_status_crm_vistos` — se vier tudo `(vazio)`, a renomeação
+   não pegou.
