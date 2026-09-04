@@ -8,7 +8,7 @@
 
 services:
   db:
-    image: postgres:16
+    image: postgres:17
     environment:
       POSTGRES_DB: postgres          # Odoo gerencia seus próprios bancos; mantenha 'postgres'
       POSTGRES_USER: ${DB_USER:-odoo}
@@ -24,7 +24,7 @@ services:
       retries: 5
 
   odoo:
-    image: odoo:18                    # confirmar versão (18 recomendado; 19 existe)
+    image: odoo:19                    # confirmar versão (18 recomendado; 19 existe)
     depends_on:
       db:
         condition: service_healthy
