@@ -47,3 +47,26 @@ odoo/
 ## ⚠️ Notas de versão
 - `odoo:18` é a recomendação (recente + estável). Se preferir **19**, trocar a tag na imagem e
   revisar o manifesto do módulo F2 (`version`). Postgres 16 atende 18/19.
+
+---
+
+## Atualização 2026-09-04 — realidade da VPS (KVM 1, id `1158274`)
+- **Deploy pela API do Hostinger (`VPS_createNewProjectV1`) NÃO funciona nesta VPS** — retornou
+  **400** (2 tentativas, formatos diferentes). Motivo: o **EasyPanel foi instalado manualmente** e é
+  ele quem gerencia o Docker; o recurso de "projeto Docker" do painel Hostinger não está ativo aqui
+  (histórico da VM não tem nenhuma ação de Docker). **Conclusão: instalar pelo EasyPanel.**
+- **Recursos:** RAM ~2,8 GB usados de 4 GB → **~1,2 GB livre** (apertado; Odoo threaded + Postgres
+  ≈ 0,6–1 GB). Disco/CPU folgados. Decidido testar assim mesmo; **se o n8n sofrer, remover o serviço**.
+- **Firewall:** nenhum ativo → porta 8069 abre sem mexer.
+- **DNS:** `crm.franzcomunicacao.com` → **A** → `72.61.62.203` (a VPS) — criado e confirmado.
+
+### Receita de instalação no EasyPanel (onde o n8n já roda)
+1. **Create Service → App** · nome `odoo` · **Image** `odoo:18`.
+2. **Create Service → Postgres** (template) — anotar host/usuário/senha/DB gerados.
+3. `odoo` → **Environment:** `HOST=<serviço-postgres>`, `USER=<pg user>`, `PASSWORD=<pg senha>`.
+4. `odoo` → **Deploy → Command:** `odoo --workers=0 --max-cron-threads=1` (leve, p/ a RAM apertada).
+5. `odoo` → **Mounts → Volume** em `/var/lib/odoo` (anexos/filestore — entra no backup).
+6. `odoo` → **Domains:** `crm.franzcomunicacao.com` → porta **8069** → o EasyPanel emite o HTTPS
+   (Let's Encrypt) sozinho, agora que o DNS resolve.
+7. Abrir o domínio → criar o banco (nome ex.: `phi_crm`) + admin → instalar o app **CRM**.
+> Rollback: apagar o serviço `odoo` (e o Postgres) no EasyPanel. Vigiar a RAM (métricas via MCP Hostinger).
