@@ -31,8 +31,10 @@ services:
       USER: odoo
       PASSWORD: ${DB_PASSWORD:-phi_odoo_test_pw}
     command: odoo --proxy-mode --workers=0 --max-cron-threads=1
-    ports:
-      - "8069:8069"                      # no EasyPanel, apontar o domínio crm. para esta porta
+    # SEM 'ports:' — no EasyPanel a exposição é via Domains (Traefik alcança o container
+    # na porta interna 8069 e faz o HTTPS). Publicar porta na mão gera aviso/conflito.
+    expose:
+      - "8069"
     volumes:
       - odoo-web:/var/lib/odoo           # filestore (anexos)
       - ./addons:/mnt/extra-addons       # módulo custom PHI (F2) — viaja junto pelo Git
