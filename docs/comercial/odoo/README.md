@@ -1,15 +1,79 @@
-# Odoo CRM (PHI) — deploy F1 (Community, easypanel)
+# Odoo CRM (PHI) — deploy
 
-> ## ✅ STATUS 2026-09-05 — F1 CONCLUÍDO
-> - Odoo 19 Community **no ar** em `https://crm.franzcomunicacao.com`; app **CRM** instalado.
-> - **Instalado pelo TEMPLATE do EasyPanel** (não pelo `docker-compose.yml` deste diretório, que
->   está **obsoleto**/histórico). Banco `phi_crm` em Postgres separado (serviço `crm_odoo-db`,
->   usuário `odoo`). HTTPS pelo EasyPanel.
-> - **Segurança:** senha-mestra forte; gerenciador de bancos com redirecionamento (o `list_db=False`
->   "de verdade" ficou pendente — fazer via `odoo.conf`, **nunca** pelo campo Command, que quebra o boot).
+> ## STATUS 2026-09-05 — F1 no ar, MIGRANDO para deploy por Git
+> - Odoo 19 Community no ar em `https://crm.franzcomunicacao.com`, app **CRM** instalado.
+> - **Instalação atual:** template do EasyPanel (banco `phi_crm` no serviço `crm_odoo-db`).
+> - **Decisão (Olavo, 2026-09-05):** trocar para **deploy por Git via `docker-compose.yml`**
+>   deste diretório. Motivo: o F2 precisa que a pasta `addons/` viaje junto com o código —
+>   pelo template o módulo não viaja (não há git-deploy) e cada atualização vira trabalho
+>   manual. **Não há dado no CRM ainda**, então recriar do zero não custa nada.
+> - O `docker-compose.yml` foi **reescrito** (2026-09-05) — ver §"O que estava errado" abaixo.
 > - **Backup:** diário da VPS (Hostinger).
-> - **Próximo:** F2 — módulo custom PHI. Brief: `docs/handoff/2026-09-05-odoo-f2-modulo-phi-subchat-brief.md`.
+> - **Próximo:** F2 — módulo custom `phi_crm`. Brief: `docs/handoff/2026-09-05-odoo-f2-modulo-phi-subchat-brief.md`.
 
+---
+
+## Deploy por Git (o caminho atual)
+
+### O que estava errado no compose anterior
+Diagnóstico feito lendo o arquivo — os dois primeiros são **fato** (dá para ver no diff);
+o terceiro é **hipótese**, não deu para confirmar sem reproduzir:
+
+1. **Corrida de inicialização (fato).** Tinha `depends_on: [db]` puro, que só espera o
+   container do Postgres **iniciar** — não espera ele **aceitar conexão**. O Odoo subia
+   antes e falhava. Corrigido com `healthcheck` (`pg_isready`) + `depends_on.condition:
+   service_healthy`.
+2. **Senha em texto no git (fato).** A senha do Postgres estava escrita no arquivo, que
+   está versionado. Agora vem de `${DB_PASSWORD}`, e o deploy falha com mensagem clara se
+   a variável não existir — em vez de subir com senha vazia e dar
+   `password authentication failed`.
+3. **`list_db = False` antes da hora (hipótese).** Se o `config/odoo.conf` for montado
+   antes do banco existir, a tela de criação some e o Odoo responde "Database not found".
+   Isso **parece** falha de conexão com o banco, mas não é. Por isso o mount da conf agora
+   é a **Etapa 2**, explicitamente comentado no compose.
+
+> A tentativa mais antiga (apontar o Odoo para o Postgres do painel, cujo superusuário é
+> `postgres`) já tinha sido abandonada — por isso este compose sobe o **próprio** banco,
+> com o usuário `odoo`.
+
+### Passo a passo
+
+**Etapa 0 — gerar uma senha nova.**
+A senha antiga está no histórico do git; considere-a queimada. Gere outra
+(`openssl rand -base64 32`) e guarde no gerenciador de senhas.
+
+**Etapa 1 — subir e criar o banco.**
+1. EasyPanel → **Create Service → Compose** · Fonte = **Git**
+   - Repositório: `git@github.com:olavofranzin/phi.git` (SSH — repo privado)
+   - Ramo: `claude/consolidacao-2026-08`
+   - Caminho de Build: `docs/comercial/odoo`
+   - Arquivo Compose: `docker-compose.yml`
+2. **Environment:** `DB_PASSWORD=<a senha da Etapa 0>`.
+3. **Domains:** `crm.franzcomunicacao.com` → serviço `odoo` → porta **8069**.
+4. Deploy. Conferir no log do serviço `odoo` a linha `addons paths:` — precisa conter
+   `/mnt/extra-addons`.
+5. Abrir o domínio → criar o banco **`phi_crm`** (nome exato — o `dbfilter` da Etapa 2
+   depende disso) → instalar o app **CRM**.
+6. Apagar o serviço antigo `crm_odoo-db` e o Odoo do template (libera RAM).
+
+**Etapa 2 — trancar.**
+1. Descomentar a linha `./config/odoo.conf:/etc/odoo/odoo.conf:ro` no `docker-compose.yml`.
+2. Commit + push + redeploy.
+3. Conferir: abrir `/web/database/manager` deve dar 404/redirect, não a tela de gerenciamento.
+
+### Instalar / atualizar o módulo `phi_crm` (F2)
+A pasta `addons/` deste diretório é montada em `/mnt/extra-addons`. Então:
+- **Instalar:** Modo Desenvolvedor → Apps → *Atualizar Lista de Apps* → "PHI CRM" → Instalar.
+- **Atualizar depois de um push:** redeploy do serviço no EasyPanel (puxa o git de novo) →
+  Apps → *Atualizar Lista de Apps* → botão **Atualizar** no módulo.
+
+### Backup (não pular)
+`pg_dump` do banco **+** o volume `odoo-web` (filestore) — **os dois** — para fora da VPS,
+e **testar a restauração**.
+
+---
+
+## Histórico
 
 > Artefatos da **Fase 1** do `../decisao-substituicao-crm-hubspot-para-odoo.md`. Sobem o **Odoo 18
 > Community + PostgreSQL** no easypanel que já roda o n8n. **Segredos ficam fora do git** (variáveis
