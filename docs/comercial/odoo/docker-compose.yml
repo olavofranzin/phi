@@ -45,14 +45,13 @@ services:
     restart: unless-stopped
 
   odoo:
-    # O EasyPanel roteia o dominio para o host `crm_odoo` (padrao <projeto>_<servico>,
-    # que ele usa para servico do tipo App). Em servico do tipo Compose os containers
-    # nascem como crm_odoo-odoo-1 e o host `crm_odoo` NAO EXISTE — o Traefik nao
-    # resolve e devolve "Service is not reachable", mesmo com o Odoo no ar.
-    # Fixar o nome faz o container atender pelo que o painel ja procura.
-    # PRE-REQUISITO: o servico Odoo antigo (do template) precisa estar APAGADO, senao
-    # o nome esta em uso e o deploy falha com "container name already in use".
-    container_name: crm_odoo
+    # NAO usar container_name nem ports aqui. O repositorio oficial de composes do
+    # EasyPanel (github.com/easypanel-io/compose) remove os dois "to ensure
+    # compatibility with the Easypanel environment", e o painel avisa no deploy que
+    # container_name "might cause conflicts". Tentamos fixar container_name: crm_odoo
+    # em 05/09/2026 para casar com o alvo do proxy — nao resolveu o roteamento e
+    # contraria o padrao, entao foi revertido. O roteamento se resolve na aba
+    # Domains do painel, nao aqui.
     image: odoo:19
     depends_on:
       db:
@@ -72,9 +71,8 @@ services:
     #   nele. Fixar agora evita uma quebra silenciosa no upgrade.
     # workers=0 (modo threaded) + 1 cron thread: a VPS tem ~1,2 GB livre.
     command: odoo --proxy-mode --http-interface=0.0.0.0 --workers=0 --max-cron-threads=1
-    # Sem `ports:` — no EasyPanel a exposição é pela aba Domains (Traefik alcança 8069 na rede interna).
-    expose:
-      - "8069"
+    # Sem `ports:` e sem `expose:` — o padrao dos composes oficiais do EasyPanel.
+    # A exposicao e pela aba Domains do painel; o Odoo escuta na 8069 dentro do container.
     volumes:
       - odoo-web:/var/lib/odoo                 # filestore/anexos — ENTRA NO BACKUP
       - ./addons:/mnt/extra-addons:ro          # módulo phi_crm (F2) — viaja junto pelo Git
