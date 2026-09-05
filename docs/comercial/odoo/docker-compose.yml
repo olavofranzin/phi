@@ -45,6 +45,14 @@ services:
     restart: unless-stopped
 
   odoo:
+    # O EasyPanel roteia o dominio para o host `crm_odoo` (padrao <projeto>_<servico>,
+    # que ele usa para servico do tipo App). Em servico do tipo Compose os containers
+    # nascem como crm_odoo-odoo-1 e o host `crm_odoo` NAO EXISTE — o Traefik nao
+    # resolve e devolve "Service is not reachable", mesmo com o Odoo no ar.
+    # Fixar o nome faz o container atender pelo que o painel ja procura.
+    # PRE-REQUISITO: o servico Odoo antigo (do template) precisa estar APAGADO, senao
+    # o nome esta em uso e o deploy falha com "container name already in use".
+    container_name: crm_odoo
     image: odoo:19
     depends_on:
       db:

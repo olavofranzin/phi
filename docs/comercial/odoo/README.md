@@ -84,6 +84,25 @@ A senha antiga está no histórico do git; considere-a queimada. Gere outra
    depende disso) → instalar o app **CRM**.
 6. Apagar o serviço antigo `crm_odoo-db` e o Odoo do template (libera RAM).
 
+> ⚠️ **Antes do primeiro deploy: apagar o serviço Odoo antigo (o do template).**
+> Ele ocupa o nome `crm_odoo`, que o compose agora reivindica. Com os dois no ar o
+> deploy falha com `container name "/crm_odoo" is already in use`.
+
+### Por que o domínio dava "Service is not reachable"
+
+O EasyPanel roteia `crm.franzcomunicacao.com` para o host **`crm_odoo`** —
+padrão `<projeto>_<serviço>`, que ele usa em serviço do tipo **App**. Em serviço
+do tipo **Compose** os containers nascem como `crm_odoo-odoo-1`, e o host
+`crm_odoo` simplesmente **não existe**: o Traefik não resolve e devolve
+"Service is not reachable" — mesmo com o Odoo no ar e saudável.
+
+Foi isso que bloqueou todas as tentativas de instalar por Git. Não era o
+compose, nem rede, nem o Odoo. Era o domínio apontando para um nome que deixou
+de existir quando o serviço virou Compose.
+
+Corrigido com `container_name: crm_odoo` no serviço `odoo`: o container passa a
+atender pelo nome que o painel já procura, sem mexer na configuração de Domains.
+
 **Etapa 2 — trancar.**
 1. Descomentar a linha `./config/odoo.conf:/etc/odoo/odoo.conf:ro` no `docker-compose.yml`.
 2. Commit + push + redeploy.
