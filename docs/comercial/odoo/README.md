@@ -8,6 +8,10 @@
 >   pelo template o módulo não viaja (não há git-deploy) e cada atualização vira trabalho
 >   manual. **Não há dado no CRM ainda**, então recriar do zero não custa nada.
 > - O `docker-compose.yml` foi **reescrito** (2026-09-05) — ver §"O que estava errado" abaixo.
+> - **05/09/2026 17:17 — o compose subiu.** Confirmado no log de boot: Odoo
+>   `19.0-20260817` sobre **PostgreSQL 17.11**, conectado como `odoo@db:5432`, e
+>   `/mnt/extra-addons` presente no `addons paths` (o módulo `phi_crm` é visível).
+>   Falta criar o banco `phi_crm` e instalar os apps.
 > - **Backup:** diário da VPS (Hostinger).
 > - **Próximo:** F2 — módulo custom `phi_crm`. Brief: `docs/handoff/2026-09-05-odoo-f2-modulo-phi-subchat-brief.md`.
 

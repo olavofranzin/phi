@@ -58,8 +58,12 @@ services:
       USER: odoo
       PASSWORD: ${DB_PASSWORD:?defina DB_PASSWORD no EasyPanel ou no .env}
     # --proxy-mode: o HTTPS termina no Traefik do EasyPanel.
+    # --http-interface=0.0.0.0: explicito de proposito. Hoje ja e o default, mas
+    #   o Odoo avisa no boot que na versao 20 passa a ser 127.0.0.1 — e ai o
+    #   Traefik, que alcanca o container pela rede do Docker, deixaria de chegar
+    #   nele. Fixar agora evita uma quebra silenciosa no upgrade.
     # workers=0 (modo threaded) + 1 cron thread: a VPS tem ~1,2 GB livre.
-    command: odoo --proxy-mode --workers=0 --max-cron-threads=1
+    command: odoo --proxy-mode --http-interface=0.0.0.0 --workers=0 --max-cron-threads=1
     # Sem `ports:` — no EasyPanel a exposição é pela aba Domains (Traefik alcança 8069 na rede interna).
     expose:
       - "8069"
