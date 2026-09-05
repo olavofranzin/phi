@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!--
+      Layout do lead/oportunidade (card-gbp-record-spec.md §1 e §4).
+
+      Regra de limpeza: o CARD carrega so numero/enum/bool; todo texto longo vai
+      para a aba "IA / Diagnostico". A visao geral fica limpa.
+
+      Guardrail: tudo aqui EXIBE. Nenhuma view escreve propriedade nem move o
+      negocio de estagio.
+
+      Ancoragem por xpath em //notebook (e nao num campo especifico da view
+      nativa) de proposito: sobrevive a mudanca de campo entre versoes do Odoo.
+    -->
+    <record id="crm_lead_view_form_phi" model="ir.ui.view">
+        <field name="name">crm.lead.form.phi</field>
+        <field name="model">crm.lead</field>
+        <field name="inherit_id" ref="crm.crm_lead_view_form"/>
+        <field name="arch" type="xml">
+
+            <xpath expr="//notebook" position="before">
+
+                <!-- Estado vazio discreto: lead que nao veio do fluxo GBP.
+                     Degradacao graciosa (card-spec §3.5) - aviso, nunca erro. -->
+                <div class="alert alert-light text-muted mb-2"
+                     role="status"
+                     invisible="gbp_score_atualizado_em">
+                    Sem diagnostico GBP neste registro.
+                </div>
+
+                <!-- ============ CARD: Diagnostico GBP ============ -->
+                <!-- So aparece quando o PHI rodou. Com o marcador vazio os
+                     Integer leriam 0 e um 0 forjado mentiria (N/D honesto). -->
+                <group string="Diagnostico GBP"
+                       name="phi_card_gbp"
+                       invisible="not gbp_score_atualizado_em">
+
+                    <!-- O que decide -->
+                    <group name="phi_gbp_decisao" string="Decisao">
+                        <field name="gbp_potencial_comercial"
+                               widget="progressbar"/>
+                        <field name="gbp_oferta_recomendada" widget="badge"/>
+                        <field name="proxima_acao_aceite"
+                               widget="badge"
+                               decoration-success="proxima_acao_aceite == 'aceita'"
+                               decoration-danger="proxima_acao_aceite == 'rejeitada'"
+                               decoration-warning="proxima_acao_aceite == 'pendente'"/>
+                    </group>
+
+                    <!-- IPC x Score Tecnico: rotular a diferenca (card-spec §4) -->
+                    <group name="phi_gbp_indices" string="Indices">
+                        <field name="gbp_ipc"/>
+                        <field name="gbp_score_tecnico"/>
+                        <div colspan="2" class="text-muted small">
+                            IPC = oportunidade de venda (quanto ha a ganhar).
+                            Score Tecnico = quao otimizado o perfil ja esta.
+                            IPC baixo + Score alto = perfil forte, pouco gap a vender.
+                        </div>
+                    </group>
+
+                    <!--
+                      As 6 dimensoes com banda de cor:
+                        forte >= 70 (verde) . medio 40-69 (ambar) . fraco < 40 (vermelho)
+                      widget="badge" mantem o NUMERO sempre visivel - a cor nunca e
+                      o unico sinal (card-spec §4, requisito de acessibilidade).
+                    -->
+                    <group name="phi_gbp_dimensoes" string="Dimensoes (forte &#8805; 70 . medio 40-69 . fraco &lt; 40)">
+                        <field name="gbp_dim_saude" widget="badge"
+                               decoration-success="gbp_dim_saude &gt;= 70"
+                               decoration-warning="gbp_dim_saude &gt;= 40 and gbp_dim_saude &lt; 70"
+                               decoration-danger="gbp_dim_saude &lt; 40"/>
+                        <field name="gbp_dim_seo" widget="badge"
+                               decoration-success="gbp_dim_seo &gt;= 70"
+                               decoration-warning="gbp_dim_seo &gt;= 40 and gbp_dim_seo &lt; 70"
+                               decoration-danger="gbp_dim_seo &lt; 40"/>
+                        <field name="gbp_dim_autoridade" widget="badge"
+                               decoration-success="gbp_dim_autoridade &gt;= 70"
+                               decoration-warning="gbp_dim_autoridade &gt;= 40 and gbp_dim_autoridade &lt; 70"
+                               decoration-danger="gbp_dim_autoridade &lt; 40"/>
+                        <field name="gbp_dim_conversao" widget="badge"
+                               decoration-success="gbp_dim_conversao &gt;= 70"
+                               decoration-warning="gbp_dim_conversao &gt;= 40 and gbp_dim_conversao &lt; 70"
+                               decoration-danger="gbp_dim_conversao &lt; 40"/>
+                        <field name="gbp_dim_engajamento" widget="badge"
+                               decoration-success="gbp_dim_engajamento &gt;= 70"
+                               decoration-warning="gbp_dim_engajamento &gt;= 40 and gbp_dim_engajamento &lt; 70"
+                               decoration-danger="gbp_dim_engajamento &lt; 40"/>
+                        <field name="gbp_dim_conteudo" widget="badge"
+                               decoration-success="gbp_dim_conteudo &gt;= 70"
+                               decoration-warning="gbp_dim_conteudo &gt;= 40 and gbp_dim_conteudo &lt; 70"
+                               decoration-danger="gbp_dim_conteudo &lt; 40"/>
+                    </group>
+
+                    <!-- Sinais de ouro -->
+                    <group name="phi_gbp_sinais" string="Sinais">
+                        <field name="gbp_nao_reivindicado"/>
+                        <field name="gbp_site_tipo" widget="badge"/>
+                        <field name="gbp_flags_score"/>
+                        <field name="gbp_score_atualizado_em" readonly="1"/>
+                    </group>
+                </group>
+
+                <!-- ============ Governanca do ciclo ============ -->
+                <group string="Governanca do Ciclo" name="phi_governanca">
+                    <group>
+                        <field name="lead_status"/>
+                        <field name="motivo_rejeicao_mql"
+                               invisible="proxima_acao_aceite != 'rejeitada'"
+                               required="proxima_acao_aceite == 'rejeitada'"/>
+                        <field name="proxima_acao_data"/>
+                    </group>
+                    <group>
+                        <field name="data_primeiro_contato"/>
+                        <field name="tentativas_contato"/>
+                    </group>
+                </group>
+
+            </xpath>
+
+            <!-- ============ Aba IA / Diagnostico (os textoes) ============ -->
+            <!-- Ordem conforme card-gbp-record-spec.md §2.1. -->
+            <xpath expr="//notebook" position="inside">
+                <page string="IA / Diagnostico" name="phi_ia_diagnostico">
+                    <group>
+                        <field name="ia_analise_gbp" nolabel="0"/>
+                        <field name="ia_proxima_acao_recomendada"/>
+                        <field name="ia_abordagem_sugerida"/>
+                        <field name="ia_analise_site"/>
+                        <field name="ia_analise_instagram"/>
+                        <field name="ia_dados_enriquecimento"/>
+                        <field name="followup"/>
+                    </group>
+                </page>
+            </xpath>
+
+        </field>
+    </record>
+
+</odoo>
