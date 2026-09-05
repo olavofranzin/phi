@@ -18,7 +18,12 @@
 
 services:
   db:
-    image: postgres:16
+    # ATENCAO ao trocar de major do Postgres (17 -> 18, etc): o diretorio de
+    # dados e especifico da major. Se o volume `odoo-db-v2` ja tiver sido
+    # inicializado por outra major, o container sobe e MORRE com
+    # "database files are incompatible with server". Nesse caso: pg_dump antes,
+    # ou volume novo. Trocar so vale de graca enquanto o volume nao existe.
+    image: postgres:17
     environment:
       POSTGRES_DB: postgres
       POSTGRES_USER: odoo

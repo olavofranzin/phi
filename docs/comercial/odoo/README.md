@@ -13,6 +13,24 @@
 
 ---
 
+## Versões (fonte única — o que vale é o `docker-compose.yml`)
+
+| Componente | Versão | Onde está declarado |
+|---|---|---|
+| Odoo | **19** (Community) | `docker-compose.yml` → `image: odoo:19` |
+| PostgreSQL | **17** | `docker-compose.yml` → `image: postgres:17` |
+| Manifesto do módulo | `19.0.1.0.0` | `addons/phi_crm/__manifest__.py` |
+
+⚠️ **Como o deploy é por Git, editar o compose à mão no servidor não adianta** —
+o próximo deploy sobrescreve. Versão se troca **no repositório**, com commit.
+
+⚠️ **Trocar a major do Postgres depois que o banco existir quebra o boot**
+(`database files are incompatible with server`) — o diretório de dados é
+específico da major. Enquanto o volume `odoo-db-v2` não existir, trocar é de
+graça; depois, exige `pg_dump` ou volume novo.
+
+---
+
 ## Deploy por Git (o caminho atual)
 
 ### O que estava errado no compose anterior
@@ -74,6 +92,12 @@ e **testar a restauração**.
 ---
 
 ## Histórico
+
+> ⚠️ **Tudo daqui para baixo é registro do que foi planejado/tentado antes —
+> NÃO é instrução.** As versões citadas (`odoo:18`, Postgres 16) eram o plano da
+> Fase 1 e estão **superadas**: hoje valem as da tabela acima. Os passos de
+> instalação por template também estão superados pelo deploy por Git.
+> Mantido só para não perder o rastro das decisões.
 
 > Artefatos da **Fase 1** do `../decisao-substituicao-crm-hubspot-para-odoo.md`. Sobem o **Odoo 18
 > Community + PostgreSQL** no easypanel que já roda o n8n. **Segredos ficam fora do git** (variáveis
