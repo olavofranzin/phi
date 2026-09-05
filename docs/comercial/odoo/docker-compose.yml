@@ -1,3 +1,8 @@
+# ⚠️ OBSOLETO (2026-09-05): a instalação de produção foi feita pelo TEMPLATE do EasyPanel,
+# NÃO por este arquivo. O Odoo 19 + Postgres (crm_odoo-db) rodam via template; o banco phi_crm
+# está no ar em https://crm.franzcomunicacao.com. Este compose fica só como histórico/referência.
+# NÃO usar para deploy (redeployar por ele pode reintroduzir conflito de senha). Ver README.
+#
 # PHI CRM — Odoo Community + PostgreSQL (AUTOSSUFICIENTE)
 # Deploy VIA GIT no EasyPanel (Fonte = Git → docker-compose.yml).
 #

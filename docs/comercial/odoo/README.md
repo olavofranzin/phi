@@ -1,5 +1,16 @@
 # Odoo CRM (PHI) — deploy F1 (Community, easypanel)
 
+> ## ✅ STATUS 2026-09-05 — F1 CONCLUÍDO
+> - Odoo 19 Community **no ar** em `https://crm.franzcomunicacao.com`; app **CRM** instalado.
+> - **Instalado pelo TEMPLATE do EasyPanel** (não pelo `docker-compose.yml` deste diretório, que
+>   está **obsoleto**/histórico). Banco `phi_crm` em Postgres separado (serviço `crm_odoo-db`,
+>   usuário `odoo`). HTTPS pelo EasyPanel.
+> - **Segurança:** senha-mestra forte; gerenciador de bancos com redirecionamento (o `list_db=False`
+>   "de verdade" ficou pendente — fazer via `odoo.conf`, **nunca** pelo campo Command, que quebra o boot).
+> - **Backup:** diário da VPS (Hostinger).
+> - **Próximo:** F2 — módulo custom PHI. Brief: `docs/handoff/2026-09-05-odoo-f2-modulo-phi-subchat-brief.md`.
+
+
 > Artefatos da **Fase 1** do `../decisao-substituicao-crm-hubspot-para-odoo.md`. Sobem o **Odoo 18
 > Community + PostgreSQL** no easypanel que já roda o n8n. **Segredos ficam fora do git** (variáveis
 > do easypanel). Nada aqui foi provisionado — é o material pronto para o Olavo aplicar.
