@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+
+    <!--
+      Pipeline do PHI - 6 etapas.
+
+      POR QUE RENOMEIA EM VEZ DE CRIAR: o CRM do Odoo ja vem com 4 estagios de
+      fabrica (New, Qualified, Proposition, Won). Criar 6 novos deixaria 10 no
+      pipeline e daria limpeza manual. Aqui 4 sao reaproveitados pelo xmlid
+      nativo e 2 sao novos -> ficam exatamente 6, sem orfao.
+      (Se algum xmlid nativo nao existir nesta versao, o Odoo cria o registro em
+      vez de falhar: o modulo instala e sobra um estagio antigo para arquivar.)
+
+      NOMENCLATURA (docs/comercial/prospecção/pesquisa-jornada-lead-crm-agencias.md):
+        - anti-pattern #3: etapa nomeada pela ATIVIDADE do vendedor
+          ("Contato feito", "Apresentacao") - a etapa deve virar pelo
+          COMPROMISSO DO COMPRADOR.
+        - anti-pattern #2: etapa sem criterio objetivo. Cada uma abaixo tem um
+          evento de saida observavel, escrito no campo `requirements`
+          (o Odoo mostra como tooltip no nome do estagio).
+        - anti-pattern #4: excesso de etapas. 5-7 e a faixa recomendada.
+      As etapas 1-3 sao PRE-CONTATO (o comprador ainda nao sabe que existimos),
+      por isso sao nomeadas pelo ESTADO da relacao, nao por acao nossa. A virada
+      real do comprador acontece na etapa 4.
+
+      GATING: `requirements` e ORIENTACAO (tooltip), nao trava. Mover o negocio
+      continua sendo ato humano - guardrail-mae do PHI.
+
+      PERDA nao e estagio: usa o botao "Perdido" nativo (lost_reason_id + arquiva).
+    -->
+
+    <!-- 1 - reaproveita o "New" nativo -->
+    <record id="crm.stage_lead1" model="crm.stage">
+        <field name="name">Prospeccao</field>
+        <field name="sequence">1</field>
+        <field name="is_won" eval="False"/>
+        <field name="requirements">Entrada: empresa no CRM.
+Saida: o PHI calculou o score GBP (campo "Diagnostico GBP em" preenchido).
+Perdido: nao se aplica nesta etapa.</field>
+    </record>
+
+    <!-- 2 - novo -->
+    <record id="stage_aguardando_aceite" model="crm.stage">
+        <field name="name">Aguardando Aceite</field>
+        <field name="sequence">2</field>
+        <field name="is_won" eval="False"/>
+        <field name="requirements">Entrada: diagnostico pronto (potencial, oferta e NBA preenchidos). SLA: decidir em ate 24h.
+Saida: uma PESSOA aceitou - NBA-Aceite = "Aceita".
+Perdido: NBA-Aceite = "Rejeitada" + preencher "Motivo da Rejeicao (MQL)".</field>
+    </record>
+
+    <!-- 3 - novo -->
+    <record id="stage_em_cadencia" model="crm.stage">
+        <field name="name">Em Cadencia</field>
+        <field name="sequence">3</field>
+        <field name="is_won" eval="False"/>
+        <field name="requirements">Entrada: aceite dado. SLA: 1o toque em ate 5 min.
+Saida: o prospect RESPONDEU e topou uma conversa.
+Perdido: 8 ou mais tentativas multi-canal sem resposta -> reciclar (Status do Lead = "Reciclado").</field>
+    </record>
+
+    <!-- 4 - reaproveita o "Qualified" nativo. Aqui comeca o compromisso do comprador. -->
+    <record id="crm.stage_lead2" model="crm.stage">
+        <field name="name">Conversa Aceita</field>
+        <field name="sequence">4</field>
+        <field name="is_won" eval="False"/>
+        <field name="requirements">Entrada: ele topou a conversa (1o compromisso do comprador).
+Saida: reuniao feita, dor e impacto confirmados.
+Perdido: sem fit, ou sumiu (botao Perdido + motivo).</field>
+    </record>
+
+    <!-- 5 - reaproveita o "Proposition" nativo -->
+    <record id="crm.stage_lead3" model="crm.stage">
+        <field name="name">Escopo e Proposta</field>
+        <field name="sequence">5</field>
+        <field name="is_won" eval="False"/>
+        <field name="requirements">Entrada: escopo iniciado (ex.: acesso aos dados de midia/analytics).
+Saida: retorno EXPLICITO do prospect. "Vou ver" nao conta.
+Perdido: objecao nao superada ou recusa (botao Perdido + motivo).</field>
+    </record>
+
+    <!-- 6 - reaproveita o "Won" nativo -->
+    <record id="crm.stage_lead4" model="crm.stage">
+        <field name="name">Ganho</field>
+        <field name="sequence">6</field>
+        <field name="is_won" eval="True"/>
+        <field name="requirements">Entrada: contrato assinado.
+Saida: handoff para a operacao - kickoff em ate 5 dias uteis.
+Perdido: nao se aplica. Fechar e ato humano: nenhum automatismo marca ganho.</field>
+    </record>
+
+</odoo>

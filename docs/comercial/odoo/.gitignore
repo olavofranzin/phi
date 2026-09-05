@@ -1,0 +1,4 @@
+# Segredos e dados locais — nunca commitar
+.env
+*.env
+filestore/

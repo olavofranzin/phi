@@ -13,6 +13,34 @@ Sistema automatizado de monitoramento e gestão de campanhas de tráfego pago (G
 
 ---
 
+## Frente estratégica ativa: Otimização (cérebro de análise — "Módulo 28" / T28)
+
+> Camada de **análise cognitiva** sobre o score: o "cérebro" (Maestro + especialistas)
+> que traduz o PHI·Mídia Score em **diagnóstico + decisão recomendada** — o humano dá o
+> "play". Design canônico em **Git** (`docs/strategic-planning/`); estado operacional em
+> **Notion**. Complementa o contexto de pipeline abaixo.
+
+- **Ler primeiro (git):** `docs/strategic-planning/ESTADO-DO-PROJETO.md` (doc mestre,
+  snapshots datados) · `docs/strategic-planning/MAPA-DE-DOCUMENTACAO.md` (navegação) ·
+  `docs/strategic-planning/roster-de-agentes.md` (agentes, staging E0→E3) ·
+  `docs/modulo-28-analise-cognitiva.md` (os 7 prompts: Maestro + 6 especialistas) ·
+  `docs/strategic-planning/saude-digital/adr-rascunhos/` (ADRs de design).
+- **Workflow n8n:** `WF-T28-Analise-Campaign` (`fhYmJH0o9BW1IO4i`). Diagnóstico (Agente 3)
+  **vive**; **Maestro (E1) no rascunho**, não ativado — ver **ADR-28**.
+- **DB de entrega:** `PHI - ANÁLISES` (`38fb65e5-c72b-80db-a425-e5939fc35c7a`).
+- **Credencial LLM:** `Anthropic account` (`YifaYCQuGWjdd1Oh`) — existe; confirmar binding
+  nos nós + smoke antes de ativar.
+- **Guardrails de dado (BLOCO COMUM, regras 8/9):** `conversions=0 ⇒ CPA/ROAS indefinidos`
+  (nunca "cpa 0 = ótimo"); `source_status error/missing ⇒ N/D` (não 0).
+- **Autoridade do score (ADR-003):** não recalcular `phi_value`/flags/severidade — são fato.
+- **Memória de Decisão:** design → ADR (git); execução → Ledger "PHI — Registro de
+  Execuções" (Notion, ADR-32).
+- **Disciplina de token:** validar prompts pela skill `phi-diagnostico` (`.claude/skills/`,
+  byte-idêntica ao nó vivo) com payload real no chat **antes** de gastar token no n8n; não
+  ativar/executar workflow sem OK de budget do Olavo.
+
+---
+
 ## Stack
 
 | Camada | Tecnologia |
@@ -80,7 +108,7 @@ como confirmar".
 2. **Nodes INSERT/MERGE:** `Always Output Data = true` obrigatório
 3. **`primary_metric_goal`** = FLOAT64 (valor numérico ex: `5.20`). **`primary_metric_type`** = STRING (ex: `'CPA'`)
 4. **`client_id`** = `CLI-4` (identificador). **`client_slug`** = `KIL` (sigla 3 letras). São campos diferentes
-5. **splitInBatches v3:** branch 0 = loop, branch 1 = done
+5. **splitInBatches v3:** branch 0 = done (dispara uma vez, ao fim), branch 1 = loop (dispara a cada item). O último node do corpo do loop DEVE reconectar ao splitInBatches, senão só o 1º item é processado. (Confirmado no SDK n8n: `.onDone` = saída 0, `.onEachBatch` = saída 1.)
 6. **IF nodes:** branch 0 = TRUE, branch 1 = FALSE
 7. **Conexões no JSON n8n:** usar NOMES dos nodes como chaves, não UUIDs
 8. **Queries dinâmicas:** montar SQL no Code node, nunca usar `{{ }}` dentro da query BigQuery
@@ -167,4 +195,4 @@ Refer to CLAUDE.md for full command reference.
    
 ---
 
-*PHI™ v1.5 — Atualizado em 27/07/2026*
+*PHI™ v1.5 — Atualizado em 27/07/2026. Adendo 2026-07-31: frente Otimização/T28 (cérebro de análise) — ver `ESTADO-DO-PROJETO.md` (snapshot 2026-07-31) + ADR-28.*

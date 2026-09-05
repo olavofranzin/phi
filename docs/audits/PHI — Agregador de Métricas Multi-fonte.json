@@ -1,0 +1,2882 @@
+{
+  "name": "PHI — Agregador de Métricas Multi-fonte",
+  "nodes": [
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "04dd59dd-ae13-4338-a58e-74ccea3cffd3",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.reportType }}",
+                    "rightValue": "Weekly"
+                  }
+                ]
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "e1abf0ff-5d0b-47e4-bb70-22400bbef5e2",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.reportType }}",
+                    "rightValue": "Monthly"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "dd9c68d5-cd59-49f2-bee7-fa025d9877f4",
+      "name": "Switch",
+      "type": "n8n-nodes-base.switch",
+      "position": [
+        4992,
+        992
+      ],
+      "typeVersion": 3.4,
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "numberInputs": 9
+      },
+      "id": "6eeeba2f-47f2-4036-81c7-e39817717e76",
+      "name": "Merge1",
+      "type": "n8n-nodes-base.merge",
+      "position": [
+        4400,
+        336
+      ],
+      "typeVersion": 3.2
+    },
+    {
+      "parameters": {
+        "jsCode": "// Separate website-level reports\nconst websites = items\n  .filter(i => i.json.website)\n  .map(i => i.json);\n\n// Normalize string booleans safely\nconst toBool = (v) => v === true || v === \"true\";\n\n// Detect run type correctly\nconst isMonthly = websites.some(w => toBool(w.isMonthly));\nconst isWeekly = websites.some(w => toBool(w.isWeekly));\n\n// Find HubSpot summary (single object)\nconst hubspotItem = items.find(\n  i => i.json.hubspotSummary || i.json.hubspot\n);\n\nconst hubspot = hubspotItem\n  ? (hubspotItem.json.hubspotSummary || hubspotItem.json.hubspot)\n  : {};\n\n// Final unified report object\nreturn [\n  {\n    json: {\n      reportDate: new Date().toISOString(),\n      reportType: isMonthly ? \"Monthly\" : \"Weekly\",\n\n      websites: websites.map(w => ({\n        website: w.website,\n        siteId: w.siteId,\n        isWeekly: toBool(w.isWeekly),\n        isMonthly: toBool(w.isMonthly),\n        websiteKPIs: w.websiteKPIs,\n        googleAdsInsights: w.googleAdsInsights,\n        metaAdsInsights: w.metaAdsInsights\n      })),\n\n      hubspot\n    }\n  }\n];\n"
+      },
+      "id": "02d8c67a-608b-4f4e-80ad-78c7f5cbeb2e",
+      "name": "Prepare Report Data2",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        4704,
+        960
+      ],
+      "typeVersion": 2,
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "your-document-id-here",
+          "cachedResultUrl": "your-document-url-here",
+          "cachedResultName": "your-document-name-here"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gid=0",
+          "cachedResultUrl": "your-document-url-here",
+          "cachedResultName": "your-document-name-here"
+        },
+        "columns": {
+          "value": {
+            "Users": "={{ $json.websiteKPIs.users }}",
+            "isWeekly": "={{ $json.isWeekly }}",
+            "isMonthly": "={{ $json.isMonthly }}",
+            "Created At": "={{ $now }}",
+            "Conversions": "={{ $json.websiteKPIs.siteConversions }}",
+            "Report Date": "={{ $now }}",
+            "Website Name": "={{ $json.website }}",
+            "Meta Ads Spend": "={{ $json.metaAdsInsights[0].spend }}",
+            "Google Ads Spend": "={{ $json.googleAdsInsights[0].spend }}",
+            "Google Ads Clicks": "={{ $json.googleAdsInsights[0].clicks }}",
+            "Google Ads Conversions": "={{ $json.googleAdsInsights[0].conversions }}"
+          },
+          "schema": [
+            {
+              "id": "Report Date",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Report Date",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "isWeekly",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "isWeekly",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "isMonthly",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "isMonthly",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Site ID",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Site ID",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Sessions",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Sessions",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Users",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Users",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Conversions",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Conversions",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Google Ads Spend",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Google Ads Spend",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Google Ads Clicks",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Google Ads Clicks",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Google Ads Conversions",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Google Ads Conversions",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Meta Ads Spend",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Meta Ads Spend",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Meta Ads Leads",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Meta Ads Leads",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Meta Ads CPA",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Meta Ads CPA",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Data Source",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Data Source",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Website Name",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Website Name",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Created At",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Created At",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            }
+          ],
+          "mappingMode": "defineBelow",
+          "matchingColumns": [
+            "Website Name"
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "119d2c23-bf88-44f2-8884-f181031c7040",
+      "name": "Append or update row in sheet2",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        3280,
+        -272
+      ],
+      "typeVersion": 4.7,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "1syGXHEXgjrxSblV",
+          "name": "Google Sheets account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "url": "=https://graph.facebook.com/v21.0/{{ $('Set dados').item.json.id_meta_campanha }}/insights",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "facebookGraphApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "level",
+              "value": "ad"
+            },
+            {
+              "name": "fields",
+              "value": "ad_id,ad_name,adset_id,adset_name,campaign_id,campaign_name,spend,impressions,clicks,reach,frequency,ctr,cpm,actions,action_values"
+            },
+            {
+              "name": "time_range",
+              "value": "={\"since\":\"{{ $('Code prepara datas para extracao').item.json.date_start }}\",\"until\":\"{{ $('Code prepara datas para extracao').item.json.date_end }}\"}"
+            },
+            {
+              "name": "time_increment",
+              "value": "1"
+            },
+            {
+              "name": "limit",
+              "value": "500"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2d1bbd55-088e-4346-a035-98271d99609b",
+      "name": "Fetch Meta Ads",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        3616,
+        1040
+      ],
+      "typeVersion": 4.3,
+      "credentials": {
+        "facebookGraphApi": {
+          "id": "jRLBlTy4dwFjiuOS",
+          "name": "Facebook Graph account"
+        }
+      },
+      "disabled": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "content": "## Step 1: Trigger & Report Type Detection\nScheduled triggers decide whether the workflow runs weekly or monthly and set flags used throughout the workflow.\n",
+        "height": 992,
+        "width": 1908,
+        "color": 7
+      },
+      "id": "d213beb2-fe84-432f-9bbe-99362d5d3f40",
+      "name": "Sticky Note7",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1056,
+        240
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Step 2: Website & Ads Data Processing\nLoops through each website, fetches analytics and ad data, filters campaigns, merges sources, and calculates performance KPIs.\n",
+        "height": 1632,
+        "width": 1524,
+        "color": 7
+      },
+      "id": "97919f97-55dd-40f9-9f53-f11497372ed8",
+      "name": "Sticky Note8",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3040,
+        -400
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Step 2.2: Analise Métricas",
+        "height": 1248,
+        "width": 1412,
+        "color": 7
+      },
+      "id": "86da3707-0478-40eb-bdec-ca4615d243a0",
+      "name": "Sticky Note9",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        4608,
+        -16
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Step 2.1: Palavras-Chave\n\n",
+        "height": 864,
+        "width": 1520,
+        "color": 7
+      },
+      "id": "da62a5a7-d2a3-4b35-96b1-9f88712f6117",
+      "name": "Sticky Note11",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3040,
+        1264
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.data }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=Classifique os termos de busca agregados abaixo para gerar features T28. Use o contexto da marca para separar brand de problema, concorrente e outros.\\n\\nContexto da marca:\\n{{ $json.brand_info }}\\n\\nDados agregados de search terms:\\n{{ $json.data }}\\n\\nRetorne estritamente JSON no schema solicitado pelo parser. Cada item em terms deve conter apenas classificacao, sem persistir o texto bruto do termo. Classificacoes permitidas: brand, problem_solving, competitor, other.\\n\\nTime Now: {{ $now.setZone(\"America/Sao_Paulo\") }}"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "id": "688af854-7c27-449b-865d-86e90fff9d3f",
+      "name": "Search Terms Checker",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "position": [
+        3840,
+        1408
+      ],
+      "typeVersion": 1.7,
+      "retryOnFail": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "559904b4-ef2c-45eb-8f27-c6f1cc8ef7c2",
+      "name": "Google Gemini Chat Model1",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "position": [
+        3904,
+        1584
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "cZNPIzF5ZCMrpnDr",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"terms\": [\n    { \"classificacao\": \"brand\" },\n    { \"classificacao\": \"problem_solving\" },\n    { \"classificacao\": \"competitor\" },\n    { \"classificacao\": \"other\" }\n  ]\n}"
+      },
+      "id": "51584d09-96fb-4016-9df4-4526c5a817ae",
+      "name": "Structured Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "position": [
+        4064,
+        1584
+      ],
+      "typeVersion": 1.3
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://googleads.googleapis.com/v23/customers/{{ $('Set dados').item.json.id_google_customer }}/googleAds:search",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleAdsOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "developer-token",
+              "value": "={{ $('Set dados').item.json.google_developer_token }}"
+            },
+            {
+              "name": "login-customer-id",
+              "value": "={{ $('Set dados').item.json.google_manager_id }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "query",
+              "value": "=SELECT search_term_view.search_term, search_term_view.status, metrics.impressions, metrics.clicks, metrics.cost_micros, metrics.all_conversions, metrics.conversions, campaign.name, ad_group.name, ad_group.id, segments.date FROM search_term_view WHERE campaign.id = {{ $('Set dados').item.json.id_google_campanha }} AND segments.date BETWEEN '{{ DateTime.now().setZone('America/Sao_Paulo').minus({ days: 14 }).toFormat('yyyy-MM-dd') }}' AND '{{ DateTime.now().setZone('America/Sao_Paulo').minus({ days: 1 }).toFormat('yyyy-MM-dd') }}' AND metrics.clicks > 1 ORDER BY metrics.clicks DESC LIMIT 1000"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "abd5c07f-d931-4bd2-b05d-cfc285bdf50c",
+      "name": "Extracting Search Terms (janela)",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        3296,
+        1392
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "googleAdsOAuth2Api": {
+          "id": "78Fta7kyLfG3QHUT",
+          "name": "Google Ads account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "results",
+        "options": {}
+      },
+      "id": "94a2a31f-7404-47d4-94bb-4db37d79c68f",
+      "name": "Split Out HTTP Request Into Individual Items",
+      "type": "n8n-nodes-base.splitOut",
+      "position": [
+        3504,
+        1392
+      ],
+      "executeOnce": false,
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "jsCode": "// Dynamic Google Ads API cleaner for n8n.\n// This version handles the direct, nested JSON output from the API.\nconst items = $input.all();\nconst cleanedData = [];\n\nfor (const item of items) {\n  const data = item.json;\n  const cleaned = {};\n  \n  // --- Campaign Info ---\n  // Extracts name and parses Campaign ID from the 'resourceName'\n  if (data.campaign) {\n    cleaned.campaign = data.campaign.name;\n    // Example resourceName: \"customers/8497428868/campaigns/1590383188\"\n    // We split by '/' and take the last part.\n    cleaned.campaignId = data.campaign.resourceName?.split('/').pop();\n  }\n  \n  // --- Ad Group Info ---\n  if (data.adGroup) {\n    cleaned.adGroup = data.adGroup.name;\n    cleaned.adGroupId = data.adGroup.id;\n  }\n  \n  // --- Metrics ---\n  // Parses all metrics and calculates cost in USD\n  if (data.metrics) {\n    cleaned.clicks = parseInt(data.metrics.clicks || 0);\n    cleaned.impressions = parseInt(data.metrics.impressions || 0);\n    cleaned.conversions = parseFloat(data.metrics.conversions || 0);\n    cleaned.allConversions = parseFloat(data.metrics.allConversions || 0);\n    \n    const costMicros = parseInt(data.metrics.costMicros || 0);\n    cleaned.costMicros = costMicros;\n    cleaned.costUSD = parseFloat((costMicros / 1000000).toFixed(2));\n  }\n  \n  // --- Search Term Info ---\n  if (data.searchTermView) {\n    cleaned.searchTerm = data.searchTermView.searchTerm;\n    cleaned.status = data.searchTermView.status;\n  }\n  \n  // --- Segments (like date) ---\n  if (data.segments) {\n    cleaned.date = data.segments.date;\n  }\n  \n  // --- Calculate Derived Metrics (CTR, CPC) ---\n  if (cleaned.impressions > 0) {\n    cleaned.ctr = ((cleaned.clicks / cleaned.impressions) * 100).toFixed(2) + '%';\n  } else {\n    cleaned.ctr = '0.00%';\n  }\n  \n  if (cleaned.clicks > 0 && cleaned.costUSD > 0) {\n    cleaned.cpc = (cleaned.costUSD / cleaned.clicks).toFixed(2);\n  } else {\n    cleaned.cpc = '0.00';\n  }\n  \n  cleanedData.push({ json: cleaned });\n}\n\nreturn cleanedData;"
+      },
+      "id": "e5454540-e75f-4f57-85f3-6d65d69cb5b6",
+      "name": "Consolidating Search Terms Data (Removing Dates)",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        3296,
+        1600
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "3af2cbb8-24e9-40f3-9150-af97040a79f9",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              },
+              "leftValue": "={{ $json.searchTerm }}",
+              "rightValue": "(INSERT YOUR BRAND TERM HERE - THIS IS TO ENSURE IT IS EXCLUDED FROM THE LLM TO ANALYZE TO SAVE ON TOKEN USAGE)"
+            },
+            {
+              "id": "5c8738cd-359c-410f-b163-d981d6153851",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              },
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "EXCLUDED"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fb5241ee-c6a9-4213-b0d5-dc7a32131570",
+      "name": "Removing Brand Terms + EXCLUDED Terms",
+      "type": "n8n-nodes-base.filter",
+      "position": [
+        3504,
+        1600
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "jsCode": "// Input: items array from the previous node (with conversion data)\n// Output: combined items aggregated by searchTerm + campaign + adGroup\n\nconst combined = {};\n\nfor (const item of items) {\n  const d = item.json;\n  // Use a robust key to handle potential missing data\n  const key = `${d.searchTerm}_${d.campaignId}_${d.adGroupId}`;\n\n  if (!combined[key]) {\n    // If we see this combination for the first time, create its entry\n    combined[key] = {\n      searchTerm: d.searchTerm,\n      campaign: d.campaign,\n      campaignId: d.campaignId,\n      adGroup: d.adGroup,\n      adGroupId: d.adGroupId,\n      status: d.status,\n      // Initialize all metrics to zero\n      clicks: 0,\n      impressions: 0,\n      costMicros: 0,\n      costUSD: 0,\n      conversions: 0,      // <-- ADDED\n      allConversions: 0    // <-- ADDED\n    };\n  }\n\n  // Add the current item's metrics to the running total\n  combined[key].clicks += d.clicks || 0;\n  combined[key].impressions += d.impressions || 0;\n  combined[key].costMicros += d.costMicros || 0;\n  combined[key].costUSD += d.costUSD || 0;\n  combined[key].conversions += d.conversions || 0;          // <-- ADDED\n  combined[key].allConversions += d.allConversions || 0;    // <-- ADDED\n}\n\n// Convert the combined object back into an array for n8n\nreturn Object.values(combined).map(x => ({ json: x }));"
+      },
+      "id": "a9f0a487-c301-4442-accf-64ceb9a3b012",
+      "name": "Aggregating Performance Metrics",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        3296,
+        1808
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "id": "2b257602-1783-44a8-a91d-e2e585e81055",
+      "name": "Aggregating Items To Prepare For LLM To Analyze",
+      "type": "n8n-nodes-base.aggregate",
+      "position": [
+        3504,
+        1808
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6ea57e24-e61e-404f-9241-f30a944e7adc",
+              "name": "data",
+              "type": "array",
+              "value": "={{ $json.data }}"
+            },
+            {
+              "id": "bdd5d2e8-83fa-4177-8ca6-543b0e36687e",
+              "name": "brand_info",
+              "type": "string",
+              "value": "INSERT YOUR BRAND_INFO HERE"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "add58865-875c-4ba5-94bb-9842ca3d5134",
+      "name": "Brand Info Node",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        3728,
+        1808
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtDay": [
+                1
+              ],
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "id": "a00b4074-c4a3-4f69-8dfa-cfbf769ef562",
+      "name": "Schedule Trigger Semanal",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [
+        1152,
+        608
+      ],
+      "typeVersion": 1.3
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "months",
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "id": "ba66002a-8896-45ce-a249-e5b488617b9a",
+      "name": "Schedule Trigger Mensal",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [
+        1152,
+        816
+      ],
+      "typeVersion": 1.3
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "value": "19fb65e5-c72b-8043-a82d-f47ede397928",
+          "mode": "list",
+          "cachedResultName": "Campanhas",
+          "cachedResultUrl": "https://app.notion.com/p/19fb65e5c72b8043a82df47ede397928"
+        },
+        "simple": false,
+        "filterType": "manual",
+        "filters": {
+          "conditions": [
+            {
+              "key": "Status|status",
+              "condition": "equals",
+              "statusValue": "Em execução"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1664,
+        688
+      ],
+      "id": "1666b1f0-96ca-4c42-ae57-34b02c3c3149",
+      "name": "Get database campanhas",
+      "credentials": {
+        "notionApi": {
+          "id": "KpPCTsYPAvGXGfp2",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "value": "19fb65e5-c72b-8147-8aa3-c63aa273d205",
+          "mode": "list",
+          "cachedResultName": "Clientes Database ",
+          "cachedResultUrl": "https://app.notion.com/p/19fb65e5c72b81478aa3c63aa273d205"
+        },
+        "simple": false,
+        "filterType": "manual",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "key": "id_client|formula",
+              "condition": "equals",
+              "returnType": "text",
+              "textValue": "={{ $('Get database campanhas').item.json.properties.client_id.rich_text[0].text.content }}"
+            },
+            {
+              "key": "Status|select",
+              "condition": "equals",
+              "selectValue": "ATIVO"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        2368,
+        688
+      ],
+      "id": "68e275f6-edc2-48e6-8dc3-095bd4994538",
+      "name": "Get database clientes",
+      "credentials": {
+        "notionApi": {
+          "id": "KpPCTsYPAvGXGfp2",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b76d3ef5-e07b-4dc9-ac90-6efb830a720a",
+              "name": "id_client",
+              "value": "={{ $json.properties.id_client.formula.string }}",
+              "type": "string"
+            },
+            {
+              "id": "c55819ae-cfd0-4497-a6e6-fe6646ffcebb",
+              "name": "id_campanha",
+              "value": "={{ $('Get database anuncios').item.json.properties.notion_id_camp_padrao.rich_text[0].text.content }}",
+              "type": "string"
+            },
+            {
+              "id": "60f869b2-cc65-469e-b0d8-c9bc995ab9cf",
+              "name": "id_adset_padrao",
+              "value": "={{ $('Get database conjuntos').item.json.properties.id_adset_padrao.unique_id.prefix }}-{{ $('Get database conjuntos').item.json.properties.id_adset_padrao.unique_id.number }}",
+              "type": "string"
+            },
+            {
+              "id": "42fa3309-345c-4773-8703-0a2343cd6924",
+              "name": "id_ad_padrao",
+              "value": "={{ $('Get database anuncios').item.json.properties.id_ad_padrao.unique_id.prefix }}-{{ $('Get database anuncios').item.json.properties.id_ad_padrao.unique_id.number }}",
+              "type": "string"
+            },
+            {
+              "id": "8d874cdf-c908-4c2a-b8cb-b5b870c9e96b",
+              "name": "notion_id_ad",
+              "value": "={{ $('Get database anuncios').item.json.properties.notion_id_ad.formula.string }}",
+              "type": "string"
+            },
+            {
+              "id": "9be514cd-d34b-4d02-a24f-d9ea92f130f1",
+              "name": "notion_id_camp",
+              "value": "={{ $('Get database campanhas').item.json.properties.notion_id_camp.formula.string }}",
+              "type": "string"
+            },
+            {
+              "id": "64840ce8-3032-4d82-b39e-34ada0e03559",
+              "name": "notion_id_adset",
+              "value": "={{ $('Get database conjuntos').item.json.properties.notion_id_adset.formula.string }}",
+              "type": "string"
+            },
+            {
+              "id": "926a60b6-a4d7-4313-906c-df0607f4958d",
+              "name": "id_ga4",
+              "type": "number",
+              "value": "={{ $json.properties.id_ga4_property.number }}"
+            },
+            {
+              "id": "6d994934-d501-4bee-9fc2-368660a6fd93",
+              "name": "id_google_customer",
+              "type": "number",
+              "value": "={{ $json.properties.id_google_account.number }}"
+            },
+            {
+              "id": "a55f34ec-f724-40ed-b15b-f49ad55135d0",
+              "name": "id_gbp",
+              "type": "number",
+              "value": "={{ $json.properties.id_gbp.number }}"
+            },
+            {
+              "id": "9c5f87e6-a267-4ab5-804d-c24ceb5802fd",
+              "name": "id_gbp_local",
+              "value": "={{ $('Get database campanhas').item.json.properties.id_gbp_local.rich_text[0].text.content }}",
+              "type": "string"
+            },
+            {
+              "id": "7359c8fb-52b5-42a7-b8c1-d929ddd72486",
+              "name": "id_google_campanha",
+              "value": "={{ $('Get database campanhas').item.json.properties.id_google_camp.number }}",
+              "type": "number"
+            },
+            {
+              "id": "c0fb3df7-2462-4a7c-8bf5-271a77868cbb",
+              "name": "ad_id_google",
+              "value": "={{ $('Get database anuncios').item.json.properties.id_google_ad.number }}",
+              "type": "number"
+            },
+            {
+              "id": "99abf772-74d1-44ab-a9a5-e2fdc831d794",
+              "name": "adset_id_google",
+              "value": "={{ $('Get database conjuntos').item.json.properties.adset_id_google.number }}",
+              "type": "string"
+            },
+            {
+              "id": "45ba24e8-bc8c-4d1b-8010-8dcb20cca4ea",
+              "name": "google_developer_token",
+              "value": "o0hGRr2vcX3jGF6aI3a_0w",
+              "type": "string"
+            },
+            {
+              "id": "e2eb01fa-277c-4508-aefe-4c2d18cfc047",
+              "name": "google_manager_id",
+              "value": "7595536100",
+              "type": "string"
+            },
+            {
+              "id": "2eac115b-fd07-4271-a124-1ad0a6f8bc0f",
+              "name": "id_meta_campanha",
+              "value": "={{ $('Get database campanhas').item.json.properties.id_meta_camp.number }}",
+              "type": "number"
+            },
+            {
+              "id": "3d3aff59-8739-4352-b263-c4bb2d7ea514",
+              "name": "id_pixel_meta",
+              "value": "={{ $('Get database campanhas').item.json.properties.id_meta_pixel.number }}",
+              "type": "number"
+            },
+            {
+              "id": "74d10036-0a87-4c6d-ba68-d3b59c223fe7",
+              "name": "meta_account",
+              "value": "={{ $json.properties.id_meta_account.number }}",
+              "type": "string"
+            },
+            {
+              "id": "d2921eeb-62ae-444b-94d0-74a3973ae571",
+              "name": "ad_id_meta",
+              "value": "={{ $('Get database anuncios').item.json.properties.ad_id_meta.number }}",
+              "type": "string"
+            },
+            {
+              "id": "61bd74e0-6b3d-4b68-a010-b0f321bb072a",
+              "name": "adset_id_meta",
+              "value": "={{ $('Get database anuncios').item.json.properties.adset_id_meta.number }}",
+              "type": "string"
+            },
+            {
+              "id": "2d42fbac-6a8a-4b33-a1ff-6bff3fbee41f",
+              "name": "Landing Page",
+              "value": "={{ $('Get database anuncios').item.json.properties['Landing Page'].url }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3db7ac9d-771f-4bda-9a33-0442c75c695a",
+      "name": "Set dados",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        2592,
+        688
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "batchSize": "=1",
+        "options": {}
+      },
+      "id": "6cdfbecf-581c-4cef-9bf8-5617e3ec2f9a",
+      "name": "Loop",
+      "type": "n8n-nodes-base.splitInBatches",
+      "position": [
+        3104,
+        464
+      ],
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "url": "https://www.clarity.ms/export-data/api/v1/project-live-insights",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "numOfDays",
+              "value": "3"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6IjQ4M0FCMDhFNUYwRDMxNjdEOTRFMTQ3M0FEQTk2RTcyRDkwRUYwRkYiLCJ0eXAiOiJKV1QifQ.eyJqdGkiOiIzN2Y0Y2I1NC05ZDY3LTRkZjMtYWIyNi05MDJjZWMzYTNmMjUiLCJzdWIiOiIzMzc4Nzk4NjM4ODE4NjMwIiwic2NvcGUiOiJEYXRhLkV4cG9ydCIsIm5iZiI6MTc4MTkwNzQ2MywiZXhwIjo0OTM1NTA3NDYzLCJpYXQiOjE3ODE5MDc0NjMsImlzcyI6ImNsYXJpdHkiLCJhdWQiOiJjbGFyaXR5LmRhdGEtZXhwb3J0ZXIifQ.iZuVgQYOHeo-E70PGg3q3r-XXkQKkfW_0NE7ITevuY1t-U-HHxWQ3fsls3NlmNa6LrXbgJpTb_O6RiPBAWAVY-Rt8U0BMKBLmTHO7BWo5pQ8qg7fNpMkwEpQvH7X3VDfM2wcOKaJfmx9bD6dzPiglhWB0FJhh9-jjuhsYGXOkD_T6ODmde_AMuQYKv3lYGY9Z83HUDRSU5_KIkyR-16u28SK7Lxweli16Y7iv8MMdnOjMclZcVZQeH1kknv5snYa2-8xcZA4K1iQjn8UVvXSWeVDWQzwlY1cWn6OInjeA0JN_mf9CU1bkZMxehxUOHopFSr8Cg6MpxKTks99F50p6w"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        3616,
+        -192
+      ],
+      "id": "9f9c0b8f-875c-460e-9429-be10c994489c",
+      "name": "HTTP Request Clarity",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "url": "=https://businessprofileperformance.googleapis.com/v1/{{ $('Set dados').item.json.id_gbp_local.toString().startsWith('locations/') ? $('Set dados').item.json.id_gbp_local : 'locations/' + $('Set dados').item.json.id_gbp_local }}:fetchMultiDailyMetricsTimeSeries",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleBusinessProfileOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "dailyMetrics",
+              "value": "WEBSITE_CLICKS"
+            },
+            {
+              "name": "dailyMetrics",
+              "value": "CALL_CLICKS"
+            },
+            {
+              "name": "dailyMetrics",
+              "value": "BUSINESS_DIRECTION_REQUESTS"
+            },
+            {
+              "name": "dailyMetrics",
+              "value": "BUSINESS_IMPRESSIONS_DESKTOP_SEARCH"
+            },
+            {
+              "name": "dailyMetrics",
+              "value": "BUSINESS_IMPRESSIONS_MOBILE_SEARCH"
+            },
+            {
+              "name": "dailyMetrics",
+              "value": "BUSINESS_IMPRESSIONS_DESKTOP_MAPS"
+            },
+            {
+              "name": "dailyMetrics",
+              "value": "BUSINESS_IMPRESSIONS_MOBILE_MAPS"
+            },
+            {
+              "name": "dailyRange.startDate.year",
+              "value": "={{ $('Code prepara datas para extracao').item.json.start_y }}"
+            },
+            {
+              "name": "dailyRange.startDate.month",
+              "value": "={{ $('Code prepara datas para extracao').item.json.start_m }}"
+            },
+            {
+              "name": "dailyRange.startDate.day",
+              "value": "={{ $('Code prepara datas para extracao').item.json.start_d }}"
+            },
+            {
+              "name": "dailyRange.endDate.year",
+              "value": "={{ $('Code prepara datas para extracao').item.json.end_y }}"
+            },
+            {
+              "name": "dailyRange.endDate.month",
+              "value": "={{ $('Code prepara datas para extracao').item.json.end_m }}"
+            },
+            {
+              "name": "dailyRange.endDate.day",
+              "value": "={{ $('Code prepara datas para extracao').item.json.end_d }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        3616,
+        0
+      ],
+      "id": "252ef5c7-6205-44db-ae45-fe4d7af7e412",
+      "name": "HTTP Request GBP",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "googleAdsOAuth2Api": {
+          "id": "78Fta7kyLfG3QHUT",
+          "name": "Google Ads account"
+        },
+        "googleBusinessProfileOAuth2Api": {
+          "id": "9DvRYkUsnjoozlOw",
+          "name": "Google Business Profile account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://analyticsdata.googleapis.com/v1beta/properties/{{ $('Set dados').item.json.id_ga4 }}:runReport",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleAnalyticsOAuth2",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"dateRanges\": [{ \"startDate\": \"{{ $('Code prepara datas para extracao').item.json.date_start }}\", \"endDate\": \"{{ $('Code prepara datas para extracao').item.json.date_end }}\" }],\n  \"dimensions\": [{ \"name\": \"landingPage\" }, { \"name\": \"sessionDefaultChannelGroup\" }, { \"name\": \"date\" }],\n  \"metrics\": [{ \"name\": \"sessions\" }, { \"name\": \"engagedSessions\" }, { \"name\": \"engagementRate\" }, { \"name\": \"totalUsers\" }, { \"name\": \"keyEvents\" }],\n  \"dimensionFilter\": { \"andGroup\": { \"expressions\": [\n    { \"filter\": { \"fieldName\": \"sessionDefaultChannelGroup\", \"stringFilter\": { \"matchType\": \"CONTAINS\", \"value\": \"Paid\" } } },\n    { \"filter\": { \"fieldName\": \"landingPage\", \"stringFilter\": { \"matchType\": \"CONTAINS\", \"value\": \"/{{ $('Set dados').item.json['Landing Page'] ? $('Set dados').item.json['Landing Page'].split('/').slice(3).join('/') : '' }}\" } } }\n  ] } },\n  \"limit\": 10000\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        3616,
+        352
+      ],
+      "id": "6571530e-20b4-4b3e-ac7b-736633522b51",
+      "name": "HTTP Request GA4 Pago (LPs)",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "googleAnalyticsOAuth2": {
+          "id": "sulCJJefyrHKq1nW",
+          "name": "Google Analytics account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "value": "297b65e5-c72b-8061-89b3-f31bd41d7e7f",
+          "mode": "list",
+          "cachedResultName": "Anúncios",
+          "cachedResultUrl": "https://app.notion.com/p/297b65e5c72b806189b3f31bd41d7e7f"
+        },
+        "simple": false,
+        "filterType": "manual",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "key": "Status do Anúncio|select",
+              "condition": "equals",
+              "selectValue": "Iniciado"
+            },
+            {
+              "key": "Conjunto de Anúncios|relation",
+              "condition": "contains",
+              "relationValue": "={{ $json.properties.notion_id_adset.formula.string }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        2144,
+        688
+      ],
+      "id": "374a3288-d193-4cc1-b4a8-7c5976e233d7",
+      "name": "Get database anuncios",
+      "credentials": {
+        "notionApi": {
+          "id": "KpPCTsYPAvGXGfp2",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "value": "19fb65e5-c72b-81e0-a3ad-c8017d4275e5",
+          "mode": "list",
+          "cachedResultName": "Conjuntos de Anúncios",
+          "cachedResultUrl": "https://app.notion.com/p/19fb65e5c72b81e0a3adc8017d4275e5"
+        },
+        "simple": false,
+        "filterType": "manual",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "key": "Status|status",
+              "condition": "equals",
+              "statusValue": "Em Progresso"
+            },
+            {
+              "key": "Campanha|relation",
+              "condition": "contains",
+              "relationValue": "={{ $json.properties.notion_id_camp.formula.string }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1904,
+        688
+      ],
+      "id": "ea610fc5-e8c7-4f7b-a6bf-bc5b30052fc7",
+      "name": "Get database conjuntos",
+      "credentials": {
+        "notionApi": {
+          "id": "KpPCTsYPAvGXGfp2",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        4848,
+        720
+      ],
+      "id": "b49231f8-5055-4a70-9528-5cb7487b8550",
+      "name": "AI Agent",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $json;\n\n/* -------------------------\n   BASIC WEBSITE INFO\n-------------------------- */\nconst website = data.website;\nconst isWeekly = data.isWeekly;\nconst isMonthly = data.isMonthly;\n\n/* -------------------------\n   GOOGLE ANALYTICS METRICS\n-------------------------- */\nconst visits = Number(data.analytics.sessions || 0);\nconst users = Number(data.analytics.users || 0);\nconst pageViews = Number(data.analytics.pageViews || 0);\nconst siteConversions = Number(data.analytics.conversions || 0);\n\n/* -------------------------\n   GOOGLE ADS CALCULATIONS\n-------------------------- */\nlet googleSpend = 0;\nlet googleClicks = 0;\nlet googleImpressions = 0;\nlet googleConversions = 0;\n\nconst googleCampaignInsights = data.googleAds.map(ad => {\n  const spend = (ad.costMicros || 0) / 1_000_000;\n  const clicks = ad.clicks || 0;\n  const impressions = ad.impressions || 0;\n  const conversions = ad.conversions || 0;\n\n  googleSpend += spend;\n  googleClicks += clicks;\n  googleImpressions += impressions;\n  googleConversions += conversions;\n\n  const ctr = impressions ? (clicks / impressions) * 100 : 0;\n  const cpa = conversions ? spend / conversions : null;\n\n  let insight = \"Performing well\";\n\n  if (spend > 3000 && conversions < 30) {\n    insight = \"High spend but low conversions – needs optimization\";\n  } else if (ctr < 1) {\n    insight = \"Low CTR – ad creatives or targeting may be weak\";\n  } else if (conversions === 0) {\n    insight = \"No conversions – consider pausing\";\n  }\n\n  return {\n    campaign: ad.name,\n    spend: Number(spend.toFixed(2)),\n    clicks,\n    impressions,\n    conversions,\n    ctr: Number(ctr.toFixed(2)),\n    cpa: cpa ? Number(cpa.toFixed(2)) : null,\n    insight\n  };\n});\n\n/* -------------------------\n   META ADS CALCULATIONS\n-------------------------- */\nlet metaSpend = 0;\nlet metaClicks = 0;\nlet metaImpressions = 0;\nlet metaLeads = 0;\n\nconst metaCampaignInsights = data.metaAds.map(ad => {\n  const spend = ad.spend || 0;\n  const clicks = ad.clicks || 0;\n  const impressions = ad.impressions || 0;\n  const leads = ad.leads || 0;\n\n  metaSpend += spend;\n  metaClicks += clicks;\n  metaImpressions += impressions;\n  metaLeads += leads;\n\n  const ctr = impressions ? (clicks / impressions) * 100 : 0;\n  const cpl = leads ? spend / leads : null;\n\n  let insight = \"Performing well\";\n\n  if (spend > 7000 && leads < 50) {\n    insight = \"High spend but low leads – targeting or offer issue\";\n  } else if (ctr < 0.8) {\n    insight = \"Low CTR – creatives may need improvement\";\n  } else if (leads === 0) {\n    insight = \"No leads – campaign underperforming\";\n  }\n\n  return {\n    campaign: ad.campaign,\n    spend,\n    clicks,\n    impressions,\n    leads,\n    ctr: Number(ctr.toFixed(2)),\n    cpl: cpl ? Number(cpl.toFixed(2)) : null,\n    insight\n  };\n});\n\n/* -------------------------\n   TOTAL WEBSITE KPIs\n-------------------------- */\nconst totalSpend = googleSpend + metaSpend;\nconst totalConversions = googleConversions + metaLeads;\n\nconst overallCPL = totalConversions\n  ? totalSpend / totalConversions\n  : null;\n\nconst conversionRate = visits\n  ? (siteConversions / visits) * 100\n  : 0;\n\n/* -------------------------\n   FINAL OUTPUT\n-------------------------- */\nreturn [\n  {\n    json: {\n      website,\n      isWeekly,\n      isMonthly,\n\n      websiteKPIs: {\n        visits,\n        users,\n        pageViews,\n        siteConversions,\n        totalSpend: Number(totalSpend.toFixed(2)),\n        totalConversions,\n        overallCPL: overallCPL ? Number(overallCPL.toFixed(2)) : null,\n        conversionRate: Number(conversionRate.toFixed(2))\n      },\n\n      googleAdsInsights: googleCampaignInsights,\n      metaAdsInsights: metaCampaignInsights\n    }\n  }\n];\n"
+      },
+      "id": "14232d14-8e02-4f76-b8c3-008ca9ca3770",
+      "name": "Calculate KPIs & Campaign Insights",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        4656,
+        720
+      ],
+      "typeVersion": 2,
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "rt-week-01",
+              "name": "reportType",
+              "type": "string",
+              "value": "Weekly"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "bf3b2b3c-4ec2-491c-9dc7-731053b2175f",
+      "name": "Set Tipo Semanal",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1344,
+        608
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "rt-month-01",
+              "name": "reportType",
+              "type": "string",
+              "value": "Monthly"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ddcbd44f-09ce-46b3-a150-480088e66785",
+      "name": "Set Tipo Mensal",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1344,
+        816
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://googleads.googleapis.com/v23/customers/{{ $('Set dados').item.json.id_google_customer }}/googleAds:search",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleAdsOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "developer-token",
+              "value": "={{ $('Set dados').item.json.google_developer_token }}"
+            },
+            {
+              "name": "login-customer-id",
+              "value": "={{ $('Set dados').item.json.google_manager_id }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "query",
+              "value": "=SELECT ad_group.id, ad_group.name, ad_group.status, ad_group.type, campaign.id, metrics.impressions, metrics.clicks, metrics.cost_micros, metrics.conversions, metrics.conversions_value, segments.date FROM ad_group WHERE campaign.id = {{ $('Set dados').item.json.id_google_campanha }} AND segments.date BETWEEN '{{ $('Code prepara datas para extracao').item.json.date_start }}' AND '{{ $('Code prepara datas para extracao').item.json.date_end }}'"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b2cb0774-4b82-4c4b-a529-7959ed2c4f00",
+      "name": "Google Ads Conjuntos (GAQL)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3616,
+        704
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "googleAdsOAuth2Api": {
+          "id": "78Fta7kyLfG3QHUT",
+          "name": "Google Ads account"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "Nível conjunto (ad_group) — roll-up intermediário."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://googleads.googleapis.com/v23/customers/{{ $('Set dados').item.json.id_google_customer }}/googleAds:search",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleAdsOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "developer-token",
+              "value": "={{ $('Set dados').item.json.google_developer_token }}"
+            },
+            {
+              "name": "login-customer-id",
+              "value": "={{ $('Set dados').item.json.google_manager_id }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "query",
+              "value": "=SELECT ad_group_ad.ad.id, ad_group_ad.ad.name, ad_group_ad.ad.type, ad_group_ad.status, ad_group_ad.ad.final_urls, ad_group_ad.ad.responsive_search_ad.headlines, ad_group_ad.ad.responsive_search_ad.descriptions, ad_group.id, ad_group.name, campaign.id, metrics.impressions, metrics.clicks, metrics.cost_micros, metrics.conversions, metrics.conversions_value, segments.date FROM ad_group_ad WHERE ad_group_ad.ad.id = {{ $json.ad_id_google }} AND segments.date BETWEEN '{{ $('Code prepara datas para extracao').item.json.date_start }}' AND '{{ $('Code prepara datas para extracao').item.json.date_end }}'"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "8819d136-a4e0-4baa-ad19-6a41636e1c8f",
+      "name": "Google Ads Anúncios (GAQL)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3616,
+        544
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "googleAdsOAuth2Api": {
+          "id": "78Fta7kyLfG3QHUT",
+          "name": "Google Ads account"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "Nível anúncio — onde tudo acontece: criativo (tipo), copy (headlines/descriptions), destino (final_urls). Público vem do nível conjunto."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://analyticsdata.googleapis.com/v1beta/properties/{{ $('Set dados').item.json.id_ga4 }}:runReport",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleAnalyticsOAuth2",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"dateRanges\": [{ \"startDate\": \"{{ $('Code prepara datas para extracao').item.json.date_start }}\", \"endDate\": \"{{ $('Code prepara datas para extracao').item.json.date_end }}\" }],\n  \"dimensions\": [{ \"name\": \"sessionDefaultChannelGroup\" }, { \"name\": \"date\" }],\n  \"metrics\": [{ \"name\": \"sessions\" }, { \"name\": \"engagedSessions\" }, { \"name\": \"engagementRate\" }, { \"name\": \"totalUsers\" }, { \"name\": \"keyEvents\" }],\n  \"dimensionFilter\": { \"filter\": { \"fieldName\": \"sessionDefaultChannelGroup\", \"inListFilter\": { \"values\": [\"Organic Search\", \"Organic Social\", \"Organic Video\", \"Organic Shopping\"] } } },\n  \"limit\": 10000\n}",
+        "options": {}
+      },
+      "id": "ae29ce76-7c49-4c2a-b74a-c549c25b23c5",
+      "name": "HTTP Request GA4 Orgânico",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        3616,
+        176
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "googleAnalyticsOAuth2": {
+          "id": "sulCJJefyrHKq1nW",
+          "name": "Google Analytics account"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "Orgânico do domínio principal (canais Organic), via GA4 Data API runReport."
+    },
+    {
+      "parameters": {
+        "jsCode": "const N = (v) => { const n = Number(v); return Number.isFinite(n) ? n : 0; };\nconst g = (o, ...keys) => { for (const k of keys) { if (o && o[k] !== undefined && o[k] !== null) return o[k]; } return undefined; };\nconst pStr = (p) => p ? (p.formula?.string ?? p.rich_text?.[0]?.text?.content ?? p.rich_text?.[0]?.plain_text ?? p.title?.[0]?.plain_text ?? p.url ?? null) : null;\nconst pNum = (p) => p ? (p.number ?? p.formula?.number ?? null) : null;\nconst pSel = (p) => p ? (p.select?.name ?? p.multi_select?.[0]?.name ?? null) : null;\nconst pDate = (p) => p ? (p.date?.start ?? p.formula?.date?.start ?? p.formula?.string ?? null) : null;\nconst pUid = (p) => p && p.unique_id ? `${p.unique_id.prefix ?? ''}-${p.unique_id.number ?? ''}` : null;\n\nfunction propAny(props, names, reader) {\n  for (const name of names) {\n    const val = reader(props[name]);\n    if (val !== null && val !== undefined && val !== '') return val;\n  }\n  return null;\n}\n\nfunction gMetrics(r) {\n  const m = r.metrics || {};\n  return {\n    business_date: r.segments?.date ?? null,\n    impressions: N(g(m, 'impressions')),\n    clicks: N(g(m, 'clicks')),\n    cost: N(g(m, 'costMicros', 'cost_micros')) / 1e6,\n    conversions: N(g(m, 'conversions')),\n    conv_value: N(g(m, 'conversionsValue', 'conversions_value')),\n    impression_share: N(g(m, 'searchImpressionShare', 'search_impression_share')),\n    budget_lost_is: N(g(m, 'searchBudgetLostImpressionShare', 'search_budget_lost_impression_share'))\n  };\n}\n\nfunction accGoogle(acc, m) {\n  acc.impressions += m.impressions; acc.clicks += m.clicks; acc.cost += m.cost;\n  acc.conversions += m.conversions; acc.conv_value += m.conv_value;\n  acc._sisNum += m.impression_share * m.impressions; acc._blisNum += m.budget_lost_is * m.impressions;\n  return acc;\n}\nfunction freshGoogle() { return { impressions: 0, clicks: 0, cost: 0, conversions: 0, conv_value: 0, _sisNum: 0, _blisNum: 0 }; }\nfunction finalizeGoogle(acc, ident) {\n  const imp = acc.impressions || 0;\n  return { ...ident, impressions: acc.impressions, clicks: acc.clicks, cost: acc.cost, conversions: acc.conversions, conv_value: acc.conv_value, impression_share: imp > 0 ? acc._sisNum / imp : null, budget_lost_is: imp > 0 ? acc._blisNum / imp : null };\n}\nfunction buildMap(items, idProp, notionIdProp, padraoProp) {\n  const map = {};\n  for (const it of (items || [])) {\n    const props = it.json?.properties || {};\n    const id = pNum(props[idProp]);\n    if (id === null || id === undefined) continue;\n    map[String(id)] = { notion_id: pStr(props[notionIdProp]), id_padrao: pUid(props[padraoProp]), start_date: propAny(props, ['Data de Início', 'Data Inicio', 'data_inicio_adset'], pDate) };\n  }\n  return map;\n}\nfunction ga4Norm(resp, source, landingPage) {\n  const headers = (resp && resp.metricHeaders) ? resp.metricHeaders.map((h) => h.name) : [];\n  const idx = (name) => headers.indexOf(name);\n  const rows = (resp && resp.rows) ? resp.rows : [];\n  const iS = idx('sessions'), iE = idx('engagedSessions'), iU = idx('totalUsers'), iN = idx('newUsers'), iK = idx('keyEvents'), iB = idx('bounceRate'), iD = idx('averageSessionDuration');\n  let sessions = 0, engaged_sessions = 0, users = 0, new_users = 0, key_events = 0, bounce_rate = null, avg_session_duration_sec = null;\n  for (const r of rows) {\n    const mv = r.metricValues || [];\n    if (iS >= 0) sessions += N(mv[iS]?.value);\n    if (iE >= 0) engaged_sessions += N(mv[iE]?.value);\n    if (iU >= 0) users += N(mv[iU]?.value);\n    if (iN >= 0) new_users += N(mv[iN]?.value);\n    if (iK >= 0) key_events += N(mv[iK]?.value);\n    if (iB >= 0) bounce_rate = N(mv[iB]?.value);\n    if (iD >= 0) avg_session_duration_sec = N(mv[iD]?.value);\n  }\n  return { canal: source === 'organico' ? 'google_organic' : 'google_paid', landing_page: landingPage || '__unknown__', source, sessions, users, new_users, engaged_sessions, engagement_rate: sessions > 0 ? engaged_sessions / sessions : null, conversions: key_events, key_events, avg_session_duration_sec, bounce_rate };\n}\nconst META_PURCHASE = ['offsite_conversion.fb_pixel_purchase', 'purchase', 'omni_purchase'];\nconst META_LEAD = ['lead', 'offsite_conversion.fb_pixel_lead', 'onsite_conversion.lead_grouped'];\nfunction metaSum(arr, types) { const map = Object.fromEntries((arr || []).map((e) => [e.action_type, N(e.value)])); for (const t of types) if (map[t]) return map[t]; return 0; }\nfunction readOrThrow(label, fn) {\n  try {\n    const v = fn();\n    if (v === null || v === undefined) {\n      throw new Error(`[T28-ADAPTADOR] fonte estrutural ausente: ${label}`);\n    }\n    return v;\n  } catch (e) {\n    throw new Error(`[T28-ADAPTADOR] falha lendo ${label}: ${e.message}`);\n  }\n}\n\nfunction safeOptional(label, fn, defaultValue = null) {\n  try {\n    return fn() ?? defaultValue;\n  } catch (e) {\n    console.log(`[T28-ADAPTADOR] opcional ${label} ausente: ${e.message}`);\n    return defaultValue;\n  }\n}\n\nconst nodeFirst = (nodeName) => {\n  const items = $(nodeName).all();\n  return (items && items.length && items[0] && items[0].json) ? items[0].json : null;\n};\nconst nodeAll = (nodeName) => {\n  const items = $(nodeName).all();\n  return (items && items.length) ? items.filter((it) => it && it.json).map((it) => it.json) : [];\n};\nconst sourceStatus = {};\nconst optionalSource = (key, label, fn) => {\n  try {\n    const v = fn();\n    if (v === null || v === undefined) { sourceStatus[key] = 'missing'; return null; }\n    sourceStatus[key] = 'ok';\n    return v;\n  } catch (e) {\n    sourceStatus[key] = 'error';\n    console.log(`[T28-ADAPTADOR] fonte opcional ${label} indisponivel: ${e.message}`);\n    return null;\n  }\n}\n\nconst ids = readOrThrow('Set dados', () => nodeFirst('Set dados'));\nconst campProps = readOrThrow('Get database campanhas', () => nodeFirst('Get database campanhas')?.properties);\nconst cliProps = readOrThrow('Get database clientes', () => nodeFirst('Get database clientes')?.properties);\nconst windows = readOrThrow('Code prepara datas para extracao', () => nodeFirst('Code prepara datas para extracao'));\nconst conjuntosItems = safeOptional('Get database conjuntos', () => $('Get database conjuntos').all(), []);\nconst anunciosItems = safeOptional('Get database anuncios', () => $('Get database anuncios').all(), []);\nconst adsetMap = buildMap(conjuntosItems, 'adset_id_google', 'notion_id_adset', 'id_adset_padrao');\nconst adMap = buildMap(anunciosItems, 'ad_id_google', 'notion_id_ad', 'id_ad_padrao');\nconst adsetMapMeta = buildMap(conjuntosItems, 'adset_id_meta', 'notion_id_adset', 'id_adset_padrao');\nconst adMapMeta = buildMap(anunciosItems, 'ad_id_meta', 'notion_id_ad', 'id_ad_padrao');\nconst landingPage = ids.landing_page ?? propAny(campProps, ['Landing Page', 'landing_page', 'URL'], pStr);\nconst campaignStart = propAny(campProps, ['Data de Início', 'Data Inicio', 'data_inicio_campanha', 'Início'], pDate);\nconst ctx = {\n  client_id: ids.id_client ?? null,\n  conta: pStr(cliProps['Nome do Cliente']) ?? pStr(campProps['client_slug']) ?? ids.id_client ?? null,\n  campaign_id: ids.id_google_campanha ?? null,\n  campaign_name: pStr(campProps['Nome da Campanha']) ?? pStr(campProps['Name']) ?? null,\n  data_inicio_campanha: campaignStart,\n  objetivo: pSel(campProps['Objetivo']),\n  modelo_negocio: pSel(campProps['Modelo de Negócio']),\n  metrica_mae: pSel(campProps['Métrica-Mãe']) ?? pSel(campProps['Metrica-Mae']) ?? null,\n  margem_contribuicao_pct: pNum(cliProps['Margem de Contribuição']) ?? pNum(cliProps['Margem de Contribuicao']),\n  ticket_ltv: pNum(cliProps['Ticket/LTV']),\n  meta_metrica_mae: pNum(campProps['CPA Alvo']) ?? pNum(campProps['Meta CPA']) ?? pNum(campProps['Meta ROAS']),\n  landing_page: landingPage,\n};\nconst bqCampaigns = readOrThrow('[T28] BQ Read raw_campaign_data', () => nodeAll('[T28] BQ Read raw_campaign_data')) || [];\nconst googleCampaigns = bqCampaigns.map((r) => ({\n  id: String(r.campaign_id ?? ids.id_google_campanha ?? ''), name: ctx.campaign_name,\n  business_date: String(r.business_date ?? windows.date_end ?? '').slice(0, 10), data_inicio_campanha: campaignStart,\n  impressions: N(r.impressions), clicks: N(r.clicks), cost: N(r.cost), conversions: N(r.conversions), conv_value: N(r.conv_value),\n  primary_metric_goal: r.primary_metric_goal ?? null, data_source: r.data_source ?? null, platform: r.platform ?? 'google_ads', daily_entry_execution_id: r.daily_entry_execution_id ?? null\n}));\nconst gAdsetRows = (optionalSource('gaql_adsets', 'Google Ads Conjuntos (GAQL)', () => nodeFirst('Google Ads Conjuntos (GAQL)'))?.results || []).map((r) => ({ json: r }));\nconst adsetAgg = {};\nfor (const it of gAdsetRows) { const r = it.json; const id = String(r.adGroup?.id ?? ''); if (!id) continue; adsetAgg[id] = accGoogle(adsetAgg[id] || freshGoogle(), gMetrics(r)); adsetAgg[id]._name = r.adGroup?.name; adsetAgg[id]._business_date = r.segments?.date ?? windows.date_end; }\nconst googleAdsets = Object.entries(adsetAgg).map(([id, acc]) => finalizeGoogle(acc, { id, name: acc._name ?? null, business_date: String(acc._business_date ?? windows.date_end ?? '').slice(0, 10), data_inicio_adset: adsetMap[id]?.start_date ?? null, notion_id: adsetMap[id]?.notion_id ?? null, id_padrao: adsetMap[id]?.id_padrao ?? null }));\nconst gAdRows = (optionalSource('gaql_ads', 'Google Ads Anúncios (GAQL)', () => nodeFirst('Google Ads Anúncios (GAQL)'))?.results || []).map((r) => ({ json: r }));\nconst googleAds = gAdRows.map((it) => ({ ...it.json, metrics_norm: gMetrics(it.json), ad_id: String(it.json.adGroupAd?.ad?.id ?? ''), adset_id: String(it.json.adGroup?.id ?? '') }));\nconst metaRows = (optionalSource('meta', 'Fetch Meta Ads', () => nodeFirst('Fetch Meta Ads'))?.data || []).map((r) => ({ json: r }));\nconst metaCampaignMap = {};\nfor (const it of metaRows) {\n  const r = it.json; const id = String(r.campaign_id ?? ids.id_meta_campanha ?? ''); if (!id) continue;\n  const a = metaCampaignMap[id] || { id, name: r.campaign_name ?? null, impressions: 0, clicks: 0, cost: 0, leads: 0, purchases: 0, purchase_value: 0, reach: 0, actions_json: [] };\n  a.impressions += N(r.impressions); a.clicks += N(r.clicks); a.cost += N(r.spend); a.reach += N(r.reach);\n  a.purchases += metaSum(r.actions, META_PURCHASE); a.leads += metaSum(r.actions, META_LEAD); a.purchase_value += metaSum(r.action_values, META_PURCHASE);\n  a.actions_json.push(...(r.actions || [])); metaCampaignMap[id] = a;\n}\nconst ga4 = {\n  organic: ga4Norm(optionalSource('ga4_organic', 'HTTP Request GA4 Orgânico', () => nodeFirst('HTTP Request GA4 Orgânico')), 'organico', landingPage),\n  paid: ga4Norm(optionalSource('ga4_paid', 'HTTP Request GA4 Pago (LPs)', () => nodeFirst('HTTP Request GA4 Pago (LPs)')), 'pago', landingPage),\n};\nconst gbp = optionalSource('gbp', 'HTTP Request GBP', () => nodeFirst('HTTP Request GBP')) || {};\nconst clarity = optionalSource('clarity', 'HTTP Request Clarity', () => nodeFirst('HTTP Request Clarity')) || {};\nconst searchTermsFeatures = optionalSource('search_terms', '[T28] Search Terms Features', () => nodeFirst('[T28] Search Terms Features')) || {};\n\nreturn [{ json: { ctx, windows: { reportType: windows.reportType, janela: windows.reportType === 'Monthly' ? 'D-30' : 'D-7', date_start: windows.date_start ?? null, date_end: windows.date_end ?? null, n_days: windows.reportType === 'Monthly' ? 30 : 7 }, google: { campaigns: googleCampaigns, adsets: googleAdsets, ads: googleAds }, meta: { campaigns: Object.values(metaCampaignMap) }, ga4, gbp, clarity, search_terms_features: searchTermsFeatures, source_status: sourceStatus } }];\n"
+      },
+      "id": "9fb73d39-d0f7-481e-9f8f-e8b38bee7f93",
+      "name": "Adaptador Input T28",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4704,
+        448
+      ],
+      "executeOnce": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const num = (v) => { const n = Number(v); return Number.isFinite(n) ? n : 0; };\nconst round = (n, d = 2) => (n === null || n === undefined || !Number.isFinite(Number(n)) ? null : Number(Number(n).toFixed(d)));\nconst div = (a, b) => (num(b) > 0 ? num(a) / num(b) : null);\nconst SOP_ID = '386b65e5-c72b-818c-84eb-c5917b089438';\n\nfunction calcVolumeSuficiente(dataInicioCampanha, businessDate, conversoesNaJanela, diasDaJanela) {\n  if (!dataInicioCampanha || !businessDate) return true;\n  const idadeCampanhaDias = Math.floor((new Date(businessDate) - new Date(dataInicioCampanha)) / (1000 * 60 * 60 * 24));\n  if (idadeCampanhaDias <= 14) return conversoesNaJanela >= 50 && diasDaJanela >= 7;\n  return true;\n}\nfunction assertNoRawSearchTerms(value, path = '') {\n  if (Array.isArray(value)) {\n    if (/search.*terms|termos|terms/i.test(path)) throw new Error('D5: search terms brutos não podem persistir em t28_*');\n    for (let i = 0; i < value.length; i++) assertNoRawSearchTerms(value[i], `${path}[${i}]`);\n    return;\n  }\n  if (value && typeof value === 'object') for (const [k, v] of Object.entries(value)) assertNoRawSearchTerms(v, path ? `${path}.${k}` : k);\n}\nfunction kpis(m) {\n  const impressions = num(m.impressions), clicks = num(m.clicks), cost = num(m.cost), conversions = num(m.conversions), convValue = num(m.conv_value ?? m.purchase_value);\n  return { cpm: round(div(cost, impressions) === null ? null : div(cost, impressions) * 1000), cpc: round(div(cost, clicks)), ctr: round(div(clicks, impressions)), cvr: round(div(conversions, clicks)), cpa: round(div(cost, conversions)), cpl: round(div(cost, num(m.leads) || conversions)), roas: round(div(convValue, cost), 4) };\n}\nfunction audit(sourceExecutionId, status, volume) {\n  return { execution_id: `EXEC-T28-${$execution.id}`, source_execution_id: sourceExecutionId ?? null, versao_contract_aplicada: 'v1.0', versao_sop_aplicada: SOP_ID, source_status: JSON.stringify(status), volume_suficiente: Boolean(volume), ingested_at: new Date().toISOString() };\n}\nfunction sourceStatus(run, source, ok) {\n  const upstream = run.source_status || {};\n  return {\n    google_ads: source === 'google_ads' ? (ok ? 'ok' : 'missing') : 'not_applicable',\n    gaql_adsets: upstream.gaql_adsets ?? 'not_applicable',\n    gaql_ads: upstream.gaql_ads ?? 'not_applicable',\n    ga4_organic: upstream.ga4_organic ?? (run.ga4?.organic?.sessions ? 'ok' : 'cred_missing'),\n    ga4_paid: upstream.ga4_paid ?? (run.ga4?.paid?.sessions ? 'ok' : 'cred_missing'),\n    gbp: upstream.gbp ?? (Object.keys(run.gbp || {}).length ? 'ok' : 'cred_missing'),\n    clarity: upstream.clarity ?? (Object.keys(run.clarity || {}).length ? 'ok' : 'cred_missing'),\n    meta_ads: upstream.meta ?? upstream.meta_ads ?? (run.meta?.campaigns?.length ? 'ok' : 'disabled'),\n    search_terms: upstream.search_terms ?? 'not_applicable'\n  };\n}\nfunction sourceAvailable(run, key, fallbackOk) {\n  const upstream = run.source_status || {};\n  if (Object.prototype.hasOwnProperty.call(upstream, key)) return upstream[key] === 'ok';\n  return Boolean(fallbackOk);\n}\nfunction base(run) { return { client_id: String(run.ctx?.client_id ?? ''), business_date: String(run.windows?.date_end ?? new Date().toISOString().slice(0, 10)).slice(0, 10), janela: run.windows?.janela ?? 'D-7' }; }\n\nconst out = [];\nfor (const item of $input.all()) {\n  const run = item.json || {};\n  assertNoRawSearchTerms(run);\n  const ctx = run.ctx || {}, win = run.windows || {}, b = base(run);\n  const metricaMae = ctx.metrica_mae || 'CPA';\n  const dias = num(win.n_days) || (win.janela === 'D-30' ? 30 : 7);\n  for (const c of (run.google?.campaigns || [])) {\n    const businessDate = c.business_date || b.business_date;\n    const kp = kpis(c);\n    const volume = calcVolumeSuficiente(c.data_inicio_campanha || ctx.data_inicio_campanha, businessDate, num(c.conversions), dias);\n    out.push({ json: { target_table: 't28_campaign', client_id: b.client_id, campaign_id: String(c.id || ctx.campaign_id || ''), business_date: businessDate, janela: b.janela, campaign_name: c.name || ctx.campaign_name || null, data_inicio_campanha: c.data_inicio_campanha || ctx.data_inicio_campanha || null, objetivo: ctx.objetivo || null, modelo_negocio: ctx.modelo_negocio || null, metrica_mae: metricaMae, meta_metrica_mae: num(ctx.meta_metrica_mae) || num(c.primary_metric_goal) || null, margem_contribuicao_pct: ctx.margem_contribuicao_pct ?? null, ticket_ltv: ctx.ticket_ltv ?? null, landing_page: ctx.landing_page || null, impressions: num(c.impressions), clicks: num(c.clicks), cost: num(c.cost), conversions: num(c.conversions), conv_value: num(c.conv_value), impression_share: c.impression_share ?? null, budget_lost_is: c.budget_lost_is ?? null, cpm: kp.cpm, cpc: kp.cpc, ctr: kp.ctr, cvr: kp.cvr, cpa: kp.cpa, cpl: kp.cpl, roas: kp.roas, pct_brand_terms: num(run.search_terms_features?.pct_brand_terms), pct_problem_solving_terms: num(run.search_terms_features?.pct_problem_solving_terms), pct_competitor_terms: num(run.search_terms_features?.pct_competitor_terms), pct_other_terms: num(run.search_terms_features?.pct_other_terms), ...audit(c.daily_entry_execution_id, sourceStatus(run, 'google_ads', true), volume) } });\n  }\n  const sourceExec = (run.google?.campaigns || [])[0]?.daily_entry_execution_id ?? null;\n  for (const a of (run.google?.adsets || [])) {\n    const businessDate = a.business_date || b.business_date;\n    const kp = kpis(a);\n    const volume = calcVolumeSuficiente(a.data_inicio_adset || ctx.data_inicio_campanha, businessDate, num(a.conversions), dias);\n    const criativos = (run.google?.ads || []).filter((ad) => String(ad.adset_id) === String(a.id)).slice(0, 10).map((ad) => ({ ad_id: ad.ad_id, headlines: ad.adGroupAd?.ad?.responsiveSearchAd?.headlines ?? [], descriptions: ad.adGroupAd?.ad?.responsiveSearchAd?.descriptions ?? [], final_url: ad.adGroupAd?.ad?.finalUrls?.[0] ?? null, impressions: num(ad.metrics_norm?.impressions), clicks: num(ad.metrics_norm?.clicks), cost: num(ad.metrics_norm?.cost), conversions: num(ad.metrics_norm?.conversions), cpa: kpis(ad.metrics_norm || {}).cpa, roas: kpis(ad.metrics_norm || {}).roas }));\n    out.push({ json: { target_table: 't28_adset', client_id: b.client_id, campaign_id: String(ctx.campaign_id || ''), adset_id: String(a.id || ''), business_date: businessDate, janela: b.janela, adset_name: a.name || null, data_inicio_adset: a.data_inicio_adset || null, impressions: num(a.impressions), clicks: num(a.clicks), cost: num(a.cost), conversions: num(a.conversions), conv_value: num(a.conv_value), cpm: kp.cpm, cpc: kp.cpc, ctr: kp.ctr, cvr: kp.cvr, cpa: kp.cpa, roas: kp.roas, criativos_json: JSON.stringify(criativos), ...audit(sourceExec, sourceStatus(run, 'google_ads', true), volume) } });\n  }\n  const ga4Sources = [\n    ['ga4_organic', run.ga4?.organic],\n    ['ga4_paid', run.ga4?.paid]\n  ];\n  for (const [sourceKey, ga] of ga4Sources) {\n    if (!ga || !sourceAvailable(run, sourceKey, num(ga.sessions) > 0 || num(ga.users) > 0 || num(ga.conversions) > 0 || num(ga.key_events) > 0)) continue;\n    const volume = calcVolumeSuficiente(ctx.data_inicio_campanha, b.business_date, num(ga.conversions), dias);\n    out.push({ json: { target_table: 't28_ga4_landing', client_id: b.client_id, business_date: b.business_date, janela: b.janela, canal: ga.canal, landing_page: ga.landing_page || '__unknown__', source: ga.source, sessions: num(ga.sessions), users: num(ga.users), new_users: num(ga.new_users), engaged_sessions: num(ga.engaged_sessions), engagement_rate: ga.engagement_rate ?? null, conversions: num(ga.conversions), key_events: num(ga.key_events), avg_session_duration_sec: ga.avg_session_duration_sec ?? null, bounce_rate: ga.bounce_rate ?? null, ...audit(sourceExec, sourceStatus(run, 'ga4', true), volume) } });\n  }\n  const gbp = run.gbp || {};\n  if (sourceAvailable(run, 'gbp', Object.keys(gbp).length > 0)) {\n    out.push({ json: { target_table: 't28_gbp_daily', client_id: b.client_id, business_date: b.business_date, janela: b.janela, gbp_impressions: num(gbp.impressions ?? gbp.gbp_impressions), gbp_search_views: num(gbp.search_views ?? gbp.gbp_search_views), gbp_maps_views: num(gbp.maps_views ?? gbp.gbp_maps_views), gbp_website_clicks: num(gbp.website_clicks ?? gbp.gbp_website_clicks), gbp_phone_calls: num(gbp.phone_calls ?? gbp.gbp_phone_calls), gbp_direction_requests: num(gbp.direction_requests ?? gbp.gbp_direction_requests), gbp_reviews_count: num(gbp.reviews_count ?? gbp.gbp_reviews_count), gbp_reviews_avg_rating: gbp.reviews_avg_rating ?? gbp.gbp_reviews_avg_rating ?? null, ...audit(sourceExec, sourceStatus(run, 'gbp', true), true) } });\n  }\n  const cl = run.clarity || {};\n  if (sourceAvailable(run, 'clarity', Object.keys(cl).length > 0)) {\n    out.push({ json: { target_table: 't28_clarity_daily', client_id: b.client_id, business_date: b.business_date, janela: b.janela, clarity_sessions: num(cl.sessions ?? cl.clarity_sessions), clarity_users: num(cl.users ?? cl.clarity_users), clarity_rage_clicks: num(cl.rage_clicks ?? cl.clarity_rage_clicks), clarity_dead_clicks: num(cl.dead_clicks ?? cl.clarity_dead_clicks), clarity_excessive_scroll: num(cl.excessive_scroll ?? cl.clarity_excessive_scroll), clarity_avg_scroll_depth: cl.avg_scroll_depth ?? cl.clarity_avg_scroll_depth ?? null, clarity_avg_session_sec: cl.avg_session_sec ?? cl.clarity_avg_session_sec ?? null, ...audit(sourceExec, sourceStatus(run, 'clarity', true), true) } });\n  }\n  for (const m of (run.meta?.campaigns || [])) {\n    const kp = kpis({ ...m, conversions: num(m.purchases), conv_value: num(m.purchase_value) });\n    const volume = calcVolumeSuficiente(ctx.data_inicio_campanha, b.business_date, num(m.purchases || m.leads), dias);\n    out.push({ json: { target_table: 't28_meta_campaign', client_id: b.client_id, campaign_id_meta: String(m.id || ''), business_date: b.business_date, janela: b.janela, campaign_name: m.name || null, data_inicio_campanha: ctx.data_inicio_campanha || null, objetivo: ctx.objetivo || null, metrica_mae: metricaMae, meta_metrica_mae: ctx.meta_metrica_mae ?? null, impressions: num(m.impressions), clicks: num(m.clicks), cost: num(m.cost), leads: num(m.leads), purchases: num(m.purchases), purchase_value: num(m.purchase_value), reach: num(m.reach), frequency: num(m.reach) > 0 ? round(num(m.impressions) / num(m.reach), 2) : null, actions_json: JSON.stringify(m.actions_json || []), cpm: kp.cpm, cpc: kp.cpc, ctr: kp.ctr, cpl: kp.cpl, roas: kp.roas, ...audit(sourceExec, sourceStatus(run, 'meta_ads', true), volume) } });\n  }\n}\nreturn out;"
+      },
+      "id": "0d3e43c2-7ea0-429b-b24e-6093212d0e5e",
+      "name": "Normalizador T28",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4960,
+        448
+      ],
+      "executeOnce": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "projectId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "project-0e7c58d4-656f-49e8-807",
+          "cachedResultName": "phi-production",
+          "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=project-0e7c58d4-656f-49e8-807"
+        },
+        "sqlQuery": "SELECT\n  client_id,\n  campaign_id,\n  date AS business_date,\n  SUM(impressions) AS impressions,\n  SUM(clicks) AS clicks,\n  SUM(cost) AS cost,\n  SUM(conversions) AS conversions,\n  SUM(revenue) AS conv_value,\n  ANY_VALUE(data_source) AS data_source,\n  ANY_VALUE(platform) AS platform,\n  ANY_VALUE(primary_metric_goal) AS primary_metric_goal,\n  ANY_VALUE(execution_id) AS daily_entry_execution_id\nFROM `phi_prod.raw_campaign_data`\nWHERE client_id = @client_id\n  AND date BETWEEN @start_date AND @end_date\nGROUP BY client_id, campaign_id, date",
+        "options": {
+          "timeoutMs": 10000,
+          "returnAsNumbers": true,
+          "queryParameters": {
+            "namedParameters": [
+              {
+                "name": "client_id",
+                "value": "={{ $('Set dados').item.json.id_client }}"
+              },
+              {
+                "name": "start_date",
+                "value": "={{ $('Code prepara datas para extracao').item.json.date_start }}"
+              },
+              {
+                "name": "end_date",
+                "value": "={{ $('Code prepara datas para extracao').item.json.date_end }}"
+              }
+            ]
+          }
+        }
+      },
+      "id": "531436af-6762-45dd-9d75-aee4da9dda18",
+      "name": "[T28] BQ Read raw_campaign_data",
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2.1,
+      "position": [
+        3616,
+        880
+      ],
+      "executeOnce": true,
+      "credentials": {
+        "googleBigQueryOAuth2Api": {
+          "id": "UhLRAanVarQeOpQy",
+          "name": "Google BigQuery account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const first = $input.first()?.json || {};\n\nfunction parseMaybeJson(v) {\n  if (!v) return null;\n  if (typeof v === 'object') return v;\n  if (typeof v !== 'string') return null;\n  try { return JSON.parse(v); } catch (e) { return null; }\n}\n\nconst payload = parseMaybeJson(first.output) || parseMaybeJson(first.text) || first.output || first;\nconst termos = Array.isArray(payload?.terms) ? payload.terms : [];\n\nconst countBy = (name) => termos.filter((t) => t?.classificacao === name).length;\nconst brand_count = countBy('brand');\nconst problem_count = countBy('problem_solving');\nconst competitor_count = countBy('competitor');\nconst other_count = countBy('other');\nconst total = termos.length;\n\nreturn [{\n  json: {\n    pct_brand_terms: total > 0 ? brand_count / total : 0,\n    pct_problem_solving_terms: total > 0 ? problem_count / total : 0,\n    pct_competitor_terms: total > 0 ? competitor_count / total : 0,\n    pct_other_terms: total > 0 ? other_count / total : 0\n  }\n}];"
+      },
+      "id": "64e9acc1-006f-4ffe-b72d-02e25fe50e62",
+      "name": "[T28] Search Terms Features",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4192,
+        1408
+      ],
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.target_table }}",
+              "rightValue": "t28_campaign",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "id": "0aab3f52-4f56-440a-a6c2-f148b4a85b85"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "e6153a72-92f8-4f74-9bad-65effb86338b",
+      "name": "[T28] Filter t28_campaign",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        5232,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const DATASET = 'phi_prod';\nconst TABLE = 't28_campaign';\nconst SCHEMA = { client_id: 'STRING', campaign_id: 'STRING', business_date: 'DATE', janela: 'STRING', campaign_name: 'STRING', data_inicio_campanha: 'DATE', objetivo: 'STRING', modelo_negocio: 'STRING', metrica_mae: 'STRING', meta_metrica_mae: 'FLOAT64', margem_contribuicao_pct: 'FLOAT64', ticket_ltv: 'FLOAT64', landing_page: 'STRING', impressions: 'INT64', clicks: 'INT64', cost: 'FLOAT64', conversions: 'FLOAT64', conv_value: 'FLOAT64', impression_share: 'FLOAT64', budget_lost_is: 'FLOAT64', cpm: 'FLOAT64', cpc: 'FLOAT64', ctr: 'FLOAT64', cvr: 'FLOAT64', cpa: 'FLOAT64', cpl: 'FLOAT64', roas: 'FLOAT64', pct_brand_terms: 'FLOAT64', pct_problem_solving_terms: 'FLOAT64', pct_competitor_terms: 'FLOAT64', pct_other_terms: 'FLOAT64', execution_id: 'STRING', source_execution_id: 'STRING', versao_contract_aplicada: 'STRING', versao_sop_aplicada: 'STRING', source_status: 'JSON', volume_suficiente: 'BOOL', ingested_at: 'TIMESTAMP' };\nconst KEY_COLUMNS = ['client_id', 'campaign_id', 'business_date', 'janela'];\nconst rows = $input.all().map((item) => { const { target_table, ...row } = item.json || {}; return row; });\nif (rows.length === 0) return [];\nconst columns = Object.keys(SCHEMA);\nconst nonKeyColumns = columns.filter((column) => !KEY_COLUMNS.includes(column));\nconst sqlString = (value) => String(value).replace(/'/g, \"''\");\nconst isBlank = (value) => value === null || value === undefined || value === '';\nfunction literal(value, type) {\n  if (isBlank(value)) return type === 'TIMESTAMP' ? 'CURRENT_TIMESTAMP()' : `CAST(NULL AS ${type})`;\n  if (type === 'STRING') return `CAST('${sqlString(value)}' AS STRING)`;\n  if (type === 'DATE') return `DATE('${sqlString(value)}')`;\n  if (type === 'TIMESTAMP') return `TIMESTAMP('${sqlString(value)}')`;\n  if (type === 'INT64') { const n = Number(value); return Number.isFinite(n) ? `CAST(${Math.trunc(n)} AS INT64)` : 'CAST(NULL AS INT64)'; }\n  if (type === 'FLOAT64') { const n = Number(value); return Number.isFinite(n) ? `CAST(${n} AS FLOAT64)` : 'CAST(NULL AS FLOAT64)'; }\n  if (type === 'BOOL') { if (value === true || value === 'true' || value === 1 || value === '1') return 'TRUE'; if (value === false || value === 'false' || value === 0 || value === '0') return 'FALSE'; return 'CAST(NULL AS BOOL)'; }\n  if (type === 'JSON') { const jsonText = typeof value === 'string' ? value : JSON.stringify(value); return `PARSE_JSON('${sqlString(jsonText)}')`; }\n  throw new Error(`Unsupported BigQuery type ${type} for ${TABLE}`);\n}\nfunction selectForRow(row, rowIndex) {\n  const expressions = columns.map((column) => { const expression = literal(row[column], SCHEMA[column]); return rowIndex === 0 ? `${expression} AS ${column}` : expression; });\n  return rowIndex === 0 ? `SELECT ${expressions.join(', ')}` : `UNION ALL SELECT ${expressions.join(', ')}`;\n}\nconst sourceSql = rows.map(selectForRow).join('\\n  ');\nconst onSql = KEY_COLUMNS.map((column) => `T.${column} = S.${column}`).join(' AND ');\nconst updateSql = nonKeyColumns.map((column) => `${column} = S.${column}`).join(',\\n  ');\nconst insertColumns = columns.join(', ');\nconst insertValues = columns.map((column) => `S.${column}`).join(', ');\nconst sql = `MERGE \\`${DATASET}.${TABLE}\\` AS T\nUSING (\n  ${sourceSql}\n) AS S\nON ${onSql}\nWHEN MATCHED THEN UPDATE SET\n  ${updateSql}\nWHEN NOT MATCHED THEN INSERT (${insertColumns})\nVALUES (${insertValues})`;\nreturn [{ json: { _merge_sql: sql } }];"
+      },
+      "id": "73983add-7d07-4bc0-933a-ff0e8f375099",
+      "name": "[T28] Build MERGE t28_campaign",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5488,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "projectId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "project-0e7c58d4-656f-49e8-807",
+          "cachedResultName": "phi-production",
+          "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=project-0e7c58d4-656f-49e8-807"
+        },
+        "sqlQuery": "{{ $json._merge_sql }}",
+        "options": {
+          "timeoutMs": 10000,
+          "useLegacySql": false
+        }
+      },
+      "id": "852435e1-3055-4d1f-86f2-da3ecf2619b0",
+      "name": "[T28] BQ Merge t28_campaign",
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2.1,
+      "position": [
+        5744,
+        128
+      ],
+      "credentials": {
+        "googleBigQueryOAuth2Api": {
+          "id": "UhLRAanVarQeOpQy",
+          "name": "Google BigQuery account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.target_table }}",
+              "rightValue": "t28_adset",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "id": "a43b698b-c33e-443e-93de-043cb900abf2"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "f7ad0859-a993-45d2-a4c6-130e92d27fae",
+      "name": "[T28] Filter t28_adset",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        5232,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const DATASET = 'phi_prod';\nconst TABLE = 't28_adset';\nconst SCHEMA = { client_id: 'STRING', campaign_id: 'STRING', adset_id: 'STRING', business_date: 'DATE', janela: 'STRING', adset_name: 'STRING', data_inicio_adset: 'DATE', impressions: 'INT64', clicks: 'INT64', cost: 'FLOAT64', conversions: 'FLOAT64', conv_value: 'FLOAT64', cpm: 'FLOAT64', cpc: 'FLOAT64', ctr: 'FLOAT64', cvr: 'FLOAT64', cpa: 'FLOAT64', roas: 'FLOAT64', criativos_json: 'JSON', execution_id: 'STRING', source_execution_id: 'STRING', versao_contract_aplicada: 'STRING', versao_sop_aplicada: 'STRING', source_status: 'JSON', volume_suficiente: 'BOOL', ingested_at: 'TIMESTAMP' };\nconst KEY_COLUMNS = ['client_id', 'campaign_id', 'adset_id', 'business_date', 'janela'];\nconst rows = $input.all().map((item) => { const { target_table, ...row } = item.json || {}; return row; });\nif (rows.length === 0) return [];\nconst columns = Object.keys(SCHEMA);\nconst nonKeyColumns = columns.filter((column) => !KEY_COLUMNS.includes(column));\nconst sqlString = (value) => String(value).replace(/'/g, \"''\");\nconst isBlank = (value) => value === null || value === undefined || value === '';\nfunction literal(value, type) {\n  if (isBlank(value)) return type === 'TIMESTAMP' ? 'CURRENT_TIMESTAMP()' : `CAST(NULL AS ${type})`;\n  if (type === 'STRING') return `CAST('${sqlString(value)}' AS STRING)`;\n  if (type === 'DATE') return `DATE('${sqlString(value)}')`;\n  if (type === 'TIMESTAMP') return `TIMESTAMP('${sqlString(value)}')`;\n  if (type === 'INT64') { const n = Number(value); return Number.isFinite(n) ? `CAST(${Math.trunc(n)} AS INT64)` : 'CAST(NULL AS INT64)'; }\n  if (type === 'FLOAT64') { const n = Number(value); return Number.isFinite(n) ? `CAST(${n} AS FLOAT64)` : 'CAST(NULL AS FLOAT64)'; }\n  if (type === 'BOOL') { if (value === true || value === 'true' || value === 1 || value === '1') return 'TRUE'; if (value === false || value === 'false' || value === 0 || value === '0') return 'FALSE'; return 'CAST(NULL AS BOOL)'; }\n  if (type === 'JSON') { const jsonText = typeof value === 'string' ? value : JSON.stringify(value); return `PARSE_JSON('${sqlString(jsonText)}')`; }\n  throw new Error(`Unsupported BigQuery type ${type} for ${TABLE}`);\n}\nfunction selectForRow(row, rowIndex) {\n  const expressions = columns.map((column) => { const expression = literal(row[column], SCHEMA[column]); return rowIndex === 0 ? `${expression} AS ${column}` : expression; });\n  return rowIndex === 0 ? `SELECT ${expressions.join(', ')}` : `UNION ALL SELECT ${expressions.join(', ')}`;\n}\nconst sourceSql = rows.map(selectForRow).join('\\n  ');\nconst onSql = KEY_COLUMNS.map((column) => `T.${column} = S.${column}`).join(' AND ');\nconst updateSql = nonKeyColumns.map((column) => `${column} = S.${column}`).join(',\\n  ');\nconst insertColumns = columns.join(', ');\nconst insertValues = columns.map((column) => `S.${column}`).join(', ');\nconst sql = `MERGE \\`${DATASET}.${TABLE}\\` AS T\nUSING (\n  ${sourceSql}\n) AS S\nON ${onSql}\nWHEN MATCHED THEN UPDATE SET\n  ${updateSql}\nWHEN NOT MATCHED THEN INSERT (${insertColumns})\nVALUES (${insertValues})`;\nreturn [{ json: { _merge_sql: sql } }];"
+      },
+      "id": "37f14f2f-5dad-4cdd-947e-58a9f67976a0",
+      "name": "[T28] Build MERGE t28_adset",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5488,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "projectId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "project-0e7c58d4-656f-49e8-807",
+          "cachedResultName": "phi-production",
+          "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=project-0e7c58d4-656f-49e8-807"
+        },
+        "sqlQuery": "{{ $json._merge_sql }}",
+        "options": {
+          "timeoutMs": 10000,
+          "useLegacySql": false
+        }
+      },
+      "id": "1fe78351-81a8-4260-b30e-69d9cbd8325f",
+      "name": "[T28] BQ Merge t28_adset",
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2.1,
+      "position": [
+        5744,
+        288
+      ],
+      "credentials": {
+        "googleBigQueryOAuth2Api": {
+          "id": "UhLRAanVarQeOpQy",
+          "name": "Google BigQuery account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ $json.target_table }}",
+              "rightValue": "t28_ga4_landing",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "1f90e979-6ef0-4ac1-b053-4e0eeb703c79",
+      "name": "[T28] Filter t28_ga4_landing",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        5232,
+        448
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const DATASET = 'phi_prod';\nconst TABLE = 't28_ga4_landing';\nconst SCHEMA = { client_id: 'STRING', business_date: 'DATE', janela: 'STRING', canal: 'STRING', landing_page: 'STRING', source: 'STRING', sessions: 'INT64', users: 'INT64', new_users: 'INT64', engaged_sessions: 'INT64', engagement_rate: 'FLOAT64', conversions: 'FLOAT64', key_events: 'FLOAT64', avg_session_duration_sec: 'FLOAT64', bounce_rate: 'FLOAT64', execution_id: 'STRING', source_execution_id: 'STRING', versao_contract_aplicada: 'STRING', versao_sop_aplicada: 'STRING', source_status: 'JSON', volume_suficiente: 'BOOL', ingested_at: 'TIMESTAMP' };\nconst KEY_COLUMNS = ['client_id', 'business_date', 'janela', 'canal', 'landing_page'];\nconst rows = $input.all().map((item) => { const { target_table, ...row } = item.json || {}; return row; });\nif (rows.length === 0) return [];\nconst columns = Object.keys(SCHEMA);\nconst nonKeyColumns = columns.filter((column) => !KEY_COLUMNS.includes(column));\nconst sqlString = (value) => String(value).replace(/'/g, \"''\");\nconst isBlank = (value) => value === null || value === undefined || value === '';\nfunction literal(value, type) {\n  if (isBlank(value)) return type === 'TIMESTAMP' ? 'CURRENT_TIMESTAMP()' : `CAST(NULL AS ${type})`;\n  if (type === 'STRING') return `CAST('${sqlString(value)}' AS STRING)`;\n  if (type === 'DATE') return `DATE('${sqlString(value)}')`;\n  if (type === 'TIMESTAMP') return `TIMESTAMP('${sqlString(value)}')`;\n  if (type === 'INT64') { const n = Number(value); return Number.isFinite(n) ? `CAST(${Math.trunc(n)} AS INT64)` : 'CAST(NULL AS INT64)'; }\n  if (type === 'FLOAT64') { const n = Number(value); return Number.isFinite(n) ? `CAST(${n} AS FLOAT64)` : 'CAST(NULL AS FLOAT64)'; }\n  if (type === 'BOOL') { if (value === true || value === 'true' || value === 1 || value === '1') return 'TRUE'; if (value === false || value === 'false' || value === 0 || value === '0') return 'FALSE'; return 'CAST(NULL AS BOOL)'; }\n  if (type === 'JSON') { const jsonText = typeof value === 'string' ? value : JSON.stringify(value); return `PARSE_JSON('${sqlString(jsonText)}')`; }\n  throw new Error(`Unsupported BigQuery type ${type} for ${TABLE}`);\n}\nfunction selectForRow(row, rowIndex) {\n  const expressions = columns.map((column) => { const expression = literal(row[column], SCHEMA[column]); return rowIndex === 0 ? `${expression} AS ${column}` : expression; });\n  return rowIndex === 0 ? `SELECT ${expressions.join(', ')}` : `UNION ALL SELECT ${expressions.join(', ')}`;\n}\nconst sourceSql = rows.map(selectForRow).join('\\n  ');\nconst onSql = KEY_COLUMNS.map((column) => `T.${column} = S.${column}`).join(' AND ');\nconst updateSql = nonKeyColumns.map((column) => `${column} = S.${column}`).join(',\\n  ');\nconst insertColumns = columns.join(', ');\nconst insertValues = columns.map((column) => `S.${column}`).join(', ');\nconst sql = `MERGE \\`${DATASET}.${TABLE}\\` AS T\nUSING (\n  ${sourceSql}\n) AS S\nON ${onSql}\nWHEN MATCHED THEN UPDATE SET\n  ${updateSql}\nWHEN NOT MATCHED THEN INSERT (${insertColumns})\nVALUES (${insertValues})`;\nreturn [{ json: { _merge_sql: sql } }];"
+      },
+      "id": "9dd04bda-1688-4004-b2cf-e82d75ad7213",
+      "name": "[T28] Build MERGE t28_ga4_landing",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5488,
+        448
+      ]
+    },
+    {
+      "parameters": {
+        "projectId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "project-0e7c58d4-656f-49e8-807",
+          "cachedResultName": "phi-production",
+          "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=project-0e7c58d4-656f-49e8-807"
+        },
+        "sqlQuery": "{{ $json._merge_sql }}",
+        "options": {
+          "timeoutMs": 10000,
+          "useLegacySql": false
+        }
+      },
+      "id": "2848af09-e25d-4709-9c42-e3dc13b748c8",
+      "name": "[T28] BQ Merge t28_ga4_landing",
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2.1,
+      "position": [
+        5744,
+        448
+      ],
+      "credentials": {
+        "googleBigQueryOAuth2Api": {
+          "id": "UhLRAanVarQeOpQy",
+          "name": "Google BigQuery account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ $json.target_table }}",
+              "rightValue": "t28_gbp_daily",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "bded2514-2d64-48e1-b65d-304ea66955e8",
+      "name": "[T28] Filter t28_gbp_daily",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        5232,
+        608
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const DATASET = 'phi_prod';\nconst TABLE = 't28_gbp_daily';\nconst SCHEMA = { client_id: 'STRING', business_date: 'DATE', janela: 'STRING', gbp_impressions: 'INT64', gbp_search_views: 'INT64', gbp_maps_views: 'INT64', gbp_website_clicks: 'INT64', gbp_phone_calls: 'INT64', gbp_direction_requests: 'INT64', gbp_reviews_count: 'INT64', gbp_reviews_avg_rating: 'FLOAT64', execution_id: 'STRING', source_execution_id: 'STRING', versao_contract_aplicada: 'STRING', versao_sop_aplicada: 'STRING', source_status: 'JSON', volume_suficiente: 'BOOL', ingested_at: 'TIMESTAMP' };\nconst KEY_COLUMNS = ['client_id', 'business_date', 'janela'];\nconst rows = $input.all().map((item) => { const { target_table, ...row } = item.json || {}; return row; });\nif (rows.length === 0) return [];\nconst columns = Object.keys(SCHEMA);\nconst nonKeyColumns = columns.filter((column) => !KEY_COLUMNS.includes(column));\nconst sqlString = (value) => String(value).replace(/'/g, \"''\");\nconst isBlank = (value) => value === null || value === undefined || value === '';\nfunction literal(value, type) {\n  if (isBlank(value)) return type === 'TIMESTAMP' ? 'CURRENT_TIMESTAMP()' : `CAST(NULL AS ${type})`;\n  if (type === 'STRING') return `CAST('${sqlString(value)}' AS STRING)`;\n  if (type === 'DATE') return `DATE('${sqlString(value)}')`;\n  if (type === 'TIMESTAMP') return `TIMESTAMP('${sqlString(value)}')`;\n  if (type === 'INT64') { const n = Number(value); return Number.isFinite(n) ? `CAST(${Math.trunc(n)} AS INT64)` : 'CAST(NULL AS INT64)'; }\n  if (type === 'FLOAT64') { const n = Number(value); return Number.isFinite(n) ? `CAST(${n} AS FLOAT64)` : 'CAST(NULL AS FLOAT64)'; }\n  if (type === 'BOOL') { if (value === true || value === 'true' || value === 1 || value === '1') return 'TRUE'; if (value === false || value === 'false' || value === 0 || value === '0') return 'FALSE'; return 'CAST(NULL AS BOOL)'; }\n  if (type === 'JSON') { const jsonText = typeof value === 'string' ? value : JSON.stringify(value); return `PARSE_JSON('${sqlString(jsonText)}')`; }\n  throw new Error(`Unsupported BigQuery type ${type} for ${TABLE}`);\n}\nfunction selectForRow(row, rowIndex) {\n  const expressions = columns.map((column) => { const expression = literal(row[column], SCHEMA[column]); return rowIndex === 0 ? `${expression} AS ${column}` : expression; });\n  return rowIndex === 0 ? `SELECT ${expressions.join(', ')}` : `UNION ALL SELECT ${expressions.join(', ')}`;\n}\nconst sourceSql = rows.map(selectForRow).join('\\n  ');\nconst onSql = KEY_COLUMNS.map((column) => `T.${column} = S.${column}`).join(' AND ');\nconst updateSql = nonKeyColumns.map((column) => `${column} = S.${column}`).join(',\\n  ');\nconst insertColumns = columns.join(', ');\nconst insertValues = columns.map((column) => `S.${column}`).join(', ');\nconst sql = `MERGE \\`${DATASET}.${TABLE}\\` AS T\nUSING (\n  ${sourceSql}\n) AS S\nON ${onSql}\nWHEN MATCHED THEN UPDATE SET\n  ${updateSql}\nWHEN NOT MATCHED THEN INSERT (${insertColumns})\nVALUES (${insertValues})`;\nreturn [{ json: { _merge_sql: sql } }];"
+      },
+      "id": "42e19d0a-098c-49b6-b54d-c465df72c0f4",
+      "name": "[T28] Build MERGE t28_gbp_daily",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5488,
+        608
+      ]
+    },
+    {
+      "parameters": {
+        "projectId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "project-0e7c58d4-656f-49e8-807",
+          "cachedResultName": "phi-production",
+          "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=project-0e7c58d4-656f-49e8-807"
+        },
+        "sqlQuery": "{{ $json._merge_sql }}",
+        "options": {
+          "timeoutMs": 10000,
+          "useLegacySql": false
+        }
+      },
+      "id": "f3d97615-5497-4a8b-a08b-0418839915ef",
+      "name": "[T28] BQ Merge t28_gbp_daily",
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2.1,
+      "position": [
+        5744,
+        608
+      ],
+      "credentials": {
+        "googleBigQueryOAuth2Api": {
+          "id": "UhLRAanVarQeOpQy",
+          "name": "Google BigQuery account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ $json.target_table }}",
+              "rightValue": "t28_clarity_daily",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fedd7c63-c467-4150-8222-92db4b7c8078",
+      "name": "[T28] Filter t28_clarity_daily",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        5232,
+        768
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const DATASET = 'phi_prod';\nconst TABLE = 't28_clarity_daily';\nconst SCHEMA = { client_id: 'STRING', business_date: 'DATE', janela: 'STRING', clarity_sessions: 'INT64', clarity_users: 'INT64', clarity_rage_clicks: 'INT64', clarity_dead_clicks: 'INT64', clarity_excessive_scroll: 'INT64', clarity_avg_scroll_depth: 'FLOAT64', clarity_avg_session_sec: 'FLOAT64', execution_id: 'STRING', source_execution_id: 'STRING', versao_contract_aplicada: 'STRING', versao_sop_aplicada: 'STRING', source_status: 'JSON', volume_suficiente: 'BOOL', ingested_at: 'TIMESTAMP' };\nconst KEY_COLUMNS = ['client_id', 'business_date', 'janela'];\nconst rows = $input.all().map((item) => { const { target_table, ...row } = item.json || {}; return row; });\nif (rows.length === 0) return [];\nconst columns = Object.keys(SCHEMA);\nconst nonKeyColumns = columns.filter((column) => !KEY_COLUMNS.includes(column));\nconst sqlString = (value) => String(value).replace(/'/g, \"''\");\nconst isBlank = (value) => value === null || value === undefined || value === '';\nfunction literal(value, type) {\n  if (isBlank(value)) return type === 'TIMESTAMP' ? 'CURRENT_TIMESTAMP()' : `CAST(NULL AS ${type})`;\n  if (type === 'STRING') return `CAST('${sqlString(value)}' AS STRING)`;\n  if (type === 'DATE') return `DATE('${sqlString(value)}')`;\n  if (type === 'TIMESTAMP') return `TIMESTAMP('${sqlString(value)}')`;\n  if (type === 'INT64') { const n = Number(value); return Number.isFinite(n) ? `CAST(${Math.trunc(n)} AS INT64)` : 'CAST(NULL AS INT64)'; }\n  if (type === 'FLOAT64') { const n = Number(value); return Number.isFinite(n) ? `CAST(${n} AS FLOAT64)` : 'CAST(NULL AS FLOAT64)'; }\n  if (type === 'BOOL') { if (value === true || value === 'true' || value === 1 || value === '1') return 'TRUE'; if (value === false || value === 'false' || value === 0 || value === '0') return 'FALSE'; return 'CAST(NULL AS BOOL)'; }\n  if (type === 'JSON') { const jsonText = typeof value === 'string' ? value : JSON.stringify(value); return `PARSE_JSON('${sqlString(jsonText)}')`; }\n  throw new Error(`Unsupported BigQuery type ${type} for ${TABLE}`);\n}\nfunction selectForRow(row, rowIndex) {\n  const expressions = columns.map((column) => { const expression = literal(row[column], SCHEMA[column]); return rowIndex === 0 ? `${expression} AS ${column}` : expression; });\n  return rowIndex === 0 ? `SELECT ${expressions.join(', ')}` : `UNION ALL SELECT ${expressions.join(', ')}`;\n}\nconst sourceSql = rows.map(selectForRow).join('\\n  ');\nconst onSql = KEY_COLUMNS.map((column) => `T.${column} = S.${column}`).join(' AND ');\nconst updateSql = nonKeyColumns.map((column) => `${column} = S.${column}`).join(',\\n  ');\nconst insertColumns = columns.join(', ');\nconst insertValues = columns.map((column) => `S.${column}`).join(', ');\nconst sql = `MERGE \\`${DATASET}.${TABLE}\\` AS T\nUSING (\n  ${sourceSql}\n) AS S\nON ${onSql}\nWHEN MATCHED THEN UPDATE SET\n  ${updateSql}\nWHEN NOT MATCHED THEN INSERT (${insertColumns})\nVALUES (${insertValues})`;\nreturn [{ json: { _merge_sql: sql } }];"
+      },
+      "id": "b76783ba-3713-4a3a-91f3-53c7a07d77b8",
+      "name": "[T28] Build MERGE t28_clarity_daily",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5488,
+        768
+      ]
+    },
+    {
+      "parameters": {
+        "projectId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "project-0e7c58d4-656f-49e8-807",
+          "cachedResultName": "phi-production",
+          "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=project-0e7c58d4-656f-49e8-807"
+        },
+        "sqlQuery": "{{ $json._merge_sql }}",
+        "options": {
+          "timeoutMs": 10000,
+          "useLegacySql": false
+        }
+      },
+      "id": "99149e42-4e57-4924-9e48-69bdaf502130",
+      "name": "[T28] BQ Merge t28_clarity_daily",
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2.1,
+      "position": [
+        5744,
+        768
+      ],
+      "credentials": {
+        "googleBigQueryOAuth2Api": {
+          "id": "UhLRAanVarQeOpQy",
+          "name": "Google BigQuery account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ $json.target_table }}",
+              "rightValue": "t28_meta_campaign",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ee442ace-b98e-40da-9371-60837f0eabcf",
+      "name": "[T28] Filter t28_meta_campaign",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        5232,
+        928
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const DATASET = 'phi_prod';\nconst TABLE = 't28_meta_campaign';\nconst SCHEMA = { client_id: 'STRING', campaign_id_meta: 'STRING', business_date: 'DATE', janela: 'STRING', campaign_name: 'STRING', data_inicio_campanha: 'DATE', objetivo: 'STRING', metrica_mae: 'STRING', meta_metrica_mae: 'FLOAT64', impressions: 'INT64', clicks: 'INT64', cost: 'FLOAT64', leads: 'FLOAT64', purchases: 'FLOAT64', purchase_value: 'FLOAT64', reach: 'INT64', frequency: 'FLOAT64', actions_json: 'JSON', cpm: 'FLOAT64', cpc: 'FLOAT64', ctr: 'FLOAT64', cpl: 'FLOAT64', roas: 'FLOAT64', execution_id: 'STRING', source_execution_id: 'STRING', versao_contract_aplicada: 'STRING', versao_sop_aplicada: 'STRING', source_status: 'JSON', volume_suficiente: 'BOOL', ingested_at: 'TIMESTAMP' };\nconst KEY_COLUMNS = ['client_id', 'campaign_id_meta', 'business_date', 'janela'];\nconst rows = $input.all().map((item) => { const { target_table, ...row } = item.json || {}; return row; });\nif (rows.length === 0) return [];\nconst columns = Object.keys(SCHEMA);\nconst nonKeyColumns = columns.filter((column) => !KEY_COLUMNS.includes(column));\nconst sqlString = (value) => String(value).replace(/'/g, \"''\");\nconst isBlank = (value) => value === null || value === undefined || value === '';\nfunction literal(value, type) {\n  if (isBlank(value)) return type === 'TIMESTAMP' ? 'CURRENT_TIMESTAMP()' : `CAST(NULL AS ${type})`;\n  if (type === 'STRING') return `CAST('${sqlString(value)}' AS STRING)`;\n  if (type === 'DATE') return `DATE('${sqlString(value)}')`;\n  if (type === 'TIMESTAMP') return `TIMESTAMP('${sqlString(value)}')`;\n  if (type === 'INT64') { const n = Number(value); return Number.isFinite(n) ? `CAST(${Math.trunc(n)} AS INT64)` : 'CAST(NULL AS INT64)'; }\n  if (type === 'FLOAT64') { const n = Number(value); return Number.isFinite(n) ? `CAST(${n} AS FLOAT64)` : 'CAST(NULL AS FLOAT64)'; }\n  if (type === 'BOOL') { if (value === true || value === 'true' || value === 1 || value === '1') return 'TRUE'; if (value === false || value === 'false' || value === 0 || value === '0') return 'FALSE'; return 'CAST(NULL AS BOOL)'; }\n  if (type === 'JSON') { const jsonText = typeof value === 'string' ? value : JSON.stringify(value); return `PARSE_JSON('${sqlString(jsonText)}')`; }\n  throw new Error(`Unsupported BigQuery type ${type} for ${TABLE}`);\n}\nfunction selectForRow(row, rowIndex) {\n  const expressions = columns.map((column) => { const expression = literal(row[column], SCHEMA[column]); return rowIndex === 0 ? `${expression} AS ${column}` : expression; });\n  return rowIndex === 0 ? `SELECT ${expressions.join(', ')}` : `UNION ALL SELECT ${expressions.join(', ')}`;\n}\nconst sourceSql = rows.map(selectForRow).join('\\n  ');\nconst onSql = KEY_COLUMNS.map((column) => `T.${column} = S.${column}`).join(' AND ');\nconst updateSql = nonKeyColumns.map((column) => `${column} = S.${column}`).join(',\\n  ');\nconst insertColumns = columns.join(', ');\nconst insertValues = columns.map((column) => `S.${column}`).join(', ');\nconst sql = `MERGE \\`${DATASET}.${TABLE}\\` AS T\nUSING (\n  ${sourceSql}\n) AS S\nON ${onSql}\nWHEN MATCHED THEN UPDATE SET\n  ${updateSql}\nWHEN NOT MATCHED THEN INSERT (${insertColumns})\nVALUES (${insertValues})`;\nreturn [{ json: { _merge_sql: sql } }];"
+      },
+      "id": "0e165ced-720e-4083-a0d5-9f26323085a0",
+      "name": "[T28] Build MERGE t28_meta_campaign",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5488,
+        928
+      ]
+    },
+    {
+      "parameters": {
+        "projectId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "project-0e7c58d4-656f-49e8-807",
+          "cachedResultName": "phi-production",
+          "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=project-0e7c58d4-656f-49e8-807"
+        },
+        "sqlQuery": "{{ $json._merge_sql }}",
+        "options": {
+          "timeoutMs": 10000,
+          "useLegacySql": false
+        }
+      },
+      "id": "96564e57-2b8e-470a-84a8-944619a5d3de",
+      "name": "[T28] BQ Merge t28_meta_campaign",
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2.1,
+      "position": [
+        5744,
+        928
+      ],
+      "credentials": {
+        "googleBigQueryOAuth2Api": {
+          "id": "UhLRAanVarQeOpQy",
+          "name": "Google BigQuery account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const sourceFromName = (nodeName) => {\n  const n = String(nodeName || '').toLowerCase();\n  if (n.includes('bq')) return 'bq';\n  if (n.includes('google ads')) return 'google_ads';\n  if (n.includes('ga4')) return 'ga4';\n  if (n.includes('gbp')) return 'gbp';\n  if (n.includes('clarity')) return 'clarity';\n  if (n.includes('notion')) return 'notion';\n  if (n.includes('telegram')) return 'telegram';\n  return null;\n};\nconst sourceFromError = (j) => {\n  const blob = JSON.stringify(j || {}).toLowerCase();\n  if (blob.includes('businessprofileperformance') || blob.includes('mybusiness')) return 'gbp';\n  if (blob.includes('analyticsdata') || blob.includes('analyticsreporting') || blob.includes('analytics')) return 'ga4';\n  if (blob.includes('googleads')) return 'google_ads';\n  if (blob.includes('bigquery')) return 'bq';\n  if (blob.includes('clarity')) return 'clarity';\n  if (blob.includes('api.telegram')) return 'telegram';\n  if (blob.includes('notion')) return 'notion';\n  return 'other';\n};\nconst errMessage = (json) => {\n  if (typeof json?.error === 'string') return json.error;\n  return json?.error?.message || json?.message || json?.errorMessage || json?.description || 'unknown';\n};\nconst safeGetNodeJson = (name) => {\n  try { return $(name).first().json; } catch (e) { return null; }\n};\n\n// Fix A: $prevNode should reflect the source node for the incoming error item.\nlet prevNodeName = null;\ntry { prevNodeName = $prevNode?.name || null; } catch (e) { prevNodeName = null; }\n\nreturn $input.all().map((item) => {\n  const j = item.json || {};\n  const nodeName = j?.error?.node?.name || j?.node?.name || j?.nodeName || j?.node_name || prevNodeName || 'unknown';\n  const source = sourceFromName(nodeName) || sourceFromError(j);\n  return { json: {\n    workflow_id: $workflow.id,\n    workflow_name: $workflow.name,\n    node_name: nodeName,\n    source,\n    severity: 'error',\n    error_message: String(errMessage(j)).slice(0, 1000),\n    error_details: JSON.stringify(j),\n    client_id: safeGetNodeJson('Set dados')?.id_client ?? null,\n    business_date: safeGetNodeJson('Code prepara datas para extracao')?.date_end ?? null,\n    execution_id: 'EXEC-T28-' + $execution.id\n  } };\n});"
+      },
+      "id": "fca8d1de-4238-45a6-8764-e41d1b8e70fb",
+      "name": "[Err] Roteador Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        6336,
+        1472
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "rTS5pE34eElfuMPl",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/rTS5pE34eElfuMPl",
+          "cachedResultName": "WF-T28-Error-Handler"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "workflow_id": "={{ $json.workflow_id }}",
+            "workflow_name": "={{ $json.workflow_name }}",
+            "node_name": "={{ $json.node_name }}",
+            "source": "={{ $json.source }}",
+            "severity": "={{ $json.severity }}",
+            "error_message": "={{ $json.error_message }}",
+            "error_details": "={{ $json.error_details }}",
+            "client_id": "={{ $json.client_id }}",
+            "business_date": "={{ $json.business_date }}",
+            "execution_id": "={{ $json.execution_id }}"
+          },
+          "schema": [
+            {
+              "id": "workflow_id",
+              "displayName": "workflow_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "workflow_name",
+              "displayName": "workflow_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "node_name",
+              "displayName": "node_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "source",
+              "displayName": "source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "severity",
+              "displayName": "severity",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "error_message",
+              "displayName": "error_message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "error_details",
+              "displayName": "error_details",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "client_id",
+              "displayName": "client_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "business_date",
+              "displayName": "business_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "execution_id",
+              "displayName": "execution_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "matchingColumns": []
+        },
+        "options": {}
+      },
+      "id": "47f96c06-821a-4c23-be31-75ce9c694ef0",
+      "name": "[Err] Call Handler",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        6048,
+        1728
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Janelas de extração (Fase 1 — spec agregador)\n// Semanal: D-7 → D-1 | Mensal: mês-calendário fechado anterior\n// Panorama 30d: apenas referência para leitura no BigQuery (Fase 2) — não gera chamada de API\nlet reportType = 'Weekly';\ntry { $('Set Tipo Mensal').first(); reportType = 'Monthly'; } catch (e) {}\n\nconst tz = 'America/Sao_Paulo';\nconst now = new Date(new Date().toLocaleString('en-US', { timeZone: tz }));\n\nfunction fmt(d) {\n  const y = d.getFullYear();\n  const m = String(d.getMonth() + 1).padStart(2, '0');\n  const dd = String(d.getDate()).padStart(2, '0');\n  return `${y}-${m}-${dd}`;\n}\n\nlet start, end;\nif (reportType === 'Monthly') {\n  end = new Date(now.getFullYear(), now.getMonth(), 0);\n  start = new Date(now.getFullYear(), now.getMonth() - 1, 1);\n} else {\n  end = new Date(now); end.setDate(end.getDate() - 1);\n  start = new Date(now); start.setDate(start.getDate() - 7);\n}\n\nconst panoramaStart = new Date(now); panoramaStart.setDate(panoramaStart.getDate() - 30);\nconst panoramaEnd = new Date(now); panoramaEnd.setDate(panoramaEnd.getDate() - 1);\n\nconst windows = {\n  reportType,\n  date_start: fmt(start),\n  date_end: fmt(end),\n  panorama_start: fmt(panoramaStart),\n  panorama_end: fmt(panoramaEnd),\n  start_y: start.getFullYear(), start_m: start.getMonth() + 1, start_d: start.getDate(),\n  end_y: end.getFullYear(), end_m: end.getMonth() + 1, end_d: end.getDate(),\n  timezone: tz,\n  execution_timestamp: new Date().toISOString()\n};\n\n// preserva 1 item por anúncio vindo do Set dados (o código antigo colapsava tudo em 1 item)\nreturn items.map(it => ({ json: { ...it.json, ...windows } }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2800,
+        688
+      ],
+      "id": "3369168f-4b30-4d7a-bff7-9edb9745c6ea",
+      "name": "Code prepara datas para extracao"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Calculate KPIs & Campaign Insights",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Report Data2": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Search Terms Checker",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Search Terms Checker",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out HTTP Request Into Individual Items": {
+      "main": [
+        [
+          {
+            "node": "Consolidating Search Terms Data (Removing Dates)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consolidating Search Terms Data (Removing Dates)": {
+      "main": [
+        [
+          {
+            "node": "Removing Brand Terms + EXCLUDED Terms",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Removing Brand Terms + EXCLUDED Terms": {
+      "main": [
+        [
+          {
+            "node": "Aggregating Performance Metrics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregating Performance Metrics": {
+      "main": [
+        [
+          {
+            "node": "Aggregating Items To Prepare For LLM To Analyze",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregating Items To Prepare For LLM To Analyze": {
+      "main": [
+        [
+          {
+            "node": "Brand Info Node",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Brand Info Node": {
+      "main": [
+        [
+          {
+            "node": "Search Terms Checker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get database campanhas": {
+      "main": [
+        [
+          {
+            "node": "Get database conjuntos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get database clientes": {
+      "main": [
+        [
+          {
+            "node": "Set dados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set dados": {
+      "main": [
+        [
+          {
+            "node": "Code prepara datas para extracao",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "[T28] BQ Read raw_campaign_data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fetch Meta Ads",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request GBP",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request GA4 Pago (LPs)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Extracting Search Terms (janela)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Google Ads Conjuntos (GAQL)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Google Ads Anúncios (GAQL)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request GA4 Orgânico",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request Clarity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request GBP": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "[Err] Roteador Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get database anuncios": {
+      "main": [
+        [
+          {
+            "node": "Get database clientes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get database conjuntos": {
+      "main": [
+        [
+          {
+            "node": "Get database anuncios",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Prepare Report Data2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate KPIs & Campaign Insights": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger Semanal": {
+      "main": [
+        [
+          {
+            "node": "Set Tipo Semanal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger Mensal": {
+      "main": [
+        [
+          {
+            "node": "Set Tipo Mensal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Tipo Semanal": {
+      "main": [
+        [
+          {
+            "node": "Get database campanhas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Tipo Mensal": {
+      "main": [
+        [
+          {
+            "node": "Get database campanhas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Meta Ads": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 7
+          }
+        ]
+      ]
+    },
+    "HTTP Request GA4 Orgânico": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 2
+          }
+        ],
+        [
+          {
+            "node": "[Err] Roteador Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Ads Conjuntos (GAQL)": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 5
+          }
+        ],
+        [
+          {
+            "node": "[Err] Roteador Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Ads Anúncios (GAQL)": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 4
+          }
+        ],
+        [
+          {
+            "node": "[Err] Roteador Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request GA4 Pago (LPs)": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 3
+          }
+        ],
+        [
+          {
+            "node": "[Err] Roteador Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request Clarity": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "[Err] Roteador Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extracting Search Terms (janela)": {
+      "main": [
+        [
+          {
+            "node": "Split Out HTTP Request Into Individual Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Loop",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Adaptador Input T28": {
+      "main": [
+        [
+          {
+            "node": "Normalizador T28",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "[Err] Roteador Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Terms Checker": {
+      "main": [
+        [
+          {
+            "node": "[T28] Search Terms Features",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[T28] Search Terms Features": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 8
+          }
+        ]
+      ]
+    },
+    "Normalizador T28": {
+      "main": [
+        [
+          {
+            "node": "[T28] Filter t28_campaign",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "[T28] Filter t28_adset",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "[T28] Filter t28_ga4_landing",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "[T28] Filter t28_gbp_daily",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "[T28] Filter t28_clarity_daily",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "[T28] Filter t28_meta_campaign",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "[Err] Roteador Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[T28] Filter t28_campaign": {
+      "main": [
+        [
+          {
+            "node": "[T28] Build MERGE t28_campaign",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[T28] Filter t28_adset": {
+      "main": [
+        [
+          {
+            "node": "[T28] Build MERGE t28_adset",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[T28] Filter t28_ga4_landing": {
+      "main": [
+        [
+          {
+            "node": "[T28] Build MERGE t28_ga4_landing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[T28] Filter t28_gbp_daily": {
+      "main": [
+        [
+          {
+            "node": "[T28] Build MERGE t28_gbp_daily",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[T28] Filter t28_clarity_daily": {
+      "main": [
+        [
+          {
+            "node": "[T28] Build MERGE t28_clarity_daily",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[T28] Filter t28_meta_campaign": {
+      "main": [
+        [
+          {
+            "node": "[T28] Build MERGE t28_meta_campaign",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[T28] BQ Read raw_campaign_data": {
+      "main": [
+        [
+          {
+            "node": "Adaptador Input T28",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "[Err] Roteador Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Err] Roteador Payload": {
+      "main": [
+        [
+          {
+            "node": "[Err] Call Handler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code prepara datas para extracao": {
+      "main": [
+        [
+          {
+            "node": "Loop",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[T28] Build MERGE t28_campaign": {
+      "main": [
+        [
+          {
+            "node": "[T28] BQ Merge t28_campaign",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[T28] BQ Merge t28_campaign": {
+      "main": [
+        null,
+        [
+          {
+            "node": "[Err] Roteador Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[T28] Build MERGE t28_adset": {
+      "main": [
+        [
+          {
+            "node": "[T28] BQ Merge t28_adset",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[T28] BQ Merge t28_adset": {
+      "main": [
+        null,
+        [
+          {
+            "node": "[Err] Roteador Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[T28] Build MERGE t28_ga4_landing": {
+      "main": [
+        [
+          {
+            "node": "[T28] BQ Merge t28_ga4_landing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[T28] BQ Merge t28_ga4_landing": {
+      "main": [
+        null,
+        [
+          {
+            "node": "[Err] Roteador Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[T28] Build MERGE t28_gbp_daily": {
+      "main": [
+        [
+          {
+            "node": "[T28] BQ Merge t28_gbp_daily",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[T28] BQ Merge t28_gbp_daily": {
+      "main": [
+        null,
+        [
+          {
+            "node": "[Err] Roteador Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[T28] Build MERGE t28_clarity_daily": {
+      "main": [
+        [
+          {
+            "node": "[T28] BQ Merge t28_clarity_daily",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[T28] BQ Merge t28_clarity_daily": {
+      "main": [
+        null,
+        [
+          {
+            "node": "[Err] Roteador Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[T28] Build MERGE t28_meta_campaign": {
+      "main": [
+        [
+          {
+            "node": "[T28] BQ Merge t28_meta_campaign",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[T28] BQ Merge t28_meta_campaign": {
+      "main": [
+        null,
+        [
+          {
+            "node": "[Err] Roteador Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "versionId": "a46d5a6a-e5bc-4dee-babe-a002872277bd",
+  "meta": {
+    "templateId": "12124",
+    "templateCredsSetupCompleted": true,
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp",
+    "instanceId": "305397df9a0eb50aabb90fb3f0fff1d7d74e7d343769e5f986243e1588b26e7b"
+  },
+  "nodeGroups": [],
+  "id": "4sdG2UKMCBuFq8xn",
+  "tags": []
+}

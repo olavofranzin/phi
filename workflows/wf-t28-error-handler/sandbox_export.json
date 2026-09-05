@@ -1,0 +1,357 @@
+{
+  "id": "rTS5pE34eElfuMPl",
+  "name": "WF-T28-Error-Handler",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "id": "errhdl-trigger",
+      "name": "[ErrHdl] Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "inputSource": "workflowInputs",
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "workflow_id",
+              "type": "string"
+            },
+            {
+              "name": "workflow_name",
+              "type": "string"
+            },
+            {
+              "name": "node_name",
+              "type": "string"
+            },
+            {
+              "name": "source",
+              "type": "string"
+            },
+            {
+              "name": "severity",
+              "type": "string"
+            },
+            {
+              "name": "error_message",
+              "type": "string"
+            },
+            {
+              "name": "error_details",
+              "type": "object"
+            },
+            {
+              "name": "client_id",
+              "type": "string"
+            },
+            {
+              "name": "business_date",
+              "type": "string"
+            },
+            {
+              "name": "execution_id",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "errhdl-set-contexto",
+      "name": "[ErrHdl] Set Contexto",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        280,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const severityRank = { warn: 10, error: 50, critical: 100 };\nconst normalizeSeverity = (value) => {\n  const s = String(value || 'error').toLowerCase();\n  return ['warn', 'error', 'critical'].includes(s) ? s : 'error';\n};\nconst htmlEscape = (value) => String(value ?? '')\n  .replace(/&/g, '&amp;')\n  .replace(/</g, '&lt;')\n  .replace(/>/g, '&gt;');\nconst asDate = (value) => {\n  if (!value) return null;\n  const s = String(value).slice(0, 10);\n  return /^\\d{4}-\\d{2}-\\d{2}$/.test(s) ? s : null;\n};\n\nreturn $input.all().map((item, index) => {\n  const input = item.json || {};\n  const severity = normalizeSeverity(input.severity);\n  const errorId = (globalThis.crypto?.randomUUID?.() || ('EXEC-ERRHDL-' + $execution.id + '-' + index));\n  const details = input.error_details ?? input.error ?? input;\n  const message = String(input.error_message || input.message || details?.message || 'unknown').slice(0, 1000);\n  const notionTitle = '[ERR] ' + String(input.node_name || 'unknown node').slice(0, 80) + ' (' + String(input.source || 'other').slice(0, 30) + '): ' + message.slice(0, 60);\n  const notionUrl = input.notion_url || '';\n  const payload = {\n    error_id: errorId,\n    execution_id: input.execution_id || null,\n    workflow_id: String(input.workflow_id || 'unknown'),\n    workflow_name: String(input.workflow_name || 'unknown'),\n    node_name: String(input.node_name || 'unknown'),\n    source: String(input.source || 'other').toLowerCase(),\n    severity,\n    error_message: message,\n    error_details: JSON.stringify(details),\n    client_id: input.client_id || null,\n    business_date: asDate(input.business_date),\n    occurred_at: new Date().toISOString(),\n    resolved: null,\n    tenant_id: 'phi-agencia',\n    demanda_titulo: notionTitle,\n    demanda_tipo: 'Investigar anomalia',\n    demanda_classe_sla: severity === 'critical' ? 'Critica' : (severity === 'warn' ? 'Ad-hoc padrao' : 'Recorrente diaria'),\n    demanda_estado: 'Aberta',\n    demanda_prioridade: severityRank[severity],\n    demanda_observacoes: [\n      'error_id=' + errorId,\n      'execution_id=' + (input.execution_id || ''),\n      'workflow_id=' + (input.workflow_id || ''),\n      'workflow_name=' + (input.workflow_name || ''),\n      'node_name=' + (input.node_name || ''),\n      'source=' + (input.source || 'other'),\n      'severity=' + severity,\n      'message=' + message,\n      'details=' + JSON.stringify(details).slice(0, 1200)\n    ].join('; '),\n  };\n  payload.telegram_text = [\n    'ALERTA <b>' + htmlEscape(severity) + '</b> - ' + htmlEscape(payload.workflow_name),\n    'Node: <code>' + htmlEscape(payload.node_name) + '</code>',\n    'Source: ' + htmlEscape(payload.source),\n    'Cliente: ' + htmlEscape(payload.client_id || 'n/a') + ' (' + htmlEscape(payload.business_date || 'n/a') + ')',\n    'Erro: <code>' + htmlEscape(message.slice(0, 200)) + '</code>',\n    'ID: ' + htmlEscape(errorId),\n    'Tarefa: <a href=\"' + htmlEscape(notionUrl) + '\">Abrir no Notion</a>'\n  ].join('\\n');\n  return { json: payload };\n});"
+      }
+    },
+    {
+      "id": "errhdl-bq-insert",
+      "name": "[ErrHdl] BQ Insert t28_errors",
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2.1,
+      "position": [
+        560,
+        -140
+      ],
+      "parameters": {
+        "operation": "insert",
+        "projectId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "project-0e7c58d4-656f-49e8-807",
+          "cachedResultName": "phi-production"
+        },
+        "datasetId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "phi_prod"
+        },
+        "tableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "t28_errors"
+        },
+        "dataMode": "define",
+        "fieldsUi": {
+          "values": [
+            {
+              "fieldId": "error_id",
+              "fieldValue": "={{ $json.error_id }}"
+            },
+            {
+              "fieldId": "execution_id",
+              "fieldValue": "={{ $json.execution_id }}"
+            },
+            {
+              "fieldId": "workflow_id",
+              "fieldValue": "={{ $json.workflow_id }}"
+            },
+            {
+              "fieldId": "workflow_name",
+              "fieldValue": "={{ $json.workflow_name }}"
+            },
+            {
+              "fieldId": "node_name",
+              "fieldValue": "={{ $json.node_name }}"
+            },
+            {
+              "fieldId": "source",
+              "fieldValue": "={{ $json.source }}"
+            },
+            {
+              "fieldId": "severity",
+              "fieldValue": "={{ $json.severity }}"
+            },
+            {
+              "fieldId": "error_message",
+              "fieldValue": "={{ $json.error_message }}"
+            },
+            {
+              "fieldId": "error_details",
+              "fieldValue": "={{ $json.error_details }}"
+            },
+            {
+              "fieldId": "client_id",
+              "fieldValue": "={{ $json.client_id }}"
+            },
+            {
+              "fieldId": "business_date",
+              "fieldValue": "={{ $json.business_date }}"
+            },
+            {
+              "fieldId": "occurred_at",
+              "fieldValue": "={{ $json.occurred_at }}"
+            },
+            {
+              "fieldId": "resolved",
+              "fieldValue": "={{ $json.resolved }}"
+            }
+          ]
+        },
+        "options": {
+          "batchSize": 1,
+          "ignoreUnknownValues": false,
+          "skipInvalidRows": false
+        }
+      },
+      "credentials": {
+        "googleApi": {
+          "id": "<GOOGLE_BIGQUERY_CREDENTIAL_ID_redacted>",
+          "name": "Google BigQuery account"
+        }
+      }
+    },
+    {
+      "id": "errhdl-notion-create",
+      "name": "[ErrHdl] Notion Criar Tarefa Demanda",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        560,
+        80
+      ],
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "create",
+        "databaseId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "a5c6b6ae-3e9c-4619-a3c3-48e58c75c25b",
+          "cachedResultName": "PHI - Demandas"
+        },
+        "simple": false,
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "titulo|title",
+              "type": "title",
+              "title": "={{ $json.demanda_titulo }}"
+            },
+            {
+              "key": "tenant_id|rich_text",
+              "type": "rich_text",
+              "textContent": "={{ $json.tenant_id }}"
+            },
+            {
+              "key": "client_id|rich_text",
+              "type": "rich_text",
+              "textContent": "={{ $json.client_id || \"\" }}"
+            },
+            {
+              "key": "tipo|select",
+              "type": "select",
+              "selectValue": "={{ $json.demanda_tipo }}"
+            },
+            {
+              "key": "classe_sla|select",
+              "type": "select",
+              "selectValue": "={{ $json.demanda_classe_sla }}"
+            },
+            {
+              "key": "estado|select",
+              "type": "select",
+              "selectValue": "={{ $json.demanda_estado }}"
+            },
+            {
+              "key": "prioridade|number",
+              "type": "number",
+              "numberValue": "={{ $json.demanda_prioridade }}"
+            },
+            {
+              "key": "prioridade_origem|select",
+              "type": "select",
+              "selectValue": "agente"
+            },
+            {
+              "key": "quality_gate|select",
+              "type": "select",
+              "selectValue": "pendente"
+            },
+            {
+              "key": "sla_version|rich_text",
+              "type": "rich_text",
+              "textContent": "error-handler-l2"
+            },
+            {
+              "key": "observacoes|rich_text",
+              "type": "rich_text",
+              "textContent": "={{ $json.demanda_observacoes }}"
+            }
+          ]
+        },
+        "blockUi": {
+          "blockValues": [
+            {
+              "type": "paragraph",
+              "textContent": "={{ \"```json\\n\" + $json.error_details + \"\\n```\" }}"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "notionApi": {
+          "id": "<credential_id_redacted>",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "id": "errhdl-telegram",
+      "name": "[ErrHdl] Telegram Notificar",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        840,
+        80
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "<TELEGRAM_CHAT_ID_redacted>",
+        "text": "={{ String($json.telegram_text || \"Abrir no Notion\").replace(/href=\"\"/g, \"href=\\\"https://app.notion.com/\\\"\") }}",
+        "additionalFields": {
+          "parse_mode": "HTML",
+          "appendAttribution": false
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "<TELEGRAM_CREDENTIAL_ID_redacted>",
+          "name": "Telegram account"
+        }
+      },
+      "continueOnFail": true
+    }
+  ],
+  "connections": {
+    "[ErrHdl] Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "[ErrHdl] Set Contexto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[ErrHdl] Set Contexto": {
+      "main": [
+        [
+          {
+            "node": "[ErrHdl] BQ Insert t28_errors",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "[ErrHdl] Notion Criar Tarefa Demanda",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[ErrHdl] Notion Criar Tarefa Demanda": {
+      "main": [
+        [
+          {
+            "node": "[ErrHdl] Telegram Notificar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true,
+    "timezone": "America/Sao_Paulo"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "tags": [
+    {
+      "name": "phi"
+    },
+    {
+      "name": "saude-digital"
+    },
+    {
+      "name": "l2-error-handler"
+    }
+  ],
+  "description": "Sub-WF acionado via onError dos nodes criticos. Grava t28_errors + cria tarefa Demanda + Telegram. ADR Aceito 2026-06-22."
+}

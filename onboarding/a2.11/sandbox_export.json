@@ -1,0 +1,576 @@
+{
+  "updatedAt": "2026-06-01T17:55:20.084Z",
+  "createdAt": "2026-05-28T17:59:21.844Z",
+  "id": "xoFU3G3xfEm0Zfjl",
+  "name": "Onb - Disparar CSAT NPS",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "daysInterval": 1,
+              "triggerAtHour": 9,
+              "triggerAtMinute": 0
+            }
+          ]
+        }
+      },
+      "id": "8a9059b6-4cf3-406b-af14-7a3f32056d9c",
+      "name": "[Onb A2.11] Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "04e34a62624b484cbda546604564b88c"
+        },
+        "returnAll": true,
+        "simple": false,
+        "options": {}
+      },
+      "id": "6a0751f6-0e8c-4288-9a38-c554cd2845b0",
+      "name": "[Onb A2.11] Buscar Clientes Concluidos",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        224,
+        0
+      ],
+      "credentials": {
+        "notionApi": {
+          "id": "<credential_id_redacted>",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const TARGET_STATUS = 'Concluído';\nconst IDEMPOTENCY_MARK = 'A2.11 disparada em';\nconst pickTitle = (page) => {\n  for (const prop of Object.values(page.properties || {})) {\n    if (prop?.type === 'title') return (prop.title || []).map((item) => item.plain_text || '').join('').trim();\n  }\n  return '';\n};\nconst pickSelect = (prop) => prop?.select?.name || '';\nconst pickPlainText = (prop) => (prop?.rich_text || []).map((item) => item.plain_text || '').join('');\nconst out = [];\nfor (const item of $input.all()) {\n  const page = item.json || {};\n  const props = page.properties || {};\n  const status = pickSelect(props.Status);\n  const observacoes_atual = pickPlainText(props['Observações']);\n  if (status === TARGET_STATUS && !observacoes_atual.includes(IDEMPOTENCY_MARK) && !page.archived) {\n    out.push({ json: { cliente_page_id: page.id, cliente_nome: pickTitle(page), cliente_status: status, observacoes_atual } });\n  }\n}\nreturn out;"
+      },
+      "id": "f87a34a2-9fbf-4d57-b83e-a0b8c6bc5b0b",
+      "name": "[Onb A2.11] Filtrar Clientes Elegiveis",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const CSAT_FORM_URL = '<CSAT_FORM_URL_redacted>';\nconst NPS_FORM_URL = '<NPS_FORM_URL_redacted>';\nconst OLAVO_PHONE = '<OLAVO_PHONE_redacted>';\nconst out = [];\nfor (const item of $input.all()) {\n  const cliente = item.json || {};\n  const cliente_page_id = cliente.cliente_page_id;\n  const cliente_nome = cliente.cliente_nome || '';\n  if (!cliente_page_id) {\n    throw new Error('cliente_page_id ausente - nao montar CSAT/NPS sem cliente');\n  }\n  const encodedId = encodeURIComponent(cliente_page_id);\n  const encodedName = encodeURIComponent(cliente_nome);\n  const csat_link = `${CSAT_FORM_URL}#cliente=${encodedId}&cliente_nome=${encodedName}`;\n  const nps_link = `${NPS_FORM_URL}#cliente=${encodedId}&cliente_nome=${encodedName}`;\n  const text = `[Onb A2.11] Disparar CSAT/NPS para cliente ${cliente_nome}\nCSAT: ${csat_link}\nNPS: ${nps_link}\nID do cliente=${cliente_page_id}\nAcao: enviar os 2 links ao cliente off-platform.`;\n  out.push({ json: { ...cliente, number: OLAVO_PHONE, csat_link, nps_link, text } });\n}\nreturn out;"
+      },
+      "id": "8343f7f9-4e63-4196-8eb8-feb98cdbbe62",
+      "name": "[Onb A2.11] Montar Mensagem e Links",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "<TELEGRAM_CHAT_ID_redacted>",
+        "text": "={{ String($json.text || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "742fd55c-92db-4c58-9210-804c5465ad00",
+      "name": "[Onb A2.11] Enviar Telegram Olavo",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        896,
+        0
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "<TELEGRAM_CREDENTIAL_ID_redacted>",
+          "name": "Telegram account"
+        }
+      },
+      "continueOnFail": true,
+      "webhookId": "7c97164a-5e26-482f-9afa-47e43797af8d"
+    },
+    {
+      "parameters": {
+        "jsCode": "const mensagens = $('[Onb A2.11] Montar Mensagem e Links').all().map((item) => item.json);\nconst responses = $input.all();\nconst now = new Date();\nconst brTimestamp = now.toLocaleString('sv-SE', { timeZone: 'America/Sao_Paulo' }).replace(' ', 'T') + '-03:00';\nconst out = [];\nfor (const [index, responseItem] of responses.entries()) {\n  const msg = mensagens[index];\n  if (!msg) continue;\n  const payload = responseItem.json || {};\n  const statusCode = Number(payload.statusCode || payload.response?.statusCode || 0);\n  const failed = Boolean(payload.error || payload.message || (statusCode && (statusCode < 200 || statusCode >= 300)));\n  const evolutionStatus = failed ? 'falhou' : 'ok';\n  const detail = statusCode ? `HTTP ${statusCode}` : (failed ? 'erro sem status HTTP' : '');\n  const linhaNova = `A2.11 disparada em ${brTimestamp}. CSAT: ${msg.csat_link}, NPS: ${msg.nps_link}. Status Evolution: ${evolutionStatus}${detail ? ` (${detail})` : ''}.`;\n  const observacoes_atual = msg.observacoes_atual || '';\n  const observacoes_finais = observacoes_atual ? `${observacoes_atual}\\n${linhaNova}` : linhaNova;\n  out.push({ json: { ...msg, evolution_status: evolutionStatus, evolution_detail: detail, linha_nova: linhaNova, observacoes_finais } });\n}\nreturn out;"
+      },
+      "id": "d1ebf798-ca68-4a90-8463-8717adc39f58",
+      "name": "[Onb A2.11] Preparar Update Observacoes",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $json.cliente_page_id }}"
+        },
+        "simple": false,
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Observações|rich_text",
+              "textContent": "={{ $json.observacoes_finais }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "1cd4700b-720a-49ef-88e5-7040f04c16c7",
+      "name": "[Onb A2.11] Atualizar Observacoes Cliente",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1344,
+        0
+      ],
+      "credentials": {
+        "notionApi": {
+          "id": "<credential_id_redacted>",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const updates = $('[Onb A2.11] Preparar Update Observacoes').all().map((item) => item.json);\nreturn [{ json: { workflow: 'Onb - Disparar CSAT NPS', clientes_processados: updates.length, evolution_sucesso: updates.filter((item) => item.evolution_status === 'ok').length, evolution_falha: updates.filter((item) => item.evolution_status === 'falhou').length, cliente_ids: updates.map((item) => item.cliente_page_id) } }];"
+      },
+      "id": "0e176969-be6b-4e70-9556-33a709350bb6",
+      "name": "[Onb A2.11] Consolidar Resultado",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1568,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "[Onb A2.11] Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.11] Buscar Clientes Concluidos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.11] Buscar Clientes Concluidos": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.11] Filtrar Clientes Elegiveis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.11] Filtrar Clientes Elegiveis": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.11] Montar Mensagem e Links",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.11] Montar Mensagem e Links": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.11] Enviar Telegram Olavo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.11] Preparar Update Observacoes": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.11] Atualizar Observacoes Cliente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.11] Atualizar Observacoes Cliente": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.11] Consolidar Resultado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.11] Enviar Telegram Olavo": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.11] Preparar Update Observacoes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true,
+    "timezone": "America/Sao_Paulo",
+    "binaryMode": "separate"
+  },
+  "staticData": {
+    "node:[Onb A2.11] Schedule Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": null,
+  "pinData": {},
+  "versionId": "cb01e363-4881-4683-b11a-7580ee2a1519",
+  "activeVersionId": "cb01e363-4881-4683-b11a-7580ee2a1519",
+  "versionCounter": 14,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-05-28T17:59:21.844Z",
+      "createdAt": "2026-05-28T17:59:21.844Z",
+      "role": "workflow:owner",
+      "workflowId": "xoFU3G3xfEm0Zfjl",
+      "projectId": "QAumYwlPGm37G3p1",
+      "project": {
+        "updatedAt": "2025-11-29T00:11:17.205Z",
+        "createdAt": "2025-11-29T00:04:49.350Z",
+        "id": "QAumYwlPGm37G3p1",
+        "name": "Olavo Franzin <olavofranzin@franzcomunicacao.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "2f681992-45e6-4ec9-afe2-d79763e3d45b"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-06-01T17:55:20.085Z",
+    "createdAt": "2026-06-01T17:55:20.085Z",
+    "versionId": "cb01e363-4881-4683-b11a-7580ee2a1519",
+    "workflowId": "xoFU3G3xfEm0Zfjl",
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "days",
+                "daysInterval": 1,
+                "triggerAtHour": 9,
+                "triggerAtMinute": 0
+              }
+            ]
+          }
+        },
+        "id": "8a9059b6-4cf3-406b-af14-7a3f32056d9c",
+        "name": "[Onb A2.11] Schedule Trigger",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          0,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "resource": "databasePage",
+          "operation": "getAll",
+          "databaseId": {
+            "__rl": true,
+            "mode": "list",
+            "value": "04e34a62624b484cbda546604564b88c"
+          },
+          "returnAll": true,
+          "simple": false,
+          "options": {}
+        },
+        "id": "6a0751f6-0e8c-4288-9a38-c554cd2845b0",
+        "name": "[Onb A2.11] Buscar Clientes Concluidos",
+        "type": "n8n-nodes-base.notion",
+        "typeVersion": 2.2,
+        "position": [
+          224,
+          0
+        ],
+        "credentials": {
+          "notionApi": {
+            "id": "<credential_id_redacted>",
+            "name": "Notion account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const TARGET_STATUS = 'Concluído';\nconst IDEMPOTENCY_MARK = 'A2.11 disparada em';\nconst pickTitle = (page) => {\n  for (const prop of Object.values(page.properties || {})) {\n    if (prop?.type === 'title') return (prop.title || []).map((item) => item.plain_text || '').join('').trim();\n  }\n  return '';\n};\nconst pickSelect = (prop) => prop?.select?.name || '';\nconst pickPlainText = (prop) => (prop?.rich_text || []).map((item) => item.plain_text || '').join('');\nconst out = [];\nfor (const item of $input.all()) {\n  const page = item.json || {};\n  const props = page.properties || {};\n  const status = pickSelect(props.Status);\n  const observacoes_atual = pickPlainText(props['Observações']);\n  if (status === TARGET_STATUS && !observacoes_atual.includes(IDEMPOTENCY_MARK) && !page.archived) {\n    out.push({ json: { cliente_page_id: page.id, cliente_nome: pickTitle(page), cliente_status: status, observacoes_atual } });\n  }\n}\nreturn out;"
+        },
+        "id": "f87a34a2-9fbf-4d57-b83e-a0b8c6bc5b0b",
+        "name": "[Onb A2.11] Filtrar Clientes Elegiveis",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          448,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const CSAT_FORM_URL = '<CSAT_FORM_URL_redacted>';\nconst NPS_FORM_URL = '<NPS_FORM_URL_redacted>';\nconst OLAVO_PHONE = '<OLAVO_PHONE_redacted>';\nconst out = [];\nfor (const item of $input.all()) {\n  const cliente = item.json || {};\n  const cliente_page_id = cliente.cliente_page_id;\n  const cliente_nome = cliente.cliente_nome || '';\n  if (!cliente_page_id) {\n    throw new Error('cliente_page_id ausente - nao montar CSAT/NPS sem cliente');\n  }\n  const encodedId = encodeURIComponent(cliente_page_id);\n  const encodedName = encodeURIComponent(cliente_nome);\n  const csat_link = `${CSAT_FORM_URL}#cliente=${encodedId}&cliente_nome=${encodedName}`;\n  const nps_link = `${NPS_FORM_URL}#cliente=${encodedId}&cliente_nome=${encodedName}`;\n  const text = `[Onb A2.11] Disparar CSAT/NPS para cliente ${cliente_nome}\nCSAT: ${csat_link}\nNPS: ${nps_link}\nID do cliente=${cliente_page_id}\nAcao: enviar os 2 links ao cliente off-platform.`;\n  out.push({ json: { ...cliente, number: OLAVO_PHONE, csat_link, nps_link, text } });\n}\nreturn out;"
+        },
+        "id": "8343f7f9-4e63-4196-8eb8-feb98cdbbe62",
+        "name": "[Onb A2.11] Montar Mensagem e Links",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          672,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "chatId": "<TELEGRAM_CHAT_ID_redacted>",
+          "text": "={{ String($json.text || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }}",
+          "additionalFields": {
+            "parse_mode": "HTML"
+          }
+        },
+        "id": "742fd55c-92db-4c58-9210-804c5465ad00",
+        "name": "[Onb A2.11] Enviar Telegram Olavo",
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          896,
+          0
+        ],
+        "credentials": {
+          "telegramApi": {
+            "id": "<TELEGRAM_CREDENTIAL_ID_redacted>",
+            "name": "Telegram account"
+          }
+        },
+        "continueOnFail": true,
+        "webhookId": "7c97164a-5e26-482f-9afa-47e43797af8d"
+      },
+      {
+        "parameters": {
+          "jsCode": "const mensagens = $('[Onb A2.11] Montar Mensagem e Links').all().map((item) => item.json);\nconst responses = $input.all();\nconst now = new Date();\nconst brTimestamp = now.toLocaleString('sv-SE', { timeZone: 'America/Sao_Paulo' }).replace(' ', 'T') + '-03:00';\nconst out = [];\nfor (const [index, responseItem] of responses.entries()) {\n  const msg = mensagens[index];\n  if (!msg) continue;\n  const payload = responseItem.json || {};\n  const statusCode = Number(payload.statusCode || payload.response?.statusCode || 0);\n  const failed = Boolean(payload.error || payload.message || (statusCode && (statusCode < 200 || statusCode >= 300)));\n  const evolutionStatus = failed ? 'falhou' : 'ok';\n  const detail = statusCode ? `HTTP ${statusCode}` : (failed ? 'erro sem status HTTP' : '');\n  const linhaNova = `A2.11 disparada em ${brTimestamp}. CSAT: ${msg.csat_link}, NPS: ${msg.nps_link}. Status Evolution: ${evolutionStatus}${detail ? ` (${detail})` : ''}.`;\n  const observacoes_atual = msg.observacoes_atual || '';\n  const observacoes_finais = observacoes_atual ? `${observacoes_atual}\\n${linhaNova}` : linhaNova;\n  out.push({ json: { ...msg, evolution_status: evolutionStatus, evolution_detail: detail, linha_nova: linhaNova, observacoes_finais } });\n}\nreturn out;"
+        },
+        "id": "d1ebf798-ca68-4a90-8463-8717adc39f58",
+        "name": "[Onb A2.11] Preparar Update Observacoes",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1120,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "resource": "databasePage",
+          "operation": "update",
+          "pageId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "={{ $json.cliente_page_id }}"
+          },
+          "simple": false,
+          "propertiesUi": {
+            "propertyValues": [
+              {
+                "key": "Observações|rich_text",
+                "textContent": "={{ $json.observacoes_finais }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "1cd4700b-720a-49ef-88e5-7040f04c16c7",
+        "name": "[Onb A2.11] Atualizar Observacoes Cliente",
+        "type": "n8n-nodes-base.notion",
+        "typeVersion": 2.2,
+        "position": [
+          1344,
+          0
+        ],
+        "credentials": {
+          "notionApi": {
+            "id": "<credential_id_redacted>",
+            "name": "Notion account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const updates = $('[Onb A2.11] Preparar Update Observacoes').all().map((item) => item.json);\nreturn [{ json: { workflow: 'Onb - Disparar CSAT NPS', clientes_processados: updates.length, evolution_sucesso: updates.filter((item) => item.evolution_status === 'ok').length, evolution_falha: updates.filter((item) => item.evolution_status === 'falhou').length, cliente_ids: updates.map((item) => item.cliente_page_id) } }];"
+        },
+        "id": "0e176969-be6b-4e70-9556-33a709350bb6",
+        "name": "[Onb A2.11] Consolidar Resultado",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1568,
+          0
+        ]
+      }
+    ],
+    "connections": {
+      "[Onb A2.11] Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "[Onb A2.11] Buscar Clientes Concluidos",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[Onb A2.11] Buscar Clientes Concluidos": {
+        "main": [
+          [
+            {
+              "node": "[Onb A2.11] Filtrar Clientes Elegiveis",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[Onb A2.11] Filtrar Clientes Elegiveis": {
+        "main": [
+          [
+            {
+              "node": "[Onb A2.11] Montar Mensagem e Links",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[Onb A2.11] Montar Mensagem e Links": {
+        "main": [
+          [
+            {
+              "node": "[Onb A2.11] Enviar Telegram Olavo",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[Onb A2.11] Preparar Update Observacoes": {
+        "main": [
+          [
+            {
+              "node": "[Onb A2.11] Atualizar Observacoes Cliente",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[Onb A2.11] Atualizar Observacoes Cliente": {
+        "main": [
+          [
+            {
+              "node": "[Onb A2.11] Consolidar Resultado",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[Onb A2.11] Enviar Telegram Olavo": {
+        "main": [
+          [
+            {
+              "node": "[Onb A2.11] Preparar Update Observacoes",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Olavo Franzin",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-06-01T17:55:20.145Z",
+        "id": 628,
+        "workflowId": "xoFU3G3xfEm0Zfjl",
+        "versionId": "cb01e363-4881-4683-b11a-7580ee2a1519",
+        "event": "deactivated",
+        "userId": "2f681992-45e6-4ec9-afe2-d79763e3d45b"
+      },
+      {
+        "createdAt": "2026-06-01T17:55:20.298Z",
+        "id": 629,
+        "workflowId": "xoFU3G3xfEm0Zfjl",
+        "versionId": "cb01e363-4881-4683-b11a-7580ee2a1519",
+        "event": "activated",
+        "userId": "2f681992-45e6-4ec9-afe2-d79763e3d45b"
+      },
+      {
+        "createdAt": "2026-06-01T17:55:20.714Z",
+        "id": 630,
+        "workflowId": "xoFU3G3xfEm0Zfjl",
+        "versionId": "cb01e363-4881-4683-b11a-7580ee2a1519",
+        "event": "deactivated",
+        "userId": "2f681992-45e6-4ec9-afe2-d79763e3d45b"
+      },
+      {
+        "createdAt": "2026-06-01T17:55:20.730Z",
+        "id": 631,
+        "workflowId": "xoFU3G3xfEm0Zfjl",
+        "versionId": "cb01e363-4881-4683-b11a-7580ee2a1519",
+        "event": "activated",
+        "userId": "2f681992-45e6-4ec9-afe2-d79763e3d45b"
+      }
+    ]
+  }
+}

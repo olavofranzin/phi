@@ -1,0 +1,91 @@
+# PHI CRM — Odoo 19 Community + PostgreSQL (autossuficiente, deploy por Git)
+#
+# Deploy no EasyPanel: Create Service → Compose → Fonte = Git
+#   Repositório     : git@github.com:olavofranzin/phi.git   (SSH — repo privado)
+#   Ramo            : claude/consolidacao-2026-08
+#   Caminho de Build: docs/comercial/odoo
+#   Arquivo Compose : docker-compose.yml
+#
+# POR QUE ESTE COMPOSE TRAZ O PRÓPRIO POSTGRES (serviço `db`):
+#   O Postgres separado do painel nasce com o superusuário `postgres`. Aqui o banco já
+#   nasce com o usuário `odoo`, que é o que o Odoo espera. Este compose NÃO depende do
+#   serviço `crm_odoo-db` — depois que subir, aquele pode ser apagado (libera RAM).
+#
+# SEGREDO: a senha NÃO fica no git. Defina DB_PASSWORD como variável de ambiente do
+# serviço no EasyPanel (ou num arquivo .env ao lado deste, que o .gitignore já ignora).
+# O `:?` abaixo faz o deploy FALHAR com mensagem clara se a variável não existir —
+# melhor do que subir com senha vazia e dar "password authentication failed".
+
+services:
+  db:
+    # CONVENCAO: o nome do volume carrega a major do Postgres (odoo-db-pg17).
+    # O diretorio de dados e especifico da major: apontar uma major nova para um
+    # volume inicializado por outra derruba o container na hora, com
+    #   FATAL: database files are incompatible with server
+    # (aconteceu em 05/09/2026: postgres:17 sobre um volume que uma tentativa
+    # anterior tinha inicializado com a 16).
+    # Ao trocar de major: mudar A TAG e O NOME DO VOLUME juntos, sempre.
+    #   - banco vazio -> volume novo, e so.
+    #   - com dado    -> pg_dump no volume antigo ANTES, e restaurar no novo.
+    image: postgres:17
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: odoo
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?defina DB_PASSWORD no EasyPanel ou no .env}
+    volumes:
+      - odoo-db-pg17:/var/lib/postgresql/data
+    # Sem healthcheck o Odoo sobe antes do Postgres aceitar conexão e falha no boot.
+    # `pg_isready -U odoo` é o teste oficial da imagem postgres.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U odoo -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+    restart: unless-stopped
+
+  odoo:
+    # NAO usar container_name nem ports aqui. O repositorio oficial de composes do
+    # EasyPanel (github.com/easypanel-io/compose) remove os dois "to ensure
+    # compatibility with the Easypanel environment", e o painel avisa no deploy que
+    # container_name "might cause conflicts". Tentamos fixar container_name: crm_odoo
+    # em 05/09/2026 para casar com o alvo do proxy — nao resolveu o roteamento e
+    # contraria o padrao, entao foi revertido. O roteamento se resolve na aba
+    # Domains do painel, nao aqui.
+    image: odoo:19
+    depends_on:
+      db:
+        # `condition: service_healthy` espera o healthcheck acima passar.
+        # Sem isto, `depends_on: [db]` só espera o container INICIAR — não o banco aceitar conexão.
+        condition: service_healthy
+    environment:
+      # Nomes exigidos pelo entrypoint da imagem oficial `odoo` — NÃO são DB_HOST/DB_USER/DB_PASSWORD.
+      HOST: db
+      PORT: "5432"
+      USER: odoo
+      PASSWORD: ${DB_PASSWORD:?defina DB_PASSWORD no EasyPanel ou no .env}
+    # --proxy-mode: o HTTPS termina no Traefik do EasyPanel.
+    # --http-interface=0.0.0.0: explicito de proposito. Hoje ja e o default, mas
+    #   o Odoo avisa no boot que na versao 20 passa a ser 127.0.0.1 — e ai o
+    #   Traefik, que alcanca o container pela rede do Docker, deixaria de chegar
+    #   nele. Fixar agora evita uma quebra silenciosa no upgrade.
+    # workers=0 (modo threaded) + 1 cron thread: a VPS tem ~1,2 GB livre.
+    command: odoo --proxy-mode --http-interface=0.0.0.0 --workers=0 --max-cron-threads=1
+    # Sem `ports:` e sem `expose:` — o padrao dos composes oficiais do EasyPanel.
+    # A exposicao e pela aba Domains do painel; o Odoo escuta na 8069 dentro do container.
+    volumes:
+      - odoo-web:/var/lib/odoo                 # filestore/anexos — ENTRA NO BACKUP
+      - ./addons:/mnt/extra-addons:ro          # módulo phi_crm (F2) — viaja junto pelo Git
+      # ── ETAPA 2 (só DEPOIS de criar o banco phi_crm pela tela) ────────────────
+      # Descomente a linha abaixo e redeploy para travar o gerenciador de bancos.
+      # Se você montar isto ANTES de criar o banco, o odoo.conf traz list_db=False,
+      # a tela de criação some e o Odoo responde "Database not found" — o que PARECE
+      # falha de conexão com o banco, mas não é.
+      # - ./config/odoo.conf:/etc/odoo/odoo.conf:ro
+    restart: unless-stopped
+
+volumes:
+  # odoo-db-v2 (Postgres 16) ficou orfao — apagar no EasyPanel depois que este
+  # subir. Nao continha dado: o banco phi_crm nunca chegou a ser criado nele.
+  odoo-db-pg17:
+  odoo-web:
