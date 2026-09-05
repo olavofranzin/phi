@@ -24,10 +24,16 @@
 ⚠️ **Como o deploy é por Git, editar o compose à mão no servidor não adianta** —
 o próximo deploy sobrescreve. Versão se troca **no repositório**, com commit.
 
-⚠️ **Trocar a major do Postgres depois que o banco existir quebra o boot**
-(`database files are incompatible with server`) — o diretório de dados é
-específico da major. Enquanto o volume `odoo-db-v2` não existir, trocar é de
-graça; depois, exige `pg_dump` ou volume novo.
+⚠️ **O nome do volume carrega a major do Postgres** (`odoo-db-pg17`). Isso é
+convenção, não enfeite: o diretório de dados é específico da major, e apontar
+uma major nova para um volume inicializado por outra **derruba o container na
+hora** — `FATAL: database files are incompatible with server`. Aconteceu em
+05/09/2026, com `postgres:17` sobre um volume que uma tentativa anterior tinha
+inicializado com a 16.
+
+**Ao trocar de major, mudar a tag e o nome do volume juntos, sempre.** Banco
+vazio: volume novo e pronto. Com dado: `pg_dump` no volume antigo **antes**, e
+restaurar no novo.
 
 ---
 

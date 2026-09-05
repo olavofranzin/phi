@@ -18,18 +18,22 @@
 
 services:
   db:
-    # ATENCAO ao trocar de major do Postgres (17 -> 18, etc): o diretorio de
-    # dados e especifico da major. Se o volume `odoo-db-v2` ja tiver sido
-    # inicializado por outra major, o container sobe e MORRE com
-    # "database files are incompatible with server". Nesse caso: pg_dump antes,
-    # ou volume novo. Trocar so vale de graca enquanto o volume nao existe.
+    # CONVENCAO: o nome do volume carrega a major do Postgres (odoo-db-pg17).
+    # O diretorio de dados e especifico da major: apontar uma major nova para um
+    # volume inicializado por outra derruba o container na hora, com
+    #   FATAL: database files are incompatible with server
+    # (aconteceu em 05/09/2026: postgres:17 sobre um volume que uma tentativa
+    # anterior tinha inicializado com a 16).
+    # Ao trocar de major: mudar A TAG e O NOME DO VOLUME juntos, sempre.
+    #   - banco vazio -> volume novo, e so.
+    #   - com dado    -> pg_dump no volume antigo ANTES, e restaurar no novo.
     image: postgres:17
     environment:
       POSTGRES_DB: postgres
       POSTGRES_USER: odoo
       POSTGRES_PASSWORD: ${DB_PASSWORD:?defina DB_PASSWORD no EasyPanel ou no .env}
     volumes:
-      - odoo-db-v2:/var/lib/postgresql/data
+      - odoo-db-pg17:/var/lib/postgresql/data
     # Sem healthcheck o Odoo sobe antes do Postgres aceitar conexão e falha no boot.
     # `pg_isready -U odoo` é o teste oficial da imagem postgres.
     healthcheck:
@@ -71,5 +75,7 @@ services:
     restart: unless-stopped
 
 volumes:
-  odoo-db-v2:
+  # odoo-db-v2 (Postgres 16) ficou orfao — apagar no EasyPanel depois que este
+  # subir. Nao continha dado: o banco phi_crm nunca chegou a ser criado nele.
+  odoo-db-pg17:
   odoo-web:
