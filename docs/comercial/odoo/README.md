@@ -84,7 +84,28 @@ A senha antiga está no histórico do git; considere-a queimada. Gere outra
    depende disso) → instalar o app **CRM**.
 6. Apagar o serviço antigo `crm_odoo-db` e o Odoo do template (libera RAM).
 
-### Domínio: "Service is not reachable" — EM ABERTO
+### ⚠️ Domínio: o campo "Serviço Compose" é obrigatório
+
+**Em serviço do tipo Compose, a caixa de Domains tem um campo `Serviço Compose`
+que precisa ser preenchido com o nome do serviço dentro do `docker-compose.yml`.**
+
+Para este projeto: **`odoo`** (minúsculo). Nunca `db` — o Postgres fala na 5432
+e não deve receber tráfego externo.
+
+Com esse campo vazio o EasyPanel monta o destino como `http://crm_odoo:8069/`,
+usando o nome do serviço do painel. Esse host não existe entre os containers que
+o compose cria (`crm_odoo-db-1` e `crm_odoo-odoo-1`), o proxy não resolve e a
+página responde **"Service is not reachable"** — mesmo com o Odoo no ar e
+saudável, respondendo na 8069.
+
+Foi isso que bloqueou todas as tentativas de instalar por Git (05/09/2026).
+Não era o compose, nem rede, nem versão, nem o Odoo: era um campo em branco no
+painel. Nenhuma mudança no arquivo resolveria.
+
+Ao criar um domínio novo, preencher os quatro: Host · Protocolo `HTTP` ·
+Porta `8069` · **Serviço Compose `odoo`**.
+
+### O que foi descartado no caminho
 
 O Odoo sobe e responde na 8069 (confirmado no log), mas o domínio não chega
 nele. É **roteamento**, não aplicação.
@@ -99,9 +120,7 @@ O que já foi descartado:
   Revertido — este compose segue o padrão oficial (sem `container_name`, sem
   `ports`, sem `expose`, sem `networks`, sem labels).
 
-O que falta investigar: os campos da caixa de **Domains** do painel para serviço
-do tipo Compose — em particular se há um campo que diz **qual serviço interno**
-do compose recebe o tráfego.
+Essa investigação levou ao campo `Serviço Compose` documentado acima.
 
 **Etapa 2 — trancar.**
 1. Descomentar a linha `./config/odoo.conf:/etc/odoo/odoo.conf:ro` no `docker-compose.yml`.
