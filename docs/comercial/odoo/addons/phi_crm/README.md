@@ -57,15 +57,30 @@ Como os 10 campos GBP são escritos **juntos** pelo pipeline, a ausência é do
 
 De brinde, vira a auditoria de quando o F3 escreveu.
 
-### Nomes dos estágios
+### Os 6 estágios (versão final aprovada)
 
-Vêm da pesquisa em `docs/comercial/prospecção/`, que lista como anti-pattern a
-etapa nomeada pela **atividade do vendedor** ("Contato feito", "Apresentação") —
-a etapa deve virar pelo **compromisso do comprador**.
+| # | Nome | Entra quando | Sai quando | Perdido (Lost) |
+|---|---|---|---|---|
+| 1 | **Prospecção** | empresa no CRM | PHI calculou o score GBP | — |
+| 2 | **Aguardando Aceite** | diagnóstico pronto · SLA 24h | humano aceita (`proxima_acao_aceite = aceita`) | rejeita + `motivo_rejeicao_mql` |
+| 3 | **Em Cadência** | aceite dado · 1º toque ≤5 min | prospect respondeu e topou conversa | ≥8 tentativas sem resposta → reciclar |
+| 4 | **Conversa Aceita** ⭐ | ele topou a conversa | reunião feita, dor e impacto confirmados | sem fit / sumiu |
+| 5 | **Escopo e Proposta** | escopo iniciado (ex.: acesso aos dados) | retorno explícito ("vou ver" não conta) | objeção / recusa |
+| 6 | **Ganho** (`is_won`) | contrato assinado | handoff pra operação | — |
 
-As etapas 1–3 são **pré-contato** (o comprador ainda não sabe que existimos), por
-isso são nomeadas pelo **estado da relação**, não por ação nossa. A virada real
-do comprador é a etapa 4.
+⭐ A etapa 4 é a primeira virada do **comprador**. As etapas 1–3 são pré-contato:
+o prospect ainda não sabe que existimos, por isso são nomeadas pelo **estado da
+relação**, não por ação nossa — a pesquisa em `docs/comercial/prospecção/` lista
+como anti-pattern (#3) a etapa nomeada pela atividade do vendedor
+("Contato feito", "Apresentação").
+
+Os três critérios de cada linha estão no campo `requirements` nativo, que o Odoo
+mostra como **tooltip** no nome do estágio. É **orientação, não trava**: mover o
+negócio continua sendo ato humano.
+
+**Perda não é estágio.** Usa o botão **Perdido** nativo (`lost_reason_id` +
+arquiva). Só o **Ganho** é estágio (`is_won`).
+
 
 ## Como verificar depois de instalar
 

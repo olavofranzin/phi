@@ -34,8 +34,9 @@
         <field name="name">Prospeccao</field>
         <field name="sequence">1</field>
         <field name="is_won" eval="False"/>
-        <field name="requirements">Entrada: empresa identificada e no CRM.
-Saida: o PHI calculou o score GBP (campo "Diagnostico GBP em" preenchido).</field>
+        <field name="requirements">Entrada: empresa no CRM.
+Saida: o PHI calculou o score GBP (campo "Diagnostico GBP em" preenchido).
+Perdido: nao se aplica nesta etapa.</field>
     </record>
 
     <!-- 2 - novo -->
@@ -43,9 +44,9 @@ Saida: o PHI calculou o score GBP (campo "Diagnostico GBP em" preenchido).</fiel
         <field name="name">Aguardando Aceite</field>
         <field name="sequence">2</field>
         <field name="is_won" eval="False"/>
-        <field name="requirements">Entrada: diagnostico GBP pronto (potencial, oferta e NBA preenchidos).
-Saida: uma PESSOA decidiu - NBA-Aceite = "Aceita", ou "Rejeitada" com motivo.
-SLA: decidir em ate 24h. Lead parado aqui e receita evaporando.</field>
+        <field name="requirements">Entrada: diagnostico pronto (potencial, oferta e NBA preenchidos). SLA: decidir em ate 24h.
+Saida: uma PESSOA aceitou - NBA-Aceite = "Aceita".
+Perdido: NBA-Aceite = "Rejeitada" + preencher "Motivo da Rejeicao (MQL)".</field>
     </record>
 
     <!-- 3 - novo -->
@@ -53,9 +54,9 @@ SLA: decidir em ate 24h. Lead parado aqui e receita evaporando.</field>
         <field name="name">Em Cadencia</field>
         <field name="sequence">3</field>
         <field name="is_won" eval="False"/>
-        <field name="requirements">Entrada: NBA-Aceite = "Aceita".
-Saida: o prospect RESPONDEU e aceitou uma conversa de descoberta.
-SLA: 1o contato em ate 5 min. Minimo de 8 tentativas multi-canal antes de reciclar.</field>
+        <field name="requirements">Entrada: aceite dado. SLA: 1o toque em ate 5 min.
+Saida: o prospect RESPONDEU e topou uma conversa.
+Perdido: 8 ou mais tentativas multi-canal sem resposta -> reciclar (Status do Lead = "Reciclado").</field>
     </record>
 
     <!-- 4 - reaproveita o "Qualified" nativo. Aqui comeca o compromisso do comprador. -->
@@ -63,8 +64,9 @@ SLA: 1o contato em ate 5 min. Minimo de 8 tentativas multi-canal antes de recicl
         <field name="name">Conversa Aceita</field>
         <field name="sequence">4</field>
         <field name="is_won" eval="False"/>
-        <field name="requirements">Entrada: o prospect ACEITOU a conversa de descoberta (1o compromisso dele).
-Saida: reuniao realizada, dor e impacto confirmados, e ele concorda em avancar para escopo.</field>
+        <field name="requirements">Entrada: ele topou a conversa (1o compromisso do comprador).
+Saida: reuniao feita, dor e impacto confirmados.
+Perdido: sem fit, ou sumiu (botao Perdido + motivo).</field>
     </record>
 
     <!-- 5 - reaproveita o "Proposition" nativo -->
@@ -72,9 +74,9 @@ Saida: reuniao realizada, dor e impacto confirmados, e ele concorda em avancar p
         <field name="name">Escopo e Proposta</field>
         <field name="sequence">5</field>
         <field name="is_won" eval="False"/>
-        <field name="requirements">Entrada: o prospect deu ACESSO AOS DADOS (contas de midia, analytics) ou aceitou a auditoria.
-Saida: proposta enviada e o prospect deu retorno EXPLICITO - aceite, objecao ou recusa.
-"Vou ver" nao e retorno.</field>
+        <field name="requirements">Entrada: escopo iniciado (ex.: acesso aos dados de midia/analytics).
+Saida: retorno EXPLICITO do prospect. "Vou ver" nao conta.
+Perdido: objecao nao superada ou recusa (botao Perdido + motivo).</field>
     </record>
 
     <!-- 6 - reaproveita o "Won" nativo -->
@@ -84,7 +86,7 @@ Saida: proposta enviada e o prospect deu retorno EXPLICITO - aceite, objecao ou 
         <field name="is_won" eval="True"/>
         <field name="requirements">Entrada: contrato assinado.
 Saida: handoff para a operacao - kickoff em ate 5 dias uteis.
-Fechar e ato humano: nenhum automatismo marca ganho.</field>
+Perdido: nao se aplica. Fechar e ato humano: nenhum automatismo marca ganho.</field>
     </record>
 
 </odoo>
