@@ -82,6 +82,13 @@ negócio continua sendo ato humano.
 arquiva). Só o **Ganho** é estágio (`is_won`).
 
 
+> ⚠️ **Se os 4 estágios nativos aparecerem com os nomes antigos** (Novo,
+> Qualificado, Proposta) depois de atualizar o módulo, a causa é a **tradução
+> pt-BR** desses registros sobrepondo o nome em inglês que o data file escreve.
+> Nesse caso, renomeie os 4 na tela: CRM → Configuração → Etapas. Os nomes
+> corretos estão na tabela acima. Aconteceu uma vez por outro motivo
+> (`noupdate="1"` no data file, já corrigido) — este aviso cobre a causa restante.
+
 ## Como verificar depois de instalar
 
 | # | O quê | Como |

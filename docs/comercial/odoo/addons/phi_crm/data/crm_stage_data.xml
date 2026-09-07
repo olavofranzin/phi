@@ -1,5 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<odoo noupdate="1">
+<odoo>
+    <!--
+      SEM noupdate. Foi tentado com noupdate="1" (05/09/2026) e os 4 estagios
+      nativos NAO foram renomeados: essa flag manda o Odoo pular registros que ja
+      existem, e era exatamente a renomeacao deles o objetivo do arquivo. Os 2
+      estagios novos entraram porque nao existiam ainda.
+      Consequencia de tirar: cada atualizacao do modulo reescreve nome, sequencia
+      e criterios dos 6. E o desejado — os nomes fazem parte da spec, nao sao
+      preferencia editavel na tela.
+    -->
 
     <!--
       Pipeline do PHI - 6 etapas.
