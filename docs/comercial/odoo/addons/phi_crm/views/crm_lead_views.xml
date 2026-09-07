@@ -29,6 +29,19 @@
                     Sem diagnostico GBP neste registro.
                 </div>
 
+                <!--
+                  O marcador fica FORA do card, e sempre visivel, de proposito.
+                  Ele e o unico campo que revela o card - se ficasse dentro dele
+                  (como estava ate 07/09/2026) seria impossivel preencher pela
+                  tela: para mostrar o card era preciso um campo que so aparecia
+                  com o card ja mostrado. Tambem nao e readonly, senao nao ha
+                  como semear um lead de teste nem corrigir um registro na mao.
+                  Em producao quem escreve aqui e o pipeline PHI (F3).
+                -->
+                <group name="phi_gbp_marcador">
+                    <field name="gbp_score_atualizado_em"/>
+                </group>
+
                 <!-- ============ CARD: Diagnostico GBP ============ -->
                 <!-- So aparece quando o PHI rodou. Com o marcador vazio os
                      Integer leriam 0 e um 0 forjado mentiria (N/D honesto). -->
@@ -97,7 +110,6 @@
                         <field name="gbp_nao_reivindicado"/>
                         <field name="gbp_site_tipo" widget="badge"/>
                         <field name="gbp_flags_score"/>
-                        <field name="gbp_score_atualizado_em" readonly="1"/>
                     </group>
                 </group>
 

@@ -99,6 +99,7 @@ arquiva). Só o **Ganho** é estágio (`is_won`).
 | 4 | Tooltip | Passar o mouse no nome do estágio no kanban mostra o critério de saída |
 | 5 | Perda | Botão "Perdido" pede motivo e arquiva — sem estágio de perda |
 | 6 | Default | Lead novo nasce com NBA-Aceite = "Pendente" |
+| 7a | **Revelar o card** | O campo **"Diagnostico GBP em"** fica sempre visível e é editável, fora do card. É ele que revela o card — por isso não pode estar escondido dentro dele |
 | 7 | **N/D honesto** | Lead novo: card escondido + aviso. Preencher `gbp_score_atualizado_em` e `gbp_dim_engajamento = 0` na mão → o card aparece e mostra **0** (o caso Niti) |
 | 8 | Bandas de cor | Pôr 80 / 50 / 20 em três dimensões → verde / âmbar / vermelho, **com o número sempre visível** |
 
