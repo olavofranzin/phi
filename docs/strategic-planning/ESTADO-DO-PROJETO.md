@@ -38,7 +38,7 @@
 | **Prospecção** (lead → CRM) | 🟢 **construída** — parque `PROSP-01..08` ativo (**ADR-35**) | renomear 06/07/08 · arquivar 5 mortos · rodar `BF`/`LO` · auditoria nó a nó | 🔴 decidir o alvo do CRM |
 | **CRM Odoo** | 🟢 **F1 + F2 CONCLUÍDOS** — deploy por Git no ar; módulo `phi_crm` aprovado nos 8 testes de aceite (2026-09-08) | **F3** n8n↔Odoo (a API escrevendo os campos GBP/IA) · F5 migração de dados do HubSpot | — |
 | **PHI·Mídia Score v2** | 🟡 **ADR-34 desenhado** e validado em dado real (jan–ago) | implementar | consolidação dos writers |
-| **Consolidação de writers** | 🟡 **Lote 2 entregue** (2026-09-08) — **ADR-37 PROPOSTO**; Lote 1 (inventário) concluído, 4 sobreposições mapeadas | Olavo decidir **D1–D5** do ADR-37 · depois rodar a **Fase 0 (Estancar)** | 🔴 aguarda decisão do Olavo |
+| **Consolidação de writers** | 🟢 **ADR-37 ACEITO + Fase 0.1 em produção** (2026-09-08) | Conferir `ingestion_step` após as 07h de **09/09** · depois Fase 1 (`revenue` + FLOAT64) | 🟢 destravado |
 | **T28 / Otimização** | 🟡 Diagnóstico vive; **Maestro E1 em rascunho** | ativar E1 (ADR-28) | budget de token |
 | **Governança / documentação** | 🟢 regras **R1–R5** no `CLAUDE.md` · Rotina de auditoria ativa (1ª: 14/09) | fazer os sub-chats cumprirem **R3** (Notion) | — |
 
@@ -52,6 +52,37 @@ Prospecção (`PROSP-05` escreve no CRM, `PROSP-06` lê dele) **continua apontan
 
 → **ADR-36:** declarar o Odoo como CRM canônico, reapontar `PROSP-05/06` e definir o corte do
 HubSpot. **Uma decisão, duas frentes destravadas.**
+
+### ✅ 2026-09-08 (fim do dia) — ADR-37 aceito e Fase 0.1 aplicada em produção
+
+`D1`–`D5` aprovados pelo Olavo. A **Fase 0.1 está no ar**: o `UPDATE SET` do `GADS_INSERT` não sobrescreve
+mais `execution_id` nem `ingestion_step` (workflow `b1pbn8qmzCNTufTp`, versão ativa `105d22b3`). Os dois
+campos seguem no `INSERT`, onde aquele workflow realmente cria a linha.
+
+**Verificação pendente — 09/09 após as 07h BRT:**
+```sql
+SELECT ingestion_step, COUNT(*) FROM `phi_prod.raw_campaign_data`
+WHERE date = DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY) GROUP BY 1;
+```
+`DAILY_ENTRY` tem de voltar a aparecer. **É o teste de que a Fase 0 funcionou.**
+
+### 🔴 A Fase 0.2 foi CANCELADA — o ADR estava errado e a execução pegou
+Antes de desabilitar os nós de `Otimização Ativa?`, a leitura nó a nó mostrou que **a S2 não é duplicação**.
+São três transições distintas: **abrir** (só o `Pipeline_v2` faz), **fechar por tarefa concluída** (os dois
+fazem — inofensivo) e **limpar órfã**, campanha marcada sem tarefa aberta (**só o `Pipeline_v2` faz**, no
+branch FALSE do `Tarefa para Fechar Existe?`).
+
+Desligar `Update otimização ativa` pararia toda abertura de otimização — quebrando a Fase 3, cuja ordem é
+imutável pela Regra Crítica nº 11. Desligar `Auto-Close: Desativar Otimização` travaria campanhas órfãs em
+`true` para sempre. **Nada foi desabilitado.**
+
+O `PHI - Fechar Otimização` tem função legítima: quando o gestor conclui a tarefa **à mão**, ele desmarca em
+até 1h em vez de esperar as 07h do dia seguinte. É rede de segurança, não writer concorrente — a descrição
+dele foi corrigida (dizia "dono efetivo", o que era falso).
+
+**Lição virou invariante:** `I1` passa a valer para **transições de estado, não nomes de campo**. Dois
+workflows podem escrever o mesmo campo se cada transição tiver um dono só. Dar dono único de verdade a esse
+campo é obra (pendência **P-9**), não estancamento.
 
 ### ADR-37 proposto em 2026-09-08 — e a Fase 0 é barata
 O desenho da consolidação está escrito: `docs/strategic-planning/saude-digital/adr-rascunhos/ADR-37-writers-canonicos-um-destino-um-dono.md`.

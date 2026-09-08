@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | 📝 **PROPOSTO** — 2026-09-08 · aguarda decisão do Olavo |
+| **Status** | ✅ **ACEITO** — 2026-09-08 · `D1`–`D5` aprovados pelo Olavo · **Fase 0.1 executada** |
 | **Escopo** | Quem grava o quê em `raw_campaign_data`, `raw_ad_data`, `client_config` e nos campos de campanha do Notion |
 | **Não cobre** | Frente Prospecção (planilha `leads` + CRM) — já normatizada pelo **ADR-35**. Não tocar. |
 | **Decisor** | Olavo |
@@ -23,7 +23,7 @@ importante, mostrou **por que ninguém tinha percebido**.
 | **S1** | Duas cadeias escrevem `raw_campaign_data` todo dia: `sw metricas campanhas` (`DAILY_ENTRY`, 04h) e `PHI - Subworkflow Campanhas` (`GADS_INSERT`, 07h) | Cada linha mistura duas origens. Métricas de D-1 vêm do segundo; janelas 3d/7d, do primeiro |
 | **S1b** | O `UPDATE SET` do segundo **inclui** `ingestion_step` e `execution_id`; o do primeiro **não** | O rótulo do primeiro é apagado. O BigQuery mostrava 100% `GADS_INSERT` e **parecia haver um writer só** |
 | **S1c** | Os dois consumidores (cálculo do score e Agregador T28) têm a mesma cláusula preferindo `DAILY_ENTRY` no desempate | **Nenhuma surte efeito.** A intenção de design foi escrita duas vezes e nunca se realizou, em silêncio |
-| **S2** | `Otimização Ativa?` (Notion) tem dois donos: `PHI - Pipeline_v2` (1×/dia) e `PHI - Fechar Otimização` (**de hora em hora**) | Quem roda 24× mais é o dono efetivo, e pode desfazer o que o pipeline marcou minutos antes |
+| **S2** | `Otimização Ativa?` (Notion) é escrito por `PHI - Pipeline_v2` (1×/dia) e por `PHI - Fechar Otimização` (de hora em hora) | 🟡 **Reclassificado na execução** — os papéis são **complementares, não concorrentes**. Ver §3 Fase 0.2 |
 | **S3** | `client_config`: o writer que **INSERE** grava em `phi_dev`; o que grava em `phi_prod` só faz **`UPDATE`** | **Cliente novo não ganha linha em `phi_prod`** e o `INNER JOIN` do score o elimina, sem erro |
 | **S3b** | Para o CLI-4 (KIL), `phi_prod` diz `CPA` (correto) e `phi_dev` diz `ROAS` — porque o writer do `dev` usa um default fixo em vez da Métrica-Mãe do Notion | Apontar esse workflow para `phi_prod` — a correção óbvia — **quebraria o score do KIL em silêncio** |
 | **S4** | `raw_ad_data` tem dois writers **que funcionam**: mesmo workflow, em sequência, colunas disjuntas | É o padrão que já existe na casa e dá certo. **Generalizar, não reinventar** |
@@ -67,7 +67,9 @@ sobrescreve não pode responder "de onde veio este número".
 ### 2.3. Invariantes (I1–I10) — não mudam sem novo ADR
 
 `I1` **um destino, um dono** — dois writers no mesmo destino só no padrão S4 (colunas disjuntas,
-declaradas, mesmo workflow).
+declaradas, mesmo workflow). **O destino é a transição de estado, não o nome do campo:** dois workflows
+podem escrever o mesmo campo desde que cada transição (abrir / fechar / limpar) tenha um dono só e isso
+esteja declarado. (Refinado em 2026-09-08 pelo achado da §3.0.2.)
 
 `I2` **nenhum `UPDATE` toca linhagem alheia.** `ingestion_step`, `execution_id` e
 `source_execution_id` **nunca** entram num `UPDATE SET` que atualiza linha que o writer não criou.
@@ -96,12 +98,12 @@ deletado nem deixado solto.
 `I10` **nada em produção escreve em `phi_dev`.** Workflow ativo aponta para `phi_prod`; `phi_dev` é
 só para smoke.
 
-### 2.4. Decisões que este ADR pede ao Olavo
+### 2.4. Decisões — ✅ aprovadas pelo Olavo em 2026-09-08
 
-| # | Decisão | Recomendação |
+| # | Decisão | Resolução |
 |---|---|---|
 | `D1` | Writer canônico de `raw_campaign_data` | **`sw metricas campanhas`**, aposentando o `GADS_INSERT` |
-| `D2` | Dono de `Otimização Ativa?` | **`PHI - Fechar Otimização`** (cadência de hora em hora) |
+| `D2` | Dono de `Otimização Ativa?` | ⚠️ **aprovado, mas a premissa caiu na execução.** Não há writer a desligar — ver §3.0.2. Dono do *fechamento por tarefa* = `PHI - Fechar Otimização`; abertura e limpeza de órfã seguem no `Pipeline_v2` |
 | `D3` | `conversions` vira `FLOAT64` | **Sim** — o `raw_ad_data` já é assim |
 | `D4` | Atraso de atribuição | **Re-puxar os últimos 3 dias** a cada rodada (o `MERGE` já é idempotente) |
 | `D5` | Arquivar o `Daily Entry` (`zGgIqiLlo5iAn8ud`) | **Não agora** — só depois da Fase 2 estável |
@@ -133,16 +135,48 @@ Copiado do que funcionou em 2026-07-21 com o `PHI - Loop Alerta Fase 1` (um doub
 > 🔴 **O pipeline das 04:00/07:00 BRT não pode quebrar.** Toda mudança de SQL passa por `phi_dev` +
 > smoke nas duas campanhas KIL (Barbearia `GADS-21149189736`, Salão `GADS-21116045403`).
 
-### Fase 0 — Estancar (baixo risco, alto retorno, nada é desligado)
+### Fase 0 — Estancar — ✅ **EXECUTADA em 2026-09-08**
 
-| # | Ação | Por quê |
+| # | Ação | Estado |
 |---|---|---|
-| **0.1** | No nó `Execute SQL  INSERT raw_campaign_data` (`b1pbn8qmzCNTufTp`), **remover `execution_id` e `ingestion_step` do `UPDATE SET`** | Duas linhas de SQL. Devolve a linhagem **sem desligar ninguém** e faz as cláusulas de desempate (S1c) voltarem a funcionar. **Totalmente reversível.** |
-| **0.2** | Desabilitar os nós `Update otimização ativa` e `Auto-Close: Desativar Otimização` no `Pipeline_v2` (D2) | Encerra a S2 imediatamente |
-| **0.3** | Verificar no dia seguinte: `SELECT ingestion_step, COUNT(*) FROM phi_prod.raw_campaign_data WHERE date = CURRENT_DATE()-1 GROUP BY 1` | Deve passar a aparecer `DAILY_ENTRY`. **É o teste de que a Fase 0 funcionou.** |
+| **0.1** | Remover `execution_id` e `ingestion_step` do `UPDATE SET` do nó `Execute SQL  INSERT raw_campaign_data` (`b1pbn8qmzCNTufTp`) | ✅ **aplicado e publicado** — versão ativa `105d22b3-5704-41a3-b143-ef5b1414d1c7` |
+| **0.2** | Desabilitar os dois nós de `Otimização Ativa?` no `Pipeline_v2` | ❌ **CANCELADA — a instrução estava errada.** Ver §3.0.2 |
+| **0.3** | Verificar `ingestion_step` no dia seguinte | ⏳ pendente — rodar após as 07h BRT de 2026-09-09 |
 
-> Depois da 0.1 os dois writers continuam existindo, mas **a linha passa a dizer a verdade sobre a
-> própria origem**. Isso já destrava o diagnóstico do Score v2 (C1) antes de qualquer obra.
+**O que a 0.1 mudou, exatamente.** Os dois campos saíram do `WHEN MATCHED ... UPDATE SET` e **continuam** no
+`WHEN NOT MATCHED ... INSERT` — onde este workflow é de fato o criador da linha. Um comentário no topo do
+SQL explica o invariante I2, para que ninguém "conserte" isso de volta.
+
+#### 3.0.2 🔴 Correção: a Fase 0.2 estava errada e não foi executada
+
+Antes de desabilitar os nós, a leitura nó a nó do `Pipeline_v2` e do `PHI - Fechar Otimização` mostrou que
+**a S2 não é uma duplicação**. Os três caminhos são distintos:
+
+| Caminho | Quem faz | Ninguém mais faz? |
+|---|---|---|
+| **Abrir** (marca `true` após criar a otimização) | `Pipeline_v2` → `Update otimização ativa` | ✅ **exclusivo** |
+| **Fechar por tarefa concluída** | `Pipeline_v2` (07h) **e** `PHI - Fechar Otimização` (1h) | ❌ sobreposto — mas inofensivo |
+| **Limpar órfã** (campanha marcada `true` **sem tarefa aberta**) | `Pipeline_v2` → branch **FALSE** do `Tarefa para Fechar Existe?` | ✅ **exclusivo** |
+
+Desabilitar qualquer um dos dois nós causaria dano:
+
+- desligar `Update otimização ativa` → **nenhuma otimização volta a ser aberta** (quebra a Fase 3 do PHI,
+  cuja ordem é imutável pela Regra Crítica nº 11);
+- desligar `Auto-Close: Desativar Otimização` → **campanhas órfãs travam em `true` para sempre**, e como o
+  `Buscar Campanha` do `PHI - Fechar Otimização` filtra por `Otimização Ativa? = true`, elas ficam presas.
+
+E o `PHI - Fechar Otimização` **tem função própria e legítima**: quando o gestor conclui a tarefa **à mão**,
+ele desmarca em até 1 hora; sem ele, a campanha esperaria até as 07h do dia seguinte. É **rede de
+segurança**, não writer concorrente.
+
+> **Por que eu errei.** O inventário viu "dois workflows escrevem o mesmo campo" e eu classifiquei como
+> conflito sem separar as **transições**. A lição vira invariante: **`I1` se aplica a transições de estado,
+> não a nomes de campo.** Dois workflows podem escrever o mesmo campo se cada transição tiver um dono só.
+
+**Consequência para o `D2`:** a resposta muda de forma. Não há writer a desligar. O dono do **fechamento por
+tarefa concluída** é o `PHI - Fechar Otimização`; o `Pipeline_v2` mantém **abertura** e **limpeza de órfã**.
+Tornar isso um dono único de verdade exige portar a limpeza de órfã para o `Fechar Otimização` — **é obra,
+não estancamento**, e virou a pendência **P-9**.
 
 ### Fase 1 — Completar o sucessor (antes de aposentar o outro)
 
@@ -220,14 +254,16 @@ Desabilitar o nó `Call Subworkflow Campanhas` no `Pipeline_v2`.
 | # | Pendência | Tipo |
 |---|---|---|
 | P-1 | Olavo decidir `D1`–`D5` (§2.4) | 🔴 bloqueante |
-| P-2 | Fase 0 — estancar (0.1, 0.2, 0.3) | execução, baixo risco |
+| P-2 | Fase 0.3 — conferir `ingestion_step` após as 07h de 2026-09-09 | ✅ 0.1 feita · verificação pendente |
 | P-3 | Fase 1 — `revenue` + `FLOAT64` + re-puxe + smoke KIL | execução |
 | P-4 | Fase 2 — aposentar o `GADS_INSERT` | execução |
 | P-5 | Fase 3 — `client_config` na ordem 3.1 → 3.2 → 3.3 → 3.4 | 🔴 execução com armadilha |
 | P-6 | Fase 4 — `ADR-010`, descrições, repo × n8n, arquivamentos | acabamento |
 | P-7 | Explicar a origem das 2 linhas de fev/2025 em `phi_prod.client_config` | investigação |
 | P-8 | Medir o subcount do Salão na Fase 1.5 | qualidade de dado |
+| P-9 | Portar a **limpeza de órfã** do `Pipeline_v2` para o `PHI - Fechar Otimização`, para o campo ter dono único de verdade | obra (não é Fase 0) |
 
 ---
 
-*Um destino, um dono. E: `ingestion_step` não é linhagem — é só quem tocou por último.*
+*Um destino, um dono — e o destino é a transição, não o campo.*
+*E: `ingestion_step` não é linhagem; é só quem tocou por último.*
