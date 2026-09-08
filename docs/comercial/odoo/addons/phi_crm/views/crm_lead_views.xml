@@ -53,12 +53,11 @@
                     <group name="phi_gbp_decisao" string="Decisao">
                         <field name="gbp_potencial_comercial"
                                widget="progressbar"/>
-                        <field name="gbp_oferta_recomendada" widget="badge"/>
-                        <field name="proxima_acao_aceite"
-                               widget="badge"
-                               decoration-success="proxima_acao_aceite == 'aceita'"
-                               decoration-danger="proxima_acao_aceite == 'rejeitada'"
-                               decoration-warning="proxima_acao_aceite == 'pendente'"/>
+                        <field name="gbp_oferta_recomendada"/>
+                        <!-- SEM badge: este e o campo do HUMANO, o "play".
+                             Com badge (so exibicao) nao havia como aceitar nem
+                             rejeitar a abordagem pela tela. -->
+                        <field name="proxima_acao_aceite"/>
                     </group>
 
                     <!-- IPC x Score Tecnico: rotular a diferenca (card-spec §4) -->
@@ -79,36 +78,66 @@
                       o unico sinal (card-spec §4, requisito de acessibilidade).
                     -->
                     <group name="phi_gbp_dimensoes" string="Dimensoes (forte &#8805; 70 . medio 40-69 . fraco &lt; 40)">
-                        <field name="gbp_dim_saude" widget="badge"
-                               decoration-success="gbp_dim_saude &gt;= 70"
-                               decoration-warning="gbp_dim_saude &gt;= 40 and gbp_dim_saude &lt; 70"
-                               decoration-danger="gbp_dim_saude &lt; 40"/>
-                        <field name="gbp_dim_seo" widget="badge"
-                               decoration-success="gbp_dim_seo &gt;= 70"
-                               decoration-warning="gbp_dim_seo &gt;= 40 and gbp_dim_seo &lt; 70"
-                               decoration-danger="gbp_dim_seo &lt; 40"/>
-                        <field name="gbp_dim_autoridade" widget="badge"
-                               decoration-success="gbp_dim_autoridade &gt;= 70"
-                               decoration-warning="gbp_dim_autoridade &gt;= 40 and gbp_dim_autoridade &lt; 70"
-                               decoration-danger="gbp_dim_autoridade &lt; 40"/>
-                        <field name="gbp_dim_conversao" widget="badge"
-                               decoration-success="gbp_dim_conversao &gt;= 70"
-                               decoration-warning="gbp_dim_conversao &gt;= 40 and gbp_dim_conversao &lt; 70"
-                               decoration-danger="gbp_dim_conversao &lt; 40"/>
-                        <field name="gbp_dim_engajamento" widget="badge"
-                               decoration-success="gbp_dim_engajamento &gt;= 70"
-                               decoration-warning="gbp_dim_engajamento &gt;= 40 and gbp_dim_engajamento &lt; 70"
-                               decoration-danger="gbp_dim_engajamento &lt; 40"/>
-                        <field name="gbp_dim_conteudo" widget="badge"
-                               decoration-success="gbp_dim_conteudo &gt;= 70"
-                               decoration-warning="gbp_dim_conteudo &gt;= 40 and gbp_dim_conteudo &lt; 70"
-                               decoration-danger="gbp_dim_conteudo &lt; 40"/>
+                        <label for="gbp_dim_saude"/>
+                        <div class="o_row">
+                            <field name="gbp_dim_saude" class="oe_inline"/>
+                            <field name="gbp_dim_saude_banda" widget="badge" nolabel="1"
+                                   class="oe_inline"
+                                   decoration-success="gbp_dim_saude_banda == 'forte'"
+                                   decoration-warning="gbp_dim_saude_banda == 'medio'"
+                                   decoration-danger="gbp_dim_saude_banda == 'fraco'"/>
+                        </div>
+                        <label for="gbp_dim_seo"/>
+                        <div class="o_row">
+                            <field name="gbp_dim_seo" class="oe_inline"/>
+                            <field name="gbp_dim_seo_banda" widget="badge" nolabel="1"
+                                   class="oe_inline"
+                                   decoration-success="gbp_dim_seo_banda == 'forte'"
+                                   decoration-warning="gbp_dim_seo_banda == 'medio'"
+                                   decoration-danger="gbp_dim_seo_banda == 'fraco'"/>
+                        </div>
+                        <label for="gbp_dim_autoridade"/>
+                        <div class="o_row">
+                            <field name="gbp_dim_autoridade" class="oe_inline"/>
+                            <field name="gbp_dim_autoridade_banda" widget="badge" nolabel="1"
+                                   class="oe_inline"
+                                   decoration-success="gbp_dim_autoridade_banda == 'forte'"
+                                   decoration-warning="gbp_dim_autoridade_banda == 'medio'"
+                                   decoration-danger="gbp_dim_autoridade_banda == 'fraco'"/>
+                        </div>
+                        <label for="gbp_dim_conversao"/>
+                        <div class="o_row">
+                            <field name="gbp_dim_conversao" class="oe_inline"/>
+                            <field name="gbp_dim_conversao_banda" widget="badge" nolabel="1"
+                                   class="oe_inline"
+                                   decoration-success="gbp_dim_conversao_banda == 'forte'"
+                                   decoration-warning="gbp_dim_conversao_banda == 'medio'"
+                                   decoration-danger="gbp_dim_conversao_banda == 'fraco'"/>
+                        </div>
+                        <label for="gbp_dim_engajamento"/>
+                        <div class="o_row">
+                            <field name="gbp_dim_engajamento" class="oe_inline"/>
+                            <field name="gbp_dim_engajamento_banda" widget="badge" nolabel="1"
+                                   class="oe_inline"
+                                   decoration-success="gbp_dim_engajamento_banda == 'forte'"
+                                   decoration-warning="gbp_dim_engajamento_banda == 'medio'"
+                                   decoration-danger="gbp_dim_engajamento_banda == 'fraco'"/>
+                        </div>
+                        <label for="gbp_dim_conteudo"/>
+                        <div class="o_row">
+                            <field name="gbp_dim_conteudo" class="oe_inline"/>
+                            <field name="gbp_dim_conteudo_banda" widget="badge" nolabel="1"
+                                   class="oe_inline"
+                                   decoration-success="gbp_dim_conteudo_banda == 'forte'"
+                                   decoration-warning="gbp_dim_conteudo_banda == 'medio'"
+                                   decoration-danger="gbp_dim_conteudo_banda == 'fraco'"/>
+                        </div>
                     </group>
 
                     <!-- Sinais de ouro -->
                     <group name="phi_gbp_sinais" string="Sinais">
                         <field name="gbp_nao_reivindicado"/>
-                        <field name="gbp_site_tipo" widget="badge"/>
+                        <field name="gbp_site_tipo"/>
                         <field name="gbp_flags_score"/>
                     </group>
                 </group>

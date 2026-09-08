@@ -1,4 +1,4 @@
-from odoo import fields, models
+from odoo import api, fields, models
 
 # Convencoes deste arquivo (guia-formatacao-crm.md §1.6 e §9):
 #   - UM DONO POR CAMPO. Cada campo diz, no help, quem escreve nele:
@@ -177,6 +177,49 @@ class CrmLead(models.Model):
         help="[HUM] O play. A IA recomenda a abordagem; quem aceita ou rejeita "
              "e a pessoa. Nenhum workflow escreve neste campo.",
     )
+
+    # --- Bandas de leitura das dimensoes ----------------------------------
+    # Por que campo computado em vez de decoration direto no numero:
+    # widget="badge" no Odoo e SO exibicao - nao tem modo de edicao. Usado no
+    # proprio gbp_dim_*, ele deixava o campo sem onde digitar E renderizava o
+    # valor 0 como vazio, engolindo justamente o zero real que o N/D honesto
+    # existe para preservar (o caso Niti). Constatado na tela em 07/09/2026.
+    # Solucao: o numero fica como Integer normal (editavel, sempre visivel) e a
+    # COR vem desta etiqueta ao lado, que e derivada e por isso pode ser badge.
+    # Nao sao armazenadas (sem store): nenhuma coluna nova, nenhum dono novo -
+    # sao leitura do valor que o pipeline PHI escreveu.
+
+    _GBP_BANDAS = [("forte", "Forte"), ("medio", "Medio"), ("fraco", "Fraco")]
+    _GBP_DIMENSOES = (
+        "saude", "seo", "autoridade", "conversao", "engajamento", "conteudo",
+    )
+
+    gbp_dim_saude_banda = fields.Selection(
+        _GBP_BANDAS, string="Banda - Saude", compute="_compute_gbp_bandas")
+    gbp_dim_seo_banda = fields.Selection(
+        _GBP_BANDAS, string="Banda - SEO", compute="_compute_gbp_bandas")
+    gbp_dim_autoridade_banda = fields.Selection(
+        _GBP_BANDAS, string="Banda - Autoridade", compute="_compute_gbp_bandas")
+    gbp_dim_conversao_banda = fields.Selection(
+        _GBP_BANDAS, string="Banda - Conversao", compute="_compute_gbp_bandas")
+    gbp_dim_engajamento_banda = fields.Selection(
+        _GBP_BANDAS, string="Banda - Engajamento", compute="_compute_gbp_bandas")
+    gbp_dim_conteudo_banda = fields.Selection(
+        _GBP_BANDAS, string="Banda - Conteudo", compute="_compute_gbp_bandas")
+
+    @api.depends(*[f"gbp_dim_{d}" for d in _GBP_DIMENSOES])
+    def _compute_gbp_bandas(self):
+        """Forte >= 70 . Medio 40-69 . Fraco < 40 (card-gbp-record-spec.md §4)."""
+        for lead in self:
+            for dim in self._GBP_DIMENSOES:
+                valor = lead[f"gbp_dim_{dim}"] or 0
+                if valor >= 70:
+                    banda = "forte"
+                elif valor >= 40:
+                    banda = "medio"
+                else:
+                    banda = "fraco"
+                lead[f"gbp_dim_{dim}_banda"] = banda
 
     # ------------------------------------------------------------------
     # 3. Diagnostico por IA - a aba (textoes)
