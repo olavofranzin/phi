@@ -38,7 +38,7 @@
 | **Prospecção** (lead → CRM) | 🟢 **construída** — parque `PROSP-01..08` ativo (**ADR-35**) | renomear 06/07/08 · arquivar 5 mortos · rodar `BF`/`LO` · auditoria nó a nó | 🔴 decidir o alvo do CRM |
 | **CRM Odoo** | 🟢 **F1 + F2 CONCLUÍDOS** — deploy por Git no ar; módulo `phi_crm` aprovado nos 8 testes de aceite (2026-09-08) | **F3** n8n↔Odoo (a API escrevendo os campos GBP/IA) · F5 migração de dados do HubSpot | — |
 | **PHI·Mídia Score v2** | 🟡 **ADR-34 desenhado** e validado em dado real (jan–ago) | implementar | consolidação dos writers |
-| **Consolidação de writers** | 🟡 **Lote 1 CONCLUÍDO** (2026-09-08) — inventário nó a nó fechado; **4 sobreposições** mapeadas (S1 `raw_campaign_data`, S2 `Otimização Ativa?`, S3 `client_config`, S4 é o modelo a copiar) | escrever o **ADR-37** · confirmar o achado do `client_config` no BQ | — |
+| **Consolidação de writers** | 🟡 **Lote 2 entregue** (2026-09-08) — **ADR-37 PROPOSTO**; Lote 1 (inventário) concluído, 4 sobreposições mapeadas | Olavo decidir **D1–D5** do ADR-37 · depois rodar a **Fase 0 (Estancar)** | 🔴 aguarda decisão do Olavo |
 | **T28 / Otimização** | 🟡 Diagnóstico vive; **Maestro E1 em rascunho** | ativar E1 (ADR-28) | budget de token |
 | **Governança / documentação** | 🟢 regras **R1–R5** no `CLAUDE.md` · Rotina de auditoria ativa (1ª: 14/09) | fazer os sub-chats cumprirem **R3** (Notion) | — |
 
@@ -52,6 +52,24 @@ Prospecção (`PROSP-05` escreve no CRM, `PROSP-06` lê dele) **continua apontan
 
 → **ADR-36:** declarar o Odoo como CRM canônico, reapontar `PROSP-05/06` e definir o corte do
 HubSpot. **Uma decisão, duas frentes destravadas.**
+
+### ADR-37 proposto em 2026-09-08 — e a Fase 0 é barata
+O desenho da consolidação está escrito: `docs/strategic-planning/saude-digital/adr-rascunhos/ADR-37-writers-canonicos-um-destino-um-dono.md`.
+Princípio *um destino, um dono*, matriz com 11 destinos, invariantes **I1–I10**, e um plano em fases
+que começa por **Estancar**.
+
+**O que vale saber sem abrir o ADR:** a **Fase 0.1 são duas linhas de SQL.** Basta remover
+`execution_id` e `ingestion_step` do `UPDATE SET` do `GADS_INSERT` para a linha voltar a dizer a
+verdade sobre a própria origem — **sem desligar nenhum workflow, e reversível**. Isso já faz as
+cláusulas de desempate dos dois consumidores voltarem a funcionar e destrava o diagnóstico do
+Score v2 antes de qualquer obra.
+
+Duas armadilhas que o ADR trava explicitamente: **(a)** não dá para desligar o `GADS_INSERT` antes
+de completar o sucessor, porque só ele escreve `revenue`; **(b)** na correção do `client_config`,
+inverter a ordem (trocar o dataset antes de corrigir a derivação da métrica) **transforma o CPA do
+KIL em ROAS e quebra o score em silêncio**.
+
+**Bloqueio:** o ADR está `PROPOSTO`. Precisa da decisão do Olavo sobre `D1`–`D5` (§2.4) para virar norma.
 
 ### 🔴 Achado de 2026-09-08 — `client_config`: cliente novo não entra no `phi_prod`
 **Verificado no BigQuery** (execução n8n 36946, leitura, workflow temporário já arquivado).
