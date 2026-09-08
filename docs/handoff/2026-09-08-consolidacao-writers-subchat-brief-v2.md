@@ -2,8 +2,8 @@
 
 > **Como usar:** abra uma sessão nova (sub-chat dedicado) e cole este arquivo como 1ª mensagem.
 > É auto-contido. **Modelo recomendado:** Opus.
-> **Repo:** `olavofranzin/phi` · **Branch de trabalho:** `claude/agentic-agency-planning-KwJEw`
-> (é a branch da frente Score/ADR — confirmar com o Olavo).
+> **Repo:** `olavofranzin/phi` · **Branch de trabalho:** `claude/consolidacao-2026-08`
+> (é a branch oficial).
 > **Substitui** `docs/handoff/2026-08-27-simplificacao-escrita-dados-subchat-brief.md` (v1, mesma
 > missão; esta v2 traz o inventário já iniciado e o modelo de contrato que funcionou).
 > **Idioma com o Olavo:** português simples. **Antes de mudança grande: explicar e esperar OK.**
