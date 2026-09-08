@@ -1,0 +1,176 @@
+# [BRIEF sub-chat] Consolidação dos WRITERS do PHI — um destino, um dono (v2)
+
+> **Como usar:** abra uma sessão nova (sub-chat dedicado) e cole este arquivo como 1ª mensagem.
+> É auto-contido. **Modelo recomendado:** Opus.
+> **Repo:** `olavofranzin/phi` · **Branch de trabalho:** `claude/agentic-agency-planning-KwJEw`
+> (é a branch da frente Score/ADR — confirmar com o Olavo).
+> **Substitui** `docs/handoff/2026-08-27-simplificacao-escrita-dados-subchat-brief.md` (v1, mesma
+> missão; esta v2 traz o inventário já iniciado e o modelo de contrato que funcionou).
+> **Idioma com o Olavo:** português simples. **Antes de mudança grande: explicar e esperar OK.**
+
+---
+
+## 0. Missão
+
+Vários workflows escrevem **o mesmo dado, da mesma fonte, com semânticas diferentes** — em
+`raw_campaign_data` (BigQuery) e nos campos de campanha do **Notion**. Ninguém sabe de onde veio
+cada número.
+
+**Objetivo:** mapear todos os writers, achar as sobreposições e **implementar um writer canônico
+por destino**, com linhagem clara.
+
+**Por que agora:** este trabalho é o critério **C2** da `DEFINICAO-DE-PRONTO-PHI-V1.md`
+(*"um dado, um writer"*) e **destrava o C1** — o Score v2 (ADR-34), que precisa de uma série diária
+limpa. Está **parado desde 2026-08-27** e é hoje o único item 🔴 do painel do projeto.
+
+## 1. Escopo — leia isto antes de qualquer coisa
+
+O problema dos writers tem **duas metades**. Esta é a segunda.
+
+| Metade | Onde | Estado |
+|---|---|---|
+| **(a) Planilha `leads` + CRM** (frente Prospecção) | Google Sheets / HubSpot / Odoo | ✅ **RESOLVIDA** — ver ADR-35 |
+| **(b) Pipeline do Score** (BigQuery + Notion) | `raw_campaign_data`, `phi_score_history`, campos Notion | 🔴 **É O SEU ESCOPO** |
+
+⚠️ **Não mexa na metade (a).** Ela já tem contrato vigente (ADR-35) e workflows `PROSP-01..08`.
+Tocar nela quebraria um contrato aceito.
+
+## 2. 🎯 O modelo a copiar — já funcionou aqui dentro
+
+A metade (a) resolveu **exatamente este problema** com um padrão simples. **Copie o padrão**
+(`docs/strategic-planning/prospeccao/CONTRATO-PROSPECCAO.md` + `ADR-35`):
+
+1. **Princípio único:** *um destino, um dono.* Cada tabela/coluna tem **um** workflow autorizado a
+   escrever. Todos leem; nenhum outro escreve — nem para "corrigir".
+2. **Matriz de propriedade:** uma tabela listando destino → dono → momento da escrita.
+3. **Invariantes numerados** (`I1`, `I2`, …) que **não mudam sem novo ADR**. Exemplos que
+   provavelmente se aplicam aqui também:
+   - nunca escrita cega por chave sem garantir que a chave existe;
+   - campo não observado grava **vazio/NULL**, nunca `0` (guardrail `N/D` do PHI);
+   - carimbo de data e de origem em toda escrita (linhagem).
+4. **Plano de migração em fases**, começando por **"Estancar"** (desligar o que apaga dado alheio)
+   antes de construir qualquer coisa nova.
+
+> Esse padrão levou a frente Prospecção de 19 workflows caóticos a 8 com dono declarado.
+> **Não reinvente o formato — reuse.**
+
+## 3. O problema, com a evidência já levantada (2026-08-27)
+
+- **`raw_campaign_data` é populado pelo `GADS_INSERT`** (o "Subworkflow Campanhas"), **não** pelo
+  Daily Entry — apesar do **ADR-010** dizer que só o Daily Entry deveria escrever essa tabela.
+  Verificação read-only (execução n8n **32695**): últimos 60 dias das 2 campanhas KIL =
+  **100% `step=GADS_INSERT`**, 1 linha/dia, contínuo.
+  → 🔴 **Confirmado em 2026-09-08:** o workflow **`Daily Entry` (`zGgIqiLlo5iAn8ud`) está INATIVO.**
+  O writer canônico do ADR-010 está **desligado**. O ADR-010 está violado de fato, não só de nome.
+- **Cada writer trata `conversions` diferente:**
+  - `daily_entry_v4` grava `conversions = round(Métrica-Mãe 1D)` = **round(CPA)** — bug, mas **esse
+    writer não é o que vence** para o KIL.
+  - `GADS_INSERT` grava **contagem real**, porém **INT64** (perde fracionárias) e **subcontando** vs.
+    o export oficial: Salão BQ `sum_conv=321` vs export ~481 no mesmo período (~49 dias).
+    Provável **atraso de atribuição** + arredondamento + escopo de ações diferente. **Investigar.**
+- **Tipos inconsistentes:** `conversions` **INT64**; `conversions_3d/7d` **FLOAT64** (NULL nas linhas
+  GADS_INSERT); `cost`/`cost_7d`/`primary_metric_goal` FLOAT64; `impressions` INT64.
+- **Notion tem escrita dupla:** `phi_subworkflow_campaign_metrics` escreve `Score Diário`/`phi_score`
+  (de um `final_score` próprio) **e** o `Pipeline_v2` escreve `Score Diário`/`Status Geral` (do
+  `phi_value` do BigQuery). **Dois donos do mesmo campo → quem roda por último vence.**
+- **Positivo:** dias sem entrega **existem** no BQ como linhas-zero explícitas (cost=0/impr=0/conv=0).
+  Bom para o "sinal de entrega" do Score v2 — não há buraco de calendário em produção.
+
+## 4. Inventário pré-preenchido (leitura do n8n em 2026-09-08)
+
+> **Método:** `mcp__n8n__search_workflows`, por **nome/descrição/estado ativo**. **Não** foi feita
+> leitura nó a nó — confirmar cada linha no Lote 1.
+
+### Candidatos ATIVOS (prioridade — são os que podem estar escrevendo hoje)
+| Workflow | ID | Suspeita |
+|---|---|---|
+| `PHI - Pipeline_v2` | `ITWG3Ge0asXtUM8U` | escreve Notion (`Score Diário`, `Status Geral`) |
+| `PHI - Subworkflow Campanhas` | `b1pbn8qmzCNTufTp` | 🔴 **forte candidato a ser o `GADS_INSERT`** — a v1 pedia "identificar o id" |
+| `PHI — Agregador de Métricas Multi-fonte` | `4sdG2UKMCBuFq8xn` | escreve tabelas `t28_*` |
+| `operador unico metricas` | `cLcimNoefTOnVVbd` | ⚠️ o nome sugere **tentativa anterior de consolidação** — investigar cedo |
+| `sw metricas campanhas` | `W571K320aqIHsdtH` | grão campanha |
+| `sw metricas anuncios` | `vVAdXAJh6MW2Z5Hp` | grão anúncio |
+| `sw metricas conjuntos` | `t0DH5N5maws4egnG` | grão conjunto |
+| `PHI - Fechar Otimização` | `83vfKD8XMYmjZjFQ` | escreve Notion (Log de Otimizações) |
+| `client_config` | `SI5NSzRb8lVUz74RwOhIT` | escreve config |
+| `WF-DOC-Telemetria-Diaria` | `VubalOUaoBteCyC6` | telemetria |
+
+### INATIVOS — confirmar que estão mesmo mortos (e arquivar)
+`Daily Entry` `zGgIqiLlo5iAn8ud` (🔴 o canônico do ADR-010, desligado) · `PHI - Pipeline`
+`nFJpI3zYsk0Wst5O` · `PHI - Fase 2 Cálculo Score` `X1eI3_aZ32EE3owgeDi_r` · `PHI - Fase 3 Operacional`
+`LIaXSq-WoaF1yj3gF30Rj` · `sw phi pipeline_v2` `MOGG0bI51pNHevEJ` · `sw métricas e diagnósticos anúncios`
+`uqEHxuJPWRiZS6ai` · as 3 cópias `*copia seg* ` (`sZYkRjHcFwEatKOJ`, `nPBVPzw2qK7epQtU`, `ffEyTUED2p4Rq2Iw`)
+· `WF-T28-Analise-Campaign` `fhYmJH0o9BW1IO4i` · `WF-T28-Orquestrador-Analises` `8Q5ofmAZju0hTN08`
+
+### ⚠️ Nomes citados na v1 que **não aparecem** com esse nome no n8n hoje
+`daily_entry_v4` · `phi_subworkflow_campaign_metrics` — podem ser os nomes internos de
+`Daily Entry` e `sw metricas campanhas`. **Reconciliar nome ↔ id no Lote 1** (não assumir).
+
+## 5. Lote 1 — Inventário (OBRIGATORIAMENTE read-only)
+
+Completar a tabela abaixo para cada workflow do §4, abrindo os nós:
+
+| Coluna | O que preencher |
+|---|---|
+| Workflow (id + nome) | do §4 |
+| Fonte | Google Ads API / Meta / Notion / BQ |
+| Destino | tabela BQ (+ `ingestion_step`) e/ou campo Notion |
+| Grão | campanha/conjunto/anúncio × dia/janela |
+| Semântica de `conversions` | contagem real? `round(CPA)`? qual escopo de ações? |
+| Frequência | cron / on-demand / sub-workflow |
+| Conflito | escreve algo que outro também escreve? |
+
+Tabelas a cobrir: `raw_campaign_data`, `raw_ad_data`, `t28_*`, `phi_score_history`.
+**Entregável:** o mapa + a **lista de sobreposições** (é ela que vira o ADR).
+
+## 6. Lote 2 — Desenho → vira **ADR-37**
+
+No formato do ADR-35 (§2 deste brief). Precisa decidir:
+- **Um** writer canônico de `raw_campaign_data`, com `conversions` **real e FLOAT64**
+  (`metrics.conversions` da API). Aposentar o GADS_INSERT **ou** o Daily Entry — **não os dois vivos**.
+- **Um** dono por campo do Notion (ex.: só o `Pipeline_v2` escreve `Score Diário`/`Status Geral`).
+- **Atraso de atribuição:** dias recentes são **provisórios** — re-puxar N dias ou marcar a linha.
+- **Linhagem por linha:** `execution_id`/`source_execution_id` — quem escreveu, de qual fonte, quando.
+- O que fazer com o **ADR-010** (declarar superado por este ADR, com o motivo).
+
+## 7. Lote 3 — Implementar (com cuidado)
+
+`phi_dev` primeiro + smoke (Barbearia + Salão) → migração de tipo (`conversions` → FLOAT64) →
+desligar os writers redundantes → produção **só com OK do Olavo**.
+🔴 **Não quebrar o pipeline diário que roda 07:00 BRT.**
+
+## 8. Guardrails (não-negociáveis)
+
+- **Lote 1 é read-only.** Nada de alterar workflow em produção sem OK + smoke em `phi_dev`.
+- **Disciplina de token:** validar SQL/queries no chat **antes** de gastar no n8n. Workflow
+  temporário de leitura → **arquivar depois** (padrão da execução 32695).
+- **Guardrails de dado:** `conversions=0 ⇒ CPA/ROAS N/D` · `source_status error ⇒ N/D`, nunca `0`.
+- **Não recalcular score (ADR-003).** Este sub-chat cuida da **escrita/ingestão**, não do cálculo.
+- **Não tocar na frente Prospecção** (§1).
+
+## 9. Registro de andamento — OBRIGATÓRIO (regras R2/R3 do CLAUDE.md)
+
+1. **Notion (R3):** DB "PHI — Registro de Execuções (Sub-chats)"
+   (`8d8eb685f66249c7ba4f298d744feec3`) — **ao começar e ao encerrar cada lote**: frente · o que foi
+   feito · estado · próximo passo · link. *O digest diário das 08:30 depende disso e hoje vive
+   dizendo "sem progresso" porque ninguém escreve lá.*
+2. **Execution-log (git):** `docs/handoff/<data>-consolidacao-writers-<lote>-execution-log.md`.
+3. **Painel (R2):** atualizar `docs/strategic-planning/ESTADO-DO-PROJETO.md` §0 e o critério **C2**
+   da `DEFINICAO-DE-PRONTO-PHI-V1.md`.
+4. **ADR:** o Lote 2 vira **ADR-37** em `docs/strategic-planning/saude-digital/adr-rascunhos/`.
+
+## 10. Âncoras
+
+- **Modelo de contrato:** `docs/strategic-planning/prospeccao/CONTRATO-PROSPECCAO.md` + `ADR-35`.
+- **Linha de chegada:** `docs/strategic-planning/DEFINICAO-DE-PRONTO-PHI-V1.md` (critérios C1 e C2).
+- **Consumidor que motiva:** ADR-34 (Score v2) + `docs/analises/score-v2-validacao/`.
+- **Mira errada a corrigir:** `docs/handoff/2026-08-27-fase2-fix-writer-conversions-DRAFT.md` mirava
+  o `daily_entry_v4` — **alvo errado**, o writer vivo é o `GADS_INSERT`.
+- ADR-010 (violado) · ADR-29 Camada 0 · ADR-25 (sub-WFs reutilizáveis) · ADR-32 (Ledger).
+- BigQuery: `project-0e7c58d4-656f-49e8-807` / `phi_prod`, credencial n8n `UhLRAanVarQeOpQy`.
+- Campanhas de teste: Barbearia `GADS-21149189736` (meta CPA 5,20) · Salão `GADS-21116045403` (3,50).
+
+---
+
+## 11. A pergunta de fecho (R4)
+> *"Onde estamos, quanto falta, e o que eu atualizei para provar isso?"*
