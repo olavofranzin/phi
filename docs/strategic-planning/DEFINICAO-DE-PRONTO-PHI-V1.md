@@ -48,7 +48,7 @@ descobre lead → pontua → enriquece → cria no CRM → [HUMANO dá o play] �
 | # | Critério | Hoje |
 |---|---|---|
 | C1 | Score v2 (ADR-34) em produção — **sem contradição** entre score e métrica-mãe | 🟡 (desenhado e validado; não implantado) |
-| C2 | Escrita de dados consolidada: **um dado, um writer** | 🔴 (sub-chat parado desde 2026-08-27) |
+| C2 | Escrita de dados consolidada: **um dado, um writer** | 🟡 (Lote 1 em curso — 2026-09-08: **dois writers confirmados** em `raw_campaign_data`) |
 | C3 | Diagnóstico T28 entregando na DB `PHI - ANÁLISES` para **todas** as campanhas ativas | ❓ **verificar cobertura** |
 | C4 | Tarefa abre no Notion a partir do diagnóstico, com checklist | ❓ **verificar** |
 
@@ -66,8 +66,8 @@ descobre lead → pontua → enriquece → cria no CRM → [HUMANO dá o play] �
 | | |
 |---|---|
 | ✅ **Pronto** | **1** de 15 |
-| 🟡 Parcial | 3 |
-| 🔴 Parado | 1 |
+| 🟡 Parcial | 4 |
+| 🔴 Parado | 0 |
 | ⬜ Não iniciado | 8 |
 | ❓ **A verificar** | 2 |
 

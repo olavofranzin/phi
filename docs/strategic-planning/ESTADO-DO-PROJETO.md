@@ -51,6 +51,23 @@ Prospecção (`PROSP-05` escreve no CRM, `PROSP-06` lê dele) **continua apontan
 → **ADR-36:** declarar o Odoo como CRM canônico, reapontar `PROSP-05/06` e definir o corte do
 HubSpot. **Uma decisão, duas frentes destravadas.**
 
+### Achado de 2026-09-08 — writers: são dois, e o rótulo mentia
+`phi_prod.raw_campaign_data` é escrita **todo dia por duas cadeias ativas**: `operador unico
+metricas` → `sw metricas campanhas` (carimba `DAILY_ENTRY`, 04h BRT) e `PHI - Pipeline_v2` →
+`PHI - Subworkflow Campanhas` (carimba `GADS_INSERT`, 07h BRT). O segundo faz `UPDATE` por cima
+do primeiro **e sobrescreve o próprio `ingestion_step`** — por isso o BigQuery mostrava 100%
+`GADS_INSERT` e parecia haver um writer só. **`ingestion_step` não é linhagem: diz apenas quem
+mexeu por último.** Cada linha mistura as duas origens (`cost`/`conversions` do segundo,
+`cost_3d`/`conversions_7d` do primeiro), sem marcação.
+
+Dois corolários: (a) o bug `conversions = round(CPA)` **já foi corrigido** no writer vivo — ele
+sobrevive só no **repositório, que está defasado** frente ao n8n, o que torna auditoria por git
+enganosa; (b) o ADR-010 não está "só desatualizado no nome" — o princípio *um destino, um dono*
+está **violado de fato** hoje.
+
+Detalhe em `docs/handoff/2026-09-08-consolidacao-writers-lote1-execution-log.md` e no registro
+do Notion (DB "PHI — Registro de Execuções", 2026-09-08).
+
 ### Lição registrada em 2026-09-08
 **Duas frentes estavam prontas e o chat-mãe não sabia.** A Prospecção (parque `PROSP-01..08`
 ativo havia semanas, com a doc descrevendo workflows já deletados) e o **F2 do Odoo** (módulo
