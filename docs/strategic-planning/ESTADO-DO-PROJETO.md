@@ -65,6 +65,7 @@ SELECT ingestion_step, COUNT(*) FROM `phi_prod.raw_campaign_data`
 WHERE date = DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY) GROUP BY 1;
 ```
 `DAILY_ENTRY` tem de voltar a aparecer. **É o teste de que a Fase 0 funcionou.**
+**Agendado** para 09/09 às 08:00 BRT — a verificação roda sozinha e o resultado é registrado aqui.
 
 ### 🔴 A Fase 0.2 foi CANCELADA — o ADR estava errado e a execução pegou
 Antes de desabilitar os nós de `Otimização Ativa?`, a leitura nó a nó mostrou que **a S2 não é duplicação**.

@@ -141,7 +141,7 @@ Copiado do que funcionou em 2026-07-21 com o `PHI - Loop Alerta Fase 1` (um doub
 |---|---|---|
 | **0.1** | Remover `execution_id` e `ingestion_step` do `UPDATE SET` do nó `Execute SQL  INSERT raw_campaign_data` (`b1pbn8qmzCNTufTp`) | ✅ **aplicado e publicado** — versão ativa `105d22b3-5704-41a3-b143-ef5b1414d1c7` |
 | **0.2** | Desabilitar os dois nós de `Otimização Ativa?` no `Pipeline_v2` | ❌ **CANCELADA — a instrução estava errada.** Ver §3.0.2 |
-| **0.3** | Verificar `ingestion_step` no dia seguinte | ⏳ pendente — rodar após as 07h BRT de 2026-09-09 |
+| **0.3** | Verificar `ingestion_step` no dia seguinte | ⏳ **agendado** para 2026-09-09 08:00 BRT (11:00 UTC), lembrete `trig_017hiDspF3yEbftpDn9qdrU1` |
 
 **O que a 0.1 mudou, exatamente.** Os dois campos saíram do `WHEN MATCHED ... UPDATE SET` e **continuam** no
 `WHEN NOT MATCHED ... INSERT` — onde este workflow é de fato o criador da linha. Um comentário no topo do
