@@ -60,8 +60,12 @@ A metade (a) resolveu **exatamente este problema** com um padrão simples. **Cop
   Daily Entry — apesar do **ADR-010** dizer que só o Daily Entry deveria escrever essa tabela.
   Verificação read-only (execução n8n **32695**): últimos 60 dias das 2 campanhas KIL =
   **100% `step=GADS_INSERT`**, 1 linha/dia, contínuo.
-  → 🔴 **Confirmado em 2026-09-08:** o workflow **`Daily Entry` (`zGgIqiLlo5iAn8ud`) está INATIVO.**
-  O writer canônico do ADR-010 está **desligado**. O ADR-010 está violado de fato, não só de nome.
+  → **Correção 2026-09-08 (informada pelo Olavo):** o `Daily Entry` (`zGgIqiLlo5iAn8ud`) está inativo
+  **porque foi SUCEDIDO**, não abandonado. Em seu lugar entrou **`sw metricas campanhas`
+  (`W571K320aqIHsdtH`), que é uma CÓPIA do Daily Entry**, chamada pelo orquestrador
+  **`operador unico metricas` (`cLcimNoefTOnVVbd`)**. Ou seja: o **ADR-010 não está violado** — está
+  **desatualizado no nome**. A função canônica continua existindo, mudou de arquivo sem ADR de
+  atualização. O ADR-37 deve corrigir a nomenclatura, não decretar violação.
 - **Cada writer trata `conversions` diferente:**
   - `daily_entry_v4` grava `conversions = round(Métrica-Mãe 1D)` = **round(CPA)** — bug, mas **esse
     writer não é o que vence** para o KIL.
@@ -76,35 +80,71 @@ A metade (a) resolveu **exatamente este problema** com um padrão simples. **Cop
 - **Positivo:** dias sem entrega **existem** no BQ como linhas-zero explícitas (cost=0/impr=0/conv=0).
   Bom para o "sinal de entrega" do Score v2 — não há buraco de calendário em produção.
 
-## 4. Inventário pré-preenchido (leitura do n8n em 2026-09-08)
+## 4. A arquitetura viva (confirmada pelo Olavo em 2026-09-08)
 
-> **Método:** `mcp__n8n__search_workflows`, por **nome/descrição/estado ativo**. **Não** foi feita
-> leitura nó a nó — confirmar cada linha no Lote 1.
+```
+operador unico metricas   cLcimNoefTOnVVbd   ← ORQUESTRADOR (ativo)
+   ├── sw metricas campanhas   W571K320aqIHsdtH   ← CÓPIA do Daily Entry · grão campanha × dia
+   ├── sw metricas conjuntos   t0DH5N5maws4egnG   ← grão conjunto
+   └── sw metricas anuncios    vVAdXAJh6MW2Z5Hp   ← grão anúncio
+```
 
-### Candidatos ATIVOS (prioridade — são os que podem estar escrevendo hoje)
+O `Daily Entry` (`zGgIqiLlo5iAn8ud`) foi **desativado por sucessão**: quem faz o trabalho dele hoje
+é o `sw metricas campanhas`. **Este é o writer vivo do grão campanha × dia.**
+
+### 🔴 A pergunta nº 1 do Lote 1 (responda antes de qualquer desenho)
+
+A execução **32695** mostrou `raw_campaign_data` = **100% `step=GADS_INSERT`** nos últimos 60 dias.
+Mas o writer vivo do grão campanha é o `sw metricas campanhas` (cópia do Daily Entry). Então:
+
+> **Quem carimba `step=GADS_INSERT` em `raw_campaign_data`?**
+> **(a)** o próprio `sw metricas campanhas` (a cópia manteve/trocou o rótulo do step) → **um writer só,
+> tudo coerente**; ou
+> **(b)** um segundo workflow também escreve a mesma tabela → **dois writers, que é o problema-raiz**.
+
+Abrir o `sw metricas campanhas` e ver qual valor ele grava em `ingestion_step` **decide o desenho
+inteiro**. Não avance sem essa resposta.
+
+### 🔴 Hipótese herdada (verificar cedo — pode ser o bug vivo)
+
+A v1 registrou que o `daily_entry_v4` gravava **`conversions = round(Métrica-Mãe 1D)` = `round(CPA)`**.
+Se o `sw metricas campanhas` é **cópia** do Daily Entry, **ele pode ter herdado esse bug** — e aí o
+`round(CPA)` está em produção hoje, com outro nome. **Conferir a fórmula de `conversions` nesse
+workflow é prioridade máxima.**
+
+### Reconciliação de nomes (hipótese, confirmar)
+
+| Nome citado na v1 | Provável workflow real | Papel suspeito |
+|---|---|---|
+| `daily_entry_v4` | `Daily Entry` `zGgIqiLlo5iAn8ud` (inativo) → sucedido por `sw metricas campanhas` | grão campanha × dia → `raw_campaign_data` |
+| `phi_subworkflow_campaign_metrics` | **`PHI - Subworkflow Campanhas` `b1pbn8qmzCNTufTp`** (ativo) | escreve **Notion** (`Score Diário`/`phi_score`) de um `final_score` próprio |
+
+> ⚠️ **Retificação:** na primeira versão deste brief eu apontei o `PHI - Subworkflow Campanhas` como
+> "forte candidato a ser o GADS_INSERT". Com a informação do Olavo, a leitura mais provável é outra:
+> ele é o **`phi_subworkflow_campaign_metrics`** — ou seja, o **writer do Notion**, metade da escrita
+> dupla de `Score Diário` com o `Pipeline_v2`. **É hipótese; confirmar abrindo os nós.**
+
+### Demais candidatos ATIVOS a inventariar
 | Workflow | ID | Suspeita |
 |---|---|---|
-| `PHI - Pipeline_v2` | `ITWG3Ge0asXtUM8U` | escreve Notion (`Score Diário`, `Status Geral`) |
-| `PHI - Subworkflow Campanhas` | `b1pbn8qmzCNTufTp` | 🔴 **forte candidato a ser o `GADS_INSERT`** — a v1 pedia "identificar o id" |
+| `PHI - Pipeline_v2` | `ITWG3Ge0asXtUM8U` | escreve Notion (`Score Diário`, `Status Geral`) a partir do `phi_value` do BQ |
 | `PHI — Agregador de Métricas Multi-fonte` | `4sdG2UKMCBuFq8xn` | escreve tabelas `t28_*` |
-| `operador unico metricas` | `cLcimNoefTOnVVbd` | ⚠️ o nome sugere **tentativa anterior de consolidação** — investigar cedo |
-| `sw metricas campanhas` | `W571K320aqIHsdtH` | grão campanha |
-| `sw metricas anuncios` | `vVAdXAJh6MW2Z5Hp` | grão anúncio |
-| `sw metricas conjuntos` | `t0DH5N5maws4egnG` | grão conjunto |
 | `PHI - Fechar Otimização` | `83vfKD8XMYmjZjFQ` | escreve Notion (Log de Otimizações) |
 | `client_config` | `SI5NSzRb8lVUz74RwOhIT` | escreve config |
 | `WF-DOC-Telemetria-Diaria` | `VubalOUaoBteCyC6` | telemetria |
 
-### INATIVOS — confirmar que estão mesmo mortos (e arquivar)
-`Daily Entry` `zGgIqiLlo5iAn8ud` (🔴 o canônico do ADR-010, desligado) · `PHI - Pipeline`
-`nFJpI3zYsk0Wst5O` · `PHI - Fase 2 Cálculo Score` `X1eI3_aZ32EE3owgeDi_r` · `PHI - Fase 3 Operacional`
-`LIaXSq-WoaF1yj3gF30Rj` · `sw phi pipeline_v2` `MOGG0bI51pNHevEJ` · `sw métricas e diagnósticos anúncios`
-`uqEHxuJPWRiZS6ai` · as 3 cópias `*copia seg* ` (`sZYkRjHcFwEatKOJ`, `nPBVPzw2qK7epQtU`, `ffEyTUED2p4Rq2Iw`)
-· `WF-T28-Analise-Campaign` `fhYmJH0o9BW1IO4i` · `WF-T28-Orquestrador-Analises` `8Q5ofmAZju0hTN08`
+### INATIVOS — confirmar que estão mortos antes de arquivar
+`PHI - Pipeline` `nFJpI3zYsk0Wst5O` · `PHI - Fase 2 Cálculo Score` `X1eI3_aZ32EE3owgeDi_r` ·
+`PHI - Fase 3 Operacional` `LIaXSq-WoaF1yj3gF30Rj` · `sw phi pipeline_v2` `MOGG0bI51pNHevEJ` ·
+`sw métricas e diagnósticos anúncios` `uqEHxuJPWRiZS6ai` · as 3 cópias `*copia seg*`
+(`sZYkRjHcFwEatKOJ`, `nPBVPzw2qK7epQtU`, `ffEyTUED2p4Rq2Iw`) · `WF-T28-Analise-Campaign`
+`fhYmJH0o9BW1IO4i` · `WF-T28-Orquestrador-Analises` `8Q5ofmAZju0hTN08`
 
-### ⚠️ Nomes citados na v1 que **não aparecem** com esse nome no n8n hoje
-`daily_entry_v4` · `phi_subworkflow_campaign_metrics` — podem ser os nomes internos de
-`Daily Entry` e `sw metricas campanhas`. **Reconciliar nome ↔ id no Lote 1** (não assumir).
+⚠️ **O `Daily Entry` NÃO entra na lista de arquivamento** sem antes confirmar que o
+`sw metricas campanhas` cobre 100% do que ele fazia — é o original de uma cópia que está em produção.
+
+> **Método deste inventário:** leitura por nome/descrição/estado ativo (n8n MCP, 2026-09-08) +
+> correção do Olavo sobre a cadeia `operador unico metricas`. **Não** foi leitura nó a nó.
 
 ## 5. Lote 1 — Inventário (OBRIGATORIAMENTE read-only)
 
@@ -131,7 +171,8 @@ No formato do ADR-35 (§2 deste brief). Precisa decidir:
 - **Um** dono por campo do Notion (ex.: só o `Pipeline_v2` escreve `Score Diário`/`Status Geral`).
 - **Atraso de atribuição:** dias recentes são **provisórios** — re-puxar N dias ou marcar a linha.
 - **Linhagem por linha:** `execution_id`/`source_execution_id` — quem escreveu, de qual fonte, quando.
-- O que fazer com o **ADR-010** (declarar superado por este ADR, com o motivo).
+- **Atualizar o ADR-010**: o writer canônico não é mais o `Daily Entry` e sim a cadeia
+  `operador unico metricas` → `sw metricas campanhas`. Corrigir o nome, preservando o princípio.
 
 ## 7. Lote 3 — Implementar (com cuidado)
 
