@@ -34,7 +34,7 @@
 | Frente | Estado | O que falta | O que trava |
 |---|---|---|---|
 | **Prospecção** (lead → CRM) | 🟢 **construída** — parque `PROSP-01..08` ativo (**ADR-35**) | renomear 06/07/08 · arquivar 5 mortos · rodar `BF`/`LO` · auditoria nó a nó | 🔴 decidir o alvo do CRM |
-| **CRM Odoo** | 🟡 **F1 no ar** — Odoo 19 + app CRM instalados | F2 módulo `phi_crm` (brief pronto) · F3 n8n↔Odoo · F5 migração de dados | volume de addons no template |
+| **CRM Odoo** | 🟢 **F1 + F2 CONCLUÍDOS** — deploy por Git no ar; módulo `phi_crm` aprovado nos 8 testes de aceite (2026-09-08) | **F3** n8n↔Odoo (a API escrevendo os campos GBP/IA) · F5 migração de dados do HubSpot | — |
 | **PHI·Mídia Score v2** | 🟡 **ADR-34 desenhado** e validado em dado real (jan–ago) | implementar | consolidação dos writers |
 | **Simplificação de writers** | 🔴 **parada** — brief de 2026-08-27 sem execução registrada | rodar o sub-chat | — |
 | **T28 / Otimização** | 🟡 Diagnóstico vive; **Maestro E1 em rascunho** | ativar E1 (ADR-28) | budget de token |
@@ -43,14 +43,20 @@
 🟢 pronto ou em acabamento · 🟡 em obra · 🔴 parado
 
 ### O bloqueio nº 1 do projeto hoje
-**Decidir o alvo do CRM: HubSpot × Odoo.** Ele trava o acabamento da Prospecção (`PROSP-05`
-escreve no CRM, `PROSP-06` lê dele) **e** define o escopo do F3 do Odoo. Enquanto não for decidido,
-duas frentes ficam em espera. → **ADR-36 (a escrever).**
+**Formalizar o Odoo como CRM e reapontar a Prospecção para ele.** Na prática a decisão já foi
+tomada pelos fatos: o Odoo está no ar e o módulo `phi_crm` já tem os campos GBP/IA. Mas a
+Prospecção (`PROSP-05` escreve no CRM, `PROSP-06` lê dele) **continua apontando para o HubSpot**.
+É o mesmo trabalho do **F3** (integração n8n↔Odoo) visto do outro lado.
+
+→ **ADR-36:** declarar o Odoo como CRM canônico, reapontar `PROSP-05/06` e definir o corte do
+HubSpot. **Uma decisão, duas frentes destravadas.**
 
 ### Lição registrada em 2026-09-08
-A frente Prospecção estava **praticamente pronta havia semanas** e nós não sabíamos, porque a
-documentação descrevia workflows que já não existiam. **Doc desatualizada fez a gente achar que
-estava travado quando não estava.** Daí as regras R1–R4.
+**Duas frentes estavam prontas e o chat-mãe não sabia.** A Prospecção (parque `PROSP-01..08`
+ativo havia semanas, com a doc descrevendo workflows já deletados) e o **F2 do Odoo** (módulo
+`phi_crm` aprovado, descoberto só ao sincronizar o git). **A sensação de "estamos enroscados" era
+falta de visibilidade, não falta de entrega.** Daí as regras R1–R4 — e o R3 (Notion) em especial:
+o digest diário existe e funciona, só não é alimentado.
 
 ---
 

@@ -150,7 +150,7 @@ validar identidade mínima · `I7` score é fato (ADR-003) · `I8` só o 05 escr
 | P-2 | Arquivar os 5 workflows inativos da §3.5 | acabamento |
 | P-3 | Rodar `PROSP-BF` e `PROSP-LO` fora de dry-run | migração única |
 | P-4 | Auditoria nó a nó dos 8 canônicos (fechar os defeitos residuais) | qualidade |
-| P-5 | **Decidir o alvo do CRM (HubSpot × Odoo) → ADR-36** | 🔴 bloqueante estratégico |
+| P-5 | **Reapontar `PROSP-05/06` do HubSpot para o Odoo → ADR-36** — o Odoo F1+F2 ficou pronto em 2026-09-08 (módulo `phi_crm` com os campos GBP/IA aprovado); é o mesmo trabalho do **F3** visto do lado da Prospecção | 🔴 bloqueante estratégico |
 | P-6 | 127 linhas sem `place_id` na coluna A — causa não explicada | dado |
 
 ---
