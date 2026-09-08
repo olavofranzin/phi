@@ -4,7 +4,11 @@
 > ⚠️ **As-built desatualizado.** As seções §6 e §9 descrevem o estado de 2026-08-28. O estado REAL
 > dos workflows está no **`ADR-35` §3** (inventário do n8n em 2026-09-08). Em caso de divergência,
 > **o ADR-35 §3 vale**. Os invariantes e a matriz de colunas (§3, §4, §5) continuam válidos.
-> **Escopo:** quem grava o quê na planilha `leads` e no HubSpot, e o que não pode mudar sem ADR.
+> **Escopo:** quem grava o quê na planilha `leads` e no CRM, e o que não pode mudar sem ADR.
+> 🔴 **2026-09-08 — nomes de coluna mudaram.** O Olavo renomeou o bloco `hubspot*` para `crm*` na
+> planilha (`id_hubspot` → **`id_crm`**, confirmado; os demais a confirmar). O CRM canônico passou a
+> ser o **Odoo** (**ADR-36**). A matriz do §3 abaixo ainda usa os nomes antigos — ler junto com o
+> **ADR-36 §4.2/§4.3**, que tem os nomes novos e o risco dos workflows apontarem para os antigos.
 >
 > **Regra de precedência:** divergência entre este contrato e um workflow é **bug do workflow**.
 > Divergência entre este contrato e a planilha real é **bug do contrato** — corrigir aqui primeiro.
