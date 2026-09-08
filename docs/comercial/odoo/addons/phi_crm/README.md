@@ -15,6 +15,23 @@ O `docker-compose.yml` deste repositório monta `docs/comercial/odoo/addons` em
 1. Modo Desenvolvedor → **Apps** → *Atualizar Lista de Apps*
 2. Buscar **"PHI CRM"** → **Instalar**
 
+## ⚠️ Mudou Python? Reinicie o container ANTES de atualizar
+
+O processo do Odoo importa os arquivos `.py` no boot e os mantém em memória. O
+botão **Atualizar** do módulo recarrega os **XML**, mas **não reimporta o
+Python**. Se o commit mexeu em `models/`, atualizar sem reiniciar deixa o Odoo
+com XML novo e Python velho — e a view quebra com
+
+```
+O campo "<nome>" não existe no modelo "crm.lead"
+```
+
+Não é erro de código: é código que ainda não foi carregado. Aconteceu em
+08/09/2026 ao introduzir os campos de banda.
+
+**Regra:** mexeu em `models/` → **Implantar** (reinicia o container) **e só
+depois** Atualizar o módulo. Mudança só de XML dispensa o reinício.
+
 ## Atualizar depois de um push
 
 1. Redeploy do serviço no EasyPanel (puxa o Git de novo)

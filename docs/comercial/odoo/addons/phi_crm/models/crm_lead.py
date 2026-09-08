@@ -1,5 +1,11 @@
 from odoo import api, fields, models
 
+# Constantes em nivel de modulo, nao atributos da classe: nomes _MAIUSCULOS
+# dentro de um models.Model sao territorio da metaclasse do Odoo, e nao ha
+# motivo para disputar espaco com ela.
+GBP_BANDAS = [("forte", "Forte"), ("medio", "Medio"), ("fraco", "Fraco")]
+GBP_DIMENSOES = ("saude", "seo", "autoridade", "conversao", "engajamento", "conteudo")
+
 # Convencoes deste arquivo (guia-formatacao-crm.md §1.6 e §9):
 #   - UM DONO POR CAMPO. Cada campo diz, no help, quem escreve nele:
 #       [IA]  = pipeline PHI (F3, via API externa). O humano nao preenche a mao.
@@ -189,29 +195,24 @@ class CrmLead(models.Model):
     # Nao sao armazenadas (sem store): nenhuma coluna nova, nenhum dono novo -
     # sao leitura do valor que o pipeline PHI escreveu.
 
-    _GBP_BANDAS = [("forte", "Forte"), ("medio", "Medio"), ("fraco", "Fraco")]
-    _GBP_DIMENSOES = (
-        "saude", "seo", "autoridade", "conversao", "engajamento", "conteudo",
-    )
-
     gbp_dim_saude_banda = fields.Selection(
-        _GBP_BANDAS, string="Banda - Saude", compute="_compute_gbp_bandas")
+        GBP_BANDAS, string="Banda - Saude", compute="_compute_gbp_bandas")
     gbp_dim_seo_banda = fields.Selection(
-        _GBP_BANDAS, string="Banda - SEO", compute="_compute_gbp_bandas")
+        GBP_BANDAS, string="Banda - SEO", compute="_compute_gbp_bandas")
     gbp_dim_autoridade_banda = fields.Selection(
-        _GBP_BANDAS, string="Banda - Autoridade", compute="_compute_gbp_bandas")
+        GBP_BANDAS, string="Banda - Autoridade", compute="_compute_gbp_bandas")
     gbp_dim_conversao_banda = fields.Selection(
-        _GBP_BANDAS, string="Banda - Conversao", compute="_compute_gbp_bandas")
+        GBP_BANDAS, string="Banda - Conversao", compute="_compute_gbp_bandas")
     gbp_dim_engajamento_banda = fields.Selection(
-        _GBP_BANDAS, string="Banda - Engajamento", compute="_compute_gbp_bandas")
+        GBP_BANDAS, string="Banda - Engajamento", compute="_compute_gbp_bandas")
     gbp_dim_conteudo_banda = fields.Selection(
-        _GBP_BANDAS, string="Banda - Conteudo", compute="_compute_gbp_bandas")
+        GBP_BANDAS, string="Banda - Conteudo", compute="_compute_gbp_bandas")
 
-    @api.depends(*[f"gbp_dim_{d}" for d in _GBP_DIMENSOES])
+    @api.depends(*[f"gbp_dim_{d}" for d in GBP_DIMENSOES])
     def _compute_gbp_bandas(self):
         """Forte >= 70 . Medio 40-69 . Fraco < 40 (card-gbp-record-spec.md §4)."""
         for lead in self:
-            for dim in self._GBP_DIMENSOES:
+            for dim in GBP_DIMENSOES:
                 valor = lead[f"gbp_dim_{dim}"] or 0
                 if valor >= 70:
                     banda = "forte"
