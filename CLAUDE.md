@@ -201,6 +201,12 @@ e **por que existe** — incluindo **o que ele substituiu e por quê**.
 > Teste prático: **se a auditoria semanal precisa perguntar ao Olavo para entender, a descrição
 > falhou.** (Generaliza o invariante I10 do ADR-35 para o projeto inteiro.)
 
+**Procedimento canônico de aposentadoria** (precedente `[APOSENTADO 2026-07-21] PHI - Loop Alerta
+Fase 1` — o único workflow do parque que hoje passa no teste da R5):
+1. consolidar a função no workflow que fica; 2. **desabilitar o nó chamador**; 3. desativar o
+workflow; 4. **renomear com o prefixo `[APOSENTADO <data>]`**; 5. sticky note dizendo **por que** e
+**proibindo reuso**. Nunca apagar sem esses 5 passos — o nome e o sticky são a memória.
+
 ### R4 — Uma pergunta que todo chat responde antes de fechar
 > *"Onde estamos, quanto falta, e o que eu atualizei para provar isso?"*
 Se não souber responder, a etapa não acabou.

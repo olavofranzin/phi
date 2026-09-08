@@ -86,6 +86,26 @@ está **violado de fato** hoje.
 Detalhe em `docs/handoff/2026-09-08-consolidacao-writers-lote1-execution-log.md` e no registro
 do Notion (DB "PHI — Registro de Execuções", 2026-09-08).
 
+### 🔴 Risco aberto — `client_config` pode estar derrubando clientes do score (2026-09-08)
+
+Achado do Lote 1 dos writers, **fora do que ele estava procurando**:
+
+- o workflow `client_config` (`SI5NSzRb8lVUz74RwOhIT`, ativo desde março, trigger de hora em hora)
+  faz `MERGE` em **`phi_dev.client_config`**;
+- o `PHI - Pipeline_v2` lê **`phi_prod.client_config`** com `INNER JOIN ... WHERE is_active = TRUE`
+  **dentro do cálculo do score**.
+
+**Se a leitura estiver certa:** cliente novo cadastrado no Notion **nunca chega ao prod**, e o
+`INNER JOIN` **o remove do score — silenciosamente**, sem erro nem alerta, desde março.
+
+**Verificado:** o SQL, o dataset e o estado ativo dos dois lados (leitura de código).
+**NÃO verificado:** se o `phi_prod.client_config` é abastecido por outra via (ex.: à mão).
+**Como fechar:** uma query read-only comparando as duas tabelas — está no §4 do inventário
+`docs/handoff/2026-09-08-consolidacao-writers-lote1-inventario.md`.
+
+⚠️ **Rodar essa query ANTES do ADR-37.** Se confirmar, muda a prioridade da frente inteira: deixa de
+ser "consolidar writers" e vira **correção de bug de produção**.
+
 ### Lição registrada em 2026-09-08
 **Duas frentes estavam prontas e o chat-mãe não sabia.** A Prospecção (parque `PROSP-01..08`
 ativo havia semanas, com a doc descrevendo workflows já deletados) e o **F2 do Odoo** (módulo

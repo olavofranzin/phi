@@ -228,7 +228,13 @@ desligar os writers redundantes → produção **só com OK do Olavo**.
 
 ## 8. Guardrails (não-negociáveis)
 
-- **Lote 1 é read-only.** Nada de alterar workflow em produção sem OK + smoke em `phi_dev`.
+- **Lote 1 é read-only** para **comportamento**: nada de alterar lógica, nó, query ou agendamento
+  em produção sem OK + smoke em `phi_dev`.
+  ✅ **EXCEÇÃO EXPLÍCITA (corrige contradição com o §5.1, apontada pelo sub-chat em 2026-09-08):**
+  **escrever `description` de workflow É PERMITIDO no Lote 1.** É metadado, não muda comportamento,
+  e é o entregável da regra R5. Não precisa de OK caso a caso.
+  *(A v2 deste brief mandava escrever a descrição no §5.1 e proibia mexer em produção no §8 — o
+  sub-chat parou e perguntou, que era o certo. A contradição era minha.)*
 - **Disciplina de token:** validar SQL/queries no chat **antes** de gastar no n8n. Workflow
   temporário de leitura → **arquivar depois** (padrão da execução 32695).
 - **Guardrails de dado:** `conversions=0 ⇒ CPA/ROAS N/D` · `source_status error ⇒ N/D`, nunca `0`.
