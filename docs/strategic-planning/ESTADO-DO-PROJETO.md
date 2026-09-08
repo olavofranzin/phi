@@ -38,7 +38,7 @@
 | **Prospecção** (lead → CRM) | 🟢 **construída** — parque `PROSP-01..08` ativo (**ADR-35**) | renomear 06/07/08 · arquivar 5 mortos · rodar `BF`/`LO` · auditoria nó a nó | 🔴 decidir o alvo do CRM |
 | **CRM Odoo** | 🟢 **F1 + F2 CONCLUÍDOS** — deploy por Git no ar; módulo `phi_crm` aprovado nos 8 testes de aceite (2026-09-08) | **F3** n8n↔Odoo (a API escrevendo os campos GBP/IA) · F5 migração de dados do HubSpot | — |
 | **PHI·Mídia Score v2** | 🟡 **ADR-34 desenhado** e validado em dado real (jan–ago) | implementar | consolidação dos writers |
-| **Consolidação de writers** | 🟡 **Lote 1 em andamento** (2026-09-08) — confirmado: **2 writers ativos** em `raw_campaign_data`; `ingestion_step` não é linhagem, é 'quem tocou por último'; cada linha mistura 2 origens | terminar o inventário · ADR-37 · implementar | — |
+| **Consolidação de writers** | 🟡 **Lote 1 CONCLUÍDO** (2026-09-08) — inventário nó a nó fechado; **4 sobreposições** mapeadas (S1 `raw_campaign_data`, S2 `Otimização Ativa?`, S3 `client_config`, S4 é o modelo a copiar) | escrever o **ADR-37** · confirmar o achado do `client_config` no BQ | — |
 | **T28 / Otimização** | 🟡 Diagnóstico vive; **Maestro E1 em rascunho** | ativar E1 (ADR-28) | budget de token |
 | **Governança / documentação** | 🟢 regras **R1–R5** no `CLAUDE.md` · Rotina de auditoria ativa (1ª: 14/09) | fazer os sub-chats cumprirem **R3** (Notion) | — |
 
@@ -52,6 +52,22 @@ Prospecção (`PROSP-05` escreve no CRM, `PROSP-06` lê dele) **continua apontan
 
 → **ADR-36:** declarar o Odoo como CRM canônico, reapontar `PROSP-05/06` e definir o corte do
 HubSpot. **Uma decisão, duas frentes destravadas.**
+
+### 🔴 Achado de 2026-09-08 — `client_config` pode estar barrando clientes novos do score
+O workflow `client_config` (`SI5NSzRb8lVUz74RwOhIT`), **ativo desde 2026-03**, sincroniza a DB
+Clientes do Notion para **`phi_dev.client_config`** — o dataset de desenvolvimento. O
+`PHI - Pipeline_v2` lê **`phi_prod.client_config`** e faz `INNER JOIN` nela para calcular o score.
+Se a leitura estiver certa, **cliente novo cadastrado no Notion nunca chega ao prod por esse
+caminho, e o `INNER JOIN` o elimina do score** — em silêncio.
+
+**Fato verificável:** o SQL do nó, o dataset e o estado ativo (os dois lados foram lidos).
+**Não confirmado:** se `phi_prod.client_config` é populado por outra via (à mão, p.ex.). Nenhuma
+query foi rodada no BigQuery. A query de confirmação está no §4 do inventário do Lote 1 — vale
+rodar antes do ADR-37, porque muda a prioridade da frente.
+
+Fora isso, o Lote 1 fechou 4 sobreposições. A mais barata de corrigir é a **S2**: `Otimização
+Ativa?` no Notion tem dois donos, e o que roda de hora em hora desfaz o que o pipeline diário
+marcou. Detalhe em `docs/handoff/2026-09-08-consolidacao-writers-lote1-inventario.md`.
 
 ### Achado de 2026-09-08 — writers: são dois, e o rótulo mentia
 `phi_prod.raw_campaign_data` é escrita **todo dia por duas cadeias ativas**: `operador unico
