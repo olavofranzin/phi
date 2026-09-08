@@ -139,7 +139,7 @@ está **violado de fato** hoje.
 Detalhe em `docs/handoff/2026-09-08-consolidacao-writers-lote1-execution-log.md` e no registro
 do Notion (DB "PHI — Registro de Execuções", 2026-09-08).
 
-### 🔴 Risco aberto — `client_config` pode estar derrubando clientes do score (2026-09-08)
+### ✅ Risco FECHADO — `client_config` (levantado e desmentido em 2026-09-08)
 
 Achado do Lote 1 dos writers, **fora do que ele estava procurando**:
 
@@ -156,8 +156,30 @@ Achado do Lote 1 dos writers, **fora do que ele estava procurando**:
 **Como fechar:** uma query read-only comparando as duas tabelas — está no §4 do inventário
 `docs/handoff/2026-09-08-consolidacao-writers-lote1-inventario.md`.
 
-⚠️ **Rodar essa query ANTES do ADR-37.** Se confirmar, muda a prioridade da frente inteira: deixa de
-ser "consolidar writers" e vira **correção de bug de produção**.
+**✅ DESFECHO (reportado pelo sub-chat em 2026-09-08): a hipótese foi DESMENTIDA pela verificação.**
+O `phi_prod` **não** estava parado — a suspeita nasceu da leitura do código e caiu quando o dado foi
+conferido. **Nenhum cliente estava sendo removido do score.**
+
+> 📌 **Por que este bloco fica aqui em vez de ser apagado:** pela regra **R6**, *hipótese desmentida
+> também se registra*. Sem isto, a auditoria de segunda-feira leria o mesmo SQL, levantaria o mesmo
+> alarme e repetiria o trabalho. **A refutação é informação.**
+>
+> ⚠️ A evidência (o resultado da query) precisa estar no inventário/execution-log do sub-chat — se
+> não estiver escrita lá, pela R2 ela não aconteceu.
+
+### ✅ Entregue em 2026-09-08 — Fase 0.1 do ADR-37 (writers)
+O `GADS_INSERT` **parou de sobrescrever** `execution_id` e `ingestion_step` no `UPDATE SET` (os dois
+seguem no `INSERT`, onde ele de fato cria a linha). `PHI - Subworkflow Campanhas`
+(`b1pbn8qmzCNTufTp`), versão ativa `105d22b3`.
+
+**Verificação combinada para amanhã, depois das 07h:** o rótulo `DAILY_ENTRY` tem de **voltar a
+aparecer** em `phi_prod.raw_campaign_data` no dia anterior.
+
+⚠️ **Efeito colateral a vigiar junto:** o rótulo das linhas muda de `GADS_INSERT` para `DAILY_ENTRY`.
+Qualquer consumidor que filtre por `ingestion_step = 'GADS_INSERT'` **passa a não achar nada**.
+Os dois `ORDER BY CASE WHEN ingestion_step = 'DAILY_ENTRY'` conhecidos são inofensivos (não há
+empate), mas **vale varrer se existe algum `WHERE` filtrando por esse campo** antes de dar a Fase 0.3
+por concluída.
 
 ### Lição registrada em 2026-09-08
 **Duas frentes estavam prontas e o chat-mãe não sabia.** A Prospecção (parque `PROSP-01..08`

@@ -43,7 +43,7 @@ Adotar como **norma vigente** o `CONTRATO-PROSPECCAO.md`, com três pilares:
 **Tudo o que não estiver nessa lista é arquivado.**
 
 ### 2.3. Invariantes (I1–I11) — não mudam sem novo ADR
-`I1` uma coluna um dono · `I2` nunca `appendOrUpdate` em escrita por chave (só `update`; append só na
+`I1` uma coluna um dono *(**refinado pelo ADR-37 em 2026-09-08:** o destino é a **transição de estado**, não o nome do campo — dois workflows podem tocar o mesmo campo se cada um for dono de transições diferentes e exclusivas)* · `I2` nunca `appendOrUpdate` em escrita por chave (só `update`; append só na
 criação, só pelo 02) · `I3` campo não observado grava **vazio**, nunca `0`/`false`/`"="` · `I4` dedup
 por `place_id`, junção por `id_hubspot`, **nome nunca é chave** · `I5` todos os leads descobertos vão
 à planilha e ao CRM (o corte governa **gasto**, não entrada) · `I6` nenhum gasto de LLM antes de

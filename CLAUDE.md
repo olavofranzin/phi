@@ -207,6 +207,22 @@ Fase 1` — o único workflow do parque que hoje passa no teste da R5):
 workflow; 4. **renomear com o prefixo `[APOSENTADO <data>]`**; 5. sticky note dizendo **por que** e
 **proibindo reuso**. Nunca apagar sem esses 5 passos — o nome e o sticky são a memória.
 
+### R6 — Plano aceito não dispensa verificação (o dado vence o plano)
+Antes de uma ação **irreversível ou em produção**, **verifique a premissa que a justifica** — mesmo
+que o plano já esteja **aceito** num ADR. Se o dado desmentir o plano:
+**pare, não execute, corrija o ADR e registre o porquê.**
+
+> **Motivo:** em 2026-09-08 a **Fase 0.2 do ADR-37 foi cancelada na hora de executar**. O inventário
+> tinha visto "dois workflows escrevem o mesmo campo" e chamado de conflito; a leitura do fluxo,
+> feita antes de desabilitar qualquer nó, mostrou **três transições distintas** — e que executar o
+> plano teria **quebrado a Fase 3** (Regra Crítica nº 11: a ordem é imutável). Nada foi desabilitado.
+>
+> **Executar um plano aceito que o dado já desmentiu é o pior dos dois mundos** — tem a autoridade do
+> ADR e a consequência do erro.
+>
+> **Corolário:** **hipótese desmentida também se registra.** Se a refutação não for escrita, a
+> próxima auditoria levanta o mesmo alarme e o trabalho se repete.
+
 ### R4 — Uma pergunta que todo chat responde antes de fechar
 > *"Onde estamos, quanto falta, e o que eu atualizei para provar isso?"*
 Se não souber responder, a etapa não acabou.
