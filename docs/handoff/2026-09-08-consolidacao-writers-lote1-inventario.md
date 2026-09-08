@@ -34,7 +34,7 @@
 | `raw_ad_data` | 2 nós do mesmo workflow, **colunas disjuntas** | ✅ **é o padrão certo** |
 | `t28_*` (6 tabelas) | 1 (Agregador) | ✅ dono único |
 | `phi_score_history` | 1 (Pipeline_v2) | ✅ dono único |
-| `phi_prod.client_config` | 1 (`PHI - Subworkflow Campanhas`, só `primary_metric_type`) | 🟡 parcial |
+| `phi_prod.client_config` | 1 (`PHI - Subworkflow Campanhas`) — **só `UPDATE`, nunca `INSERT`** | 🔴 ninguém cria linha |
 | `phi_dev.client_config` | 1 (`client_config`) | 🔴 dataset errado |
 | `workflow_execution_log` | 1 (Pipeline_v2) | ✅ dono único |
 
@@ -61,7 +61,8 @@ Pipeline_v2 marcou minutos antes. Mesmo padrão do S1: quem roda por último ven
 - `client_config` `SI5NSzRb8lVUz74RwOhIT` → **`phi_dev.client_config`** (client_id, client_name, model_id, primary_metric_type, is_active, created_at).
 - `PHI - Subworkflow Campanhas` → **`phi_prod.client_config`** (só `primary_metric_type`).
 
-Não colidem porque estão em **datasets diferentes** — o que é justamente o problema (§4).
+Não colidem porque estão em **datasets diferentes** — e, pior, **discordam**: para o CLI-4 o `prod`
+diz `CPA` (correto) e o `dev` diz `ROAS` (default hardcoded). Verificado no BigQuery — ver §4.
 
 ### S4 🟢 `raw_ad_data` — dois writers que funcionam (usar de modelo)
 `Code Montar SQL` (métricas) e `Code Montar SQL Criativo` (sinais de criativo) fazem MERGE na
@@ -96,31 +97,99 @@ está lendo a do GADS_INSERT.
 
 ---
 
-## 4. 🔴 Achado fora do escopo do brief — `client_config` escreve em `phi_dev`
+## 4. 🔴 `client_config` — VERIFICADO NO BIGQUERY (execução n8n 36946)
 
-O workflow `client_config` `SI5NSzRb8lVUz74RwOhIT` está **ativo desde 2026-03-04** (Notion Trigger,
-poll de hora em hora) e seu único nó de escrita faz:
+> **Correção da minha própria hipótese.** Eu havia escrito que `phi_prod.client_config` podia estar
+> "parado em março". **Está errado** — ele foi escrito hoje às 07:01 BRT. Mas a **consequência** que
+> eu temia continua de pé, por um mecanismo diferente. Segue o dado bruto.
+
+### O que o BigQuery devolveu
+
+`phi_prod.client_config` (2 linhas):
+
+| client_id | client_name | primary_metric_type | is_active | created_at | updated_at |
+|---|---|---|---|---|---|
+| CLI-4 | KILDARE & BRUNA BECKER | **CPA** | true | 2025-02-19 | **2026-09-08 07:01:08** |
+| CLI-5 | IMPACTO WEB CURSOS | ROAS | false | 2025-02-19 | 2026-07-04 10:29:55 |
+
+`phi_dev.client_config` (2 linhas, mesmas colunas):
+
+| client_id | client_name | primary_metric_type | is_active | created_at | updated_at |
+|---|---|---|---|---|---|
+| CLI-4 | KILDARE & BRUNA BECKER | **ROAS** | true | 2025-02-19 | **1969-12-31 (epoch/nulo)** |
+| CLI-5 | IMPACTO WEB CURSOS | ROAS | false | 2025-02-19 | 2026-07-04 10:29:56 |
+
+### 4.1 ✅ Descartado — o prod não está parado
+
+`phi_prod.client_config` recebeu escrita **hoje às 07:01:08 BRT**, exatamente na janela do
+`PHI - Pipeline_v2` → `PHI - Subworkflow Campanhas` (nó `Execute SQL client_config sincronizado`).
+Os dois clientes existem nas duas tabelas. **Ninguém está sendo barrado do score hoje.**
+
+### 4.2 🔴 Confirmado — ninguém INSERE em `phi_prod.client_config`
+
+O único writer de `phi_prod.client_config` no n8n é o `PHI - Subworkflow Campanhas`, e o SQL dele é
+**`UPDATE` puro**:
 
 ```sql
-MERGE `project-0e7c58d4-656f-49e8-807.phi_dev.client_config` AS target
+UPDATE `phi_prod.client_config`
+SET primary_metric_type = '...', updated_at = CURRENT_TIMESTAMP()
+WHERE client_id = '...';
 ```
 
-**`phi_dev`, não `phi_prod`.** Enquanto isso o `PHI - Pipeline_v2` lê `phi_prod.client_config`
-(nó `Buscar Clientes Ativos`) e faz `INNER JOIN phi_prod.client_config ... WHERE is_active = TRUE`
-no cálculo do score.
+`UPDATE` **não cria linha**. Então, para um cliente novo cadastrado no Notion:
 
-**Se essa leitura estiver certa, um cliente novo cadastrado no Notion nunca chega ao `phi_prod`
-por esse caminho — e, sem linha em `client_config`, o `INNER JOIN` o elimina do score.**
+1. o workflow `client_config` o insere em **`phi_dev`**;
+2. **nada** o insere em `phi_prod`;
+3. o `UPDATE` acima não faz nada, porque a linha não existe;
+4. o `INNER JOIN phi_prod.client_config` do cálculo do score **o elimina** — sem erro, sem alerta.
 
-- **Fato verificável:** o SQL do nó, o dataset, e o workflow ativo. Li os dois lados.
-- **Não confirmado:** se `phi_prod.client_config` é populado por outra via (à mão, por exemplo).
-  **Não rodei query no BigQuery.**
-- **Como confirmar:** `SELECT client_id, is_active, created_at, updated_at FROM phi_prod.client_config ORDER BY created_at DESC`
-  e comparar com a DB Clientes do Notion. Se o prod estiver parado em março, está confirmado.
+As duas linhas que existem em `phi_prod` têm `created_at` de **2025-02-19** — anteriores a todos os
+workflows inventariados. **Foram criadas por fora do n8n.**
 
-Nota: esse nó também viola a **Regra Crítica nº 1** do `CLAUDE.md` (usar `dataset.table` sem project ID).
+- **Fato verificável:** o SQL de todos os writers (inventário completo), o `UPDATE` sem `INSERT`, e
+  as 4 linhas acima.
+- **Limite honesto:** afirmo que **nenhum workflow do n8n** insere em `phi_prod.client_config` —
+  inventariei todos. **Não posso afirmar** que não exista um caminho fora do n8n (script manual,
+  carga pontual). O `created_at` de fev/2025 sugere justamente uma carga manual inicial.
+- **Como fechar:** cadastrar um cliente-teste no Notion e ver se ele aparece em `phi_prod`. Ou
+  perguntar ao Olavo como CLI-4 e CLI-5 entraram lá.
 
----
+### 4.3 🔴 Achado novo — o `primary_metric_type` do KIL diverge entre os datasets
+
+**`prod` diz CPA, `dev` diz ROAS, para o mesmo cliente CLI-4.**
+
+O `prod` está **certo**: o KIL é o cliente de referência com métrica-mãe CPA (meta 5,20 na Barbearia,
+3,50 no Salão, conforme o `CLAUDE.md`).
+
+O `dev` está **errado por construção**. O nó `Code limpar Notion` do workflow `client_config` deriva
+a métrica de um mapa fixo:
+
+```js
+const metricDefaultMap = { 'Negócio Local': 'ROAS' };
+const primary_metric_type = metricDefaultMap[segmento] || 'ROAS';
+```
+
+Ou seja: **sempre `ROAS`**, ignorando a Métrica-Mãe real do Notion. Já o `PHI - Subworkflow Campanhas`
+lê a Métrica-Mãe de verdade (`props['Métrica-Mãe'].multi_select[0].name`) e escreve no `prod`.
+
+> **A sobreposição S3 é pior do que eu havia descrito.** Não são "dois writers em datasets
+> diferentes": são **dois writers com semânticas diferentes para o mesmo campo** — um lê o dado
+> real, o outro chuta um default. Hoje isso não faz mal porque estão em datasets separados e o
+> `prod` (o certo) é quem o score lê. **Mas é uma bomba armada:** basta alguém "corrigir" o
+> `client_config` para apontar ao `phi_prod` — a correção óbvia, que eu mesmo recomendei antes de
+> ver os dados — para o KIL virar ROAS e o score quebrar em silêncio.
+>
+> **O ADR-37 não pode simplesmente trocar `phi_dev` por `phi_prod` nesse workflow.** Tem que
+> corrigir a derivação da métrica primeiro.
+
+### 4.4 Nota lateral
+O nó viola a **Regra Crítica nº 1** do `CLAUDE.md` (usar `dataset.table` sem project ID entre
+backticks) — é justamente o tipo de descuido que deixa um `phi_dev` passar despercebido.
+
+### 4.5 Rastro da verificação
+Workflow temporário `TMP-Lote1 Leitura client_config` (`52W4DEFqTBcpciCb`), dois `SELECT *` sem
+nenhuma escrita, execução **36946** (sucesso, 2026-09-08 18:28 UTC). **Arquivado logo após a
+leitura**, no padrão da execução 32695.
 
 ## 5. Inativos — confirmados mortos
 
@@ -214,7 +283,11 @@ Textos propostos em §7. **Não aplicados** — escrever no n8n sai do read-only
    linha alheia.
 4. **Um dono por campo do Notion.** `Otimização Ativa?` → só o `PHI - Fechar Otimização`
    (é quem tem a cadência certa). `Score Diário`/`Status Geral` → só o `Pipeline_v2`.
-5. **Corrigir o `client_config`** para `phi_prod` — depois de confirmar §4 no BigQuery.
+5. **`client_config` — nesta ordem, e só nesta ordem:** (a) corrigir a derivação de
+   `primary_metric_type`, que hoje é um default fixo `ROAS` ignorando a Métrica-Mãe do Notion;
+   (b) trocar o `MERGE` para `phi_prod`; (c) garantir que exista um writer que **INSIRA** em
+   `phi_prod.client_config`, porque hoje nenhum insere (§4.2). Inverter (a) e (b) quebra o score
+   do KIL em silêncio.
 6. **Atualizar o ADR-010** com a cadeia real e as descrições do §7.
 7. **Sincronizar o repositório com o n8n**, ou parar de versionar JSON de workflow. Hoje o git
    descreve um sistema que não existe (§6) — é exatamente o custo que a regra R2 do `CLAUDE.md`

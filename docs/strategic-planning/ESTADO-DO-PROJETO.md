@@ -53,21 +53,24 @@ Prospecção (`PROSP-05` escreve no CRM, `PROSP-06` lê dele) **continua apontan
 → **ADR-36:** declarar o Odoo como CRM canônico, reapontar `PROSP-05/06` e definir o corte do
 HubSpot. **Uma decisão, duas frentes destravadas.**
 
-### 🔴 Achado de 2026-09-08 — `client_config` pode estar barrando clientes novos do score
-O workflow `client_config` (`SI5NSzRb8lVUz74RwOhIT`), **ativo desde 2026-03**, sincroniza a DB
-Clientes do Notion para **`phi_dev.client_config`** — o dataset de desenvolvimento. O
-`PHI - Pipeline_v2` lê **`phi_prod.client_config`** e faz `INNER JOIN` nela para calcular o score.
-Se a leitura estiver certa, **cliente novo cadastrado no Notion nunca chega ao prod por esse
-caminho, e o `INNER JOIN` o elimina do score** — em silêncio.
+### 🔴 Achado de 2026-09-08 — `client_config`: cliente novo não entra no `phi_prod`
+**Verificado no BigQuery** (execução n8n 36946, leitura, workflow temporário já arquivado).
 
-**Fato verificável:** o SQL do nó, o dataset e o estado ativo (os dois lados foram lidos).
-**Não confirmado:** se `phi_prod.client_config` é populado por outra via (à mão, p.ex.). Nenhuma
-query foi rodada no BigQuery. A query de confirmação está no §4 do inventário do Lote 1 — vale
-rodar antes do ADR-37, porque muda a prioridade da frente.
+O único writer de `phi_prod.client_config` é o `PHI - Subworkflow Campanhas`, e o SQL dele é
+**`UPDATE` puro — nunca `INSERT`**. Quem faz `INSERT` é o workflow `client_config`, mas ele grava em
+**`phi_dev`**. Resultado: um cliente novo cadastrado no Notion **não ganha linha em `phi_prod`**, e o
+`INNER JOIN phi_prod.client_config` do cálculo do score o elimina — sem erro, sem alerta. As duas
+linhas que existem lá têm `created_at` de fev/2025, anteriores a todos os workflows: entraram por fora.
 
-Fora isso, o Lote 1 fechou 4 sobreposições. A mais barata de corrigir é a **S2**: `Otimização
-Ativa?` no Notion tem dois donos, e o que roda de hora em hora desfaz o que o pipeline diário
-marcou. Detalhe em `docs/handoff/2026-09-08-consolidacao-writers-lote1-inventario.md`.
+Uma hipótese anterior foi **descartada**: o `phi_prod` não está parado — foi escrito hoje às 07:01 BRT.
+O problema não é escrita ausente, é **ausência de `INSERT`**.
+
+**Achado novo e mais perigoso:** para o CLI-4 (KIL), `phi_prod` diz `primary_metric_type = CPA`
+(correto) e `phi_dev` diz `ROAS`. O `dev` erra por construção — o workflow `client_config` deriva a
+métrica de um mapa fixo (`'Negócio Local' → 'ROAS'`) em vez de ler a Métrica-Mãe do Notion.
+**Consequência prática:** a correção óbvia — apontar esse workflow para `phi_prod` — **quebraria o
+score do KIL em silêncio**. O ADR-37 tem de corrigir a derivação da métrica *antes* de trocar o
+dataset. Detalhe em `docs/handoff/2026-09-08-consolidacao-writers-lote1-inventario.md` §4.
 
 ### Achado de 2026-09-08 — writers: são dois, e o rótulo mentia
 `phi_prod.raw_campaign_data` é escrita **todo dia por duas cadeias ativas**: `operador unico
