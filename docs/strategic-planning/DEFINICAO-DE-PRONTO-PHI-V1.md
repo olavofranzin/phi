@@ -2,7 +2,8 @@
 
 | | |
 |---|---|
-| **Status** | 🟡 **PROPOSTA** — precisa do corte do Olavo (§5) |
+| **Status** | ✅ **VIGENTE** — cortes e data aprovados pelo Olavo em 2026-09-08 |
+| **Data-alvo** | 🎯 **30/11/2026** · checkpoint **31/10/2026** |
 | **Data** | 2026-09-08 |
 | **Por que existe** | Em 2026-09-08 a pergunta *"quanto falta para finalizarmos?"* não tinha resposta — porque **nunca declaramos o que é "pronto"**. Sem linha de chegada, sempre falta. |
 
@@ -24,31 +25,36 @@ descobre lead → pontua → enriquece → cria no CRM → [HUMANO dá o play] �
 
 ---
 
-## 2. Critérios de aceite — 15 itens verificáveis
+## 2. Critérios de aceite — 14 itens verificáveis
 
 > Regra: um critério só vira ✅ com **evidência** (link, execução, print). "Acho que está" não conta.
+>
+> **Cortes aprovados pelo Olavo em 2026-09-08** (de 15 → 14): **A1 removido** (renomear workflow é
+> higiene, não afeta "roda sozinho") · **A4 relaxado** de *"zero"* para *"não crescendo"* (perfeição
+> travava o v1) · **B2 reformulado** de *"uso real"* para *"um lead ponta a ponta"* (uso real depende
+> de venda acontecer, não de engenharia entregar). A numeração é preservada por causa das
+> referências nos ADRs.
 
 ### Frente A — Prospecção: o lead entra sozinho
 | # | Critério | Hoje |
 |---|---|---|
-| A1 | Parque `PROSP-01..08` renomeado, **zero** workflow morto no n8n | ⬜ |
-| A2 | Lead descoberto vira lead no **CRM canônico** sem toque humano | 🟡 (funciona p/ HubSpot; p/ Odoo depende do F3) |
-| A3 | Loop de aprendizado escreve as 17 colunas a partir do CRM | 🟡 (roda no HubSpot) |
-| A4 | Passivo zerado: **zero** linha órfã e **zero** lead sem chave de CRM | ⬜ (127 sem `place_id`; ~48 sem id) |
+| A2 | Lead descoberto vira lead no **CRM canônico** sem toque humano | 🟡 funciona p/ HubSpot; p/ Odoo depende do F3 |
+| A3 | Loop de aprendizado escreve as 17 colunas a partir do CRM | 🟡 ⚠️ **pode ter parado** desde a renomeação das colunas — ADR-36 §4.4 |
+| A4 | Passivo **conhecido, documentado e não crescendo** (não precisa ser zero) | ⬜ 127 linhas sem `place_id`; ~48 sem chave de CRM |
 
 ### Frente B — CRM: o comercial opera de verdade
 | # | Critério | Hoje |
 |---|---|---|
-| B1 | Odoo é o CRM canônico e o **HubSpot está desligado** | ⬜ (ADR-36 proposto) |
-| B2 | Pipeline dos 6 estágios **em uso real**, com critérios de saída respeitados | ⬜ |
+| B1 | Odoo é o CRM canônico e o **HubSpot está desligado** | ⬜ ADR-36 aceito; execução no F3/F5 |
+| B2 | **Um lead percorreu os 6 estágios ponta a ponta** | ⬜ |
 | B3 | Campos GBP/IA preenchidos **pela IA via API** (F3) | ⬜ |
 | B4 | O humano dá o play (`proxima_acao_aceite`) e **só ele** move estágio | ⬜ |
 
 ### Frente C — Produto PHI: score e diagnóstico
 | # | Critério | Hoje |
 |---|---|---|
-| C1 | Score v2 (ADR-34) em produção — **sem contradição** entre score e métrica-mãe | 🟡 (desenhado e validado; não implantado) |
-| C2 | Escrita de dados consolidada: **um dado, um writer** | 🟡 (Lote 1 em curso — 2026-09-08: **dois writers confirmados** em `raw_campaign_data`) |
+| C1 | Score v2 (ADR-34) em produção — **sem contradição** entre score e métrica-mãe | 🟡 desenhado e validado; bloqueado por C2 |
+| C2 | Escrita de dados consolidada: **um dado, um writer** | 🟡 Lote 1 em andamento — **2 writers confirmados** em `raw_campaign_data` |
 | C3 | Diagnóstico T28 entregando na DB `PHI - ANÁLISES` para **todas** as campanhas ativas | ❓ **verificar cobertura** |
 | C4 | Tarefa abre no Notion a partir do diagnóstico, com checklist | ❓ **verificar** |
 
@@ -57,7 +63,7 @@ descobre lead → pontua → enriquece → cria no CRM → [HUMANO dá o play] �
 |---|---|---|
 | D1 | Painel do `ESTADO-DO-PROJETO` atualizado a cada entrega (**R2**) | ✅ 2026-09-08 |
 | D2 | Digest diário chega **com conteúdo real** (**R3** — sub-chats alimentando o Notion) | ⬜ |
-| D3 | Rotina semanal de auditoria *doc × realidade* rodando | ⬜ |
+| D3 | Rotina semanal de auditoria *doc × realidade* rodando | ✅ criada + conector n8n anexado (1ª execução 14/09) |
 
 ---
 
@@ -65,15 +71,24 @@ descobre lead → pontua → enriquece → cria no CRM → [HUMANO dá o play] �
 
 | | |
 |---|---|
-| ✅ **Pronto** | **1** de 15 |
+| ✅ **Pronto** | **2** de 14 |
 | 🟡 Parcial | 4 |
-| 🔴 Parado | 0 |
-| ⬜ Não iniciado | 8 |
+| ⬜ Não iniciado | 6 |
 | ❓ **A verificar** | 2 |
 
-> ⚠️ **Os 2 itens ❓ são a primeira tarefa.** Depois de 2026-09-08 aprendemos a não confiar em
-> status não verificado: duas frentes estavam prontas sem ninguém saber. C3 e C4 podem estar
-> melhores (ou piores) do que supomos — **verificar antes de planejar em cima**.
+### Caminho crítico até 30/11
+```
+F3 (place_id + reapontar + corrigir nomes) → F5 (migrar dados) → 1 ciclo em paralelo → desligar HubSpot
+                                                                                        [B1, B2, B3, B4]
+writers: Lote 1 → ADR-37 → implementar → Score v2 em produção
+                                          [C2, C1]
+```
+**Checkpoint 31/10:** as duas correntes devem estar com **código pronto**, faltando só o ciclo em
+paralelo. Se em 31/10 alguma delas ainda estiver escrevendo código, **a data de 30/11 está em risco**
+e é hora de cortar mais escopo — não de empurrar a data.
+
+> ⚠️ **A data é estimativa por dependência, não por medição.** Nunca cronometramos um lote desses.
+> A auditoria semanal é quem vai calibrar isso a partir de 14/09.
 
 ---
 
@@ -94,14 +109,16 @@ Declarar isto é metade do valor do documento — é o que impede o projeto de c
 
 ---
 
-## 5. ⚠️ O que preciso do Olavo
+## 5. ✅ Decisões do Olavo — 2026-09-08
 
-1. **Confirmar ou cortar** os 15 critérios. *(Se algum não é essencial para "o PHI roda sozinho na
-   agência", tire — quanto menor o v1, mais cedo ele existe.)*
-2. **Confirmar a lista do §4** (o que fica de fora).
-3. **Definir um prazo-alvo** para o v1 — sem data, "pronto" nunca chega.
+| Decisão | Resultado |
+|---|---|
+| Corte dos critérios | **A1 cortado · A4 relaxado · B2 reformulado** → 15 vira **14** |
+| Escopo fora do v1 (§4) | **confirmado** |
+| Data-alvo | **30/11/2026**, com **checkpoint em 31/10** |
 
----
+**Regra de reação ao checkpoint:** se em 31/10 o código não estiver pronto nas duas correntes,
+**corta-se escopo, não se empurra a data.** Foi o que nos trouxe até aqui.
 
 ## 6. Como este documento se mantém vivo
 

@@ -27,7 +27,9 @@
 
 ## 0. PAINEL — onde estamos e quanto falta
 
-> **Atualizado: 2026-09-08.** Este painel é **o primeiro lugar a olhar e o último a atualizar**.
+> **Atualizado: 2026-09-08.** 🎯 **PHI v1 tem data: 30/11/2026** (checkpoint 31/10) — 14 critérios
+> na `DEFINICAO-DE-PRONTO-PHI-V1.md`, hoje **2 prontos**.
+> Este painel é **o primeiro lugar a olhar e o último a atualizar**.
 > Regra **R2** do `CLAUDE.md`: etapa concluída sem painel atualizado = **etapa não concluída**.
 > Vocabulário proposital: não usamos "%" inventado — usamos estado + o que falta + o que trava.
 
@@ -38,7 +40,7 @@
 | **PHI·Mídia Score v2** | 🟡 **ADR-34 desenhado** e validado em dado real (jan–ago) | implementar | consolidação dos writers |
 | **Consolidação de writers** | 🟡 **Lote 1 em andamento** (2026-09-08) — confirmado: **2 writers ativos** em `raw_campaign_data`; `ingestion_step` não é linhagem, é 'quem tocou por último'; cada linha mistura 2 origens | terminar o inventário · ADR-37 · implementar | — |
 | **T28 / Otimização** | 🟡 Diagnóstico vive; **Maestro E1 em rascunho** | ativar E1 (ADR-28) | budget de token |
-| **Governança / documentação** | 🟢 regras **R1–R4** no `CLAUDE.md` (2026-09-08) | fazer os sub-chats cumprirem **R3** (Notion) | — |
+| **Governança / documentação** | 🟢 regras **R1–R5** no `CLAUDE.md` · Rotina de auditoria ativa (1ª: 14/09) | fazer os sub-chats cumprirem **R3** (Notion) | — |
 
 🟢 pronto ou em acabamento · 🟡 em obra · 🔴 parado
 
