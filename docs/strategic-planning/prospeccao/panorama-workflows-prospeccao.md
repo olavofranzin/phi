@@ -1,5 +1,11 @@
 # Panorama dos Workflows de Prospecção — o que manter, fundir e arquivar
 
+> 🔴 **DOCUMENTO HISTÓRICO — NÃO É O ESTADO ATUAL (aviso de 2026-09-08).**
+> Este panorama retrata **2026-08-27/28**. Vários workflows aqui descritos **já não existem**
+> (ex.: `1º Enriquecimento`, `L2 Discovery`, `Site L4`, `kED2`) e o parque `PROSP-01..08` **já foi
+> construído e está ativo**. Para o **estado real**, ler **`ADR-35-contrato-prospeccao-uma-coluna-um-dono.md` §3**.
+> Este arquivo é mantido como **registro do diagnóstico** que originou o contrato.
+
 > **Data:** 2026-08-27 · **Método:** partir das 63 colunas da planilha `leads` (a única saída que
 > importa) e perguntar, para cada workflow, *qual coluna ele preenche*. Workflow que não preenche
 > coluna nenhuma — nem produz decisão — não tem razão de existir.

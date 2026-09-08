@@ -1,6 +1,9 @@
 # CONTRATO DA FRENTE PROSPECÇÃO — documento canônico
 
-> **Status:** proposta para aprovação · **Data:** 2026-08-28 · **Autoridade:** este documento
+> **Status:** ✅ **VIGENTE** desde 2026-09-08 (aprovado pelo **ADR-35**) · **Origem:** 2026-08-28
+> ⚠️ **As-built desatualizado.** As seções §6 e §9 descrevem o estado de 2026-08-28. O estado REAL
+> dos workflows está no **`ADR-35` §3** (inventário do n8n em 2026-09-08). Em caso de divergência,
+> **o ADR-35 §3 vale**. Os invariantes e a matriz de colunas (§3, §4, §5) continuam válidos.
 > **Escopo:** quem grava o quê na planilha `leads` e no HubSpot, e o que não pode mudar sem ADR.
 >
 > **Regra de precedência:** divergência entre este contrato e um workflow é **bug do workflow**.

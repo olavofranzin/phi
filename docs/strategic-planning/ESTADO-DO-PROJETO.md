@@ -25,6 +25,35 @@
 
 ---
 
+## 0. PAINEL — onde estamos e quanto falta
+
+> **Atualizado: 2026-09-08.** Este painel é **o primeiro lugar a olhar e o último a atualizar**.
+> Regra **R2** do `CLAUDE.md`: etapa concluída sem painel atualizado = **etapa não concluída**.
+> Vocabulário proposital: não usamos "%" inventado — usamos estado + o que falta + o que trava.
+
+| Frente | Estado | O que falta | O que trava |
+|---|---|---|---|
+| **Prospecção** (lead → CRM) | 🟢 **construída** — parque `PROSP-01..08` ativo (**ADR-35**) | renomear 06/07/08 · arquivar 5 mortos · rodar `BF`/`LO` · auditoria nó a nó | 🔴 decidir o alvo do CRM |
+| **CRM Odoo** | 🟡 **F1 no ar** — Odoo 19 + app CRM instalados | F2 módulo `phi_crm` (brief pronto) · F3 n8n↔Odoo · F5 migração de dados | volume de addons no template |
+| **PHI·Mídia Score v2** | 🟡 **ADR-34 desenhado** e validado em dado real (jan–ago) | implementar | consolidação dos writers |
+| **Simplificação de writers** | 🔴 **parada** — brief de 2026-08-27 sem execução registrada | rodar o sub-chat | — |
+| **T28 / Otimização** | 🟡 Diagnóstico vive; **Maestro E1 em rascunho** | ativar E1 (ADR-28) | budget de token |
+| **Governança / documentação** | 🟢 regras **R1–R4** no `CLAUDE.md` (2026-09-08) | fazer os sub-chats cumprirem **R3** (Notion) | — |
+
+🟢 pronto ou em acabamento · 🟡 em obra · 🔴 parado
+
+### O bloqueio nº 1 do projeto hoje
+**Decidir o alvo do CRM: HubSpot × Odoo.** Ele trava o acabamento da Prospecção (`PROSP-05`
+escreve no CRM, `PROSP-06` lê dele) **e** define o escopo do F3 do Odoo. Enquanto não for decidido,
+duas frentes ficam em espera. → **ADR-36 (a escrever).**
+
+### Lição registrada em 2026-09-08
+A frente Prospecção estava **praticamente pronta havia semanas** e nós não sabíamos, porque a
+documentação descrevia workflows que já não existiam. **Doc desatualizada fez a gente achar que
+estava travado quando não estava.** Daí as regras R1–R4.
+
+---
+
 ## 1. Visão geral
 
 O **PHI** é projeto de inteligência operacional para gestão de marketing

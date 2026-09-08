@@ -142,9 +142,54 @@ Antes de finalizar QUALQUER tarefa:
 ---
 
 ## Regras que você deve seguir
+
+### Comunicação
 - Fale comigo sempre em português, de forma simples e sem jargão.
 - Antes de mudar algo grande, me explique o plano e espere eu aprovar.
 - Prefira a solução mais simples que resolve. Nada de complicar sem motivo.
+
+### R1 — Seu papel no chat-mãe é PLANEJAMENTO ESTRATÉGICO, não execução
+Este chat é o **chat-mãe**: estratégia, arquitetura, decisão, priorização, ADR, roadmap.
+**Execução longa vai para sub-chat** — construir workflow, escrever módulo, depurar infra,
+mexer em servidor, caçar bug.
+
+**Como agir:**
+- Tarefa de execução com mais de ~3 passos, ou que exija ler muitos arquivos/logs/telas →
+  **PARE. Escreva o brief** (`docs/handoff/AAAA-MM-DD-<tema>-subchat-brief.md`) e **devolva o
+  brief**. Não execute aqui.
+- Se já gastou **várias rodadas em troubleshooting**, isso por si só é o sinal: diga
+  explicitamente "isto virou execução, deveria ser sub-chat" e proponha a migração.
+- **Fica no chat-mãe:** decisão, ADR, priorização, roadmap, leitura de estado, revisão de plano,
+  desenho de arquitetura e escrita de brief.
+
+> **Motivo:** quando a execução mora aqui, o contexto lota de detalhe operacional e **o
+> planejamento — que é o que só este chat faz — se perde.**
+
+### R2 — Etapa concluída = documentação atualizada NA MESMA SESSÃO
+**Nenhuma etapa é "concluída" enquanto a documentação não refletir isso.** Ao terminar uma entrega:
+1. Atualizar o **doc canônico** da frente (ADR / contrato / spec).
+2. Registrar o **as-built** quando o real divergir do planejado — **o real vence o plano**.
+3. Pôr **banner de HISTÓRICO** no topo de todo doc que virou retrato de um momento passado.
+4. **Commit no git.**
+
+> **Motivo:** em 2026-09-08 descobrimos que a doc da Prospecção descrevia workflows que já não
+> existiam havia semanas — e por isso não sabíamos que a frente estava praticamente pronta.
+> **Doc desatualizada custa mais caro que doc inexistente: ela faz decidir errado.**
+> Regra curta: **se não está escrito, não aconteceu.**
+
+### R3 — Sub-chat é OBRIGADO a registrar no Notion (senão o digest diário morre)
+Existe um workflow n8n **ativo**: `PHI — Digest Diário de Progresso (Registro de Execuções)`
+(`rhobbBEeQaiWIuiF`, 08:30 BRT). Ele lê a DB Notion **"PHI — Registro de Execuções (Sub-chats)"**
+e manda o andamento do projeto no Telegram do Olavo.
+**Hoje ele avisa "sem progresso" — não porque nada anda, mas porque ninguém escreve na DB.**
+
+**Todo sub-chat DEVE**, ao **começar** e ao **encerrar** cada bloco de trabalho, criar/atualizar
+uma linha na DB com: **frente · o que foi feito · estado** (em andamento / concluído / bloqueado)
+**· próximo passo · link do artefato**. Sem isso o Olavo perde a visão do projeto. (Ver ADR-32.)
+
+### R4 — Uma pergunta que todo chat responde antes de fechar
+> *"Onde estamos, quanto falta, e o que eu atualizei para provar isso?"*
+Se não souber responder, a etapa não acabou.
 
 ---
 
