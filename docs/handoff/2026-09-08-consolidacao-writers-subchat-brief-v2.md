@@ -92,37 +92,63 @@ operador unico metricas   cLcimNoefTOnVVbd   ← ORQUESTRADOR (ativo)
 O `Daily Entry` (`zGgIqiLlo5iAn8ud`) foi **desativado por sucessão**: quem faz o trabalho dele hoje
 é o `sw metricas campanhas`. **Este é o writer vivo do grão campanha × dia.**
 
-### 🔴 A pergunta nº 1 do Lote 1 (responda antes de qualquer desenho)
+### ✅ RESULTADO DO LOTE 1 (parcial) — 2026-09-08, confiança 0,93
 
-A execução **32695** mostrou `raw_campaign_data` = **100% `step=GADS_INSERT`** nos últimos 60 dias.
-Mas o writer vivo do grão campanha é o `sw metricas campanhas` (cópia do Daily Entry). Então:
+**Resposta à pergunta nº 1: opção (b). São DOIS writers ativos na mesma tabela.**
 
-> **Quem carimba `step=GADS_INSERT` em `raw_campaign_data`?**
-> **(a)** o próprio `sw metricas campanhas` (a cópia manteve/trocou o rótulo do step) → **um writer só,
-> tudo coerente**; ou
-> **(b)** um segundo workflow também escreve a mesma tabela → **dois writers, que é o problema-raiz**.
+| Cadeia | Quem escreve | Carimba | Roda |
+|---|---|---|---|
+| `operador unico metricas` → | `sw metricas campanhas` `W571K320aqIHsdtH` | `'DAILY_ENTRY'` | **04:00 BRT** |
+| `PHI - Pipeline_v2` → | `PHI - Subworkflow Campanhas` `b1pbn8qmzCNTufTp` | `'GADS_INSERT'` | **07:00 BRT** |
 
-Abrir o `sw metricas campanhas` e ver qual valor ele grava em `ingestion_step` **decide o desenho
-inteiro**. Não avance sem essa resposta.
+Ambas ativas, ambas com sucesso em 05, 06, 07 e 08/09 (execuções reais conferidas).
 
-### 🔴 Hipótese herdada (verificar cedo — pode ser o bug vivo)
+#### 🔴 Por que o BigQuery mostrava 100% `GADS_INSERT` mesmo com dois writers
 
-A v1 registrou que o `daily_entry_v4` gravava **`conversions = round(Métrica-Mãe 1D)` = `round(CPA)`**.
-Se o `sw metricas campanhas` é **cópia** do Daily Entry, **ele pode ter herdado esse bug** — e aí o
-`round(CPA)` está em produção hoje, com outro nome. **Conferir a fórmula de `conversions` nesse
-workflow é prioridade máxima.**
+Assimetria entre os dois MERGE:
+- **04h** — o `sw metricas campanhas` não acha a linha do dia e faz **INSERT** com `DAILY_ENTRY`.
+- **07h** — o `PHI - Subworkflow Campanhas` acha a linha e faz **UPDATE**, e o `UPDATE SET` dele
+  **inclui `ingestion_step = 'GADS_INSERT'`**. O `UPDATE SET` do primeiro **não inclui** o campo.
 
-### Reconciliação de nomes (hipótese, confirmar)
+> **Quem escreve por último apaga o rótulo do primeiro. Sempre.**
+> **`ingestion_step` não diz de onde veio o número — diz quem mexeu por último.**
+> A evidência da execução 32695 **não provava um writer só**: provava que um sobrescreve o outro.
 
-| Nome citado na v1 | Provável workflow real | Papel suspeito |
+#### 🔴 Pior: cada linha é uma colcha de retalhos
+
+O `GADS_INSERT` sobrescreve `cost`, `conversions`, `clicks`, `impressions`, `revenue`,
+`primary_metric_goal` e até o `execution_id`. Mas **não toca** em `cost_3d`, `conversions_3d`,
+`cost_7d`, `conversions_7d`, `data_source` e `platform` — que ficam com o que o `DAILY_ENTRY` gravou
+3 horas antes.
+
+**Cada linha mistura duas origens, sem nenhuma marcação.** As métricas de 1 dia vêm de um writer e
+as janelas de 3/7 dias vêm de outro.
+
+#### ✅ Hipótese do `round(CPA)` — DESCARTADA
+O bug já foi corrigido no `sw metricas campanhas` (código de 09/08/2026): ele usa
+`metrics.conversions` direto da API. O `round(CPA)` sobrevive só em lugares mortos (o `Daily Entry`
+inativo) e **no repositório, que nunca foi atualizado** — corrigir o repo faz parte do Lote 3.
+
+#### 🔎 Achado novo para o Lote 2 — duas formas de arredondar, e a pior vence
+| Writer | Como arredonda | Efeito em 4,7 conversões |
 |---|---|---|
-| `daily_entry_v4` | `Daily Entry` `zGgIqiLlo5iAn8ud` (inativo) → sucedido por `sw metricas campanhas` | grão campanha × dia → `raw_campaign_data` |
-| `phi_subworkflow_campaign_metrics` | **`PHI - Subworkflow Campanhas` `b1pbn8qmzCNTufTp`** (ativo) | escreve **Notion** (`Score Diário`/`phi_score`) de um `final_score` próprio |
+| `GADS_INSERT` (**vence**) | `parseInt()` — **trunca** | **4** |
+| `DAILY_ENTRY` | `Math.round()` | 5 |
 
-> ⚠️ **Retificação:** na primeira versão deste brief eu apontei o `PHI - Subworkflow Campanhas` como
-> "forte candidato a ser o GADS_INSERT". Com a informação do Olavo, a leitura mais provável é outra:
-> ele é o **`phi_subworkflow_campaign_metrics`** — ou seja, o **writer do Notion**, metade da escrita
-> dupla de `Score Diário` com o `Pipeline_v2`. **É hipótese; confirmar abrindo os nós.**
+**Hipótese (não medida):** explica parte do subcount do Salão (BQ 321 × export ~481).
+**Como medir:** comparar `SUM(conversions)` do BQ com o export oficial no mesmo período e ver se a
+diferença bate com o número de dias com fração.
+
+#### ↩️ Retificação — eu errei, a v1 estava certa
+Na v2 eu supus que o `PHI - Subworkflow Campanhas` fosse o writer do Notion. **Não é.** Os 14 nós
+foram lidos: ele **não escreve nenhum campo do Notion** — ele **é o `GADS_INSERT`**.
+A v1 do brief estava correta; **minha retificação introduziu o erro** ao inferir a partir da
+informação do Olavo em vez de verificar. **O writer do Notion continua desconhecido.**
+
+#### O que o Lote 1 ainda NÃO cobriu
+`sw metricas conjuntos` · `sw metricas anuncios` · `Agregador T28` · `Fechar Otimização` ·
+`WF-DOC-Telemetria-Diaria` · tabelas `raw_ad_data`, `t28_*`, `phi_score_history` ·
+**quem escreve `Score Diário`/`phi_score` no Notion**.
 
 ### Demais candidatos ATIVOS a inventariar
 | Workflow | ID | Suspeita |
@@ -188,8 +214,11 @@ No formato do ADR-35 (§2 deste brief). Precisa decidir:
 - **Um** dono por campo do Notion (ex.: só o `Pipeline_v2` escreve `Score Diário`/`Status Geral`).
 - **Atraso de atribuição:** dias recentes são **provisórios** — re-puxar N dias ou marcar a linha.
 - **Linhagem por linha:** `execution_id`/`source_execution_id` — quem escreveu, de qual fonte, quando.
-- **Atualizar o ADR-010**: o writer canônico não é mais o `Daily Entry` e sim a cadeia
-  `operador unico metricas` → `sw metricas campanhas`. Corrigir o nome, preservando o princípio.
+- **ADR-010 está VIOLADO DE FATO** (não é só nome desatualizado, como supus): há **dois writers
+  ativos na mesma tabela hoje**. O ADR-37 precisa declarar **um** e desligar o outro.
+- 🔴 **Criar linhagem de verdade.** `ingestion_step` não serve — ele registra o último a tocar, não
+  a origem do número. Decidir um mecanismo por linha (ex.: `source_execution_id` + carimbo por
+  bloco de colunas) que sobreviva a um segundo writer.
 
 ## 7. Lote 3 — Implementar (com cuidado)
 

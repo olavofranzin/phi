@@ -106,6 +106,24 @@ antigos**, o efeito é um destes — nenhum deles dá erro visível:
 
 Isto é **execução** — vai para o sub-chat da Prospecção, não para o chat-mãe.
 
+### 4.4. ✅ Decisão do Olavo (2026-09-08): correção ADIADA para o cutover
+
+O Olavo confirmou: **não ajustou** os mapeamentos do `PROSP-05` e do `PROSP-06`, e decidiu
+**fazer junto com a troca do nó do HubSpot pelo do Odoo** — em vez de mexer duas vezes.
+
+**TAREFA REGISTRADA — fazer no F3, no mesmo momento em que o nó do CRM for trocado:**
+- `PROSP-05`: passar a gravar **`id_crm`** (não `id_hubspot`) — e no Odoo, não no HubSpot.
+- `PROSP-06`: atualizar os nomes das 17 colunas de aprendizado para o padrão `crm*`, e ler do Odoo.
+- Conferir se a planilha ganhou **colunas duplicadas** desde a renomeação e limpar.
+
+> ⚠️ **Consequência de adiar, registrada para não virar surpresa:** enquanto isso, os dois workflows
+> escrevem por nomes de coluna que **não existem mais**. O efeito mais provável é que o
+> **loop de aprendizado (`PROSP-06`, roda a cada 6 h) parou de gravar** desde a renomeação — cada dia
+> parado é desfecho perdido para a base de treino do `acerto_previsao`.
+> **Custa 1 minuto conferir** (abrir a planilha e ver se há coluna duplicada ou se
+> `data_sync_crm` parou de avançar). Se estiver acumulando dano, vale antecipar; se não, o
+> adiamento é seguro.
+
 ## 5. Invariantes — como ficam no Odoo
 
 | Invariante | Leitura no Odoo |

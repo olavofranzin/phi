@@ -36,7 +36,7 @@
 | **Prospecção** (lead → CRM) | 🟢 **construída** — parque `PROSP-01..08` ativo (**ADR-35**) | renomear 06/07/08 · arquivar 5 mortos · rodar `BF`/`LO` · auditoria nó a nó | 🔴 decidir o alvo do CRM |
 | **CRM Odoo** | 🟢 **F1 + F2 CONCLUÍDOS** — deploy por Git no ar; módulo `phi_crm` aprovado nos 8 testes de aceite (2026-09-08) | **F3** n8n↔Odoo (a API escrevendo os campos GBP/IA) · F5 migração de dados do HubSpot | — |
 | **PHI·Mídia Score v2** | 🟡 **ADR-34 desenhado** e validado em dado real (jan–ago) | implementar | consolidação dos writers |
-| **Simplificação de writers** | 🔴 **parada** — brief de 2026-08-27 sem execução registrada | rodar o sub-chat | — |
+| **Consolidação de writers** | 🟡 **Lote 1 em andamento** (2026-09-08) — confirmado: **2 writers ativos** em `raw_campaign_data`; `ingestion_step` não é linhagem, é 'quem tocou por último'; cada linha mistura 2 origens | terminar o inventário · ADR-37 · implementar | — |
 | **T28 / Otimização** | 🟡 Diagnóstico vive; **Maestro E1 em rascunho** | ativar E1 (ADR-28) | budget de token |
 | **Governança / documentação** | 🟢 regras **R1–R4** no `CLAUDE.md` (2026-09-08) | fazer os sub-chats cumprirem **R3** (Notion) | — |
 
