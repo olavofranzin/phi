@@ -106,6 +106,25 @@ arquiva). Só o **Ganho** é estágio (`is_won`).
 > corretos estão na tabela acima. Aconteceu uma vez por outro motivo
 > (`noupdate="1"` no data file, já corrigido) — este aviso cobre a causa restante.
 
+## ✅ Aceite — todos os testes passaram (08/09/2026)
+
+Validado na instância `crm.franzcomunicacao.com`, Odoo 19.0-20260817:
+
+| # | Teste | Resultado |
+|---|---|---|
+| 1 | Instala sem erro | ✅ |
+| 2 | Card + Governança + aba "IA / Diagnostico" na form | ✅ |
+| 3 | 6 estágios, ordem correta, Ganho com *is_won* | ✅ |
+| 4 | Critérios de saída como tooltip (`requirements`) | ✅ |
+| 5 | Perda pelo botão nativo, sem estágio de perda | ✅ |
+| 6 | NBA–Aceite nasce "Pendente" e é editável | ✅ |
+| 7 | **N/D honesto**: card escondido sem diagnóstico; com data preenchida o **0 aparece como 0** | ✅ |
+| 8 | **Bandas**: 80 verde · 50 âmbar · 20 vermelho, número sempre visível | ✅ |
+
+O teste 7 é o caso Niti: `dim_engajamento = 0` é achado crítico, não ausência de
+dado — e continua legível. O teste 8 confirmou que `widget="badge"` só serve em
+campo derivado; nos editáveis ele travava a digitação e apagava o zero.
+
 ## Como verificar depois de instalar
 
 | # | O quê | Como |

@@ -8,6 +8,9 @@
 >   pelo template o módulo não viaja (não há git-deploy) e cada atualização vira trabalho
 >   manual. **Não há dado no CRM ainda**, então recriar do zero não custa nada.
 > - O `docker-compose.yml` foi **reescrito** (2026-09-05) — ver §"O que estava errado" abaixo.
+> - **08/09/2026 — F2 CONCLUÍDO.** Módulo `phi_crm` instalado e aprovado nos 8
+>   testes de aceite (ver `addons/phi_crm/README.md`). **Próximo: F3** —
+>   integração n8n↔Odoo, o pipeline PHI escrevendo os campos GBP/IA via API.
 > - **05/09/2026 — F1 CONCLUÍDO pelo deploy por Git.** Domínio respondendo com
 >   HTTPS, banco `phi_crm` criado, app **CRM** instalado. O bloqueio final era o
 >   campo `Serviço Compose` vazio na aba Domains — ver a seção sobre ele abaixo.
