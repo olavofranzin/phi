@@ -163,6 +163,23 @@ Completar a tabela abaixo para cada workflow do §4, abrindo os nós:
 Tabelas a cobrir: `raw_campaign_data`, `raw_ad_data`, `t28_*`, `phi_score_history`.
 **Entregável:** o mapa + a **lista de sobreposições** (é ela que vira o ADR).
 
+### 5.1. Tarefa transversal — escrever a descrição fiel (regra R5)
+
+**Toda vez que você abrir um workflow para inventariar, saia dele com a descrição correta.**
+Não é trabalho extra: é o entregável que faz a próxima auditoria dispensar o Olavo.
+
+A descrição precisa responder, em duas frases: **o que faz** + **por que existe / o que substituiu**.
+
+Comece por estes três, cuja intenção hoje **só existe na cabeça do Olavo**:
+
+| Workflow | O que a descrição precisa registrar |
+|---|---|
+| `operador unico metricas` `cLcimNoefTOnVVbd` | que é o **orquestrador** e chama os 3 sw (campanhas/conjuntos/anúncios) |
+| `sw metricas campanhas` `W571K320aqIHsdtH` | que é **cópia do `Daily Entry`** e **entrou no lugar dele** — por isso o original está inativo |
+| `Daily Entry` `zGgIqiLlo5iAn8ud` | que está inativo **por sucessão**, e quem assumiu — para ninguém arquivar por engano |
+
+⚠️ Descrição copiada de outro workflow é bug (o ADR-35 pegou 3 casos assim na Prospecção).
+
 ## 6. Lote 2 — Desenho → vira **ADR-37**
 
 No formato do ADR-35 (§2 deste brief). Precisa decidir:

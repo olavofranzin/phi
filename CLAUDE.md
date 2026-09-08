@@ -187,6 +187,20 @@ e manda o andamento do projeto no Telegram do Olavo.
 uma linha na DB com: **frente · o que foi feito · estado** (em andamento / concluído / bloqueado)
 **· próximo passo · link do artefato**. Sem isso o Olavo perde a visão do projeto. (Ver ADR-32.)
 
+### R5 — Todo artefato carrega a própria história (descrição fiel)
+A **descrição** de um workflow (n8n), módulo ou tabela deve dizer, em duas frases: **o que ele faz**
+e **por que existe** — incluindo **o que ele substituiu e por quê**.
+
+- Ao criar ou alterar um artefato, **atualize a descrição na mesma sessão**.
+- **Descrição copiada de outro artefato é bug** (foi o caso de 3 workflows da Prospecção).
+
+> **Motivo:** em 2026-09-08 a auditoria por inventário **não descobriu** que o `Daily Entry` tinha
+> sido desativado **porque** o `sw metricas campanhas` entrou no lugar. Isso só existia na cabeça do
+> Olavo. **Inventário pega estrutura; intenção só existe se alguém escrever.**
+>
+> Teste prático: **se a auditoria semanal precisa perguntar ao Olavo para entender, a descrição
+> falhou.** (Generaliza o invariante I10 do ADR-35 para o projeto inteiro.)
+
 ### R4 — Uma pergunta que todo chat responde antes de fechar
 > *"Onde estamos, quanto falta, e o que eu atualizei para provar isso?"*
 Se não souber responder, a etapa não acabou.
