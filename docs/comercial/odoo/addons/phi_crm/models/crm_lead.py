@@ -117,12 +117,36 @@ class CrmLead(models.Model):
     # resolve, em vez de 10 booleanos companheiros:
     #   vazio      -> o PHI nunca rodou neste lead -> N/D (a view esconde o card)
     #   preenchido -> todos os scores sao reais, zeros inclusive
-    gbp_score_atualizado_em = fields.Datetime(
+    gbp_score_atualizado_em = fields.Date(
         string="Diagnostico GBP em",
-        help="[IA] Quando o pipeline PHI escreveu o scoring. VAZIO significa "
-             "'nunca diagnosticado' (N/D) - e nao score zero. Preenchido "
-             "significa que todos os valores GBP abaixo sao reais, zeros inclusive.",
+        help="[IA] DIA em que o pipeline PHI escreveu o scoring. E Date, nao "
+             "Datetime, de proposito: a hora nao decide nada e o Datetime "
+             "obrigava a converter fuso na integracao (o Odoo guarda UTC e "
+             "exibe no fuso do usuario, o que deslocava o carimbo em 3h).",
     )
+
+    # --- O que revela o card ------------------------------------------------
+    # Ate 09/09/2026 quem revelava o card era gbp_score_atualizado_em. O efeito
+    # colateral apareceu na primeira carga real: um lead com potencial comercial
+    # e oferta preenchidos, mas sem o carimbo, ficava com o card inteiro
+    # escondido - dado bom, invisivel. Agora quem revela e o CONTEUDO: se ha
+    # decisao a tomar (oferta e/ou potencial), o card aparece.
+    gbp_diagnostico = fields.Selection(
+        selection=[("ativo", "Ativo"), ("inativo", "Inativo")],
+        string="Diagnostico GBP",
+        compute="_compute_gbp_diagnostico",
+        help="[SIS] Derivado, ninguem escreve. ATIVO quando o lead tem oferta "
+             "recomendada e/ou potencial comercial maior que zero - e so entao "
+             "o card do diagnostico aparece na tela. INATIVO significa que o "
+             "PHI nunca rodou neste lead (N/D honesto), nao score zero.",
+    )
+
+    @api.depends("gbp_oferta_recomendada", "gbp_potencial_comercial")
+    def _compute_gbp_diagnostico(self):
+        for lead in self:
+            tem_oferta = bool(lead.gbp_oferta_recomendada)
+            tem_potencial = (lead.gbp_potencial_comercial or 0) > 0
+            lead.gbp_diagnostico = "ativo" if (tem_oferta or tem_potencial) else "inativo"
 
     gbp_potencial_comercial = fields.Integer(
         string="Potencial Comercial (GBP)",

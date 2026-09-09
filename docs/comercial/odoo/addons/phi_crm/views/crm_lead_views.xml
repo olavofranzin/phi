@@ -25,7 +25,7 @@
                      Degradacao graciosa (card-spec §3.5) - aviso, nunca erro. -->
                 <div class="alert alert-light text-muted mb-2"
                      role="status"
-                     invisible="gbp_score_atualizado_em">
+                     invisible="gbp_diagnostico == 'ativo'">
                     Sem diagnostico GBP neste registro.
                 </div>
 
@@ -41,6 +41,11 @@
                 <group name="phi_gbp_marcador">
                     <field name="gbp_place_id"/>
                     <field name="gbp_score_atualizado_em"/>
+                    <!-- Derivado: e ele que revela o card. Badge aqui pode,
+                         porque o campo e so exibicao - ninguem escreve nele. -->
+                    <field name="gbp_diagnostico" widget="badge"
+                           decoration-success="gbp_diagnostico == 'ativo'"
+                           decoration-muted="gbp_diagnostico == 'inativo'"/>
                 </group>
 
                 <!-- ============ CARD: Diagnostico GBP ============ -->
@@ -48,7 +53,7 @@
                      Integer leriam 0 e um 0 forjado mentiria (N/D honesto). -->
                 <group string="Diagnostico GBP"
                        name="phi_card_gbp"
-                       invisible="not gbp_score_atualizado_em">
+                       invisible="gbp_diagnostico != 'ativo'">
 
                     <!-- O que decide -->
                     <group name="phi_gbp_decisao" string="Decisao">
@@ -162,7 +167,19 @@
 
             <!-- ============ Aba IA / Diagnostico (os textoes) ============ -->
             <!-- Ordem conforme card-gbp-record-spec.md §2.1. -->
+            <!--
+              O chatter do Odoo 19 e um componente proprio (<chatter/>), irmao
+              do <sheet> - ele nao aceita abas dentro. Entao em vez de levar a
+              aba ate a coluna da direita, trazemos a coluna da direita para
+              dentro das abas: o chatter inteiro (Enviar mensagem / Notas
+              internas / Atividade) vira a aba "Notas / Atividades", vizinha da
+              "IA / Diagnostico". O resultado na tela e o mesmo que foi pedido:
+              as duas convivem como abas e o formulario ganha a largura toda.
+            -->
             <xpath expr="//notebook" position="inside">
+                <page string="Notas / Atividades" name="phi_notas_atividades">
+                    <xpath expr="//chatter" position="move"/>
+                </page>
                 <page string="IA / Diagnostico" name="phi_ia_diagnostico">
                     <group>
                         <field name="ia_analise_gbp" nolabel="0"/>

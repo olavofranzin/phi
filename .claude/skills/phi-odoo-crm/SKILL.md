@@ -41,8 +41,11 @@ pela atividade do vendedor é anti-pattern (ver `docs/comercial/prospecção/`).
 ## Campos por bloco
 
 - **Chave:** `gbp_place_id` (índice + unique, `copy=False`)
-- **Marcador:** `gbp_score_atualizado_em` — **vazio = nunca diagnosticado (N/D)**;
-  preenchido = os valores GBP são reais, **zeros inclusive**
+- **O que revela o card:** `gbp_diagnostico` (`ativo`/`inativo`) — **computado,
+  ninguém escreve**. Ativo quando há `gbp_oferta_recomendada` e/ou
+  `gbp_potencial_comercial > 0`. Inativo = o PHI nunca rodou (N/D), não score zero
+- **Carimbo:** `gbp_score_atualizado_em` é **`Date`** (só o dia, `yyyy-MM-dd`).
+  Não é Datetime de propósito: a hora não decide nada e obrigava a converter fuso
 - **Scoring [IA]:** `gbp_potencial_comercial`, `gbp_oferta_recomendada`, `gbp_ipc`,
   `gbp_score_tecnico`, `gbp_nao_reivindicado`, `gbp_site_tipo`, `gbp_flags_score`
 - **As 6 dimensões [IA], nomes exatos** (é o que a integração escreve):
@@ -76,9 +79,20 @@ nunca é o único sinal.
 
 ## Escrevendo pelo n8n
 
-Nó **Odoo** nativo, recurso **`custom`** (o recurso `opportunity` não expõe campo
-customizado). Upsert: buscar por `gbp_place_id` → atualizar se achar, criar se não →
-carimbar `gbp_score_atualizado_em`. **Nunca** escrever `stage_id` nem won/lost.
+Nó **Odoo v2**, recurso **`opportunity`**, operação `create`/`update`: o parâmetro
+`fieldsToSend` é um **resource mapper** que carrega o schema do próprio `crm.lead`, então
+os campos `gbp_*` e `ia_*` aparecem na lista. (A regra antiga de usar o recurso `custom`
+valia para a **v1** do nó — foi corrigida em 09/09/2026.)
+
+**Datas:** o Odoo recusa ISO-8601. `Date` → `yyyy-MM-dd`. `Datetime` → `yyyy-MM-dd HH:mm:ss`
+**em UTC**:
+```
+{{ DateTime.fromISO($json.data).toUTC().toFormat('yyyy-MM-dd HH:mm:ss') }}
+```
+Em campo `Date` **não** use `toUTC()` — 22h de 08/09 viraria 09/09.
+
+Upsert: buscar por `gbp_place_id` → atualizar se achar, criar se não. **Nunca** escrever
+`stage_id`, won/lost, nem qualquer campo computado (`gbp_diagnostico`, `*_banda`).
 
 ## Verificação antes de fechar qualquer alteração
 
