@@ -124,7 +124,7 @@ Um relatório de campanha traz métricas. **Não traz** o resto da linha:
 |---|---|---|
 | 1 | **P-11** — descobrir por que o `client_id` sai vazio | ✅ **RESOLVIDO 2026-09-09 — ver §9. Mudou o custo: o `client_id` nunca foi extraído do Notion** |
 | 2 | Ajustar **os dois writers** para a identidade nova (`campaign_id` nativo + `platform` + `client_id`) | senão a carga é repoluída no dia seguinte |
-| 3 | Ajustar **os consumidores**: `MERGE` por `(client_id, platform, campaign_id, date)` e remover o `STARTS_WITH` do score | senão o score não acha nada |
+| 3 | Ajustar **os consumidores**: `MERGE` pela chave nova, remover o `STARTS_WITH` do score **e atualizar o campo `campaign_id` no Notion (Campanhas + Tasks abertas)** — ver §9.5 | senão o score não acha nada **e a Fase 3 inteira para** |
 | 4 | **Backup** de `raw_campaign_data` | irreversível |
 | 5 | **Migrar a chave** de `phi_score_history` (`UPDATE` tirando o prefixo) — §5.1 | senão o histórico duplica em silêncio a partir do dia seguinte |
 | 6 | **Apagar e recarregar** de janeiro até a data do corte, com `ingestion_step = 'BACKFILL_2026-09'` | |
@@ -215,6 +215,57 @@ Notion.
 ### 9.4 Verificado de passagem
 O `MERGE` deste writer casa por `ON client_id AND campaign_id AND date` — **a mesma chave** do outro
 writer. Confirma que, com a identidade unificada, os dois **passam a colidir** (teste da etapa 7).
+
+### 9.5 🔴 Achado que o ADR não previu — existe um **quinto** lugar com o `campaign_id`
+
+O §5.3 lista como consumidores o **score** e o **Agregador T28**. Falta um, e ele é o mais frágil:
+**o campo `campaign_id` (rich_text) da DB Campanhas do Notion.**
+
+**Ele é a ponte BigQuery ↔ Notion.** No `PHI - Pipeline_v2`:
+
+```js
+// Code Clean Campanhas F3 — lê o texto gravado no Notion
+const campaignId = extractRichText(props['campaign_id']?.rich_text);
+
+// Code Enriquecer Campanha — casa com o campaign_id vindo do BigQuery
+const cleanMatch = allCleaned.find(item => item.json.clean_campaing_id === campaignId);
+```
+
+Como o match **funciona hoje** (as campanhas KIL aparecem no score), está provado que esse campo do
+Notion contém hoje **`GADS-21116045403`** — o mesmo valor do BigQuery.
+
+**O que quebra se só o BigQuery mudar:**
+
+| Consequência | Efeito prático |
+|---|---|
+| `cleanMatch` não acha → `notion_page_id = null` | o score **não é escrito** na campanha do Notion |
+| sem `notion_id_camp` | a **Task não é criada** (Fase 3 — Abertura) |
+| `Get tasks para Escalada` busca pelo id novo | **escalada** não acha as tarefas |
+| `Get Task para Fechar` compara `Task.campaign_id` × `Campanha.campaign_id` | **fechamento** e a limpeza de órfã param |
+
+Ou seja: **mudar só o BigQuery derruba a Fase 3 inteira** do PHI — em silêncio, como sempre.
+
+E há um **segundo efeito** já em produção: o nó `Create a database page` grava na Task
+`campaign_id = {{ campaign_id do BigQuery }}`. Então as Tasks **abertas** carregam o valor antigo e
+também precisam ser migradas, senão o fechamento não as encontra.
+
+**Duas formas de resolver — e a diferença importa:**
+
+| | Como | Avaliação |
+|---|---|---|
+| **(i)** | Atualizar o campo `campaign_id` das páginas do Notion (Campanhas **e** Tasks abertas) para o ID nativo | ✅ **recomendada** — mantém Notion e BigQuery coerentes, e o código não muda |
+| **(ii)** | Mudar o `Code Clean Campanhas F3` para montar a chave a partir de `id_google_camp` (number) | ❌ resolve o match, mas as Tasks passam a nascer com o id novo enquanto a Campanha guarda o velho — **o fechamento quebra do mesmo jeito** |
+
+> A **(ii) sozinha não fecha o problema.** O campo do Notion tem de ser atualizado de qualquer forma.
+
+**Impacto na sequência do §6:** a etapa 3 ("ajustar os consumidores") passa a incluir **o Notion** —
+não só o SQL do score. É trabalho de dado, não de código, e precisa acontecer **junto** com as etapas
+2 e 3, não depois.
+
+### 9.6 Confirmação de passagem — o `client_id` existe mesmo no Notion
+O `Code Clean Campanhas F3` já lê `clean_client_id: extractRichText(props['client_id']?.rich_text)`.
+Isso **confirma** a correção proposta em §9.1: o campo existe na DB Campanhas e um workflow já o
+consome. O writer das 04h só não o extrai.
 
 ---
 
