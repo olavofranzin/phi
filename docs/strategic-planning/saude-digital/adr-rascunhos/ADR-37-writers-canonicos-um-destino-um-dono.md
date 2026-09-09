@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | ✅ **ACEITO** — 2026-09-08 · `D1`–`D5` aprovados pelo Olavo · **Fase 0.1 executada** |
+| **Status** | ⚠️ **ACEITO com D1 EM REVISÃO** — 2026-09-08 · Fase 0.1 executada · **Fases 1 e 2 suspensas em 2026-09-09** pelo achado da §3.0.3 |
 | **Escopo** | Quem grava o quê em `raw_campaign_data`, `raw_ad_data`, `client_config` e nos campos de campanha do Notion |
 | **Não cobre** | Frente Prospecção (planilha `leads` + CRM) — já normatizada pelo **ADR-35**. Não tocar. |
 | **Decisor** | Olavo |
@@ -102,7 +102,7 @@ só para smoke.
 
 | # | Decisão | Resolução |
 |---|---|---|
-| `D1` | Writer canônico de `raw_campaign_data` | **`sw metricas campanhas`**, aposentando o `GADS_INSERT` |
+| `D1` | Writer canônico de `raw_campaign_data` | ⚠️ **aprovado, mas EM REVISÃO desde 2026-09-09.** Duas das três justificativas caíram na verificação: hoje quem alimenta o score é o `GADS_INSERT`. Antes de escolher o writer é preciso decidir a **identidade** — ver §3.0.3 |
 | `D2` | Dono de `Otimização Ativa?` | ⚠️ **aprovado, mas a premissa caiu na execução.** Não há writer a desligar — ver §3.0.2. Dono do *fechamento por tarefa* = `PHI - Fechar Otimização`; abertura e limpeza de órfã seguem no `Pipeline_v2` |
 | `D3` | `conversions` vira `FLOAT64` | **Sim** — o `raw_ad_data` já é assim |
 | `D4` | Atraso de atribuição | **Re-puxar os últimos 3 dias** a cada rodada (o `MERGE` já é idempotente) |
@@ -141,7 +141,7 @@ Copiado do que funcionou em 2026-07-21 com o `PHI - Loop Alerta Fase 1` (um doub
 |---|---|---|
 | **0.1** | Remover `execution_id` e `ingestion_step` do `UPDATE SET` do nó `Execute SQL  INSERT raw_campaign_data` (`b1pbn8qmzCNTufTp`) | ✅ **aplicado e publicado** — versão ativa `105d22b3-5704-41a3-b143-ef5b1414d1c7` |
 | **0.2** | Desabilitar os dois nós de `Otimização Ativa?` no `Pipeline_v2` | ❌ **CANCELADA — a instrução estava errada.** Ver §3.0.2 |
-| **0.3** | Verificar `ingestion_step` no dia seguinte | ⏳ **agendado** para 2026-09-09 08:00 BRT (11:00 UTC), lembrete `trig_017hiDspF3yEbftpDn9qdrU1` |
+| **0.3** | Verificar `ingestion_step` no dia seguinte | ✅ **executada 2026-09-09** — resultado **desmentiu a premissa da S1**. Ver §3.0.3 |
 
 **O que a 0.1 mudou, exatamente.** Os dois campos saíram do `WHEN MATCHED ... UPDATE SET` e **continuam** no
 `WHEN NOT MATCHED ... INSERT` — onde este workflow é de fato o criador da linha. Um comentário no topo do
@@ -178,7 +178,114 @@ tarefa concluída** é o `PHI - Fechar Otimização`; o `Pipeline_v2` mantém **
 Tornar isso um dono único de verdade exige portar a limpeza de órfã para o `Fechar Otimização` — **é obra,
 não estancamento**, e virou a pendência **P-9**.
 
-### Fase 1 — Completar o sucessor (antes de aposentar o outro)
+## 3.0.3 🔴 Fase 0.3 — o resultado desmentiu a premissa da S1
+
+Verificação de 2026-09-09 (execuções **37179** e **37180**, leitura, workflow temporário
+`FhNyngyJkTKO6ZiH` arquivado em seguida). Os pipelines das 04h (`37117`) e das 07h (`37163`)
+rodaram **com sucesso** — a mudança de ontem não quebrou nada.
+
+### O que a tabela mostra (D-1 = 2026-09-08)
+
+| `ingestion_step` | linhas | `ingested_at` |
+|---|---|---|
+| `DAILY_ENTRY` | 3 | 04:00:15 → 04:00:49 BRT |
+| `GADS_INSERT` | 2 | 07:00:59 → 07:01:06 BRT |
+
+`DAILY_ENTRY` **apareceu**. Mas a leitura linha a linha mostra que isso **não é mérito da Fase 0.1**:
+
+| campo | linhas `DAILY_ENTRY` | linhas `GADS_INSERT` |
+|---|---|---|
+| `client_id` | **`''` (vazio)** | `CLI-4` |
+| `campaign_id` | `CMP.KIL.CAMP-7` / `CMP.KIL.CAMP-8` / `CMP.CHA.CAMP-10` | `GADS-21116045403` / `GADS-21149189736` |
+| `revenue` | `NULL` | preenchido |
+| `cost_3d` / `conversions_3d` | preenchidos | `NULL` |
+| `data_source` / `platform` | preenchidos | `NULL` |
+
+**São a mesma campanha, em linhas separadas.** Os custos batem:
+
+| Campanha | `DAILY_ENTRY` | `GADS_INSERT` |
+|---|---|---|
+| Salão (08/09) | `CMP.KIL.CAMP-7` — cost `30.576738`, conv **13** | `GADS-21116045403` — cost `30.58`, conv **12** |
+| Barbearia (08/09) | `CMP.KIL.CAMP-8` — cost `0.241752`, conv 0 | `GADS-21149189736` — cost `0.24`, conv 0 |
+
+### 🔴 A premissa S1b estava errada
+
+O `MERGE` casa por `(client_id, campaign_id, date)`. Como **os dois campos diferem**, o
+`WHEN MATCHED` **nunca dispara** — é sempre `INSERT`. **Os dois writers nunca colidiram.**
+O `GADS_INSERT` jamais sobrescreveu o rótulo do `DAILY_ENTRY`; e as linhas de **06 e 07/09**,
+anteriores à mudança, **já traziam `DAILY_ENTRY`**.
+
+> **A Fase 0.1 não produziu efeito observável.** Ela continua correta como defesa (invariante
+> I2) e não causou dano, mas **não era o problema**. O que eu registrei em 08/09 como
+> "confirmado por outro mecanismo" estava **errado**.
+
+### 🔴 O problema real é maior: duas identidades incompatíveis
+
+A cadeia das 04h grava com a identidade `CMP.<SLUG>.CAMP-N` e **`client_id` vazio**; a das 07h
+grava com `GADS-<id>` e `client_id` preenchido. **Nada reconcilia as duas.** Consequência, lida
+direto no SQL do nó `Calcular e Persistir PHI Score`:
+
+```sql
+raw_dedup AS (SELECT *, ROW_NUMBER() OVER (
+    PARTITION BY client_id, campaign_id, date
+    ORDER BY CASE WHEN ingestion_step = 'DAILY_ENTRY' THEN 0 ELSE 1 END) AS rn ...)
+...
+INNER JOIN `phi_prod.client_config` cc ON j.client_id = cc.client_id AND cc.is_active = TRUE
+```
+
+1. **A cláusula de desempate nunca dedupa nada.** Como `client_id` e `campaign_id` diferem, cada
+   linha cai na **própria partição** e sai com `rn = 1`. As duas passam.
+2. **O `INNER JOIN` elimina todas as linhas do `DAILY_ENTRY`**, porque `client_id = ''` não casa
+   com nenhum cliente. **O score nunca viu esses dados — nem antes, nem agora.**
+3. O `CASE ... STARTS_WITH(campaign_id, 'GADS-')` classificaria `CMP.*` como `'UNKNOWN'`.
+
+### 🔴 Isso inverte o `D1`
+
+Eu justifiquei o `sw metricas campanhas` como writer canônico por três motivos. **Dois caíram:**
+
+| Justificativa de 08/09 | Situação após a verificação |
+|---|---|
+| "é o preferido pelos dois consumidores, que têm a cláusula de desempate" | ❌ **falso na prática** — a cláusula não dedupa, e as linhas dele são descartadas no `INNER JOIN` |
+| "escreve as janelas `cost_3d`/`conversions_3d`, que o outro não escreve" | ❌ **não sustenta** — o score **recalcula** as janelas por `SUM(...)` sobre os 7 dias; **não lê** essas colunas |
+| "usa `Math.round`, não `parseInt` truncante" | ✅ **de pé, e agora com evidência**: Salão 08/09 → `13` (round) vs `12` (parseInt) |
+
+> **Hoje, o writer que de fato alimenta o score é o `GADS_INSERT`** — exatamente o que o ADR
+> mandava aposentar. **A Fase 2 está suspensa.** Aposentá-lo agora deixaria o score sem fonte.
+
+### Consequências imediatas
+
+- **Fases 1 e 2 suspensas.** A Fase 1 (`revenue` + `FLOAT64`) melhoraria um writer cujas linhas
+  o score descarta — trabalho sem efeito. **Nada disso foi executado.**
+- As colunas `cost_3d/7d`, `conversions_3d/7d`, `data_source` e `platform` são, hoje, **gravadas
+  todo dia e nunca lidas**.
+- O `raw_d1_rows` do log conta **5 linhas** de D-1, mas só **2** chegam ao score. A telemetria
+  superestima a cobertura em 2,5×.
+- ✅ **Confirmada com evidência a armadilha da Fase 3**: o SQL tem
+  `WHEN primary_metric_type != 'CPA' THEN 'INSUFFICIENT_DATA'`. **O score só suporta CPA.** Se o
+  `client_config` do KIL virasse `ROAS` — como está hoje no `phi_dev` — o score do KIL sairia
+  como `INSUFFICIENT_DATA`. A ordem obrigatória da Fase 3 está certa.
+
+### O que ainda não sei
+
+- **Por que `client_id` sai vazio** no `sw metricas campanhas`. Não investiguei o Code node.
+- **De onde vem o formato `CMP.<SLUG>.CAMP-N`** e se ele é a identidade do ADR-33 (que fala de
+  `entity_id`/`page_id`, sem definir esse formato). Não confirmei a ligação.
+- Quem é **`CMP.CHA.CAMP-10`** (`meta_ads`): não há cliente `CHA` no `client_config`.
+- Se algum consumidor **fora do pipeline** lê as colunas que o score ignora.
+
+### Decisão que este achado exige do Olavo
+
+A pergunta não é mais "qual dos dois writers fica", e sim **qual identidade é a verdadeira**:
+
+- **(A)** `GADS-<id>` + `client_id` — o que o score, o `client_config` e o Notion já usam. Corrigir
+  o `sw metricas campanhas` para gravar nesse formato; aí os dois writers finalmente colidem no
+  `MERGE` e a Fase 0.1 passa a valer de verdade.
+- **(B)** `CMP.<SLUG>.CAMP-N` — migrar score, `client_config` e consumidores para a identidade nova.
+  Muito maior, e o ADR-33 ainda é rascunho.
+
+**Recomendação: (A)** — é a que o sistema já usa de ponta a ponta, e é reversível.
+
+### Fase 1 — ⏸️ SUSPENSA (ver §3.0.3) — Completar o sucessor
 
 | # | Ação |
 |---|---|
@@ -192,7 +299,7 @@ não estancamento**, e virou a pendência **P-9**.
 > sumir com `FLOAT64` + re-puxe, era truncamento + atraso de atribuição. Se não sumir, é escopo de
 > ações de conversão — e vira pendência própria.
 
-### Fase 2 — Aposentar o `GADS_INSERT`
+### Fase 2 — ⏸️ SUSPENSA (ver §3.0.3) — Aposentar o `GADS_INSERT`
 Aplicar o §2.5 ao `PHI - Subworkflow Campanhas` (`b1pbn8qmzCNTufTp`), **preservando** o nó
 `Execute SQL client_config sincronizado` até a Fase 3 — ou migrando-o junto.
 Desabilitar o nó `Call Subworkflow Campanhas` no `Pipeline_v2`.
@@ -261,6 +368,9 @@ Desabilitar o nó `Call Subworkflow Campanhas` no `Pipeline_v2`.
 | P-6 | Fase 4 — `ADR-010`, descrições, repo × n8n, arquivamentos | acabamento |
 | P-7 | Explicar a origem das 2 linhas de fev/2025 em `phi_prod.client_config` | investigação |
 | P-8 | Medir o subcount do Salão na Fase 1.5 | qualidade de dado |
+| P-10 | 🔴 **Decidir a identidade canônica** (`GADS-<id>` vs `CMP.<SLUG>.CAMP-N`) — bloqueia as Fases 1 e 2 | 🔴 bloqueante |
+| P-11 | Investigar por que o `sw metricas campanhas` grava `client_id` vazio | investigação |
+| P-12 | Identificar `CMP.CHA.CAMP-10` (cliente `CHA` não existe no `client_config`) | investigação |
 | P-9 | Portar a **limpeza de órfã** do `Pipeline_v2` para o `PHI - Fechar Otimização`, para o campo ter dono único de verdade | obra (não é Fase 0) |
 
 ---

@@ -38,7 +38,7 @@
 | **Prospecção** (lead → CRM) | 🟢 **construída** — parque `PROSP-01..08` ativo (**ADR-35**) | renomear 06/07/08 · arquivar 5 mortos · rodar `BF`/`LO` · auditoria nó a nó | 🔴 decidir o alvo do CRM |
 | **CRM Odoo** | 🟢 **F1 + F2 CONCLUÍDOS** — deploy por Git no ar; módulo `phi_crm` aprovado nos 8 testes de aceite (2026-09-08) | **F3** n8n↔Odoo (a API escrevendo os campos GBP/IA) · F5 migração de dados do HubSpot | — |
 | **PHI·Mídia Score v2** | 🟡 **ADR-34 desenhado** e validado em dado real (jan–ago) | implementar | consolidação dos writers |
-| **Consolidação de writers** | 🟢 **ADR-37 ACEITO + Fase 0.1 em produção** (2026-09-08) | Conferir `ingestion_step` após as 07h de **09/09** · depois Fase 1 (`revenue` + FLOAT64) | 🟢 destravado |
+| **Consolidação de writers** | 🔴 **Fases 1 e 2 SUSPENSAS** (2026-09-09) — a verificação desmentiu a premissa da S1 e achou coisa maior | Olavo decidir a **identidade canônica** (P-10): `GADS-<id>` ou `CMP.<SLUG>.CAMP-N` | 🔴 aguarda decisão |
 | **T28 / Otimização** | 🟡 Diagnóstico vive; **Maestro E1 em rascunho** | ativar E1 (ADR-28) | budget de token |
 | **Governança / documentação** | 🟢 regras **R1–R5** no `CLAUDE.md` · Rotina de auditoria ativa (1ª: 14/09) | fazer os sub-chats cumprirem **R3** (Notion) | — |
 
@@ -52,6 +52,39 @@ Prospecção (`PROSP-05` escreve no CRM, `PROSP-06` lê dele) **continua apontan
 
 → **ADR-36:** declarar o Odoo como CRM canônico, reapontar `PROSP-05/06` e definir o corte do
 HubSpot. **Uma decisão, duas frentes destravadas.**
+
+### 🔴 2026-09-09 — a verificação da Fase 0.3 desmentiu a premissa e achou coisa pior
+
+Os pipelines das 04h e 07h rodaram com sucesso — a mudança de ontem não quebrou nada. `DAILY_ENTRY`
+apareceu na tabela. **Mas não por mérito da Fase 0.1.**
+
+**Os dois writers nunca colidiram.** As linhas das 04h têm `client_id` **vazio** e `campaign_id` no
+formato `CMP.KIL.CAMP-7`; as das 07h têm `client_id = CLI-4` e `GADS-21116045403`. O `MERGE` casa por
+`(client_id, campaign_id, date)` — como os dois campos diferem, o `WHEN MATCHED` **nunca dispara**. E as
+linhas de 06 e 07/09, anteriores à mudança, **já traziam `DAILY_ENTRY`**.
+
+**É a mesma campanha, duplicada em duas linhas por dia, sob identidades incompatíveis** — os custos batem
+(Salão: `30.576738` vs `30.58`).
+
+**O que isso significa, lido direto no SQL do score:**
+1. a cláusula de desempate `PARTITION BY client_id, campaign_id, date` **nunca dedupa nada** — cada linha
+   cai na própria partição;
+2. o `INNER JOIN client_config ON client_id` **elimina todas as linhas das 04h**, porque `client_id = ''`.
+   **O score nunca viu esses dados** — nem antes, nem agora;
+3. o score **recalcula** as janelas 3d/7d por `SUM(...)`; **não lê** as colunas `cost_3d`/`conversions_3d`
+   que o workflow das 04h grava todo dia.
+
+**Isso inverte o `D1`.** Duas das três justificativas para eleger o `sw metricas campanhas` caíram. Hoje
+**quem alimenta o score é justamente o `GADS_INSERT`** — o que o ADR mandava aposentar. **Fases 1 e 2
+suspensas; nada foi executado.** Sobrevive só o `Math.round` vs `parseInt`, agora com evidência: Salão em
+08/09 deu **13** contra **12** conversões.
+
+**Confirmada com evidência a armadilha da Fase 3:** o SQL tem `WHEN primary_metric_type != 'CPA' THEN
+'INSUFFICIENT_DATA'` — **o score só suporta CPA**. Se o `client_config` do KIL virasse `ROAS` (como está
+hoje no `phi_dev`), o score sairia como `INSUFFICIENT_DATA`. A ordem obrigatória da Fase 3 está certa.
+
+**A decisão que falta (P-10)** não é mais "qual writer fica", e sim **qual identidade é a verdadeira**:
+`GADS-<id>` (o que score, `client_config` e Notion já usam — recomendado) ou `CMP.<SLUG>.CAMP-N`.
 
 ### ✅ 2026-09-08 (fim do dia) — ADR-37 aceito e Fase 0.1 aplicada em produção
 
