@@ -6,6 +6,7 @@
 | **Substitui** | a "Opção A" do `2026-09-09-decisao-P-10-identidade-canonica.md` (prefixo `GADS-`/`META-`) |
 | **Fecha** | **P-10** do ADR-37 |
 | **Impacto** | `raw_campaign_data`, os 2 writers, o SQL do score, `phi_score_history` · critérios **C1** e **C2** |
+| **Data efetiva do corte** | ⬜ *a preencher no dia da execução* — decidido: **o dia da alteração** |
 
 ---
 
@@ -85,11 +86,30 @@ Um relatório de campanha traz métricas. **Não traz** o resto da linha:
 
 ## 5. 🔴 Riscos — o que decidir ANTES de apagar
 
-1. **`phi_score_history` está chaveado por `GADS-...`.** Trocar a identidade em `raw_campaign_data`
-   **órfã o histórico de scores**. Três saídas — **decidir explicitamente, não descobrir depois**:
-   (a) migrar o histórico para a identidade nova; (b) aceitar a descontinuidade e marcar a data de
-   corte; (c) recalcular os scores sobre a série nova. **Recomendo (a)** — é `UPDATE` com regra
-   simples (tirar o prefixo) e preserva o `acerto_previsao`.
+1. ✅ **`phi_score_history` — DECIDIDO (Olavo, 2026-09-09): migrar a chave AGORA, recalcular no Score v2.**
+   A tabela está chaveada por `GADS-...`; trocar a identidade em `raw_campaign_data` a deixaria órfã.
+
+   O Olavo perguntou: *"não deve ser recalculada já que entrarão novos dados?"* — **sim, deve.** Os
+   scores históricos foram calculados sobre a série suja (dias faltando, conversões subcontadas), e a
+   `phi_score_history` é usada como **régua**: o **ADR-29** compara a métrica-mãe de hoje com o
+   histórico ("salto implausível") e o **T28** lê o score canônico de lá. Régua construída sobre dado
+   errado mede errado.
+
+   **Mas recalcular agora é trabalho feito duas vezes.** O **Score v2 (ADR-34 / critério C1)** muda a
+   fórmula, e validá-lo **já exige** recalcular sobre a série histórica limpa. Portanto:
+
+   | Quando | O quê | Por quê |
+   |---|---|---|
+   | **Agora** (etapa 5) | `UPDATE` tirando o prefixo — migrar só a **chave** | senão o score diário cria linha nova em vez de casar com a antiga, e o histórico **duplica em silêncio** |
+   | **No Score v2** (C1) | **recalcular** os scores sobre a série limpa | vem junto com a validação do v2 — e com a fórmula que vai ficar |
+   | **Antes de apagar** | backup `phi_score_history_backup_2026-09` | guarda **o que o PHI disse na época**; o recálculo diz o que ele diria hoje — são coisas diferentes |
+
+   > ⚠️ **Correção de um erro meu na 1ª versão deste ADR.** Eu justifiquei a migração dizendo que ela
+   > "preserva o `acerto_previsao`". **Está errado:** `acerto_previsao` **não existe** em
+   > `phi_score_history` — ele vive na **planilha `leads`** da frente Prospecção (bloco de aprendizado,
+   > dono **P6**, ver `CONTRATO-PROSPECCAO.md`). O rebuild de `raw_campaign_data` **não toca** nesse
+   > loop de aprendizado. A decisão acima não depende do argumento errado. (**R6** — hipótese
+   > desmentida também se registra.)
 2. **Backup antes de apagar.** Exportar a tabela atual (GCS ou tabela `_backup_2026-09-09`) **antes**
    de qualquer `DELETE`. Apagar é irreversível; o backup custa minutos.
 3. **Outros consumidores.** O **Agregador T28** e o SQL do score leem essa tabela. O
@@ -106,7 +126,7 @@ Um relatório de campanha traz métricas. **Não traz** o resto da linha:
 | 2 | Ajustar **os dois writers** para a identidade nova (`campaign_id` nativo + `platform` + `client_id`) | senão a carga é repoluída no dia seguinte |
 | 3 | Ajustar **os consumidores**: `MERGE` por `(client_id, platform, campaign_id, date)` e remover o `STARTS_WITH` do score | senão o score não acha nada |
 | 4 | **Backup** de `raw_campaign_data` | irreversível |
-| 5 | Decidir o destino de `phi_score_history` (§5.1) | |
+| 5 | **Migrar a chave** de `phi_score_history` (`UPDATE` tirando o prefixo) — §5.1 | senão o histórico duplica em silêncio a partir do dia seguinte |
 | 6 | **Apagar e recarregar** de janeiro até a data do corte, com `ingestion_step = 'BACKFILL_2026-09'` | |
 | 7 | Smoke nas 2 campanhas KIL + conferir que os dois writers **agora colidem** no `MERGE` | é o teste real |
 | 8 | Retomar as Fases 1 e 2 do ADR-37 sob a identidade única | |
@@ -122,8 +142,13 @@ Um relatório de campanha traz métricas. **Não traz** o resto da linha:
 
 ## 8. Pontos abertos
 
-- **Data do corte** — o Olavo puxa o relatório de janeiro até 08/09 **ou até o dia da alteração**.
-  Definir a data exata na hora, e registrar.
+- ✅ **Data do corte — DECIDIDO (Olavo, 2026-09-09): o dia em que a alteração for feita** (não 08/09).
+  Consequências práticas, que mudam a execução:
+  1. o relatório é puxado **depois** das etapas 1–5, **imediatamente antes** da carga — não antes;
+  2. ele cobre **de janeiro até D-1 do dia do corte**; a 1ª rodada diária nova cobre do dia do corte
+     em diante;
+  3. **sobrepor um dia é seguro** (o `MERGE` pela chave nova deduplica); **deixar buraco não é**;
+  4. **registrar a data real na tabela do topo** no dia em que acontecer (**R2**).
 - **Meta Ads:** o **gate** continua valendo. Com a identidade neutra ele fica **mais fácil** de
   atender (não há prefixo a inventar), mas o consumidor ainda precisa aprender a pontuar Meta.
 - **ADR-33** segue em aberto (identidade estável × campanha recriada).

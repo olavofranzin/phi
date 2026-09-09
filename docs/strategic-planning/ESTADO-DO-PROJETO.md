@@ -235,14 +235,20 @@ consolidação dos writers terminar.
 ⚠️ **Não executar fora de ordem** — a sequência obrigatória está no ADR-38 §6. Em especial: os
 writers têm de emitir a identidade nova **antes** da carga, e há **backup antes de apagar**.
 
+**Decidido em 09/09 (Olavo):** a **data do corte é o dia da alteração** (o relatório é puxado por
+último, cobrindo janeiro → D-1); e o **`phi_score_history` tem a chave migrada agora** (`UPDATE`
+tirando o prefixo), com o **recálculo dos scores adiado para o Score v2 (C1)** — validar o v2 já
+exige recalcular sobre a série limpa, então fazer agora seria trabalho feito duas vezes.
+**Brief de execução:** `docs/handoff/2026-09-09-adr38-identidade-neutra-rebuild-subchat-brief.md`.
+
 ### 🔴 Dois achados de 2026-09-09 (frente writers)
 
 **1. O score só via metade do que o sistema ingere.** `raw_campaign_data` recebe 2 linhas/dia por
 campanha, de writers com **identidades incompatíveis** (`client_id` vazio × `CLI-4`; `CMP.KIL.CAMP-7`
 × `GADS-21116045403`). Como os campos diferem, o `MERGE` **nunca casou** — nunca houve erro nem
 alerta. E o `INNER JOIN` com `client_config` **descarta 100%** das linhas do writer das 04h.
-Decisão **P-10 = Opção A** (padronizar em `GADS-` + `client_id`) — ver
-`docs/handoff/2026-09-09-decisao-P-10-identidade-canonica.md`.
+~~Decisão **P-10 = Opção A** (padronizar em `GADS-`)~~ — **superada pelo ADR-38**: a chave passa a
+ser `(client_id, platform, campaign_id, date)`, com `campaign_id` **nativo, sem prefixo**.
 
 **2. ✅ Meta Ads — hipótese respondida, virou GATE.** Levantei que nenhuma campanha Meta teria
 chegado ao score. **Olavo confirmou que `CHA` é dado de configuração de campanha antiga e que nunca
