@@ -488,4 +488,98 @@ São **233 linhas reais** a migrar na etapa 5 (mais uma linha de teste, que pode
 
 ---
 
+## 13. 🎯 Staging carregada e conferida — o achado que justifica o ADR inteiro
+
+Fonte: exports oficiais do Google Ads (`docs/analises/google_ads/*jan-set.csv`), **01/01/2026 → 08/09/2026**,
+lidos direto do repositório pelo n8n. Execuções **37287** (carga) e **37288** (comparação); backups pela
+**37289**. Workflows temporários arquivados.
+
+### 13.1 A staging bate com o arquivo
+
+| Campanha | Linhas | Período | Conversões | Custo | Linhas com fração |
+|---|---|---|---|---|---|
+| Salão `21116045403` | 215 | 01/01 → 08/09 | **2 585,92** | 6 756,85 | **59** |
+| Barbearia `21149189736` | 248 | 01/01 → 08/09 | **117,00** | 953,24 | 0 |
+
+Conferido contra leitura independente do CSV: **idêntico**. O parse do formato pt-BR (ponto de milhar,
+vírgula decimal) está correto, e as **59 linhas com conversão fracionada** do Salão sobreviveram — são
+exatamente o que o `parseInt` do pipeline vinha truncando.
+
+### 13.2 🔴 O que a produção tem hoje, comparado ao real — na mesma janela
+
+Janela: a partir de **29/03/2026**, quando a produção começou a ter dado.
+
+| | Salão | Barbearia |
+|---|---|---|
+| Dias na produção | 98 | 115 |
+| Dias reais | **140** | **161** |
+| **Dias faltando** | **42** | **46** |
+| Conversões na produção | 749,00 | 5,00 |
+| Conversões reais | **1 427,19** | **43,00** |
+| **Diferença** | **+678,19** | **+38,00** |
+| Custo na produção | 3 314,19 | 289,54 |
+| Custo real | 4 520,73 | 330,85 |
+
+> **A produção tinha 52% das conversões do Salão e 12% das da Barbearia.**
+
+### 13.3 🔴🔴 O impacto vai além do dado: o score estava classificando errado
+
+| Campanha | Meta (CPA) | CPA com o dado da produção | CPA com o dado real | Leitura |
+|---|---|---|---|---|
+| **Salão** | 3,50 | **4,42** (acima da meta → ruim) | **3,17** (abaixo da meta → bom) | 🔴 **o diagnóstico se inverte** |
+| **Barbearia** | 5,20 | **57,91** (11× a meta) | **7,69** (1,5× a meta) | 🔴 severidade muito exagerada |
+
+**O PHI vinha dizendo que o Salão estava fora da meta quando ele estava dentro.** E tratava a Barbearia
+como catástrofe quando o desvio real é bem menor.
+
+Isso reposiciona o ADR-38: ele deixa de ser "arrumação de identidade" e passa a ser **correção de um erro
+de diagnóstico que chegava ao gestor**. Também explica por que o Score v2 (C1) não podia ser validado
+sobre a série atual.
+
+> **Ressalva honesta:** a comparação de CPA acima é agregada na janela inteira, não é o `phi_value`. O
+> score usa janela de 7 dias, pesos por modelo e outros componentes (MAS/TSS/FIS). A direção do erro está
+> demonstrada; **o efeito exato em cada `phi_value` diário só aparece quando os scores forem recalculados**
+> — o que é entrega do Score v2, não deste ADR.
+
+### 13.4 Backups feitos (etapa 4 ✅)
+
+| Tabela | Origem | Backup |
+|---|---|---|
+| `raw_campaign_data` → `raw_campaign_data_backup_2026_09_09` | 436 | **436** ✅ |
+| `phi_score_history` → `phi_score_history_backup_2026_09` | 234 | **234** ✅ |
+
+### 13.5 Duas correções ao plano do §6, para o passo destrutivo
+
+**(a) O `DELETE` deve ser restrito, não total.** O §6 diz "apagar e recarregar". Apagar a tabela inteira
+levaria junto as linhas de `CMP.CHA.CAMP-10` (CLI-13, Meta), que o backfill **não cobre** — não há export
+do Meta. O `DELETE` deve alcançar só o que será reposto:
+
+```sql
+DELETE FROM `phi_prod.raw_campaign_data`
+WHERE client_id = 'CLI-4'
+   OR campaign_id IN ('GADS-21116045403','GADS-21149189736','CMP.KIL.CAMP-7','CMP.KIL.CAMP-8');
+```
+
+(as linhas do writer das 04h têm `client_id` vazio, por isso a segunda condição). As linhas do CHA ficam
+intactas, com a identidade antiga, e viram pendência à parte.
+
+**(b) `conversions` precisa virar `FLOAT64` ANTES do INSERT.** A coluna é `INT64` hoje; inserir 27,98
+truncaria de novo — exatamente o defeito que o rebuild existe para corrigir. É o `D3` do ADR-37, já
+aprovado:
+
+```sql
+ALTER TABLE `phi_prod.raw_campaign_data` ALTER COLUMN conversions SET DATA TYPE FLOAT64;
+-- idem conversions_3d e conversions_7d
+```
+
+### 13.6 O que o backfill NÃO traz
+
+| Coluna | Fica | Por quê |
+|---|---|---|
+| `revenue` | **NULL** | o export não tem coluna de valor de conversão — **vazio, nunca 0** (I3) |
+| `cost_3d/7d`, `conversions_3d/7d` | NULL | o score recalcula por `SUM` (verificado em 09/09) |
+| `primary_metric_goal` | 3,50 / 5,20 | meta por campanha do Notion, **assumida constante** (§12.3) |
+
+---
+
 *Não duplique informação dentro de um campo: se a coluna `platform` já sabe, o `campaign_id` não precisa saber de novo.*
