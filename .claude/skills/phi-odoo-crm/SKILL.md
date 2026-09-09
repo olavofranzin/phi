@@ -44,8 +44,13 @@ pela atividade do vendedor é anti-pattern (ver `docs/comercial/prospecção/`).
 - **Marcador:** `gbp_score_atualizado_em` — **vazio = nunca diagnosticado (N/D)**;
   preenchido = os valores GBP são reais, **zeros inclusive**
 - **Scoring [IA]:** `gbp_potencial_comercial`, `gbp_oferta_recomendada`, `gbp_ipc`,
-  `gbp_score_tecnico`, 6 × `gbp_dim_*` (+ `_banda` computada), `gbp_nao_reivindicado`,
-  `gbp_site_tipo`, `gbp_flags_score`
+  `gbp_score_tecnico`, `gbp_nao_reivindicado`, `gbp_site_tipo`, `gbp_flags_score`
+- **As 6 dimensões [IA], nomes exatos** (é o que a integração escreve):
+  `gbp_dim_saude`, `gbp_dim_seo`, `gbp_dim_autoridade`, `gbp_dim_conversao`,
+  `gbp_dim_engajamento`, `gbp_dim_conteudo`
+- **As 6 bandas — NUNCA escreva:** `gbp_dim_<dim>_banda` é **computada e não
+  armazenada**. Escrever nela pela API dá erro. Ela sai sozinha do número
+  (forte ≥70 · médio 40–69 · fraco <40)
 - **O play [HUM]:** `proxima_acao_aceite` (`pendente`/`aceita`/`rejeitada`)
 - **Governança:** `lead_status`, `motivo_rejeicao_mql`, `data_primeiro_contato`,
   `tentativas_contato`, `proxima_acao_data`
