@@ -219,6 +219,27 @@ Os dois `ORDER BY CASE WHEN ingestion_step = 'DAILY_ENTRY'` conhecidos são inof
 empate), mas **vale varrer se existe algum `WHERE` filtrando por esse campo** antes de dar a Fase 0.3
 por concluída.
 
+### 🔴 Dois achados de 2026-09-09 (frente writers)
+
+**1. O score só via metade do que o sistema ingere.** `raw_campaign_data` recebe 2 linhas/dia por
+campanha, de writers com **identidades incompatíveis** (`client_id` vazio × `CLI-4`; `CMP.KIL.CAMP-7`
+× `GADS-21116045403`). Como os campos diferem, o `MERGE` **nunca casou** — nunca houve erro nem
+alerta. E o `INNER JOIN` com `client_config` **descarta 100%** das linhas do writer das 04h.
+Decisão **P-10 = Opção A** (padronizar em `GADS-` + `client_id`) — ver
+`docs/handoff/2026-09-09-decisao-P-10-identidade-canonica.md`.
+
+**2. ⚠️ Hipótese aberta — o Meta Ads pode nunca ter chegado ao score.** O writer que alimenta o score
+grava só `GADS-`; o score classifica com `STARTS_WITH(campaign_id, 'GADS-')`; e as linhas
+`platform = meta_ads` estão entre as descartadas. O PHI é documentado como "Google Ads **e** Meta
+Ads". **Se confirmar, é maior que o P-10 e vira o item nº 1 do projeto.** Teste no §3 do doc de
+decisão.
+
+### 📌 Limitação de produto registrada (2026-09-09)
+O SQL do score tem `WHEN primary_metric_type != 'CPA' THEN 'INSUFFICIENT_DATA'` —
+**o PHI·Mídia Score só suporta CPA.** Cliente com meta em ROAS sai `INSUFFICIENT_DATA`. Não estava
+declarado em lugar nenhum. Afeta o critério **C1** e precisa entrar no escopo do v1 **ou** ser
+explicitamente cortado.
+
 ### Lição registrada em 2026-09-08
 **Duas frentes estavam prontas e o chat-mãe não sabia.** A Prospecção (parque `PROSP-01..08`
 ativo havia semanas, com a doc descrevendo workflows já deletados) e o **F2 do Odoo** (módulo
