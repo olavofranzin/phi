@@ -6,7 +6,7 @@
 | **Substitui** | a "Opção A" do `2026-09-09-decisao-P-10-identidade-canonica.md` (prefixo `GADS-`/`META-`) |
 | **Fecha** | **P-10** do ADR-37 |
 | **Impacto** | `raw_campaign_data`, os 2 writers, o SQL do score, `phi_score_history` · critérios **C1** e **C2** |
-| **Data efetiva do corte** | ⬜ *a preencher no dia da execução* — decidido: **o dia da alteração** |
+| **Data efetiva do corte** | ⬜ **ainda não ocorreu.** Etapas 2 e 3 prontas em rascunho em 2026-09-09; o corte só acontece quando 2→6 rodarem no mesmo bloco (ver §10.2) |
 
 ---
 
@@ -266,6 +266,90 @@ não só o SQL do score. É trabalho de dado, não de código, e precisa acontec
 O `Code Clean Campanhas F3` já lê `clean_client_id: extractRichText(props['client_id']?.rich_text)`.
 Isso **confirma** a correção proposta em §9.1: o campo existe na DB Campanhas e um workflow já o
 consome. O writer das 04h só não o extrai.
+
+---
+
+## 10. Estado da execução em 2026-09-09 — etapas 2 e 3 **em rascunho**, produção intacta
+
+### 10.1 O que foi alterado (n8n, **não publicado**)
+
+| Workflow | Nó | Mudança |
+|---|---|---|
+| `sw metricas campanhas` (`W571K320aqIHsdtH`) | `Code Montar SQL` | lê `client_id` da página do Notion via `Loop Over Items`; `campaign_id` vira o **ID nativo**; chave do `MERGE` ganha `platform` |
+| `PHI - Subworkflow Campanhas` (`b1pbn8qmzCNTufTp`) | `Code in JavaScript` + `Execute SQL  INSERT raw_campaign_data` | tira o prefixo `GADS-`/`META-`, passa a gravar **`platform`**, chave do `MERGE` ganha `platform` |
+| `PHI - Pipeline_v2` (`ITWG3Ge0asXtUM8U`) | `Calcular e Persistir PHI Score` | dedup e `GROUP BY` por `(client_id, platform, campaign_id, date)`; `plataforma` deixa de vir do `STARTS_WITH` e passa a vir da coluna `platform` |
+
+> **Nenhum foi publicado.** `versionId != activeVersionId` nos três — a versão que roda às 04h/07h
+> continua sendo a antiga. **Produção não foi tocada.**
+
+### 10.2 🔴 Por que parei antes de publicar — a ordem tem uma janela perigosa
+
+Cheguei a atualizar o `campaign_id` das duas campanhas KIL no Notion para o ID nativo e **revertí em
+seguida**, ao perceber o seguinte:
+
+**Publicar (ou mudar o Notion) sem fazer o rebuild no mesmo bloco cria inconsistência garantida:**
+
+| Se eu... | O que acontece |
+|---|---|
+| mudar só o **Notion**, com os workflows em rascunho | a produção grava `GADS-…` e o `Code Clean Campanhas F3` lê o ID nativo → **o match quebra hoje** |
+| publicar só os **workflows**, sem o Notion | as linhas novas nascem com o ID nativo e o F3 lê `GADS-…` → **o match quebra amanhã** |
+| publicar **tudo** e não rebuildar até as 04h | a tabela fica com as duas identidades: a série de 7 dias da identidade nova terá **1 dia só**, e o score de amanhã sai com `cost_7d` de um dia — **errado, e em silêncio** |
+
+**Conclusão:** as etapas **2, 3, 4, 5 e 6 formam um bloco atômico** e precisam acontecer na mesma
+janela. O ADR já dizia isso ("a data do corte é o dia da alteração"); a execução deixou claro que a
+consequência de quebrar o bloco é **score errado sem erro visível**.
+
+O estado atual — workflows em rascunho, Notion no formato antigo — é **consistente e seguro**. O
+pipeline de amanhã roda exatamente como hoje.
+
+### 10.3 ✅ P-12 resolvido — quem é `CMP.CHA.CAMP-10`
+
+| Campo | Valor |
+|---|---|
+| Campanha | `[CHA] IG_MENS__PROD.TESTE__` |
+| `client_id` | **`CLI-13`** |
+| Plataforma | **Meta Ads** |
+| `id_meta_camp` | `120223097083780450` |
+| `campaign_id` no Notion | **vazio** |
+
+É uma campanha de teste do Meta. **`CLI-13` não existe em `client_config`** (que só tem `CLI-4` e
+`CLI-5`), então ela seria descartada pelo `INNER JOIN` de qualquer forma — coerente com o **gate do
+Meta**, que segue valendo. Não foi alterada.
+
+### 10.4 🟡 Risco novo — precisão do `id_meta_camp`
+
+`120223097083780450` é **maior que 2^53** (o limite de inteiro exato em JavaScript e no tipo *number*
+do Notion). Isso significa que o ID do Meta **pode já estar armazenado com perda de precisão** no
+próprio Notion, antes de qualquer código nosso.
+
+Não afeta o Google (`21149189736` está muito abaixo do limite) e não bloqueia este ADR, porque o Meta
+está no gate. **Mas precisa ser resolvido antes da primeira campanha Meta real** — provavelmente
+mudando `id_meta_camp` para um campo de **texto** no Notion.
+
+### 10.5 O inventário das campanhas ativas (fonte para o corte)
+
+| Campanha | `client_id` | `campaign_id` hoje | Alvo |
+|---|---|---|---|
+| KIL Salão | `CLI-4` | `GADS-21116045403` | `21116045403` |
+| KIL Barbearia | `CLI-4` | `GADS-21149189736` | `21149189736` |
+| CHA (teste Meta) | `CLI-13` | *(vazio)* | fora do escopo — gate do Meta |
+
+**São 2 páginas a atualizar no Notion.** As 4 campanhas `Concluído` têm `campaign_id` vazio e não
+entram (o writer filtra `Status = 'Em execução'`).
+
+### 10.6 O que falta para fechar o bloco
+
+| # | Falta | Observação |
+|---|---|---|
+| 4 | Backup de `raw_campaign_data` | antes de qualquer `DELETE` |
+| 5 | `UPDATE` em `phi_score_history` tirando o prefixo | |
+| 6 | **Puxar o relatório e recarregar** | é a etapa que eu ainda não sei executar sozinho — ver abaixo |
+| — | Publicar os 3 workflows + atualizar as 2 páginas do Notion | **no mesmo bloco da 6** |
+
+> ⚠️ **Ponto que precisa de decisão do Olavo antes da etapa 6:** de onde vem o relatório de janeiro
+> até D-1. Pela API do Google Ads (GAQL com `segments.date`, usando a credencial que já existe) ou de
+> um export manual? A API é reprodutível e não depende de arquivo, mas puxar ~8 meses × 2 campanhas
+> exige paginação e é a primeira vez que este pipeline faria uma carga histórica.
 
 ---
 
