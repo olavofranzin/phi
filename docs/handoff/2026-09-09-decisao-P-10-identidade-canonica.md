@@ -10,7 +10,15 @@
 
 ---
 
-## 1. DECISÃO: **Opção A** — `GADS-<id>` + `client_id` preenchido
+> 🔴 **SUPERSEDIDO EM 2026-09-09 PELO `ADR-38`.** O Olavo apontou o defeito da Opção A: o prefixo
+> (`GADS-`/`META-`) **duplica** o que a coluna `platform` já diz, e obriga a reescrever código a cada
+> plataforma nova (TikTok, etc.). A decisão final é **identidade neutra de plataforma** — `campaign_id`
+> nativo sem prefixo + chave `(client_id, platform, campaign_id, date)` — com **rebuild da série
+> histórica** a partir de relatório oficial. Ver
+> `docs/strategic-planning/saude-digital/adr-rascunhos/ADR-38-identidade-neutra-e-rebuild-serie-historica.md`.
+> **O §3 (gate do Meta) e o §5 (score só suporta CPA) deste documento continuam válidos.**
+
+## 1. ~~DECISÃO: **Opção A** — `GADS-<id>` + `client_id` preenchido~~ (superada — ver acima)
 
 Corrigir o `sw metricas campanhas` (`W571K320aqIHsdtH`) para gravar `client_id` preenchido e
 `campaign_id` no formato `GADS-<id>`, alinhando-o ao que o resto do sistema já usa.

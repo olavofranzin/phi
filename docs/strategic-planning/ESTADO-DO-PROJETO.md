@@ -219,6 +219,22 @@ Os dois `ORDER BY CASE WHEN ingestion_step = 'DAILY_ENTRY'` conhecidos são inof
 empate), mas **vale varrer se existe algum `WHERE` filtrando por esse campo** antes de dar a Fase 0.3
 por concluída.
 
+### 🎯 ADR-38 (2026-09-09) — identidade neutra + rebuild da série histórica
+
+O P-10 foi fechado, mas **não pela minha recomendação**: o Olavo apontou que o prefixo
+(`GADS-`/`META-`) duplica o que a coluna `platform` já diz e obriga a reescrever código a cada
+plataforma nova. **Decisão: `campaign_id` nativo sem prefixo, chave
+`(client_id, platform, campaign_id, date)`.** Plataforma nova = um valor novo em `platform`.
+
+E o Olavo **autorizou apagar e recarregar** `raw_campaign_data` a partir de relatório oficial
+(janeiro → data do corte). **Isso vale mais que a troca de identidade:** preenche os dias perdidos na
+queda de credencial, traz as conversões **já assentadas** (fecha a dúvida do subcount 321 × 481) e
+entrega ao **Score v2 a série limpa que ele precisa** — pode destravar o **C1** antes mesmo da
+consolidação dos writers terminar.
+
+⚠️ **Não executar fora de ordem** — a sequência obrigatória está no ADR-38 §6. Em especial: os
+writers têm de emitir a identidade nova **antes** da carga, e há **backup antes de apagar**.
+
 ### 🔴 Dois achados de 2026-09-09 (frente writers)
 
 **1. O score só via metade do que o sistema ingere.** `raw_campaign_data` recebe 2 linhas/dia por
