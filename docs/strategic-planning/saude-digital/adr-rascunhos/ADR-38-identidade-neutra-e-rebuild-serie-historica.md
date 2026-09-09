@@ -583,3 +583,98 @@ ALTER TABLE `phi_prod.raw_campaign_data` ALTER COLUMN conversions SET DATA TYPE 
 ---
 
 *Não duplique informação dentro de um campo: se a coluna `platform` já sabe, o `campaign_id` não precisa saber de novo.*
+
+---
+
+# §14 — Corte executado (2026-09-09) — ADR-38 CONCLUÍDO
+
+Olavo autorizou o bloco irreversível e, sobre a ressalva do §13.5, decidiu:
+**`DELETE` irrestrito** — as linhas do CLI-13 (CHA / Meta Ads) eram apenas teste
+de caminho para uma campanha Meta, não pertencem a cliente real e não há campanha
+ativa. A ressalva (a) do §13.5 fica assim **resolvida por decisão, não por técnica**.
+
+## 14.1 O que foi executado (execução n8n 37296, workflow temporário já arquivado)
+
+| # | Ação | Resultado |
+|---|---|---|
+| 1 | `ALTER TABLE phi_prod.raw_campaign_data ALTER COLUMN conversions SET DATA TYPE FLOAT64` | ok |
+| 2 | `DELETE FROM phi_prod.raw_campaign_data WHERE TRUE` | 436 linhas removidas |
+| 3 | `INSERT` das 463 linhas da staging | ok |
+| 4 | `UPDATE phi_score_history SET campaign_id = SUBSTR(campaign_id, 6) WHERE STARTS_WITH(campaign_id,'GADS-')` | 233 linhas |
+
+**Correção ao §13.5 (b):** só `conversions` era `INT64`. `conversions_3d` e
+`conversions_7d` **já eram `FLOAT64`** — o `ALTER` foi de uma coluna, não de três.
+
+## 14.2 Conferência pós-corte
+
+| | Salão `21116045403` | Barbearia `21149189736` |
+|---|---|---|
+| linhas | 215 | 248 |
+| chaves únicas `(client_id, platform, campaign_id, date)` | **215** | **248** |
+| período | 01/01 → 08/09 | 01/01 → 08/09 |
+| conversões | 2 585,92 | 117,00 |
+| custo | 6 756,85 | 953,24 |
+| `platform` | `google_ads` | `google_ads` |
+| `ingestion_status` | `SUCCESS` | `SUCCESS` |
+| `primary_metric_goal` | 3,50 | 5,20 |
+| `phi_score_history` | 116 linhas | 117 linhas |
+
+Chaves únicas = linhas: **zero duplicata**. Janela de 7 dias do score:
+Salão 54,97 conv / R$ 223,12; Barbearia 2,00 conv / R$ 19,02 — o valor fracionário
+prova que o `FLOAT64` está valendo. A linha de teste `TEST-INSUFFICIENT-A02`
+ficou intacta.
+
+## 14.3 🔴 Achado no smoke — o rebuild se desfaria amanhã de manhã
+
+Depois de publicar os três workflows, a conferência dos writers mostrou que
+**os dois ainda truncavam `conversions`**:
+
+| Workflow | Onde | O quê |
+|---|---|---|
+| `sw metricas campanhas` (04h) | `Code Montar SQL` | `intNum()` = `Math.round`, e `CAST(... AS INT64)` em `conversions`, `conversions_3d`, `conversions_7d` |
+| `PHI - Subworkflow Campanhas` (07h) | `Code transformar retorno Google Ads` | `parseInt(metrics.conversions)` |
+
+Sem essa correção, a primeira rodada de 04h/07h de 10/09 gravaria de novo o valor
+truncado — **o rebuild teria durado uma noite**. É o `D3` do ADR-37, já aprovado;
+aplicado agora nos dois writers e publicado. `clicks` e `impressions` seguem
+inteiros, que é o que de fato são.
+
+> **Lição, no espírito da R6:** o corte no dado não basta se o writer que o
+> alimenta continua com o defeito. **Migração de dado sem correção do produtor é
+> conserto com prazo de validade.**
+
+## 14.4 Estado final
+
+- **BigQuery:** identidade neutra em `raw_campaign_data` e `phi_score_history`.
+- **n8n publicados:** `sw metricas campanhas` (`a873bd69`), `PHI - Subworkflow
+  Campanhas` (`a7f555c7`), `PHI - Pipeline_v2` (`99faea77`). Descrições atualizadas (R5).
+- **Notion:** as 2 páginas de Campanha com `campaign_id` nativo
+  (`21116045403`, `21149189736`).
+- **Backups intactos:** `raw_campaign_data_backup_2026_09_09` (436),
+  `phi_score_history_backup_2026_09` (234).
+
+## 14.5 O teste que ainda falta
+
+O smoke de verdade — **os dois writers colidindo no mesmo `MERGE`** — só acontece
+na rodada natural de **10/09 às 04h e 07h BRT**. Não rodei os pipelines à mão
+porque a Fase 3 tem efeito colateral no Notion (fechamento/escalada/abertura de
+tarefas) e a Regra Crítica nº 11 torna a ordem imutável. **Verificação de amanhã:**
+
+```sql
+SELECT client_id, platform, campaign_id, COUNT(*) AS linhas
+FROM phi_prod.raw_campaign_data
+WHERE date = CURRENT_DATE('America/Sao_Paulo') - 1
+GROUP BY 1,2,3;
+-- esperado: 1 linha por campanha (e nao 2), com conversions fracionaria
+```
+
+## 14.6 Pendências que este ADR deixa abertas
+
+| # | Pendência | Por que importa |
+|---|---|---|
+| P-13 | `phi_score_history` **não tem coluna `platform`** — a chave do MERGE é `(client_id, campaign_id, calculated_date)`, de 3 partes, não as 4 do ADR-38 | Hoje inofensivo (IDs nativos não colidem entre plataformas), mas a identidade não é a mesma nas duas tabelas |
+| P-14 | O pipeline **não avisa quando a credencial cai** — só para de gravar | É a causa comprovada dos 42 e 46 dias faltando. Maior que este ADR |
+| P-15 | `id_meta_camp` (`120223097083780450`) excede 2^53 e o campo do Notion é **número** | Pode já estar impreciso. Virar texto antes da primeira campanha Meta real |
+| P-16 | `client_goal_history` é **por cliente**, mas a meta é **por campanha** (3,50 Salão vs 5,20 Barbearia) | O §4 deste ADR mandava usar essa tabela; seguir teria gravado 3,0 em ~190 dias |
+| P-17 | `revenue` fica `NULL` na série reconstruída | O export oficial não traz coluna de valor de conversão |
+| P-18 | O repositório é **público** e contém dado de cliente (nome, custos diários, IDs de campanha e conta) | Decisão do Olavo, registrada |
