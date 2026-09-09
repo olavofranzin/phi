@@ -15,6 +15,23 @@ O `docker-compose.yml` deste repositório monta `docs/comercial/odoo/addons` em
 1. Modo Desenvolvedor → **Apps** → *Atualizar Lista de Apps*
 2. Buscar **"PHI CRM"** → **Instalar**
 
+## `gbp_place_id` — a chave do lead
+
+Chave externa vinda do Google Maps, com **índice** e **restrição de unicidade no
+banco**. É por ela que o pipeline PHI (F3) encontra o lead para atualizar.
+
+**Nome nunca é chave** (invariante I4). Foi a busca por nome+telefone que gerou
+os deals duplicados no HubSpot e obrigou a construir um deduplicador. Aqui quem
+impede a repetição é o banco, não o workflow.
+
+`copy=False`: duplicar um lead na tela não arrasta o `place_id` junto.
+
+Lead criado à mão fica com o campo vazio — a `UNIQUE` do Postgres aceita vários
+`NULL`, então eles convivem sem conflito. **O teste 9 abaixo prova isso na
+instância**, porque não confirmei se o Odoo grava vazio como `NULL` ou como
+string vazia; se for string vazia, dois leads em branco colidiriam e aí o campo
+precisa de normalização.
+
 ## ⚠️ Mudou Python? Reinicie o container ANTES de atualizar
 
 O processo do Odoo importa os arquivos `.py` no boot e os mantém em memória. O
@@ -120,6 +137,8 @@ Validado na instância `crm.franzcomunicacao.com`, Odoo 19.0-20260817:
 | 6 | NBA–Aceite nasce "Pendente" e é editável | ✅ |
 | 7 | **N/D honesto**: card escondido sem diagnóstico; com data preenchida o **0 aparece como 0** | ✅ |
 | 8 | **Bandas**: 80 verde · 50 âmbar · 20 vermelho, número sempre visível | ✅ |
+| 9 | **`place_id` único**: dois leads com o mesmo Place ID → o 2º é **recusado pelo banco** | ⏳ |
+| 9b | **`place_id` vazio**: dois leads com o campo em branco → ambos salvam | ⏳ |
 
 O teste 7 é o caso Niti: `dim_engajamento = 0` é achado crítico, não ausência de
 dado — e continua legível. O teste 8 confirmou que `widget="badge"` só serve em

@@ -39,6 +39,7 @@
                   Em producao quem escreve aqui e o pipeline PHI (F3).
                 -->
                 <group name="phi_gbp_marcador">
+                    <field name="gbp_place_id"/>
                     <field name="gbp_score_atualizado_em"/>
                 </group>
 

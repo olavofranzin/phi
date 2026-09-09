@@ -20,6 +20,35 @@ class CrmLead(models.Model):
     _inherit = "crm.lead"
 
     # ------------------------------------------------------------------
+    # 0. Chave externa — a identidade do lead para o pipeline PHI
+    # ------------------------------------------------------------------
+    # I4 (CONTRATO-PROSPECCAO): a chave e o place_id. NOME NUNCA E CHAVE.
+    # Foi a busca por nome+telefone que gerou os deals duplicados no HubSpot e
+    # obrigou a construir um deduplicador. Aqui o banco impede a repeticao.
+    #
+    # `copy=False`: duplicar um lead na tela nao pode arrastar o place_id junto —
+    # a copia bateria na restricao e, pior, duas linhas disputariam a mesma chave.
+    #
+    # Nota sobre vazio: a restricao UNIQUE do Postgres aceita varios NULL, entao
+    # leads sem place_id (criados na mao) convivem sem conflito. Se o Odoo gravar
+    # string vazia em vez de NULL, dois leads em branco colidiriam — e o teste 9
+    # do README existe exatamente para provar isso na instancia.
+    gbp_place_id = fields.Char(
+        string="Place ID (Google)",
+        index=True,
+        copy=False,
+        help="[IA] Chave estavel do lead, vinda do Google Maps. E por ela que o "
+             "pipeline PHI encontra o lead para atualizar, em vez de procurar "
+             "pelo nome. Deixe vazio em lead criado a mao.",
+    )
+
+    _gbp_place_id_unico = models.Constraint(
+        "UNIQUE(gbp_place_id)",
+        "Ja existe um lead com este Place ID. A chave do lead e o place_id — "
+        "o mesmo perfil do Google nao pode virar dois leads.",
+    )
+
+    # ------------------------------------------------------------------
     # 1. Governanca do ciclo
     # ------------------------------------------------------------------
     # O "lifecycle" NAO vira campo: no Odoo ele E o estagio (stage_id).
