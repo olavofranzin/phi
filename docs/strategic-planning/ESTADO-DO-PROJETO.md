@@ -83,8 +83,13 @@ suspensas; nada foi executado.** Sobrevive só o `Math.round` vs `parseInt`, ago
 'INSUFFICIENT_DATA'` — **o score só suporta CPA**. Se o `client_config` do KIL virasse `ROAS` (como está
 hoje no `phi_dev`), o score sairia como `INSUFFICIENT_DATA`. A ordem obrigatória da Fase 3 está certa.
 
-**A decisão que falta (P-10)** não é mais "qual writer fica", e sim **qual identidade é a verdadeira**:
-`GADS-<id>` (o que score, `client_config` e Notion já usam — recomendado) ou `CMP.<SLUG>.CAMP-N`.
+**A decisão que falta (P-10)** não é mais "qual writer fica", e sim **qual identidade é a verdadeira**.
+📄 **Brief de decisão para o chat-mãe:**
+`docs/handoff/2026-09-09-identidade-canonica-raw-campaign-data-brief-decisao.md` — três opções com prós,
+contras e custo estimado, o que não foi verificado, e o encaminhamento. **Recomendação: `GADS-<id>`**, a
+menor mudança reversível e a que score, `client_config` e Notion já usam.
+
+**A Fase 3 (`client_config`) não depende do P-10 e pode andar já**, na ordem obrigatória 3.1 → 3.2.
 
 ### ✅ 2026-09-08 (fim do dia) — ADR-37 aceito e Fase 0.1 aplicada em produção
 
