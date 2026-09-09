@@ -122,7 +122,7 @@ Um relatório de campanha traz métricas. **Não traz** o resto da linha:
 
 | # | Etapa | Por quê |
 |---|---|---|
-| 1 | **P-11** — descobrir por que o `client_id` sai vazio | pode mudar o custo de tudo |
+| 1 | **P-11** — descobrir por que o `client_id` sai vazio | ✅ **RESOLVIDO 2026-09-09 — ver §9. Mudou o custo: o `client_id` nunca foi extraído do Notion** |
 | 2 | Ajustar **os dois writers** para a identidade nova (`campaign_id` nativo + `platform` + `client_id`) | senão a carga é repoluída no dia seguinte |
 | 3 | Ajustar **os consumidores**: `MERGE` por `(client_id, platform, campaign_id, date)` e remover o `STARTS_WITH` do score | senão o score não acha nada |
 | 4 | **Backup** de `raw_campaign_data` | irreversível |
@@ -152,6 +152,69 @@ Um relatório de campanha traz métricas. **Não traz** o resto da linha:
 - **Meta Ads:** o **gate** continua valendo. Com a identidade neutra ele fica **mais fácil** de
   atender (não há prefixo a inventar), mas o consumidor ainda precisa aprender a pontuar Meta.
 - **ADR-33** segue em aberto (identidade estável × campanha recriada).
+
+---
+
+## 9. ✅ Etapa 1 — P-11 resolvido (2026-09-09)
+
+Leitura nó a nó do `sw metricas campanhas` (`W571K320aqIHsdtH`, 38 nós). **Somente leitura, nada alterado.**
+
+### 9.1 Por que o `client_id` sai vazio — três elos, e o terceiro é o que importa
+
+| # | Elo | O que acontece |
+|---|---|---|
+| 1 | `Code Clean Campanhas` extrai do Notion `properties['client_slug']` e publica como **`clean_client_slug`** | ✔ funciona |
+| 2 | `Code prepara contexto para observação` lê **`data.clean_sigla_cliente`** — **nome que não existe** | ✗ `sigla_cliente` vira `undefined` |
+| 3 | `Code Montar SQL` tenta 5 fontes e cai no fallback `''` | ✗ grava vazio |
+
+```js
+// Code Montar SQL — as 5 tentativas, todas falham hoje
+const clientId = context.raw_notion_data?.clean_client_id   // 'raw_notion_data' não existe no contexto
+  || context.raw_notion_data?.clean_sigla_cliente           // idem
+  || context.sigla_cliente                                  // undefined (elo 2)
+  || calculated.client_id || input.client_id || '';         // não existem
+```
+
+> 🔴 **Corrigir o nome do campo NÃO resolve.** Se os três elos batessem, o valor gravado seria **`KIL`** —
+> o **`client_slug`**, não o **`client_id` (`CLI-4`)**. São campos diferentes (**Regra Crítica nº 4**), e o
+> `INNER JOIN client_config ON client_id` continuaria descartando as linhas.
+>
+> **O normalizador nunca extraiu o `client_id`.** Ele só extrai `client_slug`.
+
+**A correção real:** o campo **`client_id` existe no DB Campanhas do Notion** — o outro writer já o lê
+(`props['client_id']?.rich_text?.[0]?.plain_text` no `PHI - Subworkflow Campanhas`). Basta o
+`Code Clean Campanhas` passar a extraí-lo também, e o contexto propagá-lo com o nome certo.
+**Alternativa** (se algum dia faltar no Notion): resolver `client_slug → client_id` pelo `client_config`.
+
+### 9.2 Achado extra — o `campaign_id` errado tem a mesma causa: referência ao nó errado
+
+```js
+const campaignId = calculated.bq_campaign_id   // 'calculated' = Code Cálcula Métricas → NÃO tem esse campo
+  || context.campaign_id                       // = clean_id_campanha → 'CMP.KIL.CAMP-7'  ← é este que vence
+  || (googleId ? `GADS-${googleId}` : ...);    // nunca alcançado
+```
+
+Quem define `bq_campaign_id` é o **`Code Prep Tendência`** (`bq_campaign_id = 'GADS-' + idG`), **não** o
+`Code Cálcula Métricas` que o `Code Montar SQL` consulta. Ou seja: **o workflow já sabia produzir o ID da
+plataforma e lia do nó errado.** Por isso venceu o `CMP.KIL.CAMP-7`, que é o campo *ID da campanha* do
+Notion.
+
+### 9.3 O que isso muda no custo da Etapa 2
+
+| Item | Situação | Custo |
+|---|---|---|
+| `platform` | ✅ **já é gravado** corretamente (`google_ads`), com fallback por plataforma | **zero** |
+| `campaign_id` nativo | o ID está disponível (`clean_id_google`); basta usá-lo **sem prefixo** | **baixo** |
+| `client_id` | ⚠️ **não é extraído do Notion** — exige mexer no normalizador, não só no `Code Montar SQL` | **médio** |
+| `conversions` | usa `Math.round` (`intNum`) — some no rebuild | — |
+
+> A Etapa 2 é **menor do que parecia** para `campaign_id`/`platform` e **maior** para `client_id`: são
+> **dois nós** a alterar no writer das 04h (`Code Clean Campanhas` + `Code prepara contexto`), além do
+> `Code Montar SQL`.
+
+### 9.4 Verificado de passagem
+O `MERGE` deste writer casa por `ON client_id AND campaign_id AND date` — **a mesma chave** do outro
+writer. Confirma que, com a identidade unificada, os dois **passam a colidir** (teste da etapa 7).
 
 ---
 
