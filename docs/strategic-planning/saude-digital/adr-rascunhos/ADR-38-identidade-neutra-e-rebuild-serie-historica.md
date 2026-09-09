@@ -411,4 +411,81 @@ torna isso perigoso. **Fica como proposta, não aplicada** — o §6 segue valen
 
 ---
 
+## 12. Diagnóstico pré-carga (2026-09-09, execução **37280**) — credencial OK e três achados
+
+Credencial reconectada pelo Olavo e **confirmada funcionando**. Workflow temporário de leitura já
+arquivado.
+
+### 12.1 A série NÃO começa em janeiro — começa em **março de 2026**, e tem 67 dias de buraco
+
+| Mês | Dias com dado | Dias no mês | Faltam |
+|---|---|---|---|
+| 2026-03 | 7 | 31 | **24** |
+| 2026-04 | 14 | 30 | **16** |
+| 2026-05 | 20 | 31 | **11** |
+| 2026-06 | 23 | 30 | **7** |
+| 2026-07 | 22 | 31 | **9** |
+| 2026-08 | 31 | 31 | 0 ✅ |
+| 2026-09 | 8 | 8 | 0 ✅ |
+
+**67 dias faltando**, todos entre março e julho. Agosto e setembro estão completos.
+
+> O §3 e o §6 falam em recarregar "**de janeiro** até a data do corte". **Não existe dado de janeiro
+> nem de fevereiro** — a ingestão começou em **2026-03**. O período do relatório deve ser
+> **2026-03-01 → 2026-09-08**, salvo se o Olavo quiser puxar antes disso (as campanhas existem desde
+> **2024-03-22**, segundo o Notion).
+
+### 12.2 A duplicação começou em **junho/2026**
+
+A contagem de `campaign_id` distintos por mês salta de **2** (março–maio) para **5** (junho em diante).
+Os 5 são exatamente as duas identidades convivendo: `GADS-21116045403`, `GADS-21149189736`,
+`CMP.KIL.CAMP-7`, `CMP.KIL.CAMP-8` e `CMP.CHA.CAMP-10`.
+
+**Ou seja: o writer das 04h passou a gravar em junho/2026.** Antes disso só existia o `GADS_INSERT`.
+Isso data o início da sobreposição S1 com precisão.
+
+### 12.3 🔴 A instrução do §4 sobre `primary_metric_goal` está errada
+
+O §4 manda buscar a meta em **`client_goal_history`**, "a meta vigente em cada data". A tabela tem:
+
+| client_id | goal_value | valid_from | valid_until |
+|---|---|---|---|
+| `CLI-4` | **3.0** | 2026-03-05 | *(null)* |
+| `CLI-5` | 3.0 | 2026-03-05 | *(null)* |
+
+**Dois problemas:**
+
+1. **A meta ali é por CLIENTE, não por campanha.** Mas as duas campanhas do CLI-4 têm metas
+   **diferentes**: Salão **3,50** e Barbearia **5,20** (Notion, e confirmado no `CLAUDE.md`). Uma
+   tabela por cliente **não consegue** representar isso.
+2. **O valor não bate com nenhuma das duas** — `client_goal_history` diz `3.0`.
+
+**Como o pipeline realmente faz hoje:** a fonte primária é o campo **`Meta da Métrica-mãe` do Notion,
+por campanha**; o `client_goal_history` é apenas **fallback** quando aquele vem nulo (é o que o nó
+`If primary_metric_goal` do `PHI - Subworkflow Campanhas` faz).
+
+> **Se o backfill seguisse o §4 ao pé da letra, gravaria `3.0` para as duas campanhas** — sobrescrevendo
+> as metas reais em ~190 dias de série e alterando o score histórico. (**R6** — registro em vez de
+> executar.)
+
+**Proposta para a etapa 6:** usar a **meta por campanha do Notion** (3,50 Salão / 5,20 Barbearia) para
+todo o período recarregado, e **assumir explicitamente** que ela foi constante — porque **não existe
+histórico de meta por campanha** em lugar nenhum. Se a meta mudou em algum momento, essa informação
+**está perdida** e o backfill vai achatá-la. É uma perda conhecida e aceita, não um detalhe.
+
+**Pendência derivada (sem dono):** `client_goal_history` é por cliente e o negócio é por campanha. Ou a
+tabela ganha `campaign_id`, ou ela deixa de ser a fonte de meta e vira só histórico de referência.
+
+### 12.4 `phi_score_history` — extensão atual
+
+| campaign_id | linhas | de | até |
+|---|---|---|---|
+| `GADS-21116045403` | 116 | 2026-03-29 | 2026-09-08 |
+| `GADS-21149189736` | 117 | 2026-03-27 | 2026-09-08 |
+| `TEST-INSUFFICIENT-A02` | 1 | 2000-01-01 | 2000-01-01 |
+
+São **233 linhas reais** a migrar na etapa 5 (mais uma linha de teste, que pode ser descartada).
+
+---
+
 *Não duplique informação dentro de um campo: se a coluna `platform` já sabe, o `campaign_id` não precisa saber de novo.*
