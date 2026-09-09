@@ -228,11 +228,17 @@ alerta. E o `INNER JOIN` com `client_config` **descarta 100%** das linhas do wri
 Decisão **P-10 = Opção A** (padronizar em `GADS-` + `client_id`) — ver
 `docs/handoff/2026-09-09-decisao-P-10-identidade-canonica.md`.
 
-**2. ⚠️ Hipótese aberta — o Meta Ads pode nunca ter chegado ao score.** O writer que alimenta o score
-grava só `GADS-`; o score classifica com `STARTS_WITH(campaign_id, 'GADS-')`; e as linhas
-`platform = meta_ads` estão entre as descartadas. O PHI é documentado como "Google Ads **e** Meta
-Ads". **Se confirmar, é maior que o P-10 e vira o item nº 1 do projeto.** Teste no §3 do doc de
-decisão.
+**2. ✅ Meta Ads — hipótese respondida, virou GATE.** Levantei que nenhuma campanha Meta teria
+chegado ao score. **Olavo confirmou que `CHA` é dado de configuração de campanha antiga e que nunca
+houve campanha Meta ativa** — logo, **nada se perdeu**. Mas a lacuna é real e latente:
+
+> 🚧 **GATE — antes de subir a primeira campanha Meta ativa, o score precisa suportá-la.**
+> Hoje ela seria **descartada em silêncio** (o writer do score grava só `GADS-`; a classificação usa
+> `STARTS_WITH(campaign_id, 'GADS-')`). Registrado como **gate condicional**, não tarefa de backlog —
+> tarefa sem data apodrece; gate dispara sozinho quando a condição acontece.
+
+Consequência imediata: a **Opção A do P-10 passa a usar prefixo por plataforma**
+(`GADS-` / `META-`) — escrever `GADS-` numa linha de Meta seria gravar uma mentira.
 
 ### 📌 Limitação de produto registrada (2026-09-09)
 O SQL do score tem `WHEN primary_metric_type != 'CPA' THEN 'INSUFFICIENT_DATA'` —

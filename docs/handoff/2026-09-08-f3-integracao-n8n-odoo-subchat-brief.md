@@ -76,8 +76,14 @@ Código em `docs/comercial/odoo/addons/phi_crm/`.
   `tentativas_contato`, `proxima_acao_data`, **`proxima_acao_aceite`** (o "play" do humano).
 
 **API:** o Odoo usa **XML-RPC / JSON-RPC** (não é REST como o HubSpot). É trabalho de integração
-real — consultar a documentação oficial do Odoo 19 (Context7 `/odoo/odoo`, branch 19.0) e
-**validar contra a fonte, não chutar**.
+real — **validar contra a fonte, não chutar**.
+
+> ✅ **Use as skills dedicadas (existem e são canônicas para isto):**
+> - **`phi-odoo-crm`** — o contrato do `phi_crm`: os 34 campos **com o dono de cada um**, os 6
+>   estágios e os guardrails do PHI. **É a fonte para decidir quem pode escrever em cada campo** e
+>   para interpretar valor vazio/zero num campo GBP. Leia antes de escrever a integração.
+> - **`odoo-19-dev`** — ORM, campos, constraints, views e o que mudou no Odoo 19.
+> - Context7 (`/odoo/odoo`, branch 19.0) fica como complemento.
 
 ## 5. Ordem de execução sugerida
 

@@ -53,39 +53,48 @@ o dataset (o score só suporta `CPA`; `ROAS` sai `INSUFFICIENT_DATA`).
 
 ---
 
-## 3. 🔴 O que me preocupou mais que a pergunta — investigar antes da A
+## 3. ✅ Meta Ads — hipótese RESPONDIDA pelo Olavo (2026-09-09)
 
-O `CMP.CHA.CAMP-10` é `platform = meta_ads`. Some isso a três fatos do seu próprio brief:
+Eu havia levantado que **nenhuma campanha de Meta Ads jamais chegou ao score**, e que isso poderia
+ser maior que o P-10. **Resposta do Olavo:**
 
-- o writer das 07h (`GADS_INSERT`) grava **só** `GADS-` → **só Google Ads**;
-- o `INNER JOIN` descarta **100%** das linhas das 04h;
-- o score classifica com `STARTS_WITH(campaign_id, 'GADS-')`.
+> `CHA` é **cliente real**, mas os dados são de uma **campanha antiga da Meta**, usados para
+> **configurar corretamente os nós** que puxavam dados de lá. **Na época não havia campanha Meta
+> ativa — só Google.**
 
-**Hipótese (não verificada): nenhuma campanha de Meta Ads jamais chegou ao score.** O PHI é
-documentado como "Google Ads **e** Meta Ads" — se a hipótese se confirmar, **metade do produto está
-no escuro**, e isso é maior que o P-10.
+**Desfecho: não é bug ativo. É uma lacuna latente, com gatilho.**
 
-**Teste barato, faça antes de aplicar a A:**
-```sql
-SELECT platform, COUNT(*) FROM `phi_prod.phi_score_history` GROUP BY 1;
--- e:
-SELECT DISTINCT client_id, campaign_id, platform
-FROM `phi_prod.raw_campaign_data`
-WHERE platform != 'google_ads' AND date >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY);
-```
+| | |
+|---|---|
+| **Hoje** | ✅ nada se perde — não há campanha Meta ativa para pontuar |
+| **No dia em que houver** | 🔴 a campanha seria **descartada em silêncio** pelo score |
+| **Classificação** | **Gate condicional**, não tarefa de backlog |
 
-**Três desfechos, três encaminhamentos:**
-- **Meta nunca entrou em produção** → alívio, registre e siga a A.
-- **Existe cliente Meta ativo e o score nunca o viu** → **para tudo**: vira o item nº 1 do projeto,
-  na frente do P-10.
-- **`CHA` é lixo/teste** → limpar e registrar (P-12 fechada).
+### 🚧 GATE — antes de subir a primeira campanha Meta ativa
+O score precisa suportá-la. Hoje **não suporta**, por três motivos empilhados: o writer que o
+alimenta grava só `GADS-`; o `INNER JOIN` descarta as linhas do outro writer; e a classificação usa
+`STARTS_WITH(campaign_id, 'GADS-')`.
 
-> ⚠️ **A Opção A não resolve o Meta.** Ela padroniza para `GADS-`, que é um formato **de plataforma
-> única**. Se houver Meta real, a A precisa nascer já com um formato que comporte as duas
-> (ex.: `META-<id>` no mesmo campo, com o `client_id` resolvido) — senão criamos, no mesmo dia, o
-> próximo bug de identidade.
+> **Por que registrar como gate e não como tarefa:** tarefa sem data apodrece no backlog. Gate
+> dispara sozinho, no momento em que a condição acontece. E o modo de falha aqui é o pior que existe
+> — **silencioso**: ninguém receberia erro, a campanha simplesmente não teria score.
 
----
+### ⚠️ Ajuste na Opção A por causa disso (obrigatório)
+**A Opção A NÃO pode escrever `GADS-` numa linha `platform = meta_ads`** — seria gravar uma mentira.
+O prefixo tem de **derivar da plataforma**:
+
+| `platform` | prefixo |
+|---|---|
+| `google_ads` | `GADS-` |
+| `meta_ads` | `META-` |
+
+Custo praticamente idêntico (é o mesmo ponto no código), e **desarma a mina** em vez de enterrá-la
+mais fundo. A parte do **consumidor** (o `STARTS_WITH` do score) fica para o gate — não há campanha
+Meta ativa, então não há pressa.
+
+### P-12 encerrada
+`CMP.CHA.CAMP-10` **não é lixo**: é dado de configuração legítimo, de campanha antiga. **Não apagar.**
+Só precisa entrar no padrão de identidade da Opção A como qualquer outra linha.
 
 ## 4. Registro de rumo (R6)
 
