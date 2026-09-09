@@ -353,4 +353,62 @@ entram (o writer filtra `Status = 'Em execução'`).
 
 ---
 
+## 11. 🔴 2026-09-09 17:35 UTC — BLOQUEIO: a credencial do BigQuery caiu
+
+Ao iniciar a etapa 4 (backup), o n8n devolveu:
+
+> `The credential "Google BigQuery account" needs to be reconnected.`
+> *Access could not be refreshed because the connected account has revoked access, the refresh token
+> expired, or the account password or permissions changed.*
+
+Credencial `UhLRAanVarQeOpQy` (`Google BigQuery account`). Execução **37276**, falhou no primeiro nó.
+**Nada foi criado, nada foi apagado** — o backup não chegou a rodar.
+
+### 11.1 Isso é maior que o rebuild
+
+A credencial **funcionava hoje de manhã**: o pipeline das 04h (`37117`) e das 07h (`37163`) rodaram com
+sucesso, e a verificação da Fase 0.3 (execuções `37179`/`37180`, 11:00 UTC) leu o BigQuery normalmente.
+**Ela caiu em algum momento entre 11:00 e 17:35 UTC de hoje.**
+
+**Consequência imediata, independente deste ADR:** todo nó BigQuery está fora do ar. Se não for
+reconectada, **o pipeline das 04h e das 07h de amanhã falha** — ingestão e cálculo do score.
+
+### 11.2 E provavelmente explica os "dias vazios"
+
+O §3 deste ADR lista, entre os problemas que o rebuild resolve, os **dias vazios "porque a credencial
+caiu e o workflow não rodou"**. Isso não é história: **está acontecendo agora**, e foi observado ao
+vivo. Reforça o valor do rebuild — e mostra que **o rebuild sozinho não basta**: sem tratar a
+renovação da credencial, novos buracos vão aparecer.
+
+> **Pendência que este ADR não cobre e precisa de dono:** por que a credencial OAuth do BigQuery
+> expira, e o que fazer para o pipeline **avisar** quando isso acontece em vez de simplesmente deixar
+> de gravar. Hoje a falha é silenciosa do ponto de vista do Olavo — só aparece como dia faltando na
+> série, semanas depois.
+
+### 11.3 O que está travado
+
+| Etapa | Estado |
+|---|---|
+| 4 — backup | 🔴 **bloqueada** — precisa da credencial |
+| 5 — migrar `phi_score_history` | 🔴 bloqueada (BigQuery) |
+| 6 — apagar e recarregar | 🔴 bloqueada (BigQuery) |
+| 2 e 3 — writers e score | ✅ prontos **em rascunho**, não publicados |
+| Notion | ✅ no formato antigo, consistente com a produção |
+
+**Ação necessária (só o Olavo pode fazer):** reconectar a credencial `Google BigQuery account` no n8n
+(abrir a credencial → reconectar a conta Google). Depois disso o bloco de corte pode rodar inteiro.
+
+### 11.4 Decisão de ordem — proposta de mudança ao §6
+
+Quando destravar, sugiro **inverter as etapas 5 e 6** e inserir uma validação no meio:
+
+| Ordem do §6 | Ordem proposta | Por quê |
+|---|---|---|
+| 4 backup → 5 migrar histórico → 6 apagar e recarregar | 4 backup → **6a carregar em staging** → **6b conferir** → **6c apagar e trocar** → 5 migrar histórico | **só apagar quando o dado novo já estiver na mão e conferido.** Se a carga histórica falhar no meio (API, paginação, limite), a tabela de produção nunca chega a ficar vazia |
+
+O ADR manda apagar antes de carregar; a queda de credencial de hoje é exatamente o tipo de evento que
+torna isso perigoso. **Fica como proposta, não aplicada** — o §6 segue valendo até o Olavo decidir.
+
+---
+
 *Não duplique informação dentro de um campo: se a coluna `platform` já sabe, o `campaign_id` não precisa saber de novo.*

@@ -38,7 +38,7 @@
 | **Prospecção** (lead → CRM) | 🟢 **construída** — parque `PROSP-01..08` ativo (**ADR-35**) | renomear 06/07/08 · arquivar 5 mortos · rodar `BF`/`LO` · auditoria nó a nó | 🔴 decidir o alvo do CRM |
 | **CRM Odoo** | 🟢 **F1 + F2 CONCLUÍDOS** — deploy por Git no ar; módulo `phi_crm` aprovado nos 8 testes de aceite (2026-09-08) | **F3** n8n↔Odoo (a API escrevendo os campos GBP/IA) · F5 migração de dados do HubSpot | — |
 | **PHI·Mídia Score v2** | 🟡 **ADR-34 desenhado** e validado em dado real (jan–ago) | implementar | consolidação dos writers |
-| **Consolidação de writers** | 🔴 **Fases 1 e 2 SUSPENSAS** (2026-09-09) — a verificação desmentiu a premissa da S1 e achou coisa maior | Olavo decidir a **identidade canônica** (P-10): `GADS-<id>` ou `CMP.<SLUG>.CAMP-N` | 🔴 aguarda decisão |
+| **Consolidação de writers** | 🔴 **BLOQUEADO — credencial do BigQuery caiu** (2026-09-09 17:35 UTC). ADR-38 etapas 2-3 prontas em rascunho | **Olavo reconectar a credencial `Google BigQuery account` no n8n** — senão o pipeline de amanhã falha | 🔴 urgente |
 | **T28 / Otimização** | 🟡 Diagnóstico vive; **Maestro E1 em rascunho** | ativar E1 (ADR-28) | budget de token |
 | **Governança / documentação** | 🟢 regras **R1–R5** no `CLAUDE.md` · Rotina de auditoria ativa (1ª: 14/09) | fazer os sub-chats cumprirem **R3** (Notion) | — |
 
@@ -52,6 +52,25 @@ Prospecção (`PROSP-05` escreve no CRM, `PROSP-06` lê dele) **continua apontan
 
 → **ADR-36:** declarar o Odoo como CRM canônico, reapontar `PROSP-05/06` e definir o corte do
 HubSpot. **Uma decisão, duas frentes destravadas.**
+
+### 🔴🔴 2026-09-09 17:35 UTC — a credencial do BigQuery caiu (URGENTE, além do ADR-38)
+
+`The credential "Google BigQuery account" needs to be reconnected.` Credencial `UhLRAanVarQeOpQy`.
+
+**Ela funcionava hoje de manhã** — o pipeline das 04h e 07h rodou, e a verificação das 11h leu o
+BigQuery. Caiu entre 11:00 e 17:35 UTC.
+
+**Consequência que não depende do ADR-38: se não for reconectada, o pipeline das 04h e das 07h de
+amanhã falha** — ingestão e cálculo do score. **Só o Olavo pode reconectar** (abrir a credencial no
+n8n → reconectar a conta Google).
+
+E confirma ao vivo a causa dos "dias vazios" que o rebuild deveria preencher. **O rebuild sozinho não
+resolve:** sem tratar a renovação, novos buracos aparecem. Fica a pendência de fazer o pipeline
+**avisar** quando isso acontecer — hoje a falha é silenciosa e só aparece como dia faltando, semanas
+depois.
+
+O bloco de corte do ADR-38 (etapas 4, 5 e 6) está travado nisso. As etapas 2 e 3 seguem prontas em
+rascunho; o Notion está no formato antigo. **Nada foi apagado.**
 
 ### 🔴 2026-09-09 — a verificação da Fase 0.3 desmentiu a premissa e achou coisa pior
 
