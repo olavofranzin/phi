@@ -925,3 +925,109 @@ O `Pipeline_v2` **não tem `errorWorkflow` configurado** (`settings` só traz
 n8n, mas **não chega ao Olavo por Telegram**. É exatamente a **P-14**, e o
 alcance dela é maior que este ADR — não foi feita aqui para não ampliar o escopo
 sem decisão.
+
+---
+
+# §18 — P-14 resolvida — e a premissa dela estava errada (2026-09-10)
+
+A P-14 estava escrita como *"o pipeline não avisa quando a credencial cai"*. Antes
+de construir, verifiquei se era isso mesmo. **Não era.**
+
+## 18.1 O que os 45 dias perdidos realmente foram
+
+O backup `raw_campaign_data_backup_2026_09_09` ainda guarda a produção antiga, então
+deu para listar os dias que faltavam (CLI-4, a partir de 29/03) e cruzar com o
+`workflow_execution_log`:
+
+| categoria | dias |
+|---|---|
+| **Nenhuma execução registrada** | **43** |
+| Travou em `RUNNING` | 1 (07/04) |
+| Sucesso mas não gravou | 1 (09/09) |
+| **Execução com status `FAILED`** | **0** |
+
+Controle da própria verificação, para não concluir em cima de log incompleto:
+o `workflow_execution_log` cobre **18/03 → 10/09** (131 dias distintos), começa
+**antes** da janela analisada, e **contém 24 registros `FAILED`** — o status existe
+e é usado. Ainda assim, **44 dias do calendário não têm registro nenhum**, e são
+justamente os dias sem dado.
+
+> **Conclusão que muda o desenho:** o modo de falha dominante não é *"rodou e
+> falhou"*, é **"não rodou"**. Um `errorWorkflow` sozinho **não teria evitado
+> nenhum** dos 45 dias — não houve erro para disparar.
+>
+> Uma proteção desenhada sobre a premissa errada teria a aparência de solução e o
+> resultado de nada. É a **R6** aplicada a um plano meu, não herdado.
+
+## 18.2 O que foi construído — duas peças, não uma
+
+### (A) `PHI - Vigia de Frescor dos Dados` (`JMgc0HdLPOFPnFYb`)
+
+Workflow **independente do pipeline**, gatilho próprio às **08h BRT**. Olha o
+**dado**, não a execução:
+
+- pega as campanhas que tiveram dado nos **últimos 7 dias**;
+- avisa se alguma **não tem linha em `raw_campaign_data` de ontem** (`SEM INGESTAO`);
+- avisa se entrou dado mas **não saiu score** (`SEM SCORE`), só para clientes ativos
+  em `client_config` — senão o CLI-13, que não é pontuado, alertaria todo dia.
+
+Pega os três casos: *não rodou*, *rodou e morreu*, *rodou e não gravou*. **Silêncio
+é boa notícia:** sem lacuna, o nó de montagem retorna vazio e o Telegram nem executa.
+
+### (B) `PHI - Alerta de Falha` (`UZ7sIE5cWrrO8xea`)
+
+Handler compartilhado com `Error Trigger` → Telegram, apontado como `errorWorkflow`
+de: `PHI - Pipeline_v2`, `sw metricas campanhas`, `PHI - Subworkflow Campanhas`,
+`operador unico metricas` e **do próprio vigia** — se o vigia quebrar, alguém
+precisa saber. Cobre a falha dura: credencial expirada (o caso real de 09/09) e a
+checagem de unicidade da **P-19**, que até agora só ficava vermelha no n8n.
+
+## 18.3 Testado, não suposto
+
+| teste | resultado |
+|---|---|
+| Vigia com a situação real | nenhuma lacuna, Telegram **não executou** — sem falso alarme |
+| Vigia com lacunas forçadas (Telegram desligado) | mensagem montada corretamente, 2 campanhas listadas |
+| Entrega no Telegram | `ok: true`, mensagem 594 no chat do Olavo |
+
+O teste de entrega foi uma mensagem única, marcada como teste. Um canal de alerta
+nunca exercitado é o mesmo defeito em outro lugar.
+
+## 18.4 🔴 P-21 (nova) — o round-trip do MCP altera nó que ninguém pediu
+
+Ao publicar o `sw metricas campanhas` apareceu `Workflow cannot be activated
+because it has no trigger node`. A produção não foi afetada (a versão `a873bd69`
+seguiu ativa), mas o **rascunho** tinha divergido da versão no ar em dois pontos
+que **eu não alterei de propósito**:
+
+| item | versão no ar | rascunho |
+|---|---|---|
+| `BigQuery Série Diária` · `sqlQuery` | `={{ $json._bq_sql_serie }}` | `{{ ... }}` — **perdeu o `=`** |
+| `Schedule Trigger1` | habilitado | **desabilitado** |
+
+Publicar às cegas teria **matado o gatilho da meia-noite** e mexido numa expressão.
+Ambos foram restaurados ao estado da versão no ar e a publicação passou
+(`d95c75c9`), com `active: true` e o gatilho de volta.
+
+**Regra prática que fica:** antes de publicar um workflow tocado por várias
+atualizações via MCP, **comparar o rascunho com a versão no ar**. Um sinal barato:
+se a lista de `validationWarnings` ganhar um item novo entre uma atualização e
+outra, algo foi mexido sem pedido.
+
+## 18.5 Fato útil descoberto no caminho
+
+**As configurações de workflow não são versionadas.** Depois do
+`setWorkflowSettings` em `PHI - Subworkflow Campanhas`, `versionId` continuou igual
+a `activeVersionId` — ou seja, o `errorWorkflow` passa a valer **na hora**, sem
+publicar. Só mudança de nó exige publicação.
+
+## 18.6 O que a P-14 ainda não cobre
+
+- O vigia roda **uma vez por dia, às 08h**. Uma queda entre 08h e 08h do dia
+  seguinte só aparece na manhã seguinte. Aceitável para dado diário; não serve para
+  nada que exija reação em minutos.
+- Ele compara com **quem teve dado nos últimos 7 dias**. Campanha nova que nunca
+  ingeriu nada não é notada — não há com o que comparar. O dono dessa lacuna é o
+  Notion (`Status = Em execução`), e ligar o vigia ao Notion é obra à parte.
+- `PHI — Digest Diário de Progresso` (`rhobbBEeQaiWIuiF`) **não** recebeu o
+  `errorWorkflow`: é da frente de gestão, não do pipeline. Fica registrado.
