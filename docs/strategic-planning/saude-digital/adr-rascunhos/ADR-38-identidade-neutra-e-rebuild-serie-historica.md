@@ -779,3 +779,68 @@ de gravar — o erro aparece na execução.
   O `MERGE` só protege quando o destino já tem a linha; com o destino vazio, um
   `source` com chave repetida entra duas vezes. Falta uma checagem de unicidade
   pós-carga que **avise**.
+
+---
+
+# §16 — Dois achados enquanto se espera o smoke (2026-09-10)
+
+## 16.1 🟡 P-20 (nova) — `sw metricas campanhas` roda DUAS vezes por dia
+
+Toda a documentação — inclusive a descrição que escrevi no §14 — diz "04h BRT".
+O log de execuções mostra outra coisa, nos quatro dias verificados:
+
+| dia | 03:00 UTC (`trigger`) | 07:00 UTC (`integrated`) |
+|---|---|---|
+| 07/09 | `36379` | `36434` |
+| 08/09 | `36722` | `36777` |
+| 09/09 | `37062` | `37117` |
+| 10/09 | `37469` | `37533` |
+
+O workflow tem um `Schedule Trigger1` próprio, com `rule.interval: [{}]` — o
+default do n8n, meia-noite no fuso da instância. Como a instância roda em
+`America/Sao_Paulo`, isso é **00h BRT**; a segunda rodada é o orquestrador
+`operador unico metricas` chamando o mesmo workflow às 04h.
+
+**Não gera duplicata** — as duas rodadas casam na mesma chave e o `MERGE`
+atualiza. E explica um detalhe do §15: o `source_execution_id` que sobreviveu
+em 09/09 (`EXEC-DE-20260910030106`) é o da **rodada da meia-noite**, porque
+`execution_id` só é gravado no `INSERT` (ADR-37 Fase 0.1) e é ela quem cria a linha.
+
+**Por que ainda assim importa:** puxar D-1 às 00h BRT é buscar o dia **minutos
+depois de fechar**, quando a atribuição do Google Ads é a menos assentada; e
+dobra o consumo de quota da API para o mesmo dado. É o `D4` do ADR-37
+(re-puxar os últimos 3 dias) chegando pela porta dos fundos, sem ninguém ter
+decidido. Decisão pendente: manter as duas, desativar a da meia-noite, ou
+transformá-la no re-puxe de 3 dias do `D4`.
+
+> **R5 na prática:** a descrição que escrevi ontem estava incompleta e teria
+> feito a próxima auditoria concluir errado. Corrigida na mesma sessão.
+
+## 16.2 🔴 P-15 sobe para crítico — o `id_meta_camp` do Notion JÁ está errado
+
+Não é mais risco futuro. Verificação aritmética:
+
+```
+valor no Notion (campo numero) : 120223097083780450
+mais proximo representavel     : 120223097083780448
+exatamente representavel?      : False
+espacamento (ulp) nessa faixa  : 16
+```
+
+O campo `id_meta_camp` é do tipo **número** no Notion, que trafega como float64.
+Nessa ordem de grandeza os inteiros representáveis são espaçados de **16 em 16**
+— `...450` não é um deles. O que se lê é a representação decimal mais curta do
+double `...448`. **O ID verdadeiro da campanha Meta não é recuperável a partir
+do Notion**; ele está em algum ponto a ±8 do valor exibido.
+
+E isso **já está em produção**: a rodada de 10/09 gravou esse ID em
+`raw_campaign_data` (`CLI-13`, `meta_ads`, 09/09). Hoje é inofensivo porque é
+campanha de teste, mas qualquer `MERGE` ou conciliação com a API do Meta vai
+casar com o ID errado.
+
+**Correção:** `id_meta_camp` tem de virar campo de **texto** no Notion e o valor
+ser **redigitado a partir do Meta** — converter o número atual não resolve, ele
+já perdeu a informação. Vale a mesma checagem para `id_meta_account`,
+`id_meta_pixel`, `id_ga4_property`, `id_gbp` e `id_google_account`, todos
+numéricos. `id_google_camp` (`21116045403`, 11 dígitos) está bem abaixo de 2^53
+e é seguro.
