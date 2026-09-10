@@ -844,3 +844,84 @@ já perdeu a informação. Vale a mesma checagem para `id_meta_account`,
 `id_meta_pixel`, `id_ga4_property`, `id_gbp` e `id_google_account`, todos
 numéricos. `id_google_camp` (`21116045403`, 11 dígitos) está bem abaixo de 2^53
 e é seguro.
+
+---
+
+# §17 — P-13 e P-19 resolvidas (2026-09-10)
+
+As duas eram a mesma ferida, aberta pelo episódio do §15: a chave de
+`phi_score_history` tinha 3 partes enquanto a de `raw_campaign_data` tinha 4, e
+nada avisava quando isso produzia linha repetida.
+
+## 17.1 P-13 — `platform` passa a fazer parte da chave do score
+
+| passo | resultado |
+|---|---|
+| Backup `phi_score_history_backup_2026_09_10` | criado |
+| `ALTER TABLE ... ADD COLUMN IF NOT EXISTS platform STRING` | ok |
+| Backfill a partir de `raw_campaign_data` | **235 linhas → `google_ads`** |
+| Sobra | **1 linha → `unknown`** (`TEST-INSUFFICIENT-A02`) |
+| Total | 236 linhas / **236 chaves de 4 partes** |
+
+O backfill só preenche onde o par `(client_id, campaign_id)` tem **uma única**
+plataforma no `raw` — nada é adivinhado. A linha de teste ficou `unknown` em vez
+de receber `google_ads` por conveniência: ela não tem plataforma de verdade, e
+inventar uma seria mentir num campo que agora é chave.
+
+O `MERGE` do nó `Calcular e Persistir PHI Score` passou a:
+
+```sql
+ON  target.client_id      = source.client_id
+AND target.platform       = source.platform
+AND target.campaign_id    = source.campaign_id
+AND target.calculated_date = source.calculated_date
+```
+
+`platform` entra também no `SELECT` da origem e no `INSERT`. **Não** entra no
+`UPDATE SET` — é chave, não atributo.
+
+## 17.2 P-19 — a duplicata agora grita
+
+Dois nós novos entre `Calcular e Persistir PHI Score` e `If Cálculo OK?`:
+
+1. **`Checar unicidade do score`** — procura, nos últimos 7 dias, chave repetida
+   ou `platform` nula.
+2. **`Falhar se chave duplicada`** — **lança erro** se achar algo.
+
+Falhar a execução é deliberado. Em 09/09 o PHI reportou **EXCELLENT** sobre dado
+duplicado e ninguém soube até alguém ir olhar; uma execução vermelha na lista do
+n8n é infinitamente melhor que um score bonito e errado.
+
+## 17.3 A verificação que faltou em 09/09, feita desta vez ANTES de publicar
+
+O erro do §15 não foi o plano, foi publicar sem provar que os campos da chave
+chegavam preenchidos. Desta vez a origem do `MERGE` foi rodada isolada primeiro:
+
+| client_id | platform | campaign_id | calculated_date | linhas na chave |
+|---|---|---|---|---|
+| CLI-4 | `google_ads` | 21116045403 | 2026-09-09 | **1** |
+| CLI-4 | `google_ads` | 21149189736 | 2026-09-09 | **1** |
+
+Nenhum `NULL`, nenhuma chave repetida. **Só então publiquei** (`2015834e`).
+
+## 17.4 Os dois caminhos da proteção foram testados
+
+Uma proteção nunca exercitada é uma proteção que ninguém sabe se funciona —
+seria repetir o erro em outro lugar. Ambos rodados num workflow temporário:
+
+| caminho | como | resultado |
+|---|---|---|
+| **falha** | mesma query com `HAVING COUNT(*) >= 1`, forçando achados | execução **vermelha**, erro nomeando cada chave |
+| **normal** | query real (`> 1`) | `{ unicidade: 'ok' }`, execução verde |
+
+O caminho normal importa tanto quanto o outro: um falso positivo quebraria o
+pipeline toda manhã.
+
+## 17.5 Fica registrado, não resolvido
+
+O `Pipeline_v2` **não tem `errorWorkflow` configurado** (`settings` só traz
+`executionOrder`, `binaryMode`, `timeSavedMode`, `callerPolicy`,
+`availableInMCP`). Ou seja: a falha da P-19 aparece na lista de execuções do
+n8n, mas **não chega ao Olavo por Telegram**. É exatamente a **P-14**, e o
+alcance dela é maior que este ADR — não foi feita aqui para não ampliar o escopo
+sem decisão.
