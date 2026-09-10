@@ -678,3 +678,104 @@ GROUP BY 1,2,3;
 | P-16 | `client_goal_history` é **por cliente**, mas a meta é **por campanha** (3,50 Salão vs 5,20 Barbearia) | O §4 deste ADR mandava usar essa tabela; seguir teria gravado 3,0 em ~190 dias |
 | P-17 | `revenue` fica `NULL` na série reconstruída | O export oficial não traz coluna de valor de conversão |
 | P-18 | O repositório é **público** e contém dado de cliente (nome, custos diários, IDs de campanha e conta) | Decisão do Olavo, registrada |
+
+---
+
+# §15 — O smoke de 10/09 FALHOU: um defeito meu, encontrado e corrigido
+
+O teste previsto no §14.5 rodou. Os dois pipelines executaram com sucesso
+(`37533` às 04h BRT, `37578` às 07h BRT) — **e o resultado foi negativo.**
+
+## 15.1 O que se viu
+
+Para `date = 2026-09-09`, **duas linhas por campanha**, não uma:
+
+| `platform` | `ingestion_step` | `conversions` | `revenue` |
+|---|---|---|---|
+| `google_ads` | `DAILY_ENTRY` (04h) | 6,9919 | NULL |
+| **`undefined`** | `GADS_INSERT` (07h) | 7,9919 | 3,99 |
+
+## 15.2 A causa — introduzida por mim no §14
+
+O writer das 07h gravou a **string literal `'undefined'`** na coluna `platform`.
+
+Ao pôr `platform` na chave do `MERGE` (etapa 2 do §6), não verifiquei se o campo
+chegava ao nó que monta o SQL. Ele nasce em `Code in JavaScript` e **se perde em
+`Code transformar retorno Google Ads`**, que reconstrói o objeto de saída campo a
+campo e não repassava `platform`. A expressão do nó de SQL resolvia para
+`undefined` e o `WHEN MATCHED` nunca disparava — exatamente a falha de colisão
+que o ADR-38 existe para eliminar, **agora por outro motivo**.
+
+> **Isto é o inverso da R6.** Lá, o dado desmentiu o plano antes da execução.
+> Aqui, o plano estava certo e **a implementação não foi verificada de ponta a
+> ponta**: eu conferi que a chave do MERGE mudou, não que os três campos da chave
+> chegavam preenchidos. **Mudar uma chave é mudar um contrato — todo produtor
+> dela precisa ser reconferido, não só o consumidor.**
+
+## 15.3 O dano no score — pior que a duplicata
+
+`phi_score_history` **não tem coluna `platform`** (P-13). O cálculo agrupa por
+`(client_id, platform, campaign_id)`, então cada campanha virou **dois grupos**;
+como a chave do MERGE de destino tem só 3 partes e não havia linha para 09/09,
+**os dois grupos entraram como INSERT** — 2 linhas por campanha na tabela de score.
+
+E não bastava escolher a "boa": o componente `fis` divide o custo da campanha
+pelo custo total do cliente, e `portfolio_cost` somou os grupos fantasma.
+**As duas linhas estavam erradas.**
+
+| campanha | linha `EXEC-DE-…` (04h) | linha `EXEC-PHI-…` (07h) | **recalculado** |
+|---|---|---|---|
+| Salão | 68,70 · fis 18,62 | 93,44 EXCELLENT · fis 88,64 | **65,10 GOOD · fis 7,72** |
+| Barbearia | 69,34 · fis 93,19 | 99,85 EXCELLENT · fis 99,55 | **69,03 GOOD · fis 92,28** |
+
+O PHI reportou **EXCELLENT** em duas campanhas que estão em **GOOD**. Os `fis`
+recalculados batem com os de 08/09 (7,86 e 92,14), o que confirma o rateio.
+
+## 15.4 O que foi feito (execuções 37661–37665, temporário arquivado)
+
+1. **Writer corrigido:** `Code transformar retorno Google Ads` passa a repassar
+   `platform`, com uma guarda que **lança erro** se ele faltar — falhar alto é
+   melhor que gravar `'undefined'` em silêncio. Publicado (`ac55503a`).
+2. `UPDATE` consolidando na linha `google_ads` os valores das 07h — o que o MERGE
+   corrigido teria feito (`conversions` 7,9919 e `revenue` 3,99 no Salão).
+3. `DELETE` das linhas `platform = 'undefined'`.
+4. `DELETE` das 4 linhas de 09/09 em `phi_score_history`.
+5. **Recálculo** do score de 09/09 com o SQL exato do nó de produção, só com o
+   `execution_id` literal `EXEC-REPARO-ADR38-20260910` para deixar rastro.
+
+## 15.5 Estado conferido
+
+| | linhas | chaves únicas |
+|---|---|---|
+| `raw_campaign_data` | 466 | **466** |
+| `phi_score_history` | 236 | **236** |
+
+Zero duplicata nas duas. `conversions` fracionária confirmada em produção
+(6,9919 / 7,9919) — **o `D3` funcionou**, e é a única parte do §14 que o smoke
+aprovou sem ressalva.
+
+## 15.6 O smoke ainda não passou
+
+A correção está publicada mas **não foi exercitada numa rodada real**. O teste de
+verdade continua sendo o mesmo, agora em **11/09 às 04h e 07h**:
+
+```sql
+SELECT client_id, platform, campaign_id, COUNT(*) AS linhas
+FROM phi_prod.raw_campaign_data
+WHERE date = CURRENT_DATE('America/Sao_Paulo') - 1
+GROUP BY 1,2,3;
+-- esperado: 1 linha por campanha, platform preenchida, revenue nao-nulo
+```
+
+Se `platform` voltar vazia ou `undefined`, o workflow agora **falha alto** em vez
+de gravar — o erro aparece na execução.
+
+## 15.7 Pendências que este episódio muda de prioridade
+
+- **P-13 sobe para 🔴.** `phi_score_history` sem coluna `platform` não é mais
+  "inofensivo hoje": foi o que transformou uma duplicata na origem em **duas
+  linhas de score e um `fis` errado**. A chave das duas tabelas tem de ser a mesma.
+- **P-19 (nova):** nada impede uma linha duplicada por chave em `phi_score_history`.
+  O `MERGE` só protege quando o destino já tem a linha; com o destino vazio, um
+  `source` com chave repetida entra duas vezes. Falta uma checagem de unicidade
+  pós-carga que **avise**.
