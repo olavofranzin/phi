@@ -1031,3 +1031,120 @@ publicar. Só mudança de nó exige publicação.
   Notion (`Status = Em execução`), e ligar o vigia ao Notion é obra à parte.
 - `PHI — Digest Diário de Progresso` (`rhobbBEeQaiWIuiF`) **não** recebeu o
   `errorWorkflow`: é da frente de gestão, não do pipeline. Fica registrado.
+
+---
+
+# 19. Smoke de 11/09 — o que passou e o defeito que ele achou
+
+> Verificação feita em 11/09 às ~10h55 BRT, depois das três janelas do dia
+> (00h, 04h e 07h BRT). Fonte: execuções do n8n + consulta direta ao BigQuery.
+
+## 19.1 As execuções do dia
+
+| Workflow | Horário (UTC) | = BRT | Status |
+|---|---|---|---|
+| `sw metricas campanhas` (gatilho próprio) | 03:00:15 | 00h | `success` |
+| `operador unico metricas` | 07:00:00 | 04h | `success` |
+| `sw metricas campanhas` (chamado pelo orquestrador) | 07:00:01 | 04h | `success` |
+| `PHI - Pipeline_v2` | 10:00:51 | 07h | `success` |
+| `PHI - Alerta de Falha` | — | — | **nenhuma execução** (correto: nada falhou) |
+| `PHI - Vigia de Frescor dos Dados` | — | — | **nenhuma execução — ver 19.4** |
+
+O `success` do `Pipeline_v2` **é** a prova de que a P-19 passou: a checagem de
+unicidade fica no meio da cadeia e o nó `Falhar se chave duplicada` derruba a
+execução se achar chave repetida ou `platform` nula. Execução verde = checagem
+verde.
+
+## 19.2 O dado de ontem (10/09)
+
+| tabela | client_id | platform | campaign_id | linhas | detalhe |
+|---|---|---|---|---|---|
+| RAW | CLI-13 | `meta_ads` | 120223097083780450 | **1** | conv=0 clicks=0 cost=0 rev=NULL |
+| RAW | CLI-4 | `google_ads` | 21116045403 | **1** | conv=8 clicks=89 cost=33,10 rev=4 |
+| RAW | CLI-4 | `google_ads` | 21149189736 | **1** | conv=0 clicks=0 cost=0 rev=0 |
+| SCORE | CLI-4 | `google_ads` | 21116045403 | **1** | phi=57,51 |
+| SCORE | CLI-4 | `google_ads` | 21149189736 | **1** | phi=76,35 |
+
+Os três critérios da §15.6 passam:
+
+- **Uma linha por campanha/dia** — todas com `linhas = 1`. O defeito do
+  `platform = 'undefined'` de 09/09 **não voltou**.
+- **`platform` preenchida** — nenhuma linha caiu no `<NULO>`.
+- **Um score por campanha** — `phi_score_history` com `linhas = 1` e `platform`
+  preenchida nas duas. A P-13 está de pé em produção.
+
+## 19.3 A fração de `conversions` — provada, mas não por 10/09
+
+10/09 trouxe `conv = 8` na campanha Salão: **inteiro**. Isso não prova nem
+desmente a correção da D3, porque 8,0 é um valor legítimo. A prova está no dia
+anterior, já escrito pelos writers corrigidos:
+
+| data | campanha | conversions | forma |
+|---|---|---|---|
+| 07/09 | Salão | 8 | inteiro |
+| 08/09 | Salão | **12,97** | **fracionário** |
+| 09/09 | Salão | **7,991889** | **fracionário** |
+| 10/09 | Salão | 8 | inteiro |
+
+`7,991889` é escrita do writer já corrigido. Antes da D3 esse valor teria virado
+`7` ou `8`. **A truncagem acabou** — e vale registrar que o erro era maior do que
+parecia: não é só "perde o centavo", é que `7,991889` virava `8` num dia e `12,97`
+virava `12` no outro, com o desvio mudando de sinal.
+
+## 19.4 🔴 Defeito encontrado: o vigia não roda às 08h
+
+**O `PHI - Vigia de Frescor dos Dados` não executou hoje.** Não por estar
+inativo — `active: true`, publicado, gatilho único, `errorWorkflow` ligado. Ele
+não executou porque **o horário está errado**.
+
+Eu escrevi a expressão como `0 11 * * *`, convertendo 08h BRT para 11:00 UTC.
+**A instância do n8n não interpreta cron em UTC.** A prova está no parque que já
+existia:
+
+| workflow | expressão | disparou em (UTC) |
+|---|---|---|
+| `operador unico metricas` | `0 4 * * *` | **07:00:00** |
+
+`0 4` disparando às 07:00 UTC só fecha se a instância lê a expressão em
+**America/Sao_Paulo** (UTC−3). Logo `0 11 * * *` marca **11h BRT**, não 08h.
+
+**Por que o teste não pegou:** todos os testes da P-14 foram execuções
+**manuais**. Execução manual dispara o nó de gatilho sem consultar o
+agendamento — o único pedaço que eu não exercitei foi justamente o que estava
+errado. Fica a regra: **testar um workflow agendado à mão não testa o
+agendamento.** O que testa é a primeira execução automática.
+
+**Correção:** expressão trocada para `0 8 * * *`.
+
+**Nota de honestidade:** a §18 e a descrição do workflow afirmavam "08h BRT".
+Era falso desde a criação — o vigia existiu por um dia marcado para as 11h.
+Nenhuma consequência prática (não houve lacuna para avisar hoje), mas o texto
+estava errado e está corrigido aqui.
+
+## 19.5 Achado menor: CLI-13 voltou a ser escrito
+
+O corte da §14 apagou as linhas de teste do CLI-13, mas **o caminho Meta continua
+gravando uma linha zerada por dia** para ele:
+
+| data | client_id | campanha | custo |
+|---|---|---|---|
+| 09/09 | CLI-13 | 120223097083780450 | 0 |
+| 10/09 | CLI-13 | 120223097083780450 | 0 |
+
+Não quebra nada e não entra em score (o cliente não está ativo em
+`client_config`, e o ramo `SEM SCORE` do vigia exige `is_active = TRUE`). Mas
+**entra no ramo `SEM INGESTAO` do vigia**: no dia em que o caminho Meta parar, o
+vigia vai alertar sobre uma campanha de teste como se fosse cliente real. Isso
+vira a **P-22**.
+
+## 19.6 Pendências abertas depois deste smoke
+
+| # | Pendência |
+|---|---|
+| P-15 | `id_meta_camp` precisa virar **texto** no Notion, com o valor **redigitado** da Meta |
+| P-16 | `client_goal_history` é por cliente, mas a meta é por campanha |
+| P-17 | `revenue` NULL na série reconstruída (o export não tem a coluna) |
+| P-18 | Repositório público com dado de cliente |
+| P-20 | Decidir a rodada dupla do `sw metricas campanhas` (00h + 04h) |
+| P-21 | Comparar rascunho × versão no ar antes de publicar |
+| **P-22** | **CLI-13 (teste) continua sendo ingerido e vai virar falso alarme do vigia** |
