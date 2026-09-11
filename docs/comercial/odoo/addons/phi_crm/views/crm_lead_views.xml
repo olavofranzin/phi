@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!--
+      Layout do lead/oportunidade (card-gbp-record-spec.md §1 e §4).
+
+      Regra de limpeza: o CARD carrega so numero/enum/bool; todo texto longo vai
+      para a aba "IA / Diagnostico". A visao geral fica limpa.
+
+      Guardrail: tudo aqui EXIBE. Nenhuma view escreve propriedade nem move o
+      negocio de estagio.
+
+      Ancoragem por xpath em //notebook (e nao num campo especifico da view
+      nativa) de proposito: sobrevive a mudanca de campo entre versoes do Odoo.
+    -->
+    <record id="crm_lead_view_form_phi" model="ir.ui.view">
+        <field name="name">crm.lead.form.phi</field>
+        <field name="model">crm.lead</field>
+        <field name="inherit_id" ref="crm.crm_lead_view_form"/>
+        <field name="arch" type="xml">
+
+            <xpath expr="//notebook" position="before">
+
+                <!-- Estado vazio discreto: lead que nao veio do fluxo GBP.
+                     Degradacao graciosa (card-spec §3.5) - aviso, nunca erro. -->
+                <div class="alert alert-light text-muted mb-2"
+                     role="status"
+                     invisible="gbp_diagnostico == 'ativo'">
+                    Sem diagnostico GBP neste registro.
+                </div>
+
+                <!--
+                  O marcador fica FORA do card, e sempre visivel, de proposito.
+                  Ele e o unico campo que revela o card - se ficasse dentro dele
+                  (como estava ate 07/09/2026) seria impossivel preencher pela
+                  tela: para mostrar o card era preciso um campo que so aparecia
+                  com o card ja mostrado. Tambem nao e readonly, senao nao ha
+                  como semear um lead de teste nem corrigir um registro na mao.
+                  Em producao quem escreve aqui e o pipeline PHI (F3).
+                -->
+                <group name="phi_gbp_marcador">
+                    <field name="gbp_place_id"/>
+                    <field name="gbp_score_atualizado_em"/>
+                    <!-- Derivado: e ele que revela o card. Badge aqui pode,
+                         porque o campo e so exibicao - ninguem escreve nele. -->
+                    <field name="gbp_diagnostico" widget="badge"
+                           decoration-success="gbp_diagnostico == 'ativo'"
+                           decoration-muted="gbp_diagnostico == 'inativo'"/>
+                </group>
+
+                <!-- ============ CARD: Diagnostico GBP ============ -->
+                <!-- So aparece quando o PHI rodou. Com o marcador vazio os
+                     Integer leriam 0 e um 0 forjado mentiria (N/D honesto). -->
+                <group string="Diagnostico GBP"
+                       name="phi_card_gbp"
+                       invisible="gbp_diagnostico != 'ativo'">
+
+                    <!-- O que decide -->
+                    <group name="phi_gbp_decisao" string="Decisao">
+                        <field name="gbp_potencial_comercial"
+                               widget="progressbar"/>
+                        <field name="gbp_oferta_recomendada"/>
+                        <!-- SEM badge: este e o campo do HUMANO, o "play".
+                             Com badge (so exibicao) nao havia como aceitar nem
+                             rejeitar a abordagem pela tela. -->
+                        <field name="proxima_acao_aceite"/>
+                    </group>
+
+                    <!-- IPC x Score Tecnico: rotular a diferenca (card-spec §4) -->
+                    <group name="phi_gbp_indices" string="Indices">
+                        <field name="gbp_ipc"/>
+                        <field name="gbp_score_tecnico"/>
+                        <div colspan="2" class="text-muted small">
+                            IPC = oportunidade de venda (quanto ha a ganhar).
+                            Score Tecnico = quao otimizado o perfil ja esta.
+                            IPC baixo + Score alto = perfil forte, pouco gap a vender.
+                        </div>
+                    </group>
+
+                    <!--
+                      As 6 dimensoes com banda de cor:
+                        forte >= 70 (verde) . medio 40-69 (ambar) . fraco < 40 (vermelho)
+                      widget="badge" mantem o NUMERO sempre visivel - a cor nunca e
+                      o unico sinal (card-spec §4, requisito de acessibilidade).
+                    -->
+                    <group name="phi_gbp_dimensoes" string="Dimensoes (forte &#8805; 70 . medio 40-69 . fraco &lt; 40)">
+                        <label for="gbp_dim_saude"/>
+                        <div class="o_row">
+                            <field name="gbp_dim_saude" class="oe_inline"/>
+                            <field name="gbp_dim_saude_banda" widget="badge" nolabel="1"
+                                   class="oe_inline"
+                                   decoration-success="gbp_dim_saude_banda == 'forte'"
+                                   decoration-warning="gbp_dim_saude_banda == 'medio'"
+                                   decoration-danger="gbp_dim_saude_banda == 'fraco'"/>
+                        </div>
+                        <label for="gbp_dim_seo"/>
+                        <div class="o_row">
+                            <field name="gbp_dim_seo" class="oe_inline"/>
+                            <field name="gbp_dim_seo_banda" widget="badge" nolabel="1"
+                                   class="oe_inline"
+                                   decoration-success="gbp_dim_seo_banda == 'forte'"
+                                   decoration-warning="gbp_dim_seo_banda == 'medio'"
+                                   decoration-danger="gbp_dim_seo_banda == 'fraco'"/>
+                        </div>
+                        <label for="gbp_dim_autoridade"/>
+                        <div class="o_row">
+                            <field name="gbp_dim_autoridade" class="oe_inline"/>
+                            <field name="gbp_dim_autoridade_banda" widget="badge" nolabel="1"
+                                   class="oe_inline"
+                                   decoration-success="gbp_dim_autoridade_banda == 'forte'"
+                                   decoration-warning="gbp_dim_autoridade_banda == 'medio'"
+                                   decoration-danger="gbp_dim_autoridade_banda == 'fraco'"/>
+                        </div>
+                        <label for="gbp_dim_conversao"/>
+                        <div class="o_row">
+                            <field name="gbp_dim_conversao" class="oe_inline"/>
+                            <field name="gbp_dim_conversao_banda" widget="badge" nolabel="1"
+                                   class="oe_inline"
+                                   decoration-success="gbp_dim_conversao_banda == 'forte'"
+                                   decoration-warning="gbp_dim_conversao_banda == 'medio'"
+                                   decoration-danger="gbp_dim_conversao_banda == 'fraco'"/>
+                        </div>
+                        <label for="gbp_dim_engajamento"/>
+                        <div class="o_row">
+                            <field name="gbp_dim_engajamento" class="oe_inline"/>
+                            <field name="gbp_dim_engajamento_banda" widget="badge" nolabel="1"
+                                   class="oe_inline"
+                                   decoration-success="gbp_dim_engajamento_banda == 'forte'"
+                                   decoration-warning="gbp_dim_engajamento_banda == 'medio'"
+                                   decoration-danger="gbp_dim_engajamento_banda == 'fraco'"/>
+                        </div>
+                        <label for="gbp_dim_conteudo"/>
+                        <div class="o_row">
+                            <field name="gbp_dim_conteudo" class="oe_inline"/>
+                            <field name="gbp_dim_conteudo_banda" widget="badge" nolabel="1"
+                                   class="oe_inline"
+                                   decoration-success="gbp_dim_conteudo_banda == 'forte'"
+                                   decoration-warning="gbp_dim_conteudo_banda == 'medio'"
+                                   decoration-danger="gbp_dim_conteudo_banda == 'fraco'"/>
+                        </div>
+                    </group>
+
+                    <!-- Sinais de ouro -->
+                    <group name="phi_gbp_sinais" string="Sinais">
+                        <field name="gbp_nao_reivindicado"/>
+                        <field name="gbp_site_tipo"/>
+                        <field name="gbp_flags_score"/>
+                    </group>
+                </group>
+
+                <!-- ============ Governanca do ciclo ============ -->
+                <group string="Governanca do Ciclo" name="phi_governanca">
+                    <group>
+                        <field name="lead_status"/>
+                        <field name="motivo_rejeicao_mql"
+                               invisible="proxima_acao_aceite != 'rejeitada'"
+                               required="proxima_acao_aceite == 'rejeitada'"/>
+                        <field name="proxima_acao_data"/>
+                    </group>
+                    <group>
+                        <field name="data_primeiro_contato"/>
+                        <field name="tentativas_contato"/>
+                    </group>
+                </group>
+
+            </xpath>
+
+            <!-- ============ Aba IA / Diagnostico (os textoes) ============ -->
+            <!-- Ordem conforme card-gbp-record-spec.md §2.1. -->
+            <!--
+              O chatter do Odoo 19 e um componente proprio (<chatter/>), irmao
+              do <sheet> - ele nao aceita abas dentro. Entao em vez de levar a
+              aba ate a coluna da direita, trazemos a coluna da direita para
+              dentro das abas: o chatter inteiro (Enviar mensagem / Notas
+              internas / Atividade) vira a aba "Notas / Atividades", vizinha da
+              "IA / Diagnostico". O resultado na tela e o mesmo que foi pedido:
+              as duas convivem como abas e o formulario ganha a largura toda.
+            -->
+            <xpath expr="//notebook" position="inside">
+                <page string="Notas / Atividades" name="phi_notas_atividades">
+                    <xpath expr="//chatter" position="move"/>
+                </page>
+                <page string="IA / Diagnostico" name="phi_ia_diagnostico">
+                    <group>
+                        <field name="ia_analise_gbp" nolabel="0"/>
+                        <field name="ia_proxima_acao_recomendada"/>
+                        <field name="ia_abordagem_sugerida"/>
+                        <field name="ia_analise_site"/>
+                        <field name="ia_analise_instagram"/>
+                        <field name="ia_dados_enriquecimento"/>
+                        <field name="followup"/>
+                    </group>
+                </page>
+            </xpath>
+
+        </field>
+    </record>
+
+</odoo>

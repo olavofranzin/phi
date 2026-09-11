@@ -1,0 +1,1159 @@
+# ADR-38 — Identidade neutra de plataforma + rebuild da série histórica
+
+| | |
+|---|---|
+| **Status** | ✅ **ACEITO** na direção (Olavo, 2026-09-09) · **execução condicionada** aos pré-checks do §6 |
+| **Substitui** | a "Opção A" do `2026-09-09-decisao-P-10-identidade-canonica.md` (prefixo `GADS-`/`META-`) |
+| **Fecha** | **P-10** do ADR-37 |
+| **Impacto** | `raw_campaign_data`, os 2 writers, o SQL do score, `phi_score_history` · critérios **C1** e **C2** |
+| **Data efetiva do corte** | ⬜ **ainda não ocorreu.** Etapas 2 e 3 prontas em rascunho em 2026-09-09; o corte só acontece quando 2→6 rodarem no mesmo bloco (ver §10.2) |
+
+---
+
+## 1. Contexto
+
+O P-10 perguntava qual identidade é a canônica em `raw_campaign_data`. Eu havia recomendado a
+**Opção A** — padronizar em `GADS-<id>`, e depois ajustei para prefixo por plataforma
+(`GADS-`/`META-`) por causa da linha de Meta.
+
+**O Olavo apontou o defeito da minha proposta, e ele está certo:**
+
+> *"Crie um identificador único (e não mais GADS ou META), porque futuramente se entrar outra
+> plataforma (ex.: TikTok) o código terá que ser escrito novamente. **Já temos o dado de qual
+> plataforma é — não precisamos deste identificador.**"*
+
+O prefixo **duplica** informação que já existe na coluna `platform`. Duplicação de informação é a
+mesma doença dos dois writers, só que dentro de um campo: **duas fontes para o mesmo fato**. E cobra
+o preço em cada plataforma nova.
+
+## 2. Decisão 1 — a identidade
+
+| Campo | Conteúdo | Exemplo |
+|---|---|---|
+| `campaign_id` | **ID nativo da plataforma, SEM prefixo** | `21116045403` |
+| `platform` | a plataforma | `google_ads` · `meta_ads` · `tiktok_ads`… |
+| `client_id` | **sempre preenchido** (fecha o P-11) | `CLI-4` |
+
+> **Chave de identidade: `(client_id, platform, campaign_id, date)`.**
+> Plataforma nova = **um valor novo em `platform`**. Zero código de identidade a reescrever.
+
+### Por que o ID nativo, e não um surrogate (`CMP.KIL.CAMP-7`)
+- **Rastreabilidade:** com o ID nativo dá para abrir o Google Ads/Meta e achar a campanha na hora.
+  Um surrogate exige uma tabela de-para só para depurar.
+- **Sem estado:** surrogate sequencial precisa de gerador + tabela de mapeamento — mais um artefato
+  para manter e mais um ponto de falha (quem atribui o número? e se dois workflows gerarem juntos?).
+- **Atende o pedido sem abrir obra:** o `platform` já carrega o que o prefixo carregava.
+
+> ⚠️ **Limitação conhecida e aceita:** se uma campanha for **recriada** na plataforma, ela ganha ID
+> novo e a série histórica quebra naquele ponto. É exatamente o problema que o **ADR-33** (identidade
+> estável) quer resolver. Este ADR **não fecha essa porta** — se o ADR-33 for aceito, a migração vira
+> planejada, a partir de **uma** identidade em produção em vez de duas por acidente.
+
+## 3. Decisão 2 — rebuild da série histórica a partir da fonte
+
+**Autorizado pelo Olavo (2026-09-09):** apagar `phi_prod.raw_campaign_data` e recarregar a partir de
+um **relatório oficial do Google Ads**, de **janeiro até a data do corte**.
+
+### O que o rebuild resolve de brinde (é mais valioso que a própria troca de identidade)
+
+| Problema | Como o rebuild resolve |
+|---|---|
+| **Dias vazios** (a credencial caiu e o workflow não rodou) | o relatório traz os dias que faltam |
+| **Subcount de `conversions`** (Salão: BQ 321 × export ~481) | conversões **já assentaram** — o relatório de hoje traz o valor final, não o parcial de D-1 |
+| **`parseInt` truncante × `Math.round`** | some: a carga vem de uma fonte só, com uma regra só |
+| **Série diária suja** — o que **bloqueia o Score v2 (ADR-34)** | entrega a **série limpa** que o C1 precisa |
+
+> 🎯 **Consequência estratégica:** este rebuild pode destravar o **C1** mais do que a própria
+> consolidação dos writers. O ADR-34 foi validado em exports do Google Ads — o rebuild coloca no
+> BigQuery **exatamente o tipo de dado em que ele foi validado**.
+
+## 4. ⚠️ O que o relatório NÃO traz (não pode ser esquecido)
+
+Um relatório de campanha traz métricas. **Não traz** o resto da linha:
+
+| Coluna | De onde vem no rebuild |
+|---|---|
+| `primary_metric_goal` | **`client_goal_history`** — a meta muda ao longo do tempo; usar a meta **vigente em cada data**, não a de hoje |
+| `platform` / `data_source` | definido pela carga (`google_ads`) |
+| `client_id` | resolvido por cliente/conta |
+| `revenue` | só se o relatório trouxer valor de conversão; senão **vazio, nunca 0** (invariante I3) |
+| `cost_3d`/`conversions_3d`/`cost_7d`/`conversions_7d` | **NÃO backfillar.** O score recalcula por `SUM` sobre 7 dias (verificado em 09/09). Preencher seria trabalho descartado |
+| `ingestion_step` | **`BACKFILL_2026-09`** — rótulo próprio, honesto |
+| `execution_id` | id da execução da carga |
+
+> **O rótulo `BACKFILL_2026-09` não é detalhe.** Sem ele, daqui a seis meses ninguém sabe que aquele
+> trecho da série veio de relatório e não do pipeline diário. É a regra **R5** aplicada a dado.
+
+## 5. 🔴 Riscos — o que decidir ANTES de apagar
+
+1. ✅ **`phi_score_history` — DECIDIDO (Olavo, 2026-09-09): migrar a chave AGORA, recalcular no Score v2.**
+   A tabela está chaveada por `GADS-...`; trocar a identidade em `raw_campaign_data` a deixaria órfã.
+
+   O Olavo perguntou: *"não deve ser recalculada já que entrarão novos dados?"* — **sim, deve.** Os
+   scores históricos foram calculados sobre a série suja (dias faltando, conversões subcontadas), e a
+   `phi_score_history` é usada como **régua**: o **ADR-29** compara a métrica-mãe de hoje com o
+   histórico ("salto implausível") e o **T28** lê o score canônico de lá. Régua construída sobre dado
+   errado mede errado.
+
+   **Mas recalcular agora é trabalho feito duas vezes.** O **Score v2 (ADR-34 / critério C1)** muda a
+   fórmula, e validá-lo **já exige** recalcular sobre a série histórica limpa. Portanto:
+
+   | Quando | O quê | Por quê |
+   |---|---|---|
+   | **Agora** (etapa 5) | `UPDATE` tirando o prefixo — migrar só a **chave** | senão o score diário cria linha nova em vez de casar com a antiga, e o histórico **duplica em silêncio** |
+   | **No Score v2** (C1) | **recalcular** os scores sobre a série limpa | vem junto com a validação do v2 — e com a fórmula que vai ficar |
+   | **Antes de apagar** | backup `phi_score_history_backup_2026-09` | guarda **o que o PHI disse na época**; o recálculo diz o que ele diria hoje — são coisas diferentes |
+
+   > ⚠️ **Correção de um erro meu na 1ª versão deste ADR.** Eu justifiquei a migração dizendo que ela
+   > "preserva o `acerto_previsao`". **Está errado:** `acerto_previsao` **não existe** em
+   > `phi_score_history` — ele vive na **planilha `leads`** da frente Prospecção (bloco de aprendizado,
+   > dono **P6**, ver `CONTRATO-PROSPECCAO.md`). O rebuild de `raw_campaign_data` **não toca** nesse
+   > loop de aprendizado. A decisão acima não depende do argumento errado. (**R6** — hipótese
+   > desmentida também se registra.)
+2. **Backup antes de apagar.** Exportar a tabela atual (GCS ou tabela `_backup_2026-09-09`) **antes**
+   de qualquer `DELETE`. Apagar é irreversível; o backup custa minutos.
+3. **Outros consumidores.** O **Agregador T28** e o SQL do score leem essa tabela. O
+   `STARTS_WITH(campaign_id, 'GADS-')` do score **quebra** com a identidade nova — tem de sair, dando
+   lugar à coluna `platform`.
+4. **Os dois writers têm de emitir a identidade nova ANTES da carga.** Se recarregar primeiro, o
+   pipeline das 04h/07h volta a poluir no formato velho no dia seguinte.
+
+## 6. Sequência obrigatória (não pular, não reordenar)
+
+| # | Etapa | Por quê |
+|---|---|---|
+| 1 | **P-11** — descobrir por que o `client_id` sai vazio | ✅ **RESOLVIDO 2026-09-09 — ver §9. Mudou o custo: o `client_id` nunca foi extraído do Notion** |
+| 2 | Ajustar **os dois writers** para a identidade nova (`campaign_id` nativo + `platform` + `client_id`) | senão a carga é repoluída no dia seguinte |
+| 3 | Ajustar **os consumidores**: `MERGE` pela chave nova, remover o `STARTS_WITH` do score **e atualizar o campo `campaign_id` no Notion (Campanhas + Tasks abertas)** — ver §9.5 | senão o score não acha nada **e a Fase 3 inteira para** |
+| 4 | **Backup** de `raw_campaign_data` | irreversível |
+| 5 | **Migrar a chave** de `phi_score_history` (`UPDATE` tirando o prefixo) — §5.1 | senão o histórico duplica em silêncio a partir do dia seguinte |
+| 6 | **Apagar e recarregar** de janeiro até a data do corte, com `ingestion_step = 'BACKFILL_2026-09'` | |
+| 7 | Smoke nas 2 campanhas KIL + conferir que os dois writers **agora colidem** no `MERGE` | é o teste real |
+| 8 | Retomar as Fases 1 e 2 do ADR-37 sob a identidade única | |
+
+## 7. Verificação
+
+- `SELECT platform, COUNT(*) FROM phi_prod.raw_campaign_data GROUP BY 1` — sem `NULL`.
+- **Nenhum** `campaign_id` começando com `GADS-` ou `META-`.
+- **Uma** linha por `(client_id, platform, campaign_id, date)` — a duplicação diária acabou.
+- Os dias que estavam vazios (queda de credencial) **têm dado**.
+- `SUM(conversions)` do Salão no período **bate com o relatório oficial** — fecha a dúvida do subcount.
+- O score roda e as 2 campanhas KIL aparecem em `phi_score_history`.
+
+## 8. Pontos abertos
+
+- ✅ **Data do corte — DECIDIDO (Olavo, 2026-09-09): o dia em que a alteração for feita** (não 08/09).
+  Consequências práticas, que mudam a execução:
+  1. o relatório é puxado **depois** das etapas 1–5, **imediatamente antes** da carga — não antes;
+  2. ele cobre **de janeiro até D-1 do dia do corte**; a 1ª rodada diária nova cobre do dia do corte
+     em diante;
+  3. **sobrepor um dia é seguro** (o `MERGE` pela chave nova deduplica); **deixar buraco não é**;
+  4. **registrar a data real na tabela do topo** no dia em que acontecer (**R2**).
+- **Meta Ads:** o **gate** continua valendo. Com a identidade neutra ele fica **mais fácil** de
+  atender (não há prefixo a inventar), mas o consumidor ainda precisa aprender a pontuar Meta.
+- **ADR-33** segue em aberto (identidade estável × campanha recriada).
+
+---
+
+## 9. ✅ Etapa 1 — P-11 resolvido (2026-09-09)
+
+Leitura nó a nó do `sw metricas campanhas` (`W571K320aqIHsdtH`, 38 nós). **Somente leitura, nada alterado.**
+
+### 9.1 Por que o `client_id` sai vazio — três elos, e o terceiro é o que importa
+
+| # | Elo | O que acontece |
+|---|---|---|
+| 1 | `Code Clean Campanhas` extrai do Notion `properties['client_slug']` e publica como **`clean_client_slug`** | ✔ funciona |
+| 2 | `Code prepara contexto para observação` lê **`data.clean_sigla_cliente`** — **nome que não existe** | ✗ `sigla_cliente` vira `undefined` |
+| 3 | `Code Montar SQL` tenta 5 fontes e cai no fallback `''` | ✗ grava vazio |
+
+```js
+// Code Montar SQL — as 5 tentativas, todas falham hoje
+const clientId = context.raw_notion_data?.clean_client_id   // 'raw_notion_data' não existe no contexto
+  || context.raw_notion_data?.clean_sigla_cliente           // idem
+  || context.sigla_cliente                                  // undefined (elo 2)
+  || calculated.client_id || input.client_id || '';         // não existem
+```
+
+> 🔴 **Corrigir o nome do campo NÃO resolve.** Se os três elos batessem, o valor gravado seria **`KIL`** —
+> o **`client_slug`**, não o **`client_id` (`CLI-4`)**. São campos diferentes (**Regra Crítica nº 4**), e o
+> `INNER JOIN client_config ON client_id` continuaria descartando as linhas.
+>
+> **O normalizador nunca extraiu o `client_id`.** Ele só extrai `client_slug`.
+
+**A correção real:** o campo **`client_id` existe no DB Campanhas do Notion** — o outro writer já o lê
+(`props['client_id']?.rich_text?.[0]?.plain_text` no `PHI - Subworkflow Campanhas`). Basta o
+`Code Clean Campanhas` passar a extraí-lo também, e o contexto propagá-lo com o nome certo.
+**Alternativa** (se algum dia faltar no Notion): resolver `client_slug → client_id` pelo `client_config`.
+
+### 9.2 Achado extra — o `campaign_id` errado tem a mesma causa: referência ao nó errado
+
+```js
+const campaignId = calculated.bq_campaign_id   // 'calculated' = Code Cálcula Métricas → NÃO tem esse campo
+  || context.campaign_id                       // = clean_id_campanha → 'CMP.KIL.CAMP-7'  ← é este que vence
+  || (googleId ? `GADS-${googleId}` : ...);    // nunca alcançado
+```
+
+Quem define `bq_campaign_id` é o **`Code Prep Tendência`** (`bq_campaign_id = 'GADS-' + idG`), **não** o
+`Code Cálcula Métricas` que o `Code Montar SQL` consulta. Ou seja: **o workflow já sabia produzir o ID da
+plataforma e lia do nó errado.** Por isso venceu o `CMP.KIL.CAMP-7`, que é o campo *ID da campanha* do
+Notion.
+
+### 9.3 O que isso muda no custo da Etapa 2
+
+| Item | Situação | Custo |
+|---|---|---|
+| `platform` | ✅ **já é gravado** corretamente (`google_ads`), com fallback por plataforma | **zero** |
+| `campaign_id` nativo | o ID está disponível (`clean_id_google`); basta usá-lo **sem prefixo** | **baixo** |
+| `client_id` | ⚠️ **não é extraído do Notion** — exige mexer no normalizador, não só no `Code Montar SQL` | **médio** |
+| `conversions` | usa `Math.round` (`intNum`) — some no rebuild | — |
+
+> A Etapa 2 é **menor do que parecia** para `campaign_id`/`platform` e **maior** para `client_id`: são
+> **dois nós** a alterar no writer das 04h (`Code Clean Campanhas` + `Code prepara contexto`), além do
+> `Code Montar SQL`.
+
+### 9.4 Verificado de passagem
+O `MERGE` deste writer casa por `ON client_id AND campaign_id AND date` — **a mesma chave** do outro
+writer. Confirma que, com a identidade unificada, os dois **passam a colidir** (teste da etapa 7).
+
+### 9.5 🔴 Achado que o ADR não previu — existe um **quinto** lugar com o `campaign_id`
+
+O §5.3 lista como consumidores o **score** e o **Agregador T28**. Falta um, e ele é o mais frágil:
+**o campo `campaign_id` (rich_text) da DB Campanhas do Notion.**
+
+**Ele é a ponte BigQuery ↔ Notion.** No `PHI - Pipeline_v2`:
+
+```js
+// Code Clean Campanhas F3 — lê o texto gravado no Notion
+const campaignId = extractRichText(props['campaign_id']?.rich_text);
+
+// Code Enriquecer Campanha — casa com o campaign_id vindo do BigQuery
+const cleanMatch = allCleaned.find(item => item.json.clean_campaing_id === campaignId);
+```
+
+Como o match **funciona hoje** (as campanhas KIL aparecem no score), está provado que esse campo do
+Notion contém hoje **`GADS-21116045403`** — o mesmo valor do BigQuery.
+
+**O que quebra se só o BigQuery mudar:**
+
+| Consequência | Efeito prático |
+|---|---|
+| `cleanMatch` não acha → `notion_page_id = null` | o score **não é escrito** na campanha do Notion |
+| sem `notion_id_camp` | a **Task não é criada** (Fase 3 — Abertura) |
+| `Get tasks para Escalada` busca pelo id novo | **escalada** não acha as tarefas |
+| `Get Task para Fechar` compara `Task.campaign_id` × `Campanha.campaign_id` | **fechamento** e a limpeza de órfã param |
+
+Ou seja: **mudar só o BigQuery derruba a Fase 3 inteira** do PHI — em silêncio, como sempre.
+
+E há um **segundo efeito** já em produção: o nó `Create a database page` grava na Task
+`campaign_id = {{ campaign_id do BigQuery }}`. Então as Tasks **abertas** carregam o valor antigo e
+também precisam ser migradas, senão o fechamento não as encontra.
+
+**Duas formas de resolver — e a diferença importa:**
+
+| | Como | Avaliação |
+|---|---|---|
+| **(i)** | Atualizar o campo `campaign_id` das páginas do Notion (Campanhas **e** Tasks abertas) para o ID nativo | ✅ **recomendada** — mantém Notion e BigQuery coerentes, e o código não muda |
+| **(ii)** | Mudar o `Code Clean Campanhas F3` para montar a chave a partir de `id_google_camp` (number) | ❌ resolve o match, mas as Tasks passam a nascer com o id novo enquanto a Campanha guarda o velho — **o fechamento quebra do mesmo jeito** |
+
+> A **(ii) sozinha não fecha o problema.** O campo do Notion tem de ser atualizado de qualquer forma.
+
+**Impacto na sequência do §6:** a etapa 3 ("ajustar os consumidores") passa a incluir **o Notion** —
+não só o SQL do score. É trabalho de dado, não de código, e precisa acontecer **junto** com as etapas
+2 e 3, não depois.
+
+### 9.6 Confirmação de passagem — o `client_id` existe mesmo no Notion
+O `Code Clean Campanhas F3` já lê `clean_client_id: extractRichText(props['client_id']?.rich_text)`.
+Isso **confirma** a correção proposta em §9.1: o campo existe na DB Campanhas e um workflow já o
+consome. O writer das 04h só não o extrai.
+
+---
+
+## 10. Estado da execução em 2026-09-09 — etapas 2 e 3 **em rascunho**, produção intacta
+
+### 10.1 O que foi alterado (n8n, **não publicado**)
+
+| Workflow | Nó | Mudança |
+|---|---|---|
+| `sw metricas campanhas` (`W571K320aqIHsdtH`) | `Code Montar SQL` | lê `client_id` da página do Notion via `Loop Over Items`; `campaign_id` vira o **ID nativo**; chave do `MERGE` ganha `platform` |
+| `PHI - Subworkflow Campanhas` (`b1pbn8qmzCNTufTp`) | `Code in JavaScript` + `Execute SQL  INSERT raw_campaign_data` | tira o prefixo `GADS-`/`META-`, passa a gravar **`platform`**, chave do `MERGE` ganha `platform` |
+| `PHI - Pipeline_v2` (`ITWG3Ge0asXtUM8U`) | `Calcular e Persistir PHI Score` | dedup e `GROUP BY` por `(client_id, platform, campaign_id, date)`; `plataforma` deixa de vir do `STARTS_WITH` e passa a vir da coluna `platform` |
+
+> **Nenhum foi publicado.** `versionId != activeVersionId` nos três — a versão que roda às 04h/07h
+> continua sendo a antiga. **Produção não foi tocada.**
+
+### 10.2 🔴 Por que parei antes de publicar — a ordem tem uma janela perigosa
+
+Cheguei a atualizar o `campaign_id` das duas campanhas KIL no Notion para o ID nativo e **revertí em
+seguida**, ao perceber o seguinte:
+
+**Publicar (ou mudar o Notion) sem fazer o rebuild no mesmo bloco cria inconsistência garantida:**
+
+| Se eu... | O que acontece |
+|---|---|
+| mudar só o **Notion**, com os workflows em rascunho | a produção grava `GADS-…` e o `Code Clean Campanhas F3` lê o ID nativo → **o match quebra hoje** |
+| publicar só os **workflows**, sem o Notion | as linhas novas nascem com o ID nativo e o F3 lê `GADS-…` → **o match quebra amanhã** |
+| publicar **tudo** e não rebuildar até as 04h | a tabela fica com as duas identidades: a série de 7 dias da identidade nova terá **1 dia só**, e o score de amanhã sai com `cost_7d` de um dia — **errado, e em silêncio** |
+
+**Conclusão:** as etapas **2, 3, 4, 5 e 6 formam um bloco atômico** e precisam acontecer na mesma
+janela. O ADR já dizia isso ("a data do corte é o dia da alteração"); a execução deixou claro que a
+consequência de quebrar o bloco é **score errado sem erro visível**.
+
+O estado atual — workflows em rascunho, Notion no formato antigo — é **consistente e seguro**. O
+pipeline de amanhã roda exatamente como hoje.
+
+### 10.3 ✅ P-12 resolvido — quem é `CMP.CHA.CAMP-10`
+
+| Campo | Valor |
+|---|---|
+| Campanha | `[CHA] IG_MENS__PROD.TESTE__` |
+| `client_id` | **`CLI-13`** |
+| Plataforma | **Meta Ads** |
+| `id_meta_camp` | `120223097083780450` |
+| `campaign_id` no Notion | **vazio** |
+
+É uma campanha de teste do Meta. **`CLI-13` não existe em `client_config`** (que só tem `CLI-4` e
+`CLI-5`), então ela seria descartada pelo `INNER JOIN` de qualquer forma — coerente com o **gate do
+Meta**, que segue valendo. Não foi alterada.
+
+### 10.4 🟡 Risco novo — precisão do `id_meta_camp`
+
+`120223097083780450` é **maior que 2^53** (o limite de inteiro exato em JavaScript e no tipo *number*
+do Notion). Isso significa que o ID do Meta **pode já estar armazenado com perda de precisão** no
+próprio Notion, antes de qualquer código nosso.
+
+Não afeta o Google (`21149189736` está muito abaixo do limite) e não bloqueia este ADR, porque o Meta
+está no gate. **Mas precisa ser resolvido antes da primeira campanha Meta real** — provavelmente
+mudando `id_meta_camp` para um campo de **texto** no Notion.
+
+### 10.5 O inventário das campanhas ativas (fonte para o corte)
+
+| Campanha | `client_id` | `campaign_id` hoje | Alvo |
+|---|---|---|---|
+| KIL Salão | `CLI-4` | `GADS-21116045403` | `21116045403` |
+| KIL Barbearia | `CLI-4` | `GADS-21149189736` | `21149189736` |
+| CHA (teste Meta) | `CLI-13` | *(vazio)* | fora do escopo — gate do Meta |
+
+**São 2 páginas a atualizar no Notion.** As 4 campanhas `Concluído` têm `campaign_id` vazio e não
+entram (o writer filtra `Status = 'Em execução'`).
+
+### 10.6 O que falta para fechar o bloco
+
+| # | Falta | Observação |
+|---|---|---|
+| 4 | Backup de `raw_campaign_data` | antes de qualquer `DELETE` |
+| 5 | `UPDATE` em `phi_score_history` tirando o prefixo | |
+| 6 | **Puxar o relatório e recarregar** | é a etapa que eu ainda não sei executar sozinho — ver abaixo |
+| — | Publicar os 3 workflows + atualizar as 2 páginas do Notion | **no mesmo bloco da 6** |
+
+> ⚠️ **Ponto que precisa de decisão do Olavo antes da etapa 6:** de onde vem o relatório de janeiro
+> até D-1. Pela API do Google Ads (GAQL com `segments.date`, usando a credencial que já existe) ou de
+> um export manual? A API é reprodutível e não depende de arquivo, mas puxar ~8 meses × 2 campanhas
+> exige paginação e é a primeira vez que este pipeline faria uma carga histórica.
+
+---
+
+## 11. 🔴 2026-09-09 17:35 UTC — BLOQUEIO: a credencial do BigQuery caiu
+
+Ao iniciar a etapa 4 (backup), o n8n devolveu:
+
+> `The credential "Google BigQuery account" needs to be reconnected.`
+> *Access could not be refreshed because the connected account has revoked access, the refresh token
+> expired, or the account password or permissions changed.*
+
+Credencial `UhLRAanVarQeOpQy` (`Google BigQuery account`). Execução **37276**, falhou no primeiro nó.
+**Nada foi criado, nada foi apagado** — o backup não chegou a rodar.
+
+### 11.1 Isso é maior que o rebuild
+
+A credencial **funcionava hoje de manhã**: o pipeline das 04h (`37117`) e das 07h (`37163`) rodaram com
+sucesso, e a verificação da Fase 0.3 (execuções `37179`/`37180`, 11:00 UTC) leu o BigQuery normalmente.
+**Ela caiu em algum momento entre 11:00 e 17:35 UTC de hoje.**
+
+**Consequência imediata, independente deste ADR:** todo nó BigQuery está fora do ar. Se não for
+reconectada, **o pipeline das 04h e das 07h de amanhã falha** — ingestão e cálculo do score.
+
+### 11.2 E provavelmente explica os "dias vazios"
+
+O §3 deste ADR lista, entre os problemas que o rebuild resolve, os **dias vazios "porque a credencial
+caiu e o workflow não rodou"**. Isso não é história: **está acontecendo agora**, e foi observado ao
+vivo. Reforça o valor do rebuild — e mostra que **o rebuild sozinho não basta**: sem tratar a
+renovação da credencial, novos buracos vão aparecer.
+
+> **Pendência que este ADR não cobre e precisa de dono:** por que a credencial OAuth do BigQuery
+> expira, e o que fazer para o pipeline **avisar** quando isso acontece em vez de simplesmente deixar
+> de gravar. Hoje a falha é silenciosa do ponto de vista do Olavo — só aparece como dia faltando na
+> série, semanas depois.
+
+### 11.3 O que está travado
+
+| Etapa | Estado |
+|---|---|
+| 4 — backup | 🔴 **bloqueada** — precisa da credencial |
+| 5 — migrar `phi_score_history` | 🔴 bloqueada (BigQuery) |
+| 6 — apagar e recarregar | 🔴 bloqueada (BigQuery) |
+| 2 e 3 — writers e score | ✅ prontos **em rascunho**, não publicados |
+| Notion | ✅ no formato antigo, consistente com a produção |
+
+**Ação necessária (só o Olavo pode fazer):** reconectar a credencial `Google BigQuery account` no n8n
+(abrir a credencial → reconectar a conta Google). Depois disso o bloco de corte pode rodar inteiro.
+
+### 11.4 Decisão de ordem — proposta de mudança ao §6
+
+Quando destravar, sugiro **inverter as etapas 5 e 6** e inserir uma validação no meio:
+
+| Ordem do §6 | Ordem proposta | Por quê |
+|---|---|---|
+| 4 backup → 5 migrar histórico → 6 apagar e recarregar | 4 backup → **6a carregar em staging** → **6b conferir** → **6c apagar e trocar** → 5 migrar histórico | **só apagar quando o dado novo já estiver na mão e conferido.** Se a carga histórica falhar no meio (API, paginação, limite), a tabela de produção nunca chega a ficar vazia |
+
+O ADR manda apagar antes de carregar; a queda de credencial de hoje é exatamente o tipo de evento que
+torna isso perigoso. **Fica como proposta, não aplicada** — o §6 segue valendo até o Olavo decidir.
+
+---
+
+## 12. Diagnóstico pré-carga (2026-09-09, execução **37280**) — credencial OK e três achados
+
+Credencial reconectada pelo Olavo e **confirmada funcionando**. Workflow temporário de leitura já
+arquivado.
+
+### 12.1 A série NÃO começa em janeiro — começa em **março de 2026**, e tem 67 dias de buraco
+
+| Mês | Dias com dado | Dias no mês | Faltam |
+|---|---|---|---|
+| 2026-03 | 7 | 31 | **24** |
+| 2026-04 | 14 | 30 | **16** |
+| 2026-05 | 20 | 31 | **11** |
+| 2026-06 | 23 | 30 | **7** |
+| 2026-07 | 22 | 31 | **9** |
+| 2026-08 | 31 | 31 | 0 ✅ |
+| 2026-09 | 8 | 8 | 0 ✅ |
+
+**67 dias faltando**, todos entre março e julho. Agosto e setembro estão completos.
+
+> O §3 e o §6 falam em recarregar "**de janeiro** até a data do corte". **Não existe dado de janeiro
+> nem de fevereiro** — a ingestão começou em **2026-03**. O período do relatório deve ser
+> **2026-03-01 → 2026-09-08**, salvo se o Olavo quiser puxar antes disso (as campanhas existem desde
+> **2024-03-22**, segundo o Notion).
+
+### 12.2 A duplicação começou em **junho/2026**
+
+A contagem de `campaign_id` distintos por mês salta de **2** (março–maio) para **5** (junho em diante).
+Os 5 são exatamente as duas identidades convivendo: `GADS-21116045403`, `GADS-21149189736`,
+`CMP.KIL.CAMP-7`, `CMP.KIL.CAMP-8` e `CMP.CHA.CAMP-10`.
+
+**Ou seja: o writer das 04h passou a gravar em junho/2026.** Antes disso só existia o `GADS_INSERT`.
+Isso data o início da sobreposição S1 com precisão.
+
+### 12.3 🔴 A instrução do §4 sobre `primary_metric_goal` está errada
+
+O §4 manda buscar a meta em **`client_goal_history`**, "a meta vigente em cada data". A tabela tem:
+
+| client_id | goal_value | valid_from | valid_until |
+|---|---|---|---|
+| `CLI-4` | **3.0** | 2026-03-05 | *(null)* |
+| `CLI-5` | 3.0 | 2026-03-05 | *(null)* |
+
+**Dois problemas:**
+
+1. **A meta ali é por CLIENTE, não por campanha.** Mas as duas campanhas do CLI-4 têm metas
+   **diferentes**: Salão **3,50** e Barbearia **5,20** (Notion, e confirmado no `CLAUDE.md`). Uma
+   tabela por cliente **não consegue** representar isso.
+2. **O valor não bate com nenhuma das duas** — `client_goal_history` diz `3.0`.
+
+**Como o pipeline realmente faz hoje:** a fonte primária é o campo **`Meta da Métrica-mãe` do Notion,
+por campanha**; o `client_goal_history` é apenas **fallback** quando aquele vem nulo (é o que o nó
+`If primary_metric_goal` do `PHI - Subworkflow Campanhas` faz).
+
+> **Se o backfill seguisse o §4 ao pé da letra, gravaria `3.0` para as duas campanhas** — sobrescrevendo
+> as metas reais em ~190 dias de série e alterando o score histórico. (**R6** — registro em vez de
+> executar.)
+
+**Proposta para a etapa 6:** usar a **meta por campanha do Notion** (3,50 Salão / 5,20 Barbearia) para
+todo o período recarregado, e **assumir explicitamente** que ela foi constante — porque **não existe
+histórico de meta por campanha** em lugar nenhum. Se a meta mudou em algum momento, essa informação
+**está perdida** e o backfill vai achatá-la. É uma perda conhecida e aceita, não um detalhe.
+
+**Pendência derivada (sem dono):** `client_goal_history` é por cliente e o negócio é por campanha. Ou a
+tabela ganha `campaign_id`, ou ela deixa de ser a fonte de meta e vira só histórico de referência.
+
+### 12.4 `phi_score_history` — extensão atual
+
+| campaign_id | linhas | de | até |
+|---|---|---|---|
+| `GADS-21116045403` | 116 | 2026-03-29 | 2026-09-08 |
+| `GADS-21149189736` | 117 | 2026-03-27 | 2026-09-08 |
+| `TEST-INSUFFICIENT-A02` | 1 | 2000-01-01 | 2000-01-01 |
+
+São **233 linhas reais** a migrar na etapa 5 (mais uma linha de teste, que pode ser descartada).
+
+---
+
+## 13. 🎯 Staging carregada e conferida — o achado que justifica o ADR inteiro
+
+Fonte: exports oficiais do Google Ads (`docs/analises/google_ads/*jan-set.csv`), **01/01/2026 → 08/09/2026**,
+lidos direto do repositório pelo n8n. Execuções **37287** (carga) e **37288** (comparação); backups pela
+**37289**. Workflows temporários arquivados.
+
+### 13.1 A staging bate com o arquivo
+
+| Campanha | Linhas | Período | Conversões | Custo | Linhas com fração |
+|---|---|---|---|---|---|
+| Salão `21116045403` | 215 | 01/01 → 08/09 | **2 585,92** | 6 756,85 | **59** |
+| Barbearia `21149189736` | 248 | 01/01 → 08/09 | **117,00** | 953,24 | 0 |
+
+Conferido contra leitura independente do CSV: **idêntico**. O parse do formato pt-BR (ponto de milhar,
+vírgula decimal) está correto, e as **59 linhas com conversão fracionada** do Salão sobreviveram — são
+exatamente o que o `parseInt` do pipeline vinha truncando.
+
+### 13.2 🔴 O que a produção tem hoje, comparado ao real — na mesma janela
+
+Janela: a partir de **29/03/2026**, quando a produção começou a ter dado.
+
+| | Salão | Barbearia |
+|---|---|---|
+| Dias na produção | 98 | 115 |
+| Dias reais | **140** | **161** |
+| **Dias faltando** | **42** | **46** |
+| Conversões na produção | 749,00 | 5,00 |
+| Conversões reais | **1 427,19** | **43,00** |
+| **Diferença** | **+678,19** | **+38,00** |
+| Custo na produção | 3 314,19 | 289,54 |
+| Custo real | 4 520,73 | 330,85 |
+
+> **A produção tinha 52% das conversões do Salão e 12% das da Barbearia.**
+
+### 13.3 🔴🔴 O impacto vai além do dado: o score estava classificando errado
+
+| Campanha | Meta (CPA) | CPA com o dado da produção | CPA com o dado real | Leitura |
+|---|---|---|---|---|
+| **Salão** | 3,50 | **4,42** (acima da meta → ruim) | **3,17** (abaixo da meta → bom) | 🔴 **o diagnóstico se inverte** |
+| **Barbearia** | 5,20 | **57,91** (11× a meta) | **7,69** (1,5× a meta) | 🔴 severidade muito exagerada |
+
+**O PHI vinha dizendo que o Salão estava fora da meta quando ele estava dentro.** E tratava a Barbearia
+como catástrofe quando o desvio real é bem menor.
+
+Isso reposiciona o ADR-38: ele deixa de ser "arrumação de identidade" e passa a ser **correção de um erro
+de diagnóstico que chegava ao gestor**. Também explica por que o Score v2 (C1) não podia ser validado
+sobre a série atual.
+
+> **Ressalva honesta:** a comparação de CPA acima é agregada na janela inteira, não é o `phi_value`. O
+> score usa janela de 7 dias, pesos por modelo e outros componentes (MAS/TSS/FIS). A direção do erro está
+> demonstrada; **o efeito exato em cada `phi_value` diário só aparece quando os scores forem recalculados**
+> — o que é entrega do Score v2, não deste ADR.
+
+### 13.4 Backups feitos (etapa 4 ✅)
+
+| Tabela | Origem | Backup |
+|---|---|---|
+| `raw_campaign_data` → `raw_campaign_data_backup_2026_09_09` | 436 | **436** ✅ |
+| `phi_score_history` → `phi_score_history_backup_2026_09` | 234 | **234** ✅ |
+
+### 13.5 Duas correções ao plano do §6, para o passo destrutivo
+
+**(a) O `DELETE` deve ser restrito, não total.** O §6 diz "apagar e recarregar". Apagar a tabela inteira
+levaria junto as linhas de `CMP.CHA.CAMP-10` (CLI-13, Meta), que o backfill **não cobre** — não há export
+do Meta. O `DELETE` deve alcançar só o que será reposto:
+
+```sql
+DELETE FROM `phi_prod.raw_campaign_data`
+WHERE client_id = 'CLI-4'
+   OR campaign_id IN ('GADS-21116045403','GADS-21149189736','CMP.KIL.CAMP-7','CMP.KIL.CAMP-8');
+```
+
+(as linhas do writer das 04h têm `client_id` vazio, por isso a segunda condição). As linhas do CHA ficam
+intactas, com a identidade antiga, e viram pendência à parte.
+
+**(b) `conversions` precisa virar `FLOAT64` ANTES do INSERT.** A coluna é `INT64` hoje; inserir 27,98
+truncaria de novo — exatamente o defeito que o rebuild existe para corrigir. É o `D3` do ADR-37, já
+aprovado:
+
+```sql
+ALTER TABLE `phi_prod.raw_campaign_data` ALTER COLUMN conversions SET DATA TYPE FLOAT64;
+-- idem conversions_3d e conversions_7d
+```
+
+### 13.6 O que o backfill NÃO traz
+
+| Coluna | Fica | Por quê |
+|---|---|---|
+| `revenue` | **NULL** | o export não tem coluna de valor de conversão — **vazio, nunca 0** (I3) |
+| `cost_3d/7d`, `conversions_3d/7d` | NULL | o score recalcula por `SUM` (verificado em 09/09) |
+| `primary_metric_goal` | 3,50 / 5,20 | meta por campanha do Notion, **assumida constante** (§12.3) |
+
+---
+
+*Não duplique informação dentro de um campo: se a coluna `platform` já sabe, o `campaign_id` não precisa saber de novo.*
+
+---
+
+# §14 — Corte executado (2026-09-09) — ADR-38 CONCLUÍDO
+
+Olavo autorizou o bloco irreversível e, sobre a ressalva do §13.5, decidiu:
+**`DELETE` irrestrito** — as linhas do CLI-13 (CHA / Meta Ads) eram apenas teste
+de caminho para uma campanha Meta, não pertencem a cliente real e não há campanha
+ativa. A ressalva (a) do §13.5 fica assim **resolvida por decisão, não por técnica**.
+
+## 14.1 O que foi executado (execução n8n 37296, workflow temporário já arquivado)
+
+| # | Ação | Resultado |
+|---|---|---|
+| 1 | `ALTER TABLE phi_prod.raw_campaign_data ALTER COLUMN conversions SET DATA TYPE FLOAT64` | ok |
+| 2 | `DELETE FROM phi_prod.raw_campaign_data WHERE TRUE` | 436 linhas removidas |
+| 3 | `INSERT` das 463 linhas da staging | ok |
+| 4 | `UPDATE phi_score_history SET campaign_id = SUBSTR(campaign_id, 6) WHERE STARTS_WITH(campaign_id,'GADS-')` | 233 linhas |
+
+**Correção ao §13.5 (b):** só `conversions` era `INT64`. `conversions_3d` e
+`conversions_7d` **já eram `FLOAT64`** — o `ALTER` foi de uma coluna, não de três.
+
+## 14.2 Conferência pós-corte
+
+| | Salão `21116045403` | Barbearia `21149189736` |
+|---|---|---|
+| linhas | 215 | 248 |
+| chaves únicas `(client_id, platform, campaign_id, date)` | **215** | **248** |
+| período | 01/01 → 08/09 | 01/01 → 08/09 |
+| conversões | 2 585,92 | 117,00 |
+| custo | 6 756,85 | 953,24 |
+| `platform` | `google_ads` | `google_ads` |
+| `ingestion_status` | `SUCCESS` | `SUCCESS` |
+| `primary_metric_goal` | 3,50 | 5,20 |
+| `phi_score_history` | 116 linhas | 117 linhas |
+
+Chaves únicas = linhas: **zero duplicata**. Janela de 7 dias do score:
+Salão 54,97 conv / R$ 223,12; Barbearia 2,00 conv / R$ 19,02 — o valor fracionário
+prova que o `FLOAT64` está valendo. A linha de teste `TEST-INSUFFICIENT-A02`
+ficou intacta.
+
+## 14.3 🔴 Achado no smoke — o rebuild se desfaria amanhã de manhã
+
+Depois de publicar os três workflows, a conferência dos writers mostrou que
+**os dois ainda truncavam `conversions`**:
+
+| Workflow | Onde | O quê |
+|---|---|---|
+| `sw metricas campanhas` (04h) | `Code Montar SQL` | `intNum()` = `Math.round`, e `CAST(... AS INT64)` em `conversions`, `conversions_3d`, `conversions_7d` |
+| `PHI - Subworkflow Campanhas` (07h) | `Code transformar retorno Google Ads` | `parseInt(metrics.conversions)` |
+
+Sem essa correção, a primeira rodada de 04h/07h de 10/09 gravaria de novo o valor
+truncado — **o rebuild teria durado uma noite**. É o `D3` do ADR-37, já aprovado;
+aplicado agora nos dois writers e publicado. `clicks` e `impressions` seguem
+inteiros, que é o que de fato são.
+
+> **Lição, no espírito da R6:** o corte no dado não basta se o writer que o
+> alimenta continua com o defeito. **Migração de dado sem correção do produtor é
+> conserto com prazo de validade.**
+
+## 14.4 Estado final
+
+- **BigQuery:** identidade neutra em `raw_campaign_data` e `phi_score_history`.
+- **n8n publicados:** `sw metricas campanhas` (`a873bd69`), `PHI - Subworkflow
+  Campanhas` (`a7f555c7`), `PHI - Pipeline_v2` (`99faea77`). Descrições atualizadas (R5).
+- **Notion:** as 2 páginas de Campanha com `campaign_id` nativo
+  (`21116045403`, `21149189736`).
+- **Backups intactos:** `raw_campaign_data_backup_2026_09_09` (436),
+  `phi_score_history_backup_2026_09` (234).
+
+## 14.5 O teste que ainda falta
+
+O smoke de verdade — **os dois writers colidindo no mesmo `MERGE`** — só acontece
+na rodada natural de **10/09 às 04h e 07h BRT**. Não rodei os pipelines à mão
+porque a Fase 3 tem efeito colateral no Notion (fechamento/escalada/abertura de
+tarefas) e a Regra Crítica nº 11 torna a ordem imutável. **Verificação de amanhã:**
+
+```sql
+SELECT client_id, platform, campaign_id, COUNT(*) AS linhas
+FROM phi_prod.raw_campaign_data
+WHERE date = CURRENT_DATE('America/Sao_Paulo') - 1
+GROUP BY 1,2,3;
+-- esperado: 1 linha por campanha (e nao 2), com conversions fracionaria
+```
+
+## 14.6 Pendências que este ADR deixa abertas
+
+| # | Pendência | Por que importa |
+|---|---|---|
+| P-13 | `phi_score_history` **não tem coluna `platform`** — a chave do MERGE é `(client_id, campaign_id, calculated_date)`, de 3 partes, não as 4 do ADR-38 | Hoje inofensivo (IDs nativos não colidem entre plataformas), mas a identidade não é a mesma nas duas tabelas |
+| P-14 | O pipeline **não avisa quando a credencial cai** — só para de gravar | É a causa comprovada dos 42 e 46 dias faltando. Maior que este ADR |
+| P-15 | `id_meta_camp` (`120223097083780450`) excede 2^53 e o campo do Notion é **número** | Pode já estar impreciso. Virar texto antes da primeira campanha Meta real |
+| P-16 | `client_goal_history` é **por cliente**, mas a meta é **por campanha** (3,50 Salão vs 5,20 Barbearia) | O §4 deste ADR mandava usar essa tabela; seguir teria gravado 3,0 em ~190 dias |
+| P-17 | `revenue` fica `NULL` na série reconstruída | O export oficial não traz coluna de valor de conversão |
+| P-18 | O repositório é **público** e contém dado de cliente (nome, custos diários, IDs de campanha e conta) | Decisão do Olavo, registrada |
+
+---
+
+# §15 — O smoke de 10/09 FALHOU: um defeito meu, encontrado e corrigido
+
+O teste previsto no §14.5 rodou. Os dois pipelines executaram com sucesso
+(`37533` às 04h BRT, `37578` às 07h BRT) — **e o resultado foi negativo.**
+
+## 15.1 O que se viu
+
+Para `date = 2026-09-09`, **duas linhas por campanha**, não uma:
+
+| `platform` | `ingestion_step` | `conversions` | `revenue` |
+|---|---|---|---|
+| `google_ads` | `DAILY_ENTRY` (04h) | 6,9919 | NULL |
+| **`undefined`** | `GADS_INSERT` (07h) | 7,9919 | 3,99 |
+
+## 15.2 A causa — introduzida por mim no §14
+
+O writer das 07h gravou a **string literal `'undefined'`** na coluna `platform`.
+
+Ao pôr `platform` na chave do `MERGE` (etapa 2 do §6), não verifiquei se o campo
+chegava ao nó que monta o SQL. Ele nasce em `Code in JavaScript` e **se perde em
+`Code transformar retorno Google Ads`**, que reconstrói o objeto de saída campo a
+campo e não repassava `platform`. A expressão do nó de SQL resolvia para
+`undefined` e o `WHEN MATCHED` nunca disparava — exatamente a falha de colisão
+que o ADR-38 existe para eliminar, **agora por outro motivo**.
+
+> **Isto é o inverso da R6.** Lá, o dado desmentiu o plano antes da execução.
+> Aqui, o plano estava certo e **a implementação não foi verificada de ponta a
+> ponta**: eu conferi que a chave do MERGE mudou, não que os três campos da chave
+> chegavam preenchidos. **Mudar uma chave é mudar um contrato — todo produtor
+> dela precisa ser reconferido, não só o consumidor.**
+
+## 15.3 O dano no score — pior que a duplicata
+
+`phi_score_history` **não tem coluna `platform`** (P-13). O cálculo agrupa por
+`(client_id, platform, campaign_id)`, então cada campanha virou **dois grupos**;
+como a chave do MERGE de destino tem só 3 partes e não havia linha para 09/09,
+**os dois grupos entraram como INSERT** — 2 linhas por campanha na tabela de score.
+
+E não bastava escolher a "boa": o componente `fis` divide o custo da campanha
+pelo custo total do cliente, e `portfolio_cost` somou os grupos fantasma.
+**As duas linhas estavam erradas.**
+
+| campanha | linha `EXEC-DE-…` (04h) | linha `EXEC-PHI-…` (07h) | **recalculado** |
+|---|---|---|---|
+| Salão | 68,70 · fis 18,62 | 93,44 EXCELLENT · fis 88,64 | **65,10 GOOD · fis 7,72** |
+| Barbearia | 69,34 · fis 93,19 | 99,85 EXCELLENT · fis 99,55 | **69,03 GOOD · fis 92,28** |
+
+O PHI reportou **EXCELLENT** em duas campanhas que estão em **GOOD**. Os `fis`
+recalculados batem com os de 08/09 (7,86 e 92,14), o que confirma o rateio.
+
+## 15.4 O que foi feito (execuções 37661–37665, temporário arquivado)
+
+1. **Writer corrigido:** `Code transformar retorno Google Ads` passa a repassar
+   `platform`, com uma guarda que **lança erro** se ele faltar — falhar alto é
+   melhor que gravar `'undefined'` em silêncio. Publicado (`ac55503a`).
+2. `UPDATE` consolidando na linha `google_ads` os valores das 07h — o que o MERGE
+   corrigido teria feito (`conversions` 7,9919 e `revenue` 3,99 no Salão).
+3. `DELETE` das linhas `platform = 'undefined'`.
+4. `DELETE` das 4 linhas de 09/09 em `phi_score_history`.
+5. **Recálculo** do score de 09/09 com o SQL exato do nó de produção, só com o
+   `execution_id` literal `EXEC-REPARO-ADR38-20260910` para deixar rastro.
+
+## 15.5 Estado conferido
+
+| | linhas | chaves únicas |
+|---|---|---|
+| `raw_campaign_data` | 466 | **466** |
+| `phi_score_history` | 236 | **236** |
+
+Zero duplicata nas duas. `conversions` fracionária confirmada em produção
+(6,9919 / 7,9919) — **o `D3` funcionou**, e é a única parte do §14 que o smoke
+aprovou sem ressalva.
+
+## 15.6 O smoke ainda não passou
+
+A correção está publicada mas **não foi exercitada numa rodada real**. O teste de
+verdade continua sendo o mesmo, agora em **11/09 às 04h e 07h**:
+
+```sql
+SELECT client_id, platform, campaign_id, COUNT(*) AS linhas
+FROM phi_prod.raw_campaign_data
+WHERE date = CURRENT_DATE('America/Sao_Paulo') - 1
+GROUP BY 1,2,3;
+-- esperado: 1 linha por campanha, platform preenchida, revenue nao-nulo
+```
+
+Se `platform` voltar vazia ou `undefined`, o workflow agora **falha alto** em vez
+de gravar — o erro aparece na execução.
+
+## 15.7 Pendências que este episódio muda de prioridade
+
+- **P-13 sobe para 🔴.** `phi_score_history` sem coluna `platform` não é mais
+  "inofensivo hoje": foi o que transformou uma duplicata na origem em **duas
+  linhas de score e um `fis` errado**. A chave das duas tabelas tem de ser a mesma.
+- **P-19 (nova):** nada impede uma linha duplicada por chave em `phi_score_history`.
+  O `MERGE` só protege quando o destino já tem a linha; com o destino vazio, um
+  `source` com chave repetida entra duas vezes. Falta uma checagem de unicidade
+  pós-carga que **avise**.
+
+---
+
+# §16 — Dois achados enquanto se espera o smoke (2026-09-10)
+
+## 16.1 🟡 P-20 (nova) — `sw metricas campanhas` roda DUAS vezes por dia
+
+Toda a documentação — inclusive a descrição que escrevi no §14 — diz "04h BRT".
+O log de execuções mostra outra coisa, nos quatro dias verificados:
+
+| dia | 03:00 UTC (`trigger`) | 07:00 UTC (`integrated`) |
+|---|---|---|
+| 07/09 | `36379` | `36434` |
+| 08/09 | `36722` | `36777` |
+| 09/09 | `37062` | `37117` |
+| 10/09 | `37469` | `37533` |
+
+O workflow tem um `Schedule Trigger1` próprio, com `rule.interval: [{}]` — o
+default do n8n, meia-noite no fuso da instância. Como a instância roda em
+`America/Sao_Paulo`, isso é **00h BRT**; a segunda rodada é o orquestrador
+`operador unico metricas` chamando o mesmo workflow às 04h.
+
+**Não gera duplicata** — as duas rodadas casam na mesma chave e o `MERGE`
+atualiza. E explica um detalhe do §15: o `source_execution_id` que sobreviveu
+em 09/09 (`EXEC-DE-20260910030106`) é o da **rodada da meia-noite**, porque
+`execution_id` só é gravado no `INSERT` (ADR-37 Fase 0.1) e é ela quem cria a linha.
+
+**Por que ainda assim importa:** puxar D-1 às 00h BRT é buscar o dia **minutos
+depois de fechar**, quando a atribuição do Google Ads é a menos assentada; e
+dobra o consumo de quota da API para o mesmo dado. É o `D4` do ADR-37
+(re-puxar os últimos 3 dias) chegando pela porta dos fundos, sem ninguém ter
+decidido. Decisão pendente: manter as duas, desativar a da meia-noite, ou
+transformá-la no re-puxe de 3 dias do `D4`.
+
+> **R5 na prática:** a descrição que escrevi ontem estava incompleta e teria
+> feito a próxima auditoria concluir errado. Corrigida na mesma sessão.
+
+## 16.2 🔴 P-15 sobe para crítico — o `id_meta_camp` do Notion JÁ está errado
+
+Não é mais risco futuro. Verificação aritmética:
+
+```
+valor no Notion (campo numero) : 120223097083780450
+mais proximo representavel     : 120223097083780448
+exatamente representavel?      : False
+espacamento (ulp) nessa faixa  : 16
+```
+
+O campo `id_meta_camp` é do tipo **número** no Notion, que trafega como float64.
+Nessa ordem de grandeza os inteiros representáveis são espaçados de **16 em 16**
+— `...450` não é um deles. O que se lê é a representação decimal mais curta do
+double `...448`. **O ID verdadeiro da campanha Meta não é recuperável a partir
+do Notion**; ele está em algum ponto a ±8 do valor exibido.
+
+E isso **já está em produção**: a rodada de 10/09 gravou esse ID em
+`raw_campaign_data` (`CLI-13`, `meta_ads`, 09/09). Hoje é inofensivo porque é
+campanha de teste, mas qualquer `MERGE` ou conciliação com a API do Meta vai
+casar com o ID errado.
+
+**Correção:** `id_meta_camp` tem de virar campo de **texto** no Notion e o valor
+ser **redigitado a partir do Meta** — converter o número atual não resolve, ele
+já perdeu a informação. Vale a mesma checagem para `id_meta_account`,
+`id_meta_pixel`, `id_ga4_property`, `id_gbp` e `id_google_account`, todos
+numéricos. `id_google_camp` (`21116045403`, 11 dígitos) está bem abaixo de 2^53
+e é seguro.
+
+---
+
+# §17 — P-13 e P-19 resolvidas (2026-09-10)
+
+As duas eram a mesma ferida, aberta pelo episódio do §15: a chave de
+`phi_score_history` tinha 3 partes enquanto a de `raw_campaign_data` tinha 4, e
+nada avisava quando isso produzia linha repetida.
+
+## 17.1 P-13 — `platform` passa a fazer parte da chave do score
+
+| passo | resultado |
+|---|---|
+| Backup `phi_score_history_backup_2026_09_10` | criado |
+| `ALTER TABLE ... ADD COLUMN IF NOT EXISTS platform STRING` | ok |
+| Backfill a partir de `raw_campaign_data` | **235 linhas → `google_ads`** |
+| Sobra | **1 linha → `unknown`** (`TEST-INSUFFICIENT-A02`) |
+| Total | 236 linhas / **236 chaves de 4 partes** |
+
+O backfill só preenche onde o par `(client_id, campaign_id)` tem **uma única**
+plataforma no `raw` — nada é adivinhado. A linha de teste ficou `unknown` em vez
+de receber `google_ads` por conveniência: ela não tem plataforma de verdade, e
+inventar uma seria mentir num campo que agora é chave.
+
+O `MERGE` do nó `Calcular e Persistir PHI Score` passou a:
+
+```sql
+ON  target.client_id      = source.client_id
+AND target.platform       = source.platform
+AND target.campaign_id    = source.campaign_id
+AND target.calculated_date = source.calculated_date
+```
+
+`platform` entra também no `SELECT` da origem e no `INSERT`. **Não** entra no
+`UPDATE SET` — é chave, não atributo.
+
+## 17.2 P-19 — a duplicata agora grita
+
+Dois nós novos entre `Calcular e Persistir PHI Score` e `If Cálculo OK?`:
+
+1. **`Checar unicidade do score`** — procura, nos últimos 7 dias, chave repetida
+   ou `platform` nula.
+2. **`Falhar se chave duplicada`** — **lança erro** se achar algo.
+
+Falhar a execução é deliberado. Em 09/09 o PHI reportou **EXCELLENT** sobre dado
+duplicado e ninguém soube até alguém ir olhar; uma execução vermelha na lista do
+n8n é infinitamente melhor que um score bonito e errado.
+
+## 17.3 A verificação que faltou em 09/09, feita desta vez ANTES de publicar
+
+O erro do §15 não foi o plano, foi publicar sem provar que os campos da chave
+chegavam preenchidos. Desta vez a origem do `MERGE` foi rodada isolada primeiro:
+
+| client_id | platform | campaign_id | calculated_date | linhas na chave |
+|---|---|---|---|---|
+| CLI-4 | `google_ads` | 21116045403 | 2026-09-09 | **1** |
+| CLI-4 | `google_ads` | 21149189736 | 2026-09-09 | **1** |
+
+Nenhum `NULL`, nenhuma chave repetida. **Só então publiquei** (`2015834e`).
+
+## 17.4 Os dois caminhos da proteção foram testados
+
+Uma proteção nunca exercitada é uma proteção que ninguém sabe se funciona —
+seria repetir o erro em outro lugar. Ambos rodados num workflow temporário:
+
+| caminho | como | resultado |
+|---|---|---|
+| **falha** | mesma query com `HAVING COUNT(*) >= 1`, forçando achados | execução **vermelha**, erro nomeando cada chave |
+| **normal** | query real (`> 1`) | `{ unicidade: 'ok' }`, execução verde |
+
+O caminho normal importa tanto quanto o outro: um falso positivo quebraria o
+pipeline toda manhã.
+
+## 17.5 Fica registrado, não resolvido
+
+O `Pipeline_v2` **não tem `errorWorkflow` configurado** (`settings` só traz
+`executionOrder`, `binaryMode`, `timeSavedMode`, `callerPolicy`,
+`availableInMCP`). Ou seja: a falha da P-19 aparece na lista de execuções do
+n8n, mas **não chega ao Olavo por Telegram**. É exatamente a **P-14**, e o
+alcance dela é maior que este ADR — não foi feita aqui para não ampliar o escopo
+sem decisão.
+
+---
+
+# §18 — P-14 resolvida — e a premissa dela estava errada (2026-09-10)
+
+A P-14 estava escrita como *"o pipeline não avisa quando a credencial cai"*. Antes
+de construir, verifiquei se era isso mesmo. **Não era.**
+
+## 18.1 O que os 45 dias perdidos realmente foram
+
+O backup `raw_campaign_data_backup_2026_09_09` ainda guarda a produção antiga, então
+deu para listar os dias que faltavam (CLI-4, a partir de 29/03) e cruzar com o
+`workflow_execution_log`:
+
+| categoria | dias |
+|---|---|
+| **Nenhuma execução registrada** | **43** |
+| Travou em `RUNNING` | 1 (07/04) |
+| Sucesso mas não gravou | 1 (09/09) |
+| **Execução com status `FAILED`** | **0** |
+
+Controle da própria verificação, para não concluir em cima de log incompleto:
+o `workflow_execution_log` cobre **18/03 → 10/09** (131 dias distintos), começa
+**antes** da janela analisada, e **contém 24 registros `FAILED`** — o status existe
+e é usado. Ainda assim, **44 dias do calendário não têm registro nenhum**, e são
+justamente os dias sem dado.
+
+> **Conclusão que muda o desenho:** o modo de falha dominante não é *"rodou e
+> falhou"*, é **"não rodou"**. Um `errorWorkflow` sozinho **não teria evitado
+> nenhum** dos 45 dias — não houve erro para disparar.
+>
+> Uma proteção desenhada sobre a premissa errada teria a aparência de solução e o
+> resultado de nada. É a **R6** aplicada a um plano meu, não herdado.
+
+## 18.2 O que foi construído — duas peças, não uma
+
+### (A) `PHI - Vigia de Frescor dos Dados` (`JMgc0HdLPOFPnFYb`)
+
+Workflow **independente do pipeline**, gatilho próprio às **08h BRT**. Olha o
+**dado**, não a execução:
+
+- pega as campanhas que tiveram dado nos **últimos 7 dias**;
+- avisa se alguma **não tem linha em `raw_campaign_data` de ontem** (`SEM INGESTAO`);
+- avisa se entrou dado mas **não saiu score** (`SEM SCORE`), só para clientes ativos
+  em `client_config` — senão o CLI-13, que não é pontuado, alertaria todo dia.
+
+Pega os três casos: *não rodou*, *rodou e morreu*, *rodou e não gravou*. **Silêncio
+é boa notícia:** sem lacuna, o nó de montagem retorna vazio e o Telegram nem executa.
+
+### (B) `PHI - Alerta de Falha` (`UZ7sIE5cWrrO8xea`)
+
+Handler compartilhado com `Error Trigger` → Telegram, apontado como `errorWorkflow`
+de: `PHI - Pipeline_v2`, `sw metricas campanhas`, `PHI - Subworkflow Campanhas`,
+`operador unico metricas` e **do próprio vigia** — se o vigia quebrar, alguém
+precisa saber. Cobre a falha dura: credencial expirada (o caso real de 09/09) e a
+checagem de unicidade da **P-19**, que até agora só ficava vermelha no n8n.
+
+## 18.3 Testado, não suposto
+
+| teste | resultado |
+|---|---|
+| Vigia com a situação real | nenhuma lacuna, Telegram **não executou** — sem falso alarme |
+| Vigia com lacunas forçadas (Telegram desligado) | mensagem montada corretamente, 2 campanhas listadas |
+| Entrega no Telegram | `ok: true`, mensagem 594 no chat do Olavo |
+
+O teste de entrega foi uma mensagem única, marcada como teste. Um canal de alerta
+nunca exercitado é o mesmo defeito em outro lugar.
+
+## 18.4 🔴 P-21 (nova) — o round-trip do MCP altera nó que ninguém pediu
+
+Ao publicar o `sw metricas campanhas` apareceu `Workflow cannot be activated
+because it has no trigger node`. A produção não foi afetada (a versão `a873bd69`
+seguiu ativa), mas o **rascunho** tinha divergido da versão no ar em dois pontos
+que **eu não alterei de propósito**:
+
+| item | versão no ar | rascunho |
+|---|---|---|
+| `BigQuery Série Diária` · `sqlQuery` | `={{ $json._bq_sql_serie }}` | `{{ ... }}` — **perdeu o `=`** |
+| `Schedule Trigger1` | habilitado | **desabilitado** |
+
+Publicar às cegas teria **matado o gatilho da meia-noite** e mexido numa expressão.
+Ambos foram restaurados ao estado da versão no ar e a publicação passou
+(`d95c75c9`), com `active: true` e o gatilho de volta.
+
+**Regra prática que fica:** antes de publicar um workflow tocado por várias
+atualizações via MCP, **comparar o rascunho com a versão no ar**. Um sinal barato:
+se a lista de `validationWarnings` ganhar um item novo entre uma atualização e
+outra, algo foi mexido sem pedido.
+
+## 18.5 Fato útil descoberto no caminho
+
+**As configurações de workflow não são versionadas.** Depois do
+`setWorkflowSettings` em `PHI - Subworkflow Campanhas`, `versionId` continuou igual
+a `activeVersionId` — ou seja, o `errorWorkflow` passa a valer **na hora**, sem
+publicar. Só mudança de nó exige publicação.
+
+## 18.6 O que a P-14 ainda não cobre
+
+- O vigia roda **uma vez por dia, às 08h**. Uma queda entre 08h e 08h do dia
+  seguinte só aparece na manhã seguinte. Aceitável para dado diário; não serve para
+  nada que exija reação em minutos.
+- Ele compara com **quem teve dado nos últimos 7 dias**. Campanha nova que nunca
+  ingeriu nada não é notada — não há com o que comparar. O dono dessa lacuna é o
+  Notion (`Status = Em execução`), e ligar o vigia ao Notion é obra à parte.
+- `PHI — Digest Diário de Progresso` (`rhobbBEeQaiWIuiF`) **não** recebeu o
+  `errorWorkflow`: é da frente de gestão, não do pipeline. Fica registrado.
+
+---
+
+# 19. Smoke de 11/09 — o que passou e o defeito que ele achou
+
+> Verificação feita em 11/09 às ~10h55 BRT, depois das três janelas do dia
+> (00h, 04h e 07h BRT). Fonte: execuções do n8n + consulta direta ao BigQuery.
+
+## 19.1 As execuções do dia
+
+| Workflow | Horário (UTC) | = BRT | Status |
+|---|---|---|---|
+| `sw metricas campanhas` (gatilho próprio) | 03:00:15 | 00h | `success` |
+| `operador unico metricas` | 07:00:00 | 04h | `success` |
+| `sw metricas campanhas` (chamado pelo orquestrador) | 07:00:01 | 04h | `success` |
+| `PHI - Pipeline_v2` | 10:00:51 | 07h | `success` |
+| `PHI - Alerta de Falha` | — | — | **nenhuma execução** (correto: nada falhou) |
+| `PHI - Vigia de Frescor dos Dados` | — | — | **nenhuma execução — ver 19.4** |
+
+O `success` do `Pipeline_v2` **é** a prova de que a P-19 passou: a checagem de
+unicidade fica no meio da cadeia e o nó `Falhar se chave duplicada` derruba a
+execução se achar chave repetida ou `platform` nula. Execução verde = checagem
+verde.
+
+## 19.2 O dado de ontem (10/09)
+
+| tabela | client_id | platform | campaign_id | linhas | detalhe |
+|---|---|---|---|---|---|
+| RAW | CLI-13 | `meta_ads` | 120223097083780450 | **1** | conv=0 clicks=0 cost=0 rev=NULL |
+| RAW | CLI-4 | `google_ads` | 21116045403 | **1** | conv=8 clicks=89 cost=33,10 rev=4 |
+| RAW | CLI-4 | `google_ads` | 21149189736 | **1** | conv=0 clicks=0 cost=0 rev=0 |
+| SCORE | CLI-4 | `google_ads` | 21116045403 | **1** | phi=57,51 |
+| SCORE | CLI-4 | `google_ads` | 21149189736 | **1** | phi=76,35 |
+
+Os três critérios da §15.6 passam:
+
+- **Uma linha por campanha/dia** — todas com `linhas = 1`. O defeito do
+  `platform = 'undefined'` de 09/09 **não voltou**.
+- **`platform` preenchida** — nenhuma linha caiu no `<NULO>`.
+- **Um score por campanha** — `phi_score_history` com `linhas = 1` e `platform`
+  preenchida nas duas. A P-13 está de pé em produção.
+
+## 19.3 A fração de `conversions` — provada, mas não por 10/09
+
+10/09 trouxe `conv = 8` na campanha Salão: **inteiro**. Isso não prova nem
+desmente a correção da D3, porque 8,0 é um valor legítimo. A prova está no dia
+anterior, já escrito pelos writers corrigidos:
+
+| data | campanha | conversions | forma |
+|---|---|---|---|
+| 07/09 | Salão | 8 | inteiro |
+| 08/09 | Salão | **12,97** | **fracionário** |
+| 09/09 | Salão | **7,991889** | **fracionário** |
+| 10/09 | Salão | 8 | inteiro |
+
+`7,991889` é escrita do writer já corrigido. Antes da D3 esse valor teria virado
+`7` ou `8`. **A truncagem acabou** — e vale registrar que o erro era maior do que
+parecia: não é só "perde o centavo", é que `7,991889` virava `8` num dia e `12,97`
+virava `12` no outro, com o desvio mudando de sinal.
+
+## 19.4 🔴 Defeito encontrado: o vigia não roda às 08h
+
+**O `PHI - Vigia de Frescor dos Dados` não executou hoje.** Não por estar
+inativo — `active: true`, publicado, gatilho único, `errorWorkflow` ligado. Ele
+não executou porque **o horário está errado**.
+
+Eu escrevi a expressão como `0 11 * * *`, convertendo 08h BRT para 11:00 UTC.
+**A instância do n8n não interpreta cron em UTC.** A prova está no parque que já
+existia:
+
+| workflow | expressão | disparou em (UTC) |
+|---|---|---|
+| `operador unico metricas` | `0 4 * * *` | **07:00:00** |
+
+`0 4` disparando às 07:00 UTC só fecha se a instância lê a expressão em
+**America/Sao_Paulo** (UTC−3). Logo `0 11 * * *` marca **11h BRT**, não 08h.
+
+**Por que o teste não pegou:** todos os testes da P-14 foram execuções
+**manuais**. Execução manual dispara o nó de gatilho sem consultar o
+agendamento — o único pedaço que eu não exercitei foi justamente o que estava
+errado. Fica a regra: **testar um workflow agendado à mão não testa o
+agendamento.** O que testa é a primeira execução automática.
+
+**Correção aplicada e provada.** A hipótese não ficou no papel: às 14:00:00 UTC
+o vigia **disparou sozinho** (execução `38029`, `mode: trigger`), confirmando que
+`0 11` significa 11h BRT. Essa mesma execução também provou o resto do caminho em
+produção — BigQuery consultou, o Code devolveu vazio e o Telegram **não executou**.
+O vigia estava inteiro; só a hora estava errada.
+
+Expressão trocada para `0 8 * * *` e publicada (`ba3ce628`). A conferência da
+P-21 foi feita antes de publicar: o diff rascunho × versão no ar mostrou **uma
+única diferença** — a expressão do cron — com SQL, `jsCode`, credenciais e nós
+byte a byte iguais, e o único `validationWarning` marcado `[pre-existing]`.
+
+**Nota de honestidade:** a §18 e a descrição do workflow afirmavam "08h BRT".
+Era falso desde a criação — o vigia existiu por um dia marcado para as 11h.
+Nenhuma consequência prática (não houve lacuna para avisar hoje), mas o texto
+estava errado e está corrigido aqui.
+
+## 19.5 Achado menor: CLI-13 voltou a ser escrito
+
+O corte da §14 apagou as linhas de teste do CLI-13, mas **o caminho Meta continua
+gravando uma linha zerada por dia** para ele:
+
+| data | client_id | campanha | custo |
+|---|---|---|---|
+| 09/09 | CLI-13 | 120223097083780450 | 0 |
+| 10/09 | CLI-13 | 120223097083780450 | 0 |
+
+Não quebra nada e não entra em score (o cliente não está ativo em
+`client_config`, e o ramo `SEM SCORE` do vigia exige `is_active = TRUE`). Mas
+**entra no ramo `SEM INGESTAO` do vigia**: no dia em que o caminho Meta parar, o
+vigia vai alertar sobre uma campanha de teste como se fosse cliente real. Isso
+vira a **P-22**.
+
+## 19.6 Pendências abertas depois deste smoke
+
+| # | Pendência |
+|---|---|
+| P-15 | `id_meta_camp` precisa virar **texto** no Notion, com o valor **redigitado** da Meta |
+| P-16 | `client_goal_history` é por cliente, mas a meta é por campanha |
+| P-17 | `revenue` NULL na série reconstruída (o export não tem a coluna) |
+| P-18 | Repositório público com dado de cliente |
+| P-20 | Decidir a rodada dupla do `sw metricas campanhas` (00h + 04h) |
+| P-21 | Comparar rascunho × versão no ar antes de publicar |
+| **P-22** | **CLI-13 (teste) continua sendo ingerido e vai virar falso alarme do vigia** |

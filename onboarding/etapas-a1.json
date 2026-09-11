@@ -1,0 +1,297 @@
+{
+  "$schema_version": "1.0.0",
+  "source": "SOP v1.0.2 — Tabela A1 (31 etapas de Onboarding de Cliente — Tráfego Pago)",
+  "source_url": "https://www.notion.so/35fb65e5c72b8109a80cccd657450b74",
+  "consumed_by_workflow": "Onb - Briefing to Client (A2.1)",
+  "target_database": "PHI - Etapas de Onboarding",
+  "target_data_source": "df28bb77-997d-43e8-93e7-d9a291f787a6",
+  "extracted_at": "2026-05-26",
+  "extracted_by": "Cérebro Estratégico (Claude Code)",
+  "notes": [
+    "Responsável (campo person no Notion) não está incluído — é preenchido manualmente após criação.",
+    "Status inicial de cada etapa criada deve ser 'Pendente'.",
+    "Data prevista = data_inicio (do payload do form) + prazo_dias.",
+    "Ao mudar A1 no SOP, atualizar este arquivo e bump da versão do workflow A2.1."
+  ],
+  "etapas": [
+    {
+      "sequencia": 1,
+      "nome": "Receber handoff do Comercial",
+      "tipo_etapa": "Documentação interna",
+      "aguardando": "Comercial",
+      "prazo_dias": 0,
+      "inputs": "Contrato assinado e dados mínimos",
+      "output_dod": "Pacote de handoff entregue"
+    },
+    {
+      "sequencia": 2,
+      "nome": "Validar completude do handoff",
+      "tipo_etapa": "Documentação interna",
+      "aguardando": "Nada",
+      "prazo_dias": 0,
+      "inputs": "Pacote recebido",
+      "output_dod": "Lacunas críticas identificadas ou sanadas"
+    },
+    {
+      "sequencia": 3,
+      "nome": "Criar registro em PHI - Onboarding de Clientes",
+      "tipo_etapa": "Documentação interna",
+      "aguardando": "Nada",
+      "prazo_dias": 0,
+      "inputs": "Dados mínimos validados",
+      "output_dod": "Página do onboarding criada"
+    },
+    {
+      "sequencia": 4,
+      "nome": "Definir responsável operacional",
+      "tipo_etapa": "Documentação interna",
+      "aguardando": "Nada",
+      "prazo_dias": 0,
+      "inputs": "Registro criado",
+      "output_dod": "Dono do onboarding definido"
+    },
+    {
+      "sequencia": 5,
+      "nome": "Enviar mensagem inicial + briefing",
+      "tipo_etapa": "Marco de comunicação",
+      "aguardando": "Cliente",
+      "prazo_dias": 0,
+      "inputs": "Contato principal confirmado",
+      "output_dod": "Cliente recebe instruções e link do form"
+    },
+    {
+      "sequencia": 6,
+      "nome": "Cobrar briefing não respondido",
+      "tipo_etapa": "Marco de comunicação",
+      "aguardando": "Cliente",
+      "prazo_dias": 1,
+      "inputs": "Form enviado sem resposta",
+      "output_dod": "Follow-up executado"
+    },
+    {
+      "sequencia": 7,
+      "nome": "Validar briefing recebido",
+      "tipo_etapa": "Documentação interna",
+      "aguardando": "Cliente",
+      "prazo_dias": 2,
+      "inputs": "Resposta do Google Form",
+      "output_dod": "Briefing classificado como aprovado, com lacunas ou insuficiente"
+    },
+    {
+      "sequencia": 8,
+      "nome": "Produzir resumo operacional do briefing",
+      "tipo_etapa": "Documentação interna",
+      "aguardando": "Nada",
+      "prazo_dias": 2,
+      "inputs": "Briefing validado",
+      "output_dod": "Resumo com oferta, público, meta e riscos anexado ao PHI"
+    },
+    {
+      "sequencia": 9,
+      "nome": "Executar análise de ativos e presença digital",
+      "tipo_etapa": "Documentação interna",
+      "aguardando": "Nada",
+      "prazo_dias": 3,
+      "inputs": "Briefing validado + links",
+      "output_dod": "Achados principais coletados"
+    },
+    {
+      "sequencia": 10,
+      "nome": "Rodar cliente oculto e checar rastreamento aparente",
+      "tipo_etapa": "Setup técnico",
+      "aguardando": "Nada",
+      "prazo_dias": 3,
+      "inputs": "Site/contato do cliente",
+      "output_dod": "Fricções e lacunas técnicas registradas"
+    },
+    {
+      "sequencia": 11,
+      "nome": "Analisar concorrentes prioritários",
+      "tipo_etapa": "Documentação interna",
+      "aguardando": "Nada",
+      "prazo_dias": 3,
+      "inputs": "Lista de concorrentes",
+      "output_dod": "Benchmark mínimo concluído"
+    },
+    {
+      "sequencia": 12,
+      "nome": "Consolidar relatório curto pré-kickoff",
+      "tipo_etapa": "Entrega",
+      "aguardando": "Nada",
+      "prazo_dias": 4,
+      "inputs": "Achados da análise prévia",
+      "output_dod": "Relatório curto pronto para sustentar a kickoff"
+    },
+    {
+      "sequencia": 13,
+      "nome": "Conduzir call de kickoff e preencher ata",
+      "tipo_etapa": "Marco de comunicação",
+      "aguardando": "Cliente",
+      "prazo_dias": 4,
+      "inputs": "Briefing + relatório prévio + agenda da reunião",
+      "output_dod": "Kickoff executada e ata preenchida"
+    },
+    {
+      "sequencia": 14,
+      "nome": "Consolidar pendências, responsáveis e cronograma pós-kickoff",
+      "tipo_etapa": "Documentação interna",
+      "aguardando": "Nada",
+      "prazo_dias": 4,
+      "inputs": "Ata da kickoff",
+      "output_dod": "Lista de pendências e cronograma macro enviados ao cliente"
+    },
+    {
+      "sequencia": 15,
+      "nome": "Enviar materiais bônus D+1 / D+2",
+      "tipo_etapa": "Entrega",
+      "aguardando": "Cliente",
+      "prazo_dias": 5,
+      "inputs": "Resumo da call e materiais de apoio",
+      "output_dod": "Cliente recebe reforço pós-kickoff e próximos passos"
+    },
+    {
+      "sequencia": 16,
+      "nome": "Estruturar Business Manager e ativos Meta",
+      "tipo_etapa": "Setup técnico",
+      "aguardando": "Cliente",
+      "prazo_dias": 5,
+      "inputs": "Acessos Meta e dados do domínio",
+      "output_dod": "BM, Página, Instagram, conta de anúncios e domínio estruturados"
+    },
+    {
+      "sequencia": 17,
+      "nome": "Implantar GTM, GA4 e base de tracking",
+      "tipo_etapa": "Setup técnico",
+      "aguardando": "Fornecedor externo",
+      "prazo_dias": 6,
+      "inputs": "Acesso ao site/CMS e IDs das plataformas",
+      "output_dod": "GTM e GA4 instalados e publicados com versionamento"
+    },
+    {
+      "sequencia": 18,
+      "nome": "Configurar Pixel e eventos Meta",
+      "tipo_etapa": "Setup técnico",
+      "aguardando": "Fornecedor externo",
+      "prazo_dias": 6,
+      "inputs": "Pixel criado + GTM funcional",
+      "output_dod": "Eventos Meta críticos disparando corretamente"
+    },
+    {
+      "sequencia": 19,
+      "nome": "Configurar Google Ads e importação de conversões",
+      "tipo_etapa": "Setup técnico",
+      "aguardando": "Cliente",
+      "prazo_dias": 7,
+      "inputs": "Conta Google Ads + vínculo com GA4",
+      "output_dod": "Conversões importadas e elegíveis para uso"
+    },
+    {
+      "sequencia": 20,
+      "nome": "Criar públicos mínimos em GA4 / Google Ads / Meta",
+      "tipo_etapa": "Setup técnico",
+      "aguardando": "Nada",
+      "prazo_dias": 7,
+      "inputs": "Tracking base validado",
+      "output_dod": "Públicos mínimos em preenchimento"
+    },
+    {
+      "sequencia": 21,
+      "nome": "Executar validação final PASS/FAIL da stack",
+      "tipo_etapa": "Entrega",
+      "aguardando": "Nada",
+      "prazo_dias": 8,
+      "inputs": "Todas as configurações anteriores",
+      "output_dod": "Jornada ponta a ponta validada e pendências remanescentes registradas"
+    },
+    {
+      "sequencia": 22,
+      "nome": "Revisar hipótese estratégica e definir canal de entrada",
+      "tipo_etapa": "Documentação interna",
+      "aguardando": "Nada",
+      "prazo_dias": 8,
+      "inputs": "Fase 4 concluída + orçamento definido",
+      "output_dod": "Hipótese inicial revisada, papel de Meta/Google definido e oferta foco escolhida"
+    },
+    {
+      "sequencia": 23,
+      "nome": "Criar arquitetura de públicos quente, morna e fria",
+      "tipo_etapa": "Setup técnico",
+      "aguardando": "Nada",
+      "prazo_dias": 9,
+      "inputs": "Eventos validados + listas/base disponíveis",
+      "output_dod": "Públicos estratégicos criados ou documentados com exceções"
+    },
+    {
+      "sequencia": 24,
+      "nome": "Emitir naming convention e briefing de criativos",
+      "tipo_etapa": "Documentação interna",
+      "aguardando": "Cliente",
+      "prazo_dias": 9,
+      "inputs": "Estrutura estratégica definida",
+      "output_dod": "Convenção de nomes aprovada e briefing criativo emitido com responsável e prazo"
+    },
+    {
+      "sequencia": 25,
+      "nome": "Publicar primeira leva de campanhas",
+      "tipo_etapa": "Entrega",
+      "aguardando": "Cliente",
+      "prazo_dias": 10,
+      "inputs": "Públicos prontos + criativos aprovados + orçamento liberado",
+      "output_dod": "Campanhas publicadas conforme ordem e checklist pré-publish"
+    },
+    {
+      "sequencia": 26,
+      "nome": "Monitorar campanha intensivamente e registrar sinais iniciais",
+      "tipo_etapa": "Documentação interna",
+      "aguardando": "Nada",
+      "prazo_dias": 10,
+      "inputs": "Campanhas ativas",
+      "output_dod": "Janela crítica de 3-7 dias acompanhada com intervenções registradas"
+    },
+    {
+      "sequencia": 27,
+      "nome": "Comunicar resultados e emitir relatórios de onboarding",
+      "tipo_etapa": "Marco de comunicação",
+      "aguardando": "Nada",
+      "prazo_dias": 14,
+      "inputs": "Dados iniciais de campanha",
+      "output_dod": "Cliente recebe atualizações a cada 3-4 dias e relatórios D+14 / D+21"
+    },
+    {
+      "sequencia": 28,
+      "nome": "Avaliar primeiro valor e decidir transição",
+      "tipo_etapa": "Entrega",
+      "aguardando": "Nada",
+      "prazo_dias": 21,
+      "inputs": "Relatórios + marco de first value",
+      "output_dod": "Resultado classificado como atingido, parcial ou não atingido com próximo passo definido"
+    },
+    {
+      "sequencia": 29,
+      "nome": "Disparar CSAT e NPS",
+      "tipo_etapa": "Marco de comunicação",
+      "aguardando": "Cliente",
+      "prazo_dias": 21,
+      "inputs": "Encerramento do onboarding decidido",
+      "output_dod": "Formulários enviados ao contato principal do cliente"
+    },
+    {
+      "sequencia": 30,
+      "nome": "Finalizar handoff documental para ongoing",
+      "tipo_etapa": "Documentação interna",
+      "aguardando": "Nada",
+      "prazo_dias": 21,
+      "inputs": "Estado final das campanhas, públicos e hipóteses",
+      "output_dod": "Documento de handoff pronto para operação contínua"
+    },
+    {
+      "sequencia": 31,
+      "nome": "Encerrar página do onboarding no PHI e vincular aprendizados/ADRs",
+      "tipo_etapa": "Documentação interna",
+      "aguardando": "Nada",
+      "prazo_dias": 21,
+      "inputs": "Handoff concluído + retrospectiva",
+      "output_dod": "Status do onboarding concluído, data da 1ª entrega preenchida e vínculos criados"
+    }
+  ]
+}

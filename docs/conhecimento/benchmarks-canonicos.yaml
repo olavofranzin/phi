@@ -1,0 +1,80 @@
+# =====================================================================
+# PHI — Tabela Canônica de Benchmarks (v1)
+# Fonte de consulta ÚNICA para números absolutos citados por agentes.
+# Os documentos narrativos (pesquisa/benchmarks 2026) explicam; ESTA
+# tabela é o que se cita. Regra do Bloco Comum (Módulo 28): toda
+# afirmação numérica ancora numa referência entre colchetes — aqui,
+# o campo `id` (ex.: "[BM-CPC-GSEARCH-US-2025]").
+# Seed: §7.6 de docs/pesquisa-trafego-pago.md (R2, canônico) + KPI-cards
+# do doc G2 (Santana, escopo e-commerce) com evidência rebaixada.
+# Governança: K1 da Camada de Conhecimento (BRUTO-v0.1 §2/§3).
+# =====================================================================
+
+meta:
+  versao: "1.0"
+  criado_em: "2026-07-05"
+  autoridade: "docs/pesquisa-trafego-pago.md (R2) > docs/Gestão de Tráfego Pago, Métricas e Benchmarks (2026).md (R1)"
+  revisao: trimestral   # números de leilão degradam ~12 meses (CPC Google +18% YoY)
+  regras_de_uso:
+    - "Ordem de consulta: percentis da própria conta (raw_campaign_data/phi_score_history) > este arquivo > estratégia do Banco > conceito."
+    - "Prefira múltiplos relativos ('X% acima da média do setor'); absolutos são faixa de ancoragem, não verdade única (nota de reconciliação de variância, R2)."
+    - "Janela estatística: nenhuma conclusão com <~30 conversões ou <2-4 semanas → responder VOLUME INSUFICIENTE (ADR-21 / Bloco Comum)."
+    - "forca_evidencia: A=validado internamente | B=case documentado | C=benchmark/estudo público | D=heurística/opinião. D nunca sustenta [CERTEZA]."
+
+arbitragens:  # conflitos entre R1×R2×G2 resolvidos aqui — vale sobre os docs
+  - id: ARB-CVR-01
+    regra: "CVR de SITE (pedidos/sessões, e-commerce: médio 1,5-3%, bom 3-5%) e CVR de PLATAFORMA (conversões da plataforma/cliques, Google Ads: média ~7,2-7,5%) são MÉTRICAS DISTINTAS. Nunca comparar uma com a faixa da outra. Diagnóstico de campanha usa CVR de plataforma; diagnóstico de loja/LP usa CVR de site."
+  - id: ARB-ROAS-01
+    regra: "Break-even ROAS = 1 ÷ margem de contribuição SEMPRE precede regra absoluta. 'ROAS bom' = 1-2 pontos acima do break-even do cliente. Regras absolutas ('≥5:1 saudável') só na ausência da margem — e citadas como [HIPÓTESE]."
+  - id: ARB-LTVCAC-01
+    regra: "LTV:CAC 3-4:1 saudável. >5:1 → 'avaliar headroom de escala ANTES de concluir eficiência' (une leituras R1 'subinvestimento' e R2 'eficiente'). Nunca celebrar >5:1 sem checar se há demanda não capturada."
+  - id: ARB-KEYWORD-01
+    regra: "Keyword vencedora: sinal a partir de 5-10 conversões; DECISÃO definitiva só com ~20-30 conversões E 3-4 semanas de estabilidade E CPA ≤ meta (unifica R1 20+ e R2 ~30)."
+  - id: ARB-ESCOPO-01
+    regra: "Limiares de G2 (Santana) valem só para e-commerce; testes de G3 (Sobral) são n=1 em infoproduto/lançamento — sempre [HIPÓTESE], nunca benchmark. Doc G4 (comercial-agência) fora do retrieval de análise de campanha."
+
+faixas_qualitativas:  # consolidado R1+R2 (onde divergem, R2 vence)
+  - id: BM-CTR-GSEARCH-FAIXAS
+    metrica: ctr_search_google
+    faixas: {ruim: "<2%", medio: "2-4%", bom: "4-7%", excelente: ">7%"}
+    media_referencia: "3,17% [BM-CTR-GOOGLE-GLOBAL-2026]"
+    fonte: "R1 §1 c/ média R2 §7.6"
+    forca_evidencia: C
+  - id: BM-CTR-META-FAIXAS
+    metrica: ctr_meta
+    faixas: {saudavel: "1,4-2,2%", bom: "1,5-2,5%", excelente: ">2,5-3%"}
+    fonte: "Visible Factors 2026 (R2) + R1"
+    forca_evidencia: C
+  - id: BM-CVR-SITE-FAIXAS
+    metrica: cvr_site_ecommerce
+    faixas: {medio: "1,5-3%", bom: "3-5%"}
+    nota: "ver ARB-CVR-01"
+    forca_evidencia: C
+  - id: BM-CVR-PLATAFORMA-GOOGLE
+    metrica: cvr_plataforma_google_ads
+    valor_medio: "7,17-7,52%"
+    fonte: "WordStream 2025 / Improvado 2026"
+    nota: "ver ARB-CVR-01"
+    forca_evidencia: C
+
+benchmarks_absolutos:  # seed = §7.6 R2 (2025-2026); usar como ancoragem
+  - {id: BM-CPC-GSEARCH-US-2025, metrica: cpc_google_search, valor: "US$ 5,26 (alt. 4,22)", fonte: "WordStream 2025 / PPC Chief 2026", regiao: EUA, valido_ate: "2027-01", forca_evidencia: C}
+  - {id: BM-CTR-GOOGLE-GLOBAL-2026, metrica: ctr_google_search_display, valor: "3,17% / 0,46%", fonte: "StoreGrowers 2026", regiao: Global, valido_ate: "2027-01", forca_evidencia: C}
+  - {id: BM-CPC-TREND-GOOGLE-2026, metrica: tendencia_cpc_google, valor: "+18% vs 2024", fonte: "Searchlab 2026", regiao: Global, valido_ate: "2027-01", forca_evidencia: C}
+  - {id: BM-ROAS-ECOMM-GLOBAL-2025, metrica: roas_ecommerce_geral, valor: "2,87x", fonte: "Triple Whale/Upcounting 2025", regiao: Global, valido_ate: "2027-01", forca_evidencia: C}
+  - {id: BM-ROAS-ECOMM-CANAL-2026, metrica: roas_ecommerce_por_canal, valor: "Google 3,68x · Meta 1,93x", fonte: "eightx/Triple Whale 2026", regiao: Global, valido_ate: "2027-01", forca_evidencia: C}
+  - {id: BM-CPL-MULTI-2025, metrica: cpl_multicanal, valor: "US$ 28-131 (Google/Meta/LinkedIn)", fonte: "Flyweel CPL Index 2025", regiao: Global, valido_ate: "2027-01", forca_evidencia: C}
+  - {id: BM-META-CPA-CPM-2026, metrica: meta_cpa_cpm_medianos, valor: "US$ 38,17 / US$ 13,48", fonte: "Triple Whale 2026", regiao: Global, valido_ate: "2027-01", forca_evidencia: C}
+  - {id: BM-CPM-META-BR, metrica: cpm_meta_brasil, valor: "R$ 15-20", fonte: "R2 §7.3 (blogs BR — fraca)", regiao: BR, valido_ate: "2026-12", forca_evidencia: D}
+  - {id: BM-CPC-GOOGLE-BR, metrica: cpc_google_brasil, valor: "R$ 1,50-15 (faixa ampla por setor)", fonte: "R2 §7.3 (blogs BR — fraca)", regiao: BR, valido_ate: "2026-12", forca_evidencia: D}
+  - {id: BM-SAAS-CAC-2025, metrica: saas_cac_mediano, valor: "US$ 2,00 por US$ 1,00 ARR novo", fonte: "SaaS Capital 2025", regiao: Global, valido_ate: "2027-06", forca_evidencia: C}
+  - {id: BM-LTVCAC-QUARTIS-2026, metrica: ltv_cac_quartis, valor: "top 25% ≥5,0 · mediana 3,0-5,0", fonte: "DigitalApplied 2026", regiao: Global, valido_ate: "2027-06", forca_evidencia: C, nota: "ver ARB-LTVCAC-01"}
+  - {id: BM-B2B-CVR-2025, metrica: b2b_taxa_conversao, valor: "2-5% (SaaS/tech ponta baixa)", fonte: "SerpSculpt 2025", regiao: Global, valido_ate: "2027-01", forca_evidencia: C}
+
+limiares_operacionais_ecommerce:  # origem G2 (Santana) — escopo e-commerce, ver ARB-ESCOPO-01
+  - {id: OP-ECOMM-ESCALA, regra: "escalar +20-30% por ajuste, nunca dobrar; recuar se CPS subir >20% pós-aumento", forca_evidencia: D}
+  - {id: OP-ECOMM-CPS, metrica: custo_por_sessao, limiar: "teto ~R$ 1,50; +30% em 14 dias = estrutura quebrando", forca_evidencia: D, nota: "opinião do autor, sem contexto de nicho"}
+  - {id: OP-ECOMM-ATC, metrica: add_to_cart_rate, faixas: {vermelho: "<4%", saudavel: "8-15%"}, nota: "<4% = oferta fraca, não tráfego", forca_evidencia: D}
+  - {id: OP-ECOMM-BOUNCE-PDP, metrica: bounce_pdp, faixas: {vermelho: ">70%", verde: "<40%"}, forca_evidencia: D}
+  - {id: OP-ECOMM-LCP, metrica: lcp_mobile, faixas: {verde: "≤2,5s", amarelo: "2,5-4s", vermelho: ">4s"}, fonte: "Core Web Vitals; +0,1s = +8,4% conversão (Deloitte 2020)", forca_evidencia: B}
+  - {id: OP-ECOMM-REVIEWS, metrica: avaliacoes_produto, regra: "0 avaliações=vermelho; ≥5 com foto e nota 4,2-4,8=verde; nota 'perfeita' 5,0 converte menos", fonte: "Spiegel/Northwestern", forca_evidencia: B}

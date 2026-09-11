@@ -6,7 +6,7 @@ Use for generic API request nodes, webhook handlers, third-party integrations, a
 
 - Method and URL are explicit and environment-appropriate.
 - Authentication uses n8n credentials when possible.
-- Secrets are not hardcoded in headers, query params, body, notes, or handoff logs.
+- Secrets use n8n credentials wherever the auth type supports the value. Where a secret must live in the node (e.g. a header the credential does not inject, on an instance without the Variables feature), that is a platform limit — do not flag it as a defect, but keep the value out of notes, logs, and handoff docs.
 - Query parameters and body parameters are represented in the structure expected by the node version.
 - Content type matches body encoding.
 - Error behavior is intentional: retry, timeout, `onError`, and response-code handling.

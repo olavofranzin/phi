@@ -1,5 +1,15 @@
 # Pesquisa Aprofundada: Gestão de Tráfego Pago (Paid Media)
 
+> **[GOVERNANÇA — Camada de Conhecimento, 2026-07-05]** Papel: autoridade
+> CANÔNICA de benchmarks, heurísticas de decisão e frameworks (O.D.A.E.,
+> quadrantes, scorecard). Em conflito numérico com outros docs, ESTE vence.
+> Números absolutos citáveis foram extraídos para
+> `docs/conhecimento/benchmarks-canonicos.yaml` (citar por `[BM-*]`); a §7.6
+> daqui é o seed. Atenção ARB-CVR-01: o "CVR médio Google Ads ~7,5%" é CVR de
+> **PLATAFORMA**; as faixas de e-commerce (§7.1) são CVR de **SITE** — métricas
+> distintas. E ARB-ROAS-01: break-even por margem SEMPRE precede a regra
+> absoluta "≥5:1" da §7.3.
+
 > **Documento de consultoria sênior — Mídia Paga, Analytics e Performance Marketing**
 > Última atualização: **junho/2026** · Foco: **Brasil + comparativo global (EUA/internacional)**
 > Autoria técnica: consolidação de fontes reconhecidas (Google, Meta, HubSpot, WordStream/LocalIQ, Databox, Search Engine Land, Search Engine Journal, Semrush, entre outras).

@@ -2,6 +2,8 @@
 
 Esta pasta é um índice navegável (versionado em git) da documentação estratégica do projeto PHI.
 
+> **🗺️ Comece por [`MAPA-DE-DOCUMENTACAO.md`](MAPA-DE-DOCUMENTACAO.md)** — porta única de entrada: onde procurar cada documento e quando criar cada tipo (ADR / SOP / Aprendizado / Mudança de Escopo / strawman / handoff). Evita reler vários docs e recriar o que já existe.
+
 > **Fonte da verdade: Notion.** Aqui ficam apenas ponteiros e, quando faz sentido versionar (ex: snapshots críticos, exports de auditoria), arquivos `.md` exportados manualmente.
 
 Artefatos operacionais entre agentes (Cérebro ↔ Codex ↔ Antigravity) ficam em `../handoff/`.

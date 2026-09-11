@@ -1,0 +1,11 @@
+{
+  "uid": "phi_gbp_card",
+  "type": "card",
+  "config": {
+    "name": "Diagnóstico GBP",
+    "description": "Card estratégico GBP no record do Deal (somente leitura).",
+    "entrypoint": "/app/cards/GbpCard.tsx",
+    "location": "crm.record.tab",
+    "objectTypes": ["DEAL"]
+  }
+}
