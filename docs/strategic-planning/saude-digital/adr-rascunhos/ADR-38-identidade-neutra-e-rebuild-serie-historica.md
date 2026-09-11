@@ -1114,7 +1114,16 @@ agendamento — o único pedaço que eu não exercitei foi justamente o que esta
 errado. Fica a regra: **testar um workflow agendado à mão não testa o
 agendamento.** O que testa é a primeira execução automática.
 
-**Correção:** expressão trocada para `0 8 * * *`.
+**Correção aplicada e provada.** A hipótese não ficou no papel: às 14:00:00 UTC
+o vigia **disparou sozinho** (execução `38029`, `mode: trigger`), confirmando que
+`0 11` significa 11h BRT. Essa mesma execução também provou o resto do caminho em
+produção — BigQuery consultou, o Code devolveu vazio e o Telegram **não executou**.
+O vigia estava inteiro; só a hora estava errada.
+
+Expressão trocada para `0 8 * * *` e publicada (`ba3ce628`). A conferência da
+P-21 foi feita antes de publicar: o diff rascunho × versão no ar mostrou **uma
+única diferença** — a expressão do cron — com SQL, `jsCode`, credenciais e nós
+byte a byte iguais, e o único `validationWarning` marcado `[pre-existing]`.
 
 **Nota de honestidade:** a §18 e a descrição do workflow afirmavam "08h BRT".
 Era falso desde a criação — o vigia existiu por um dia marcado para as 11h.
