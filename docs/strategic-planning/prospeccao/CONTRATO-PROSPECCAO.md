@@ -120,6 +120,35 @@ Tudo neste documento decorre disso.
 > `status_crm` e `data_sync_crm` no sub-chat de troca do CRM
 > (`docs/handoff/2026-09-13-prosp05-prosp06-odoo-subchat-brief.md`). Esta tabela é atualizada lá.
 
+## A trava de sobrescrita — quando o P5 para de escrever num lead
+
+> Decisão do Olavo, 2026-09-13. Substitui a regra "depois do CRM a planilha congela", que não
+> funcionava: o **P4 escreve enriquecimento depois** de o lead já estar no CRM, e isso é trabalho
+> do pipeline, não edição humana.
+
+**A regra nova:**
+
+> O **P5 atualiza um lead que já existe no CRM apenas enquanto ele estiver no primeiro estágio
+> (`Prospeccao`). A partir do segundo, o lead é do humano — o P5 nunca mais escreve nele.**
+
+Por que é melhor que congelar a planilha:
+
+- **É o dado que decide, não a política.** Não depende de ninguém lembrar de não digitar. O estado
+  do CRM é a trava, e ele é verificável.
+- **Não atrapalha o pipeline.** Enquanto o lead está em Prospecção, P3 repontua e P4 enriquece
+  livremente, e o P5 leva tudo. A porta fecha exatamente quando o vendedor encosta no lead.
+- **Protege o trabalho humano.** Um telefone corrigido na mão, uma anotação, um campo ajustado —
+  nada disso é sobrescrito por uma rodada de sincronização.
+
+**Onde mora:** no **P5**, não no P6. O P6 só lê o CRM (**I8**); quem escreve no CRM é o P5, então
+a trava tem de estar em quem escreve. A criação de lead novo não é afetada — lead novo nasce em
+Prospecção.
+
+**Como é verificada:** o `getAll` do P5 já traz o lead buscado por `gbp_place_id`; basta pedir o
+campo `stage_id` e comparar com o estágio configurado. O nome do estágio fica num `Set` de
+configuração (`estagio_aberto = "Prospeccao"`), **não enterrado num IF** — se o estágio for
+renomeado na tela, corrige-se numa linha.
+
 ## §6 — Direção por campo (planilha ↔ Odoo)
 
 > ### ⚠️ Cabeçalho real lido em 2026-09-13 — três divergências com este contrato
