@@ -48,6 +48,12 @@ pela atividade do vendedor é anti-pattern (ver `docs/comercial/prospecção/`).
   Não é Datetime de propósito: a hora não decide nada e obrigava a converter fuso
 - **Scoring [IA]:** `gbp_potencial_comercial`, `gbp_oferta_recomendada`, `gbp_ipc`,
   `gbp_score_tecnico`, `gbp_nao_reivindicado`, `gbp_site_tipo`, `gbp_flags_score`
+- **Os dois eixos [IA]:** `gbp_fit` (é um bom cliente?) e `gbp_oportunidade` (tenho o que
+  vender?). O **potencial é o produto dos dois**, com rank percentil dentro da mesma
+  `Searchstring`. Entram na tela porque "potencial 72" não diz **o que** oferecer — e o I9 é
+  justamente que o potencial *roteia a oferta*, não gateia a abordagem
+- **Sem fonte hoje:** `gbp_ipc` e `gbp_score_tecnico` não têm coluna na planilha
+  (cabeçalho lido em 2026-09-13). Ficam **vazios** — I3, nunca zero
 - **As 6 dimensões [IA], nomes exatos** (é o que a integração escreve):
   `gbp_dim_saude`, `gbp_dim_seo`, `gbp_dim_autoridade`, `gbp_dim_conversao`,
   `gbp_dim_engajamento`, `gbp_dim_conteudo`

@@ -60,6 +60,10 @@
                         <field name="gbp_potencial_comercial"
                                widget="progressbar"/>
                         <field name="gbp_oferta_recomendada"/>
+                        <!-- Os dois eixos, logo abaixo do numero que eles
+                             formam: e a leitura que diz O QUE oferecer. -->
+                        <field name="gbp_fit"/>
+                        <field name="gbp_oportunidade"/>
                         <!-- SEM badge: este e o campo do HUMANO, o "play".
                              Com badge (so exibicao) nao havia como aceitar nem
                              rejeitar a abordagem pela tela. -->

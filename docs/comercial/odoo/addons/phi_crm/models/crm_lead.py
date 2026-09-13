@@ -153,6 +153,26 @@ class CrmLead(models.Model):
         help="[IA] 0-100. E o numero que decide se vale abordar.",
     )
 
+    # --- Os dois eixos do potencial ------------------------------------------
+    # O potencial_comercial e o PRODUTO destes dois, com rank percentil dentro
+    # da mesma Searchstring (modelagem-estatistica §2.1, ADR-35 §3). Entram na
+    # tela porque "potencial 72" nao diz O QUE oferecer, e o I9 e justamente
+    # que o potencial ROTEIA a oferta em vez de gatear a abordagem:
+    #   fit alto + oportunidade alta -> bom cliente com gap: prioridade
+    #   fit alto + oportunidade baixa -> ja estruturado: lead de ADS
+    #   fit baixo + oportunidade alta -> tem gap, cliente dificil: cuidado
+    gbp_fit = fields.Integer(
+        string="Fit (GBP)",
+        help="[IA] Este negocio e um bom cliente? Um dos dois eixos cujo "
+             "produto forma o Potencial Comercial.",
+    )
+
+    gbp_oportunidade = fields.Integer(
+        string="Oportunidade (GBP)",
+        help="[IA] Tenho o que vender a ele? Um dos dois eixos cujo produto "
+             "forma o Potencial Comercial.",
+    )
+
     gbp_oferta_recomendada = fields.Selection(
         selection=[
             ("SVC-GBP", "SVC-GBP - Perfil no Google"),
