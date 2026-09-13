@@ -48,10 +48,14 @@ pela atividade do vendedor é anti-pattern (ver `docs/comercial/prospecção/`).
   Não é Datetime de propósito: a hora não decide nada e obrigava a converter fuso
 - **Scoring [IA]:** `gbp_potencial_comercial`, `gbp_oferta_recomendada`, `gbp_ipc`,
   `gbp_score_tecnico`, `gbp_nao_reivindicado`, `gbp_site_tipo`, `gbp_flags_score`
-- **Os dois eixos [IA]:** `gbp_fit` (é um bom cliente?) e `gbp_oportunidade` (tenho o que
-  vender?). O **potencial é o produto dos dois**, com rank percentil dentro da mesma
-  `Searchstring`. Entram na tela porque "potencial 72" não diz **o que** oferecer — e o I9 é
-  justamente que o potencial *roteia a oferta*, não gateia a abordagem
+- **Os dois eixos [IA]:** `gbp_fit` e `gbp_oportunidade` são **Float 0–1** (ex.: `0.52`),
+  não 0–100 — é assim que o PROSP-03 os grava. **Escrever num Integer trunca para 0.**
+  O `gbp_potencial_comercial` é que é inteiro: `round(100 × fit × oportunidade)`.
+  Entram na tela porque "potencial 72" não diz **o que** oferecer — e o I9 é justamente que o
+  potencial *roteia a oferta*, não gateia a abordagem
+- **`score_gbp` (planilha) NÃO é o `gbp_score_tecnico`.** Lido no nó de escrita do PROSP-03:
+  é a **média das dimensões disponíveis**, que são percentis dentro do grupo. Grandeza
+  diferente do score técnico do modelo antigo. **Não mapeie.**
 - **Sem fonte hoje:** `gbp_ipc` e `gbp_score_tecnico` não têm coluna na planilha
   (cabeçalho lido em 2026-09-13). Ficam **vazios** — I3, nunca zero
 - **As 6 dimensões [IA], nomes exatos** (é o que a integração escreve):

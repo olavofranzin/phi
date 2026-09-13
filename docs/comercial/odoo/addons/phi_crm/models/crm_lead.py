@@ -161,16 +161,22 @@ class CrmLead(models.Model):
     #   fit alto + oportunidade alta -> bom cliente com gap: prioridade
     #   fit alto + oportunidade baixa -> ja estruturado: lead de ADS
     #   fit baixo + oportunidade alta -> tem gap, cliente dificil: cuidado
-    gbp_fit = fields.Integer(
+    # ATENCAO: Float, nao Integer. O PROSP-03 grava estes dois como round2 de um
+    # valor 0-1 (ex.: 0.52). Num campo Integer o Odoo truncaria 0.52 para 0 e o
+    # eixo inteiro viraria zero sem erro nenhum - a mesma familia de defeito do
+    # zero forjado. O potencial_comercial e que e inteiro: round(100*fit*oport).
+    gbp_fit = fields.Float(
         string="Fit (GBP)",
-        help="[IA] Este negocio e um bom cliente? Um dos dois eixos cujo "
-             "produto forma o Potencial Comercial.",
+        digits=(3, 2),
+        help="[IA] 0 a 1. Este negocio e um bom cliente? Um dos dois eixos "
+             "cujo produto forma o Potencial Comercial.",
     )
 
-    gbp_oportunidade = fields.Integer(
+    gbp_oportunidade = fields.Float(
         string="Oportunidade (GBP)",
-        help="[IA] Tenho o que vender a ele? Um dos dois eixos cujo produto "
-             "forma o Potencial Comercial.",
+        digits=(3, 2),
+        help="[IA] 0 a 1. Tenho o que vender a ele? Um dos dois eixos cujo "
+             "produto forma o Potencial Comercial.",
     )
 
     gbp_oferta_recomendada = fields.Selection(

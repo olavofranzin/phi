@@ -219,7 +219,9 @@ Se o P5 escrevesse essas três, ele apagaria a cada 6h o que o agente acabou de 
 | `ultimo_contato` | Candidato: `date_last_stage_update`. **Não é a mesma coisa** que "último contato". Deixar vazia até confirmar |
 | `Estado` | `state_id` é **many2one** — exige o ID do estado, não a sigla. Fora do escopo desta rodada |
 | `contato` | ✅ **É telefone** (Olavo, 13/09) → `phone`. Na tela do Odoo o rótulo pt-BR é "Telefone", mas o nome técnico é `phone` — não é campo customizado |
-| `fit` · `oportunidade` · `score_gbp` · `modelo_versao` | Existem na planilha e **não estão neste contrato**. Sem destino definido no Odoo — precisam de decisão antes de qualquer mapeamento |
+| `score_gbp` | ✅ **VIVO, não órfão.** Lido no nó `[P3] Gravar score` do PROSP-03 (`V0f80LU1ZH8PUtdc`): é a **média simples das dimensões que tiveram valor** — e as dimensões são **percentis dentro do grupo** (`Categoria 1 + Cidade`). **Não é o `score_tecnico`** do modelo antigo: aquele media otimização absoluta, este é média de posição relativa. Grandezas diferentes. **Não mapear** |
+| `fit` · `oportunidade` | **Float 0–1** (`round2`), não 0–100. Vão para `gbp_fit` e `gbp_oportunidade` no Odoo |
+| `modelo_versao` | Existem na planilha e **não estão neste contrato**. Sem destino definido no Odoo — precisam de decisão antes de qualquer mapeamento |
 
 ### Colunas com conflito ativo hoje
 
