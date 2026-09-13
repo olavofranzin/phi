@@ -104,6 +104,82 @@ Tudo neste documento decorre disso.
 > `status_crm` e `data_sync_crm` no sub-chat de troca do CRM
 > (`docs/handoff/2026-09-13-prosp05-prosp06-odoo-subchat-brief.md`). Esta tabela é atualizada lá.
 
+## §6 — Direção por campo (planilha ↔ Odoo)
+
+> **Escrita em 2026-09-13**, antes de cabear qualquer nó, como manda o brief
+> `2026-09-13-prosp05-prosp06-odoo-subchat-brief.md` §6. Os nomes dos campos Odoo foram **lidos ao
+> vivo** da instância (`crm.lead`, via credencial do bot), não de memória.
+>
+> **A regra:** o workflow é bidirecional; **o campo é sempre de mão única.** Se um campo aparecer nos
+> dois lados, é erro de desenho — pare.
+
+### Mão 1 — planilha → CRM (dono **P5**)
+
+| Coluna na planilha | Campo no Odoo | Tipo |
+|---|---|---|
+| `id` (place_id) | `gbp_place_id` | char · **a chave** |
+| `nome` | `name` | char · obrigatório |
+| `e-mail` | `email_from` | char |
+| `site` | `website` | char |
+| `Cidade` | `city` | char |
+| `CEP` | `zip` | char |
+| `Endereço` / `Rua/Avenida` | `street` / `street2` | char |
+| `enriquecimento` | `ia_dados_enriquecimento` | text |
+| `enriquecimento_site` | `ia_analise_site` | text |
+| `analise_gbp_ia` | `ia_analise_gbp` | text |
+| `potencial_comercial` | `gbp_potencial_comercial` | integer |
+| `oferta_recomendada` | `gbp_oferta_recomendada` | selection |
+| `score_tecnico` | `gbp_score_tecnico` | integer |
+| `ipc` | `gbp_ipc` | integer |
+| `dim_saude` · `dim_seo` · `dim_autoridade` · `dim_conversao` · `dim_engajamento` · `dim_conteudo` | `gbp_dim_saude` · `gbp_dim_seo` · `gbp_dim_autoridade` · `gbp_dim_conversao` · `gbp_dim_engajamento` · `gbp_dim_conteudo` | integer |
+| `site_tipo` | `gbp_site_tipo` | selection |
+| `flags_score` | `gbp_flags_score` | char |
+| `nao_reivindicado` | `gbp_nao_reivindicado` | boolean |
+| `data_processamento_score` | `gbp_score_atualizado_em` | **date** (`yyyy-MM-dd`) |
+| `mês extração` (derivada) | `campaign_id` → `PROSP-yyyy-MM` | many2one |
+| — (fixo) | `medium_id` = *Prospecção ativa* · `source_id` = *Google Maps* | many2one |
+
+### Mão 2 — CRM → planilha (dono **P6**, bloco `aprendizado`)
+
+| Campo no Odoo | Coluna na planilha |
+|---|---|
+| `stage_id` | `status_crm` |
+| `won_status` + `lost_reason_id` | `motivo_perda` / `motivo_ganho` |
+| `expected_revenue` | `valor` |
+| `source_id` / `medium_id` | `via_aquisicao` |
+| `create_date` | `data_criacao_deal` |
+| `date_closed` | `data_fechamento` |
+| `day_close` | `dias_no_funil` |
+| `probability` | `probabilidade` |
+| `ia_proxima_acao_recomendada` | `nba_recomendada` |
+| `proxima_acao_aceite` | `nba_aceite` |
+| `ia_abordagem_sugerida` | `abordagem_ia` |
+| *(derivado no P6)* | `acerto_previsao` · `data_sync_crm` · `sync_por` |
+
+### ⚠️ O conflito que esta tabela achou
+
+Três campos de IA estão **nas duas listas de nome parecido**, e é aí que o ping-pong nasceria:
+
+| Campo Odoo | Quem escreve | Quem NUNCA escreve |
+|---|---|---|
+| `ia_analise_gbp` | **P5** (vem de `analise_gbp_ia`, produzido pelo P4) | P6 não lê de volta |
+| `ia_proxima_acao_recomendada` | **ninguém do P5** — nasce no CRM | **P5 não pode escrever** |
+| `ia_abordagem_sugerida` | **ninguém do P5** — nasce no CRM | **P5 não pode escrever** |
+| `proxima_acao_aceite` | **só o humano, na tela** | P5 e P6 não escrevem |
+
+A distinção: `analise_gbp_ia` é **feature**, calculada antes do CRM e levada para lá. A NBA e a
+abordagem são **produzidas dentro do CRM** pelos agentes, e o P6 só as traz de volta para treino.
+Se o P5 escrevesse essas três, ele apagaria a cada 6h o que o agente acabou de gerar.
+
+### Campos sem par — N/D honesto, não zero
+
+| Coluna | Situação |
+|---|---|
+| `num_interacoes` | O HubSpot tinha `num_contacted_notes`. **Não há equivalente direto em `crm.lead`.** Fica **vazia** até decidirmos a fonte — nunca `0` (**I3**) |
+| `ultimo_contato` | Candidato: `date_last_stage_update`. **Não é a mesma coisa** que "último contato". Deixar vazia até confirmar |
+| `Estado` | `state_id` é **many2one** — exige o ID do estado, não a sigla. Fora do escopo desta rodada |
+| `contato` | Precisa confirmar com o Olavo se é telefone (`phone`) ou nome da pessoa (`contact_name`) |
+
 ### Colunas com conflito ativo hoje
 
 | Coluna | Quem escreve hoje | Quem deve escrever |

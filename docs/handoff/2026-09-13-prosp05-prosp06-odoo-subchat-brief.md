@@ -105,6 +105,47 @@ descobrir um problema de layout com 20 leads é bem mais barato que com 300.
 
 - ✅ **`gbp_place_id` existe** no módulo `phi_crm`, com constraint `UNIQUE`. O bloqueio registrado no
   ADR-36 §3 **está resolvido** — confirme na instalação antes de confiar.
+> ## ✅ Verificação executada em 2026-09-13 (R6 — o dado vence o plano)
+>
+> **1. A credencial Odoo JÁ EXISTE.** `Odoo (API Key) account user n8n@` (`YJBRNdCvPaSiUoep`, tipo
+> `odooApiKeyApi`), com o usuário-bot, exatamente como o brief pediu. **Este item não é mais
+> bloqueio.** (Cuidado: o filtro `query` do `list_credentials` **não** a encontra por "odoo" — só a
+> listagem completa. Não conclua que não existe a partir do filtro.)
+>
+> **2. O nó Odoo nativo cobre o que precisamos — com evidência, não memória.** Lendo os tipos:
+> `opportunity/getAll` aceita `filters.filter[]` com `fieldName` vindo de `getOpportunityFields`,
+> operador `equal` — ou seja, **busca por `gbp_place_id` funciona** (I4). `create` e `update` usam
+> `fieldsToSend`, um **resource mapper** que carrega o schema do próprio `crm.lead`. **Não precisa de
+> HTTP Request contra XML-RPC.**
+>
+> **3. Chamei `getOpportunityFields` ao vivo na instância.** Confirmado presente: `gbp_place_id`
+> (char), `gbp_diagnostico` (selection), `gbp_score_atualizado_em` (**date**), as 6 dimensões e as 6
+> bandas, `gbp_potencial_comercial`, `gbp_oferta_recomendada`. **O módulo publicado está em dia com o
+> repositório.** O pré-requisito do ADR-36 §3 está resolvido de fato, não só no papel.
+>
+> **4. Achado novo — `won_status`.** O `crm.lead` do Odoo 19 tem um campo nativo `won_status`
+> (selection). Para o §7.3 do brief, ele é **melhor que inferir o desfecho pela probabilidade do
+> estágio**. Use-o.
+>
+> **5. O estágio não precisa ser escrito.** O `stage_id` do Odoo é computado com `precompute=True`:
+> um lead criado sem `stage_id` **cai sozinho no primeiro estágio**. Isso satisfaz o §4.5 do brief
+> **sem** escrever no campo — o que é mais fiel ao guardrail-mãe do que escolher o estágio "certo".
+>
+> **6. O PROSP-06 — diagnóstico corrigido, são DUAS causas, não uma.** O brief pergunta se ele parou
+> de escrever desde a renomeação. Lendo a execução `38824` (13/09 21:00):
+> - o cursor está **congelado em 2026-09-08T21:00Z**;
+> - o nó do HubSpot devolveu **`[]`** — zero deals modificados;
+> - o nó do Sheets **nem executou**, e por isso o cursor nunca avança.
+>
+> Ou seja: **(a)** entre 28/08 e 08/09 ele achava deals e a escrita falhava calada pelo nome de coluna
+> (`onError: continueRegularOutput`); **(b)** de 08/09 para cá não há mais fonte nenhuma — os leads
+> pararam de ir para o HubSpot. As 60 execuções marcadas "success" são as duas doenças somadas.
+> **Consequência para o trabalho:** apontar o P6 para o Odoo resolve (b); renomear as colunas resolve
+> (a). **Fazer só um dos dois deixa o buraco aberto.**
+>
+> **Ainda aberto:** os nomes exatos do cabeçalho da planilha (não tenho acesso a ela), se o Olavo já
+> cadastrou Meio/Origem à mão no Odoo, e as decisões do §5.
+
 - ⬜ **Credencial Odoo no n8n:** URL `https://crm.franzcomunicacao.com`, base `phi_crm`.
   **Crie um usuário dedicado à integração** (ex.: `n8n@franzcomunicacao.com`), **não use o admin** —
   assim dá para ver na tela quem escreveu o quê. Peça ao Olavo.
