@@ -63,9 +63,10 @@ O pedido é certo — é a mesma ideia do `ingestion_step` no BigQuery.
 **Recomendação:** `data_sync_crm` continua **data pura**, e a assinatura vai numa coluna própria
 **`sync_por`** (dono P6). Duas colunas, dois fatos, nenhum tipo quebrado.
 
-**Confirme com o Olavo antes de implementar** — e registre no CONTRATO a coluna que ele escolher.
-Se hoje só o P6 escreve ali, o valor será sempre `P6`; a coluna ganha utilidade real no dia em que
-mais de um processo puder sincronizar.
+✅ **Decidido (Olavo, 2026-09-13): a coluna `sync_por` será criada à mão na planilha.** Já está no
+CONTRATO (bloco `aprendizado`, dono **P6**). **Não crie a coluna** — ela já existe; confira o nome
+exato no cabeçalho antes de cabear o nó (o nó do Sheets casa por **nome de cabeçalho**, e um caractere
+diferente falha em silêncio — foi o que aconteceu com `id_hubspot` → `id_crm`).
 
 ## 2. O filtro `>= 60` é TEMPORÁRIO — e por isso NÃO mexe no I5
 

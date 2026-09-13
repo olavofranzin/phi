@@ -91,7 +91,18 @@ Tudo neste documento decorre disso.
 | | `nao_reivindicado` | **P4** | só Apify observa |
 | | `analise_gbp_ia` | **P4** | após o agente |
 | **aprendizado** (17) | `status hubspot` *(estágio — D4)*, `hubspot_status`, `motivo_perda`, `motivo_ganho`, `valor`, `via_aquisicao`, `num_interacoes`, `ultimo_contato`, `data_criacao_deal`, `data_fechamento`, `dias_no_funil`, `probabilidade`, `nba_recomendada`, `nba_aceite`, `abordagem_ia`, `acerto_previsao`, `data_sync_hubspot` | **P6** | a cada 6h |
+| | `sync_por` | **P6** | a cada sincronização |
 | **descontinuada** | `hubspot_estagio` | — | **D4:** ninguém escreve. O estágio vive em `status hubspot` |
+
+> **`sync_por` (adicionada 2026-09-13, decisão Olavo — coluna criada à mão na planilha).**
+> Guarda **quem** sincronizou a linha (hoje, sempre `P6`). Existe porque `data_sync_crm` guarda
+> **quando**, e juntar os dois fatos na mesma célula transformaria a data em texto — quebrando a
+> comparação *"mudou desde a última sincronização?"* de que a rotina agendada do P5 depende.
+> **Um fato por coluna.** Mesma razão do `ingestion_step` no BigQuery.
+>
+> ⚠️ As colunas `status hubspot`, `hubspot_status` e `data_sync_hubspot` **serão renomeadas** para
+> `status_crm` e `data_sync_crm` no sub-chat de troca do CRM
+> (`docs/handoff/2026-09-13-prosp05-prosp06-odoo-subchat-brief.md`). Esta tabela é atualizada lá.
 
 ### Colunas com conflito ativo hoje
 
