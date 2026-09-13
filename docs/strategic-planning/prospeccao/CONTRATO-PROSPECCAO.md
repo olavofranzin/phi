@@ -106,6 +106,28 @@ Tudo neste documento decorre disso.
 
 ## §6 — Direção por campo (planilha ↔ Odoo)
 
+> ### ⚠️ Cabeçalho real lido em 2026-09-13 — três divergências com este contrato
+>
+> O cabeçalho da aba `leads` foi lido **ao vivo** (loadOptions do nó Sheets, 64 colunas). Ele
+> desmente três coisas escritas aqui. **O dado vence o plano (R6).**
+>
+> **1. `id_hubspot` e `data_sync_hubspot` NÃO EXISTEM MAIS.** Já foram renomeadas para `id_crm` e
+> `data_sync_crm`. Ou seja: o nó do P5 que grava `id_hubspot` e o do P6 que casa por
+> `matchingColumns: ["id_hubspot"]` apontam para **colunas inexistentes** desde a renomeação. Com
+> `onError: continueRegularOutput` nos dois, isso falhou em silêncio. **Deixa de ser hipótese: é
+> fato medido.**
+>
+> **2. A planilha NÃO TEM as colunas `ipc` nem `score_tecnico`.** Este contrato lista as duas no
+> bloco `scoring`. Elas não estão no cabeçalho. O que existe no lugar: `score_gbp`, `fit`,
+> `oportunidade`, `modelo_versao`. **Consequência:** `gbp_ipc` e `gbp_score_tecnico` no Odoo não têm
+> origem — ficam **vazios** (I3), e a aposentadoria do IPC já aconteceu na prática, na origem.
+>
+> **3. `data_envio_crm` NÃO EXISTE.** A rotina agendada do P5 (§5 do brief) depende dela. Precisa ser
+> criada à mão, como foi feito com `sync_por`.
+>
+> **Colunas confirmadas existindo:** `id_crm`, `status_crm`, `data_sync_crm`, `sync_por` — os quatro
+> nomes que o Olavo confirmou, conferidos contra o cabeçalho.
+
 > **Escrita em 2026-09-13**, antes de cabear qualquer nó, como manda o brief
 > `2026-09-13-prosp05-prosp06-odoo-subchat-brief.md` §6. Os nomes dos campos Odoo foram **lidos ao
 > vivo** da instância (`crm.lead`, via credencial do bot), não de memória.
@@ -123,14 +145,16 @@ Tudo neste documento decorre disso.
 | `site` | `website` | char |
 | `Cidade` | `city` | char |
 | `CEP` | `zip` | char |
+| `contato` | `phone` | char |
+| `Estado` | ⛔ `state_id` é many2one — exige ID, fora do escopo | — |
 | `Endereço` / `Rua/Avenida` | `street` / `street2` | char |
 | `enriquecimento` | `ia_dados_enriquecimento` | text |
 | `enriquecimento_site` | `ia_analise_site` | text |
 | `analise_gbp_ia` | `ia_analise_gbp` | text |
 | `potencial_comercial` | `gbp_potencial_comercial` | integer |
 | `oferta_recomendada` | `gbp_oferta_recomendada` | selection |
-| `score_tecnico` | `gbp_score_tecnico` | integer |
-| `ipc` | `gbp_ipc` | integer |
+| ~~`score_tecnico`~~ | `gbp_score_tecnico` | ⛔ **coluna não existe na planilha** — fica vazio |
+| ~~`ipc`~~ | `gbp_ipc` | ⛔ **coluna não existe na planilha** — fica vazio |
 | `dim_saude` · `dim_seo` · `dim_autoridade` · `dim_conversao` · `dim_engajamento` · `dim_conteudo` | `gbp_dim_saude` · `gbp_dim_seo` · `gbp_dim_autoridade` · `gbp_dim_conversao` · `gbp_dim_engajamento` · `gbp_dim_conteudo` | integer |
 | `site_tipo` | `gbp_site_tipo` | selection |
 | `flags_score` | `gbp_flags_score` | char |
@@ -178,7 +202,8 @@ Se o P5 escrevesse essas três, ele apagaria a cada 6h o que o agente acabou de 
 | `num_interacoes` | O HubSpot tinha `num_contacted_notes`. **Não há equivalente direto em `crm.lead`.** Fica **vazia** até decidirmos a fonte — nunca `0` (**I3**) |
 | `ultimo_contato` | Candidato: `date_last_stage_update`. **Não é a mesma coisa** que "último contato". Deixar vazia até confirmar |
 | `Estado` | `state_id` é **many2one** — exige o ID do estado, não a sigla. Fora do escopo desta rodada |
-| `contato` | Precisa confirmar com o Olavo se é telefone (`phone`) ou nome da pessoa (`contact_name`) |
+| `contato` | ✅ **É telefone** (Olavo, 13/09) → `phone`. Na tela do Odoo o rótulo pt-BR é "Telefone", mas o nome técnico é `phone` — não é campo customizado |
+| `fit` · `oportunidade` · `score_gbp` · `modelo_versao` | Existem na planilha e **não estão neste contrato**. Sem destino definido no Odoo — precisam de decisão antes de qualquer mapeamento |
 
 ### Colunas com conflito ativo hoje
 
