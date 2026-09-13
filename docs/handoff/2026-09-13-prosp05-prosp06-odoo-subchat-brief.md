@@ -23,7 +23,7 @@ feitas quando formos trocar o hubspot pelo nó do odoo."* **Este é o momento.**
 
 ---
 
-## 1. 🔴 O pedido × o contrato — leia antes de tudo
+## 1. ✅ O pedido × o contrato — resolvido, leia antes de tudo
 
 O Olavo pediu que o **PROSP-05** atualizasse estas colunas da planilha:
 
@@ -47,30 +47,51 @@ Fazer o P5 escrever essas colunas criaria **dois donos** — exatamente a doenç
 | sincronizar CRM → planilha | **P6** — já roda a cada 6h |
 | sincronizar planilha → CRM sem depender do PROSP-04 | **P5** — é a parte **genuinamente nova** (§5) |
 
-> **Explique isso ao Olavo em uma frase antes de começar**, para ele confirmar que é o mesmo
-> resultado com dono certo. Não é recusa — é endereçamento.
+> ✅ **Confirmado pelo Olavo (2026-09-13):** *"nenhum problema o P6 ser o responsável por atualizar a
+> planilha... Deixemos então o P6 como o dono não 'da escrita' mas da 'atualização'."* **A divisão
+> acima está fechada** — P5 leva ao CRM, P6 traz o desfecho de volta.
 
-## 2. 🔴 O filtro `>= 60` contradiz o invariante I5 — precisa de ADR
+### 1.1 Carimbo de linhagem — quem sincronizou
 
-> **I5 — "Todos os leads descobertos vão à planilha e ao CRM. O corte governa gasto de Apify/IA, não
-> entrada. Filtrar a entrada torna o score irrefutável (viés de seleção)."** — decisão Olavo, 2026-08-27.
+O Olavo pediu que a sincronização deixe **assinatura**: saber que foi o P6 que atualizou aquela linha.
+O pedido é certo — é a mesma ideia do `ingestion_step` no BigQuery.
 
-O filtro pedido **é legítimo** (higiene do CRM: o vendedor não deve ver 300 leads fracos), mas tem uma
-consequência que precisa ficar escrita, não descoberta depois:
+⚠️ **Mas não misture os dois fatos na mesma célula.** Se `data_sync_crm` virar texto
+(`2026-09-13 14:22 · P6`), a coluna **deixa de ser data** e qualquer comparação de "mudou desde a
+última sincronização" quebra — justamente o que a rotina do §5 precisa fazer.
 
-> Se só entram leads `>= 60`, nunca saberemos se um lead de 50 fecharia. O `acerto_previsao` passa a
-> medir **só falso positivo** — o score nunca pode ser corrigido para baixo. Ele fica **irrefutável**,
-> que é o problema que o I5 existia para evitar.
+**Recomendação:** `data_sync_crm` continua **data pura**, e a assinatura vai numa coluna própria
+**`sync_por`** (dono P6). Duas colunas, dois fatos, nenhum tipo quebrado.
 
-**O que fazer (nesta ordem):**
-1. **Implemente o filtro** como o Olavo pediu — é decisão dele e a higiene do CRM é real.
-2. **Escreva um ADR curto** (ou emenda ao ADR-35) alterando o I5, com a consequência acima declarada.
-   *Invariante não muda sem ADR.* Registre que **a planilha continua recebendo todos** (dono P2) —
-   nada se perde, o dado fica guardado.
-3. **Proponha ao Olavo a mitigação já prevista no contrato:** a **amostra de exploração de 10–15%**
-   (`origem_fila` = `topo`/`exploracao`, item 3.3 do plano de migração). Com ela o filtro vira
-   `potencial_comercial >= 60 OU origem_fila = 'exploracao'` — CRM limpo **e** score falseável.
-   Hoje essa coluna **não existe**; é trabalho de outra etapa. **Só proponha, não construa aqui.**
+**Confirme com o Olavo antes de implementar** — e registre no CONTRATO a coluna que ele escolher.
+Se hoje só o P6 escreve ali, o valor será sempre `P6`; a coluna ganha utilidade real no dia em que
+mais de um processo puder sincronizar.
+
+## 2. O filtro `>= 60` é TEMPORÁRIO — e por isso NÃO mexe no I5
+
+✅ **Decisão do Olavo (2026-09-13):** o corte é **temporário**. Os leads `>= 60` têm mais campos
+preenchidos, e ele quer **conferir o layout do lead na tela** antes de ativar os agentes de IA
+(previstos para os próximos dias).
+
+> Isso muda o trabalho: **não escreva ADR alterando o I5.** O invariante
+> (*"todos os leads vão à planilha e ao CRM"*) **continua valendo**. Isto é uma exceção de carga, não
+> uma mudança de política.
+
+**Como implementar para que ele saia fácil depois:**
+
+1. **O corte é um parâmetro, não um número enterrado num nó IF.** Um `Set` no topo do workflow
+   (`corte_potencial = 60`). Remover depois vira **uma linha**, não uma caçada.
+2. **Sticky note obrigatório, com a condição de saída escrita** (**R5**):
+   > *"Filtro TEMPORÁRIO de carga. Sai quando os agentes de IA estiverem ativos e preenchendo os
+   > campos. Não é política: o I5 continua valendo — todos os leads vão ao CRM."*
+3. **Filtro temporário sem condição de saída escrita vira permanente.** É o motivo do item 2.
+
+**Nada se perde:** os leads abaixo de 60 continuam na planilha (dono **P2**) e entram quando o corte
+sair — com o lote certo (`PROSP-<mês da extração>`), porque o lote vem do **dado**, não do relógio.
+
+**Sugestão prática:** para conferir layout **não precisa subir todos**. 10–20 leads já mostram como a
+tela fica. Suba um lote pequeno, olhe, ajuste o módulo se for o caso, e só então suba o resto —
+descobrir um problema de layout com 20 leads é bem mais barato que com 300.
 
 **Dois detalhes do filtro que precisam de regra explícita:**
 
@@ -184,7 +205,8 @@ aparecer nos dois lados, **pare** — é erro de desenho, não detalhe de implem
 ## 9. Guardrails e obrigações
 
 - **R2 — doc na mesma sessão:** atualizar `CONTRATO-PROSPECCAO.md` (donos, colunas renomeadas,
-  coluna nova) e escrever o ADR do I5. Commit no git. *Se não está escrito, não aconteceu.*
+  colunas novas). Commit no git. *Se não está escrito, não aconteceu.*
+  **Sem ADR do I5** — o filtro é temporário e o invariante não muda (§2).
 - **R3 — Notion obrigatório:** ao **começar** e ao **encerrar** cada bloco, escrever na DB
   **"PHI — Registro de Execuções (Sub-chats)"** (`8d8eb685f66249c7ba4f298d744feec3`):
   frente · o que foi feito · estado · próximo passo · link.
@@ -207,5 +229,4 @@ aparecer nos dois lados, **pare** — é erro de desenho, não detalhe de implem
 
 ## 11. Fora de escopo
 
-- Construir a **amostra de exploração** (`origem_fila`) — só propor.
 - **Desligar o HubSpot** · **migrar histórico** (F5) · mexer na frente do Score/BigQuery (ADR-38).
