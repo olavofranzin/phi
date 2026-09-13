@@ -87,7 +87,8 @@ Tudo neste documento decorre disso.
 | | `Patrocinado`, `Atributos`, `Agendamento`, `Posts` | **P4** | só Apify observa |
 | | `enriquecimento`, `enriquecimento_site` | **P4** | após o agente |
 | **controle** (2) | `data extração`, `mês extração` | **P2** | criação |
-| **scoring** (18) | `score_tecnico`, `ipc`, `potencial_comercial`, `oferta_recomendada`, 6 × `dim_*`, `site_tipo`, `flags_score`, `data_processamento_score`, `score_gbp` | **P3** | após P2 |
+| **scoring** (18) | `potencial_comercial`, `oferta_recomendada`, 6 × `dim_*`, `site_tipo`, `flags_score`, `data_processamento_score`, `score_gbp`, `modelo_versao` | **P3** | após P2 |
+| | ~~`score_tecnico`~~, ~~`ipc`~~ | — | ⛔ **não existem no cabeçalho** — ver ressalva 2 abaixo |
 | | `fit`, `oportunidade` | **P3** | após P2 — **os dois eixos** do `potencial_comercial` |
 | | `nao_reivindicado` | **P4** | só Apify observa |
 | | `analise_gbp_ia` | **P4** | após o agente |
