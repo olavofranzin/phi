@@ -152,6 +152,30 @@ configuração (`estagio_aberto_id`), **não enterrado num IF**.
 comum e inocente — e quebraria uma trava que compara texto, em silêncio, liberando escrita sobre
 lead que já é do vendedor. O ID não muda quando o rótulo muda.
 
+### Os 6 estágios — ID, nome e sequência
+
+Lidos do `crm.stage` da instância em **2026-09-13** (execução `38869`, leitura pura):
+
+| sequência (pipeline) | nome | **ID** | `is_won` |
+|---|---|---|---|
+| 1 | **Prospecção** | **`1`** | não |
+| 2 | Aguardando Aceite | `5` | não |
+| 3 | Em Cadencia | `6` | não |
+| 4 | Conversa Aceita | `2` | não |
+| 5 | Escopo e Proposta | `3` | não |
+| 6 | Ganho | `4` | **sim** |
+
+> ⚠️ **O ID não segue a ordem do pipeline.** Os quatro estágios nativos reaproveitados ficaram com
+> 1–4; os dois que criamos (`Aguardando Aceite`, `Em Cadencia`) receberam 5 e 6 e foram encaixados
+> nas posições 2 e 3 pela `sequence`. Ordenar ou comparar por ID **não** equivale a ordenar pelo
+> pipeline.
+>
+> **Consequência para a trava:** a comparação é de **igualdade** — `stage_id == 1` —, nunca
+> `stage_id > 1`. Hoje o `> 1` daria o mesmo resultado por coincidência, e deixaria de dar no dia
+> em que um estágio novo nascer com ID 7 e for colocado antes de Prospecção.
+>
+> **`estagio_aberto_id = 1`.**
+
 **Contrapartida, e ela é real:** ID não se lê na tela. Por isso o nó carrega, como comentário, a
 **tabela completa dos 6 estágios — ID e nome** —, para que qualquer pessoa entenda a comparação
 sem abrir o Odoo. Sem essa tabela, `stage_id == 3` é um número mágico, e número mágico sem
