@@ -144,10 +144,18 @@ Por que é melhor que congelar a planilha:
 a trava tem de estar em quem escreve. A criação de lead novo não é afetada — lead novo nasce em
 Prospecção.
 
-**Como é verificada:** o `getAll` do P5 já traz o lead buscado por `gbp_place_id`; basta pedir o
-campo `stage_id` e comparar com o estágio configurado. O nome do estágio fica num `Set` de
-configuração (`estagio_aberto = "Prospeccao"`), **não enterrado num IF** — se o estágio for
-renomeado na tela, corrige-se numa linha.
+**Como é verificada:** o `getAll` do P5 já traz o lead buscado por `gbp_place_id`; pede-se o campo
+`stage_id` e compara-se com o **ID numérico** do primeiro estágio, guardado num `Set` de
+configuração (`estagio_aberto_id`), **não enterrado num IF**.
+
+**Por que ID e não nome** (decisão Olavo, 2026-09-13): renomear o estágio na tela é uma ação
+comum e inocente — e quebraria uma trava que compara texto, em silêncio, liberando escrita sobre
+lead que já é do vendedor. O ID não muda quando o rótulo muda.
+
+**Contrapartida, e ela é real:** ID não se lê na tela. Por isso o nó carrega, como comentário, a
+**tabela completa dos 6 estágios — ID e nome** —, para que qualquer pessoa entenda a comparação
+sem abrir o Odoo. Sem essa tabela, `stage_id == 3` é um número mágico, e número mágico sem
+legenda é o começo da próxima doença de documentação.
 
 ## §6 — Direção por campo (planilha ↔ Odoo)
 
