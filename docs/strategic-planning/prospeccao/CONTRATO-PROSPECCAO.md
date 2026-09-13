@@ -87,11 +87,26 @@ Tudo neste documento decorre disso.
 | | `Patrocinado`, `Atributos`, `Agendamento`, `Posts` | **P4** | só Apify observa |
 | | `enriquecimento`, `enriquecimento_site` | **P4** | após o agente |
 | **controle** (2) | `data extração`, `mês extração` | **P2** | criação |
-| **scoring** (16) | `score_tecnico`, `ipc`, `potencial_comercial`, `oferta_recomendada`, 6 × `dim_*`, `site_tipo`, `flags_score`, `data_processamento_score`, `score_gbp` | **P3** | após P2 |
+| **scoring** (18) | `score_tecnico`, `ipc`, `potencial_comercial`, `oferta_recomendada`, 6 × `dim_*`, `site_tipo`, `flags_score`, `data_processamento_score`, `score_gbp` | **P3** | após P2 |
+| | `fit`, `oportunidade` | **P3** | após P2 — **os dois eixos** do `potencial_comercial` |
 | | `nao_reivindicado` | **P4** | só Apify observa |
 | | `analise_gbp_ia` | **P4** | após o agente |
 | **aprendizado** (17) | `status hubspot` *(estágio — D4)*, `hubspot_status`, `motivo_perda`, `motivo_ganho`, `valor`, `via_aquisicao`, `num_interacoes`, `ultimo_contato`, `data_criacao_deal`, `data_fechamento`, `dias_no_funil`, `probabilidade`, `nba_recomendada`, `nba_aceite`, `abordagem_ia`, `acerto_previsao`, `data_sync_hubspot` | **P6** | a cada 6h |
 | | `sync_por` | **P6** | a cada sincronização |
+> **`fit` e `oportunidade` (documentadas 2026-09-13 — existiam na planilha sem registro aqui).**
+> Não são scores soltos: são **os dois eixos cujo produto vira o `potencial_comercial`**, com rank
+> percentil dentro da mesma `Searchstring` (Fase 3.1, já as-built no **PROSP-03** — ver ADR-35 §3).
+> - **`fit`** = *este negócio é um bom cliente?* (porte, qualidade, viabilidade de contato)
+> - **`oportunidade`** = *tenho o que vender a ele?* (gap de fundação **ou** prontidão para ADS)
+>
+> São o **porquê** do score: `potencial_comercial = 72` não diz o que oferecer; `fit` alto com
+> `oportunidade` baixa é outra conversa que o inverso. É o **I9** em duas colunas.
+>
+> ⚠️ **`score_gbp` precisa de verificação de vida.** O contrato o lista como P3, mas quem o escrevia
+> era o **`GBP Scoring - L2 Discovery`** (`5j79f7oR8x1Nxs4q`) — a cadeia **L2→L3→L4** que o PROSP-03/04
+> **substituiu**. Se nada mais escreve nele, é **coluna órfã de pipeline aposentado**, e o caso é o
+> procedimento de aposentadoria da **R5**, não migração para o Odoo.
+
 | **descontinuada** | `hubspot_estagio` | — | **D4:** ninguém escreve. O estágio vive em `status hubspot` |
 
 > **`sync_por` (adicionada 2026-09-13, decisão Olavo — coluna criada à mão na planilha).**
