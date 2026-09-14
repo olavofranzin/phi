@@ -125,6 +125,24 @@ a resposta é o upgrade do módulo, nunca mexer no payload.
 Bumpe a `version` do `__manifest__.py` na mesma alteração — é o que dá para
 saber, olhando a tela de Apps, se o servidor está na versão do git.
 
+## Chave de Selection não se inventa — copia-se do produtor
+
+O rótulo é escolha nossa; **a chave é dado de terceiro**. Quem decide as chaves
+de `gbp_site_tipo` é a função `classificarSite()` do normalizador (PROSP-02), e
+ela só tem três saídas: `own` | `social` | `none`. Não `site`.
+
+Errar uma chave não degrada: o Odoo recusa a **escrita inteira** com
+`ValueError: Wrong value for crm.lead.<campo>: '<valor>'` — não grava parcial e
+não avisa no momento em que o campo é declarado.
+
+Pior: o schema que o nó Odoo do n8n guarda em cache mostra as opções **antigas**
+e não valida nada em `autoMapInputData`. Ele parece confirmar a lista errada.
+A fonte é o código do produtor, nunca o cache do n8n nem a memória de quem
+escreveu o campo.
+
+Antes de declarar um `Selection` que recebe dado de fora, abra o nó ou o arquivo
+que gera o valor e copie as chaves de lá.
+
 ## Verificação antes de fechar qualquer alteração
 
 0. **O módulo foi atualizado no Odoo**, não só commitado

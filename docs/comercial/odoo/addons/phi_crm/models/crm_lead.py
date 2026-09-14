@@ -235,9 +235,14 @@ class CrmLead(models.Model):
         help="[IA] Sinal de ouro: o perfil existe e ninguem reivindicou.",
     )
 
+    # ATENCAO: as chaves sao as que o normalizador do PROSP-02 produz, nao
+    # rotulos escolhidos aqui. A funcao classificarSite() so tem tres saidas:
+    # 'none' (sem URL ou URL invalida), 'social' (host e rede social) e 'own'
+    # (qualquer outro host). Qualquer chave diferente disso faz o Odoo recusar
+    # a escrita inteira com ValueError - nao grava parcial, nao avisa antes.
     gbp_site_tipo = fields.Selection(
         selection=[
-            ("site", "Site proprio"),
+            ("own", "Site proprio"),
             ("social", "Rede social"),
             ("none", "Sem site"),
         ],
