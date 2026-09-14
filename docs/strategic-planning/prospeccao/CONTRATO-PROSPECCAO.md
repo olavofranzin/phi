@@ -152,6 +152,22 @@ configuração (`estagio_aberto_id`), **não enterrado num IF**.
 comum e inocente — e quebraria uma trava que compara texto, em silêncio, liberando escrita sobre
 lead que já é do vendedor. O ID não muda quando o rótulo muda.
 
+### O vendedor do lead — `user_id = 2`
+
+> ✅ **Decisão do Olavo, 2026-09-14:** *"o meu user_id é 2, todo lead deve vir como eu sendo o
+> vendedor."*
+
+O P5 escreve **`user_id = 2`** (Olavo Franzin) em todo lead que cria.
+
+**Precisa ser explícito.** O `user_id` do `crm.lead` tem `default=lambda self: self.env.user` — o
+usuário da sessão. Como quem chama a API é o bot `n8n@franzcomunicacao.com`, **sem esta linha todo
+lead nasceria com o bot como vendedor**, e o funil do Olavo apareceria vazio.
+
+**O que se perde:** deixa de dar para distinguir na tela, pelo vendedor, o que a máquina criou do
+que uma pessoa criou. Essa informação continua existindo no **chatter** de cada lead, que registra
+`n8n@franzcomunicacao.com` como autor da criação — e em `create_uid`, que o Odoo preenche com o
+usuário real da chamada e ninguém sobrescreve.
+
 ### Marketing — IDs de Meio, Origem e Lote
 
 Lidos da instância em **2026-09-14** (execução `38884`, leitura pura):
