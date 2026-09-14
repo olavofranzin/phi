@@ -239,3 +239,102 @@ nova, **colocar um `CLAUDE.md` curto em cada pasta que já existe**, dizendo: o 
 doc canônico, o que ler antes de agir, e o que **não** mexer.
 
 **Preciso da lista dos ramos do Miro** para conferir se algum não tem pasta ainda.
+
+---
+
+# 10. Entrevista de alinhamento — resultado (2026-09-14)
+
+> **R9, item 1.** 12 perguntas em 3 rodadas. A skill `grill-me` **não existe** (procurei; ver §6).
+
+## 10.1 As respostas
+
+| Tema | Resposta do Olavo |
+|---|---|
+| Meta de clientes/mês | **ainda não sei — descobrir rodando** |
+| Quem contata | **só o Olavo** |
+| Ticket de entrada | **até R$ 500/mês** — e é **isca para crescer a conta depois** |
+| Escopo v1 | vários setores, uma cidade |
+| Capacidade real | **4 a 10 contatos novos por dia** |
+| Setores | **prospectar todos, contatar um por vez** |
+| Sinal de aprendizado | **os três em etapas:** respondeu → aceitou conversa → virou cliente |
+| Follow-up | **automatizado + número de toques reduzido** |
+| Canal do 1º contato | **DM no Instagram** |
+| Ciclo por setor | **100 contatos** antes de concluir |
+| Quem não responde | **perdido, sai da fila** |
+
+## 10.2 O dimensionamento que sai daí
+
+| Conta | Valor |
+|---|---|
+| Contatos por mês | **88 a 220** (4–10/dia × ~22 dias) |
+| Duração de um ciclo de setor | **~1 mês** (100 contatos) |
+| Tempo para testar 3 setores | **~3 meses** |
+| Leads **enriquecidos** necessários por mês | **~300 a 500** — não milhares |
+
+> 🎯 **A conclusão que muda o projeto:** **o gargalo nunca foi achar leads — é falar com eles.**
+> Prospectar uma cidade inteira produziria milhares de leads que ninguém contataria em anos.
+>
+> **Consequências diretas:**
+> - a tensão **volume × custo** do §4 praticamente se dissolve: o volume necessário é pequeno;
+> - o **rodízio de credenciais do Apify perde o motivo** — não vale risco de banimento para economizar
+>   num volume que a agenda não consome;
+> - o **score muda de função**: não serve para *filtrar* volume, serve para **ordenar uma fila curta**.
+>   A pergunta deixa de ser "quais leads descartar?" e vira **"se eu só puder falar com 10 pessoas esta
+>   semana, quais são?"**
+
+## 10.3 Decisões de desenho (derivadas, a confirmar)
+
+| # | Decisão | Por quê |
+|---|---|---|
+| **DD1** | **Duas velocidades:** coleta ampla e barata (Maps puro) para todos; enriquecimento caro (PageSpeed + IA) **só na fila** | preserva o **I5**, forma a base do ICP e mantém o custo proporcional à agenda |
+| **DD2** | **O sistema entrega FILA, não lote** — sempre os próximos N prontos e ordenados | a capacidade varia por semana; lote agendado quebra, fila não |
+| **DD3** | **Um setor por vez no contato**, ciclo de **100** | é o que dá sinal; contatar cinco setores rasos não ensina nada sobre nenhum |
+| **DD4** | **Cadência curta e automatizada do 2º toque em diante** | ver §10.4 — é o que impede o afogamento |
+| **DD5** | Sinal registrado em **3 etapas** | responde "o problema é o alvo ou a mensagem?" — a etapa onde perde diz qual |
+| **DD6** | Quem não responde sai da **fila**, mas **permanece na base** | o "não respondeu" é dado de treino; sair da fila ≠ sair da planilha |
+
+## 10.4 ⚠️ A armadilha do follow-up (resolvida na entrevista)
+
+Com **8 toques por lead** e 4–10 novos por dia, na 6ª semana seriam ~30 novos **+ ~150 follow-ups**
+por semana. **Não cabe em agenda nenhuma.** É o modo mais comum de uma máquina de prospecção morrer:
+não por falta de lead, mas por afogamento — e acontece na semana 4, quando já se investiu tudo.
+
+**Decidido:** follow-up **automatizado** + **número de toques reduzido**.
+⬜ **Falta fixar o número.** Proposta: **4 toques**. ⚠️ O contrato hoje assume **cadência ≥ 8**
+(`tentativas_contato`) — **ao fixar, atualizar o CONTRATO** (R2).
+
+## 10.5 🔴 O conflito que a entrevista abriu: DM automatizada no Instagram
+
+Duas respostas se chocam:
+
+| Resposta | |
+|---|---|
+| Canal do 1º contato | **DM no Instagram** |
+| Follow-up | **automatizado** |
+
+> **Automatizar DM no Instagram é exatamente o comportamento que a plataforma pune com bloqueio ou
+> banimento de conta.** E aqui o ativo em risco não é uma ferramenta trocável: é **o perfil da
+> agência** — que também é prova social e canal de marca.
+
+**Some-se a isso uma dependência nova:** se o 1º contato é DM, **o lead precisa TER Instagram**. Isso
+promove o item 11 do §2 (*skill para descobrir perfis sociais*) de "desejável" a **pré-requisito da
+fila** — sem ele não há como saber quem é contatável.
+
+⚠️ **Nota:** no §2 o Olavo havia previsto o Instagram como **2ª etapa, de "aquecimento"**. Na
+entrevista ele virou **1º contato**. **Confirmar se a mudança é intencional.**
+
+**Três saídas, a decidir:**
+1. **DM manual no 1º toque** (é aquecimento, é pessoal, é baixo volume) **+ follow-up automatizado em
+   outro canal** (e-mail ou WhatsApp). ⬅️ *preserva a intenção e tira o risco do lugar errado*
+2. **1º contato em canal automatizável** (e-mail — daí o item "extrair e-mail do site" vira crítico),
+   com Instagram só como aquecimento anterior, como estava no §2.
+3. **Tudo no Instagram, tudo manual** — seguro, mas contraria a decisão de automatizar o follow-up e
+   traz de volta o afogamento do §10.4.
+
+## 10.6 Pendência que a estratégia de isca criou
+
+R$ 500 como **isca** só funciona se existir um **segundo passo desenhado**: quando e como oferecer o
+serviço seguinte. Sem isso, a conta nunca cresce e a carteira fica cheia de clientes de R$ 500 que
+custam a mesma conversa de um de R$ 3.000.
+
+⬜ **Não é da v1**, mas tem de estar no plano — senão "isca" vira só "barato".
