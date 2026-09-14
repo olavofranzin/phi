@@ -152,6 +152,39 @@ configuração (`estagio_aberto_id`), **não enterrado num IF**.
 comum e inocente — e quebraria uma trava que compara texto, em silêncio, liberando escrita sobre
 lead que já é do vendedor. O ID não muda quando o rótulo muda.
 
+### Marketing — IDs de Meio, Origem e Lote
+
+Lidos da instância em **2026-09-14** (execução `38884`, leitura pura):
+
+| campo Odoo | modelo | nome | **ID** |
+|---|---|---|---|
+| `medium_id` | `utm.medium` | **Prospecção Ativa** | **`11`** |
+| `source_id` | `utm.source` | **Google Maps** | **`11`** |
+| `campaign_id` | `utm.campaign` | **PROSP-2026-09** | **`1`** |
+
+> ⚠️ **O nome tem A maiúsculo: "Prospecção Ativa".** O brief escreveu "Prospecção ativa". Se a
+> busca fosse por nome, falharia; por ID, não. Mais um ponto para a decisão de usar ID.
+>
+> ⚠️ **`medium_id = 11` e `source_id = 11` são o mesmo número em modelos diferentes.** Coincidência,
+> não relação. Trocar um pelo outro não daria erro — daria dado errado em silêncio.
+>
+> **Só existe um lote hoje.** Leads de outros meses de extração precisam do lote correspondente.
+> Ver a regra de auto-cura abaixo.
+
+### Lote de campanha que ainda não existe — a regra de auto-cura
+
+O lote vem do **mês de extração do lead** (`PROSP-yyyy-MM`), nunca de `$now`. Se o lote de um mês
+ainda não existir no Odoo, o P5 **cria o lead assim mesmo, com `campaign_id` vazio, e NÃO carimba
+`data_envio_crm`**.
+
+Consequência: a linha continua aparecendo na fila da reconciliação e é reprocessada na rodada
+seguinte — quando o lote já existirá. O upsert por `gbp_place_id` garante que reprocessar
+**atualiza**, nunca duplica.
+
+**Não carimbar a data quando a escrita saiu incompleta é o que torna a fila auto-corretiva.**
+Carimbar sempre transformaria uma falha parcial em perda permanente e silenciosa — que é
+exatamente a doença que o `onError: continueRegularOutput` causou no P6.
+
 ### Os 6 estágios — ID, nome e sequência
 
 Lidos do `crm.stage` da instância em **2026-09-13** (execução `38869`, leitura pura):
