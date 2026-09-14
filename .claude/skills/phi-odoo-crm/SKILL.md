@@ -104,8 +104,30 @@ Em campo `Date` **não** use `toUTC()` — 22h de 08/09 viraria 09/09.
 Upsert: buscar por `gbp_place_id` → atualizar se achar, criar se não. **Nunca** escrever
 `stage_id`, won/lost, nem qualquer campo computado (`gbp_diagnostico`, `*_banda`).
 
+## Mexeu em campo? O git não é o deploy
+
+Alterar `crm_lead.py` **não muda o banco**. O Odoo lê as definições de campo do
+Python a cada subida, mas só cria ou altera coluna quando o módulo é
+**atualizado** (Apps -> `phi_crm` -> Atualizar, ou `odoo -d phi_crm -u phi_crm`).
+
+Sem o upgrade o módulo fica num meio-termo silencioso: o campo existe no registry
+e a coluna não existe no Postgres. O sintoma é este, e vale tanto para a API
+quanto para a tela:
+
+    psycopg2.errors.UndefinedColumn: column crm_lead.<campo> does not exist
+    HINT: Perhaps you meant to reference the column "crm_lead.<outro>"
+
+Aconteceu em 2026-09-13 com `gbp_fit` / `gbp_oportunidade`: quebrou o nó
+`[P5] Atualizar lead` **e o chatter de qualquer lead no navegador**. Não é bug do
+workflow que gritou primeiro. Sempre que a mensagem citar `UndefinedColumn`,
+a resposta é o upgrade do módulo, nunca mexer no payload.
+
+Bumpe a `version` do `__manifest__.py` na mesma alteração — é o que dá para
+saber, olhando a tela de Apps, se o servidor está na versão do git.
+
 ## Verificação antes de fechar qualquer alteração
 
+0. **O módulo foi atualizado no Odoo**, não só commitado
 1. Todo campo do modelo tem par na view
 2. Nenhum campo com dois donos
 3. Lead novo nasce `pendente`, em `Prospecção`
