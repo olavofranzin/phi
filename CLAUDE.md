@@ -141,6 +141,20 @@ Antes de finalizar QUALQUER tarefa:
 
 ---
 
+## Por onde começar, por assunto
+
+| Se a conversa é sobre… | Leia primeiro |
+|---|---|
+| **Onde o projeto está** | `docs/strategic-planning/ESTADO-DO-PROJETO.md` (§0 PAINEL) |
+| **Quanto falta para acabar** | `docs/strategic-planning/DEFINICAO-DE-PRONTO-PHI-V1.md` |
+| **Achar qualquer documento** | `docs/strategic-planning/MAPA-DE-DOCUMENTACAO.md` |
+| **Prospecção** (leads, GBP, planilha, CRM) | `docs/strategic-planning/prospeccao/CLAUDE.md` |
+| **Score de mídia** (campanhas, BigQuery) | `docs/strategic-planning/saude-digital/` + ADR-37/ADR-38 |
+| **CRM Odoo** | skills `phi-odoo-crm` e `odoo-19-dev` |
+
+> ⚠️ **Dois scores diferentes, não confundir:** `phi_value` (saúde da **campanha**) e
+> `potencial_comercial` (qualidade do **lead**). Frentes, donos e ADRs distintos.
+
 ## Regras que você deve seguir
 
 ### Comunicação
@@ -222,6 +236,48 @@ que o plano já esteja **aceito** num ADR. Se o dado desmentir o plano:
 >
 > **Corolário:** **hipótese desmentida também se registra.** Se a refutação não for escrita, a
 > próxima auditoria levanta o mesmo alarme e o trabalho se repete.
+
+### R7 — Nada se cria sem plano pronto. E todo plano começa procurando o que já existe
+**Antes de construir qualquer coisa nova** — workflow, skill, agente, coluna, tabela, pasta — **tem de
+existir um plano escrito e aprovado pelo Olavo.**
+
+E **em cada etapa do plano**, antes de propor construir, responder por escrito:
+1. **Existe skill instalada** que já faz isso? (`ListSkills` / `SearchSkills` — não confie na memória)
+2. **Existe workflow** que já faz? **Existe coluna** que já guarda?
+3. Se procurei e **não existe**, **registrar que procurei** — senão a próxima sessão procura de novo.
+
+> **Motivo:** é a **R2** e a **R6** aplicadas *antes* do fato, e não depois. Corrigir um plano em texto
+> custa minutos; corrigir uma construção custa semanas — foi o que aconteceu com o `1º Enriquecimento`,
+> com o `id_hubspot` e com as 6 dimensões do score. **O caro nunca foi construir: foi construir o que
+> já existia, ou o que não podia ser auditado depois.**
+
+### R8 — Skill primeiro; subagente é a exceção
+**O padrão é a skill** — instrução determinística, versionada em pasta. **Orquestrar vários agentes é
+exceção**, reservada a tarefa de alta volatilidade.
+
+| Escolha **skill** quando | Escolha **agente/subagente** quando |
+|---|---|
+| a tarefa se repete **com a mesma forma** | cada execução é diferente e exige **decidir** |
+| é frequente e estruturada | precisa de **humano no loop** antes de publicar |
+| você quer previsibilidade e custo baixo | há **paralelismo real** ou depuração ao vivo |
+
+> **Teste prático:** *"se eu escrevesse isso num checklist, outra pessoa executaria igual?"* Se sim, é
+> skill. Se a resposta depende de julgamento a cada caso, é agente.
+>
+> **Motivo:** skill tem carga de contexto baixa e saída previsível; orquestração tem o efeito oposto e
+> só se paga quando a tarefa realmente exige autonomia. O `phi-diagnostico` é o exemplo da casa: um
+> agente que virou skill e passou a poder ser testado sem gastar token no n8n.
+
+### R9 — A ordem do trabalho: alinhar → planejar → isolar → revisar
+1. **Entrevista de alinhamento antes do primeiro token de execução.** Perguntar até a ambiguidade
+   acabar. Ambiguidade não resolvida vira retrabalho, não vira criatividade.
+2. **Plano barato antes da construção** (é a **R7**).
+3. **Contexto isolado por camada** — cada sub-chat com o seu (é a **R1**).
+4. **Quem revisa não é quem executou**, e o critério de aceite é **escrito antes**. Reprovou, volta com
+   relatório do defeito. **Limite de 3 voltas** — na terceira, o problema é o plano, não a execução.
+
+> **O que falta hoje na nossa versão:** temos executor e revisor separados (sub-chat × chat-mãe), mas
+> **sem critério de aceite escrito antes**. É o buraco que a R9 fecha.
 
 ### R4 — Uma pergunta que todo chat responde antes de fechar
 > *"Onde estamos, quanto falta, e o que eu atualizei para provar isso?"*
