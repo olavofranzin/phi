@@ -268,6 +268,26 @@ exceção**, reservada a tarefa de alta volatilidade.
 > só se paga quando a tarefa realmente exige autonomia. O `phi-diagnostico` é o exemplo da casa: um
 > agente que virou skill e passou a poder ser testado sem gastar token no n8n.
 
+### R10 — Modelo caro só onde há julgamento (escada de modelos)
+Tarefa básica usa **modelo rápido e barato**; tarefa que exige **raciocínio e qualidade de entrega**
+usa **modelo forte**. Escolher o modelo é decisão de arquitetura, não detalhe.
+
+| Camada | Para quê | O que usamos hoje |
+|---|---|---|
+| **Rápido / barato** | extrair, estruturar, classificar, formatar, redigir com molde pronto | **Gemini Flash** (`gemini-2.5-flash`) na cadeia de enriquecimento |
+| **Forte** | diagnosticar, decidir, priorizar, escrever abordagem, planejar | **Claude Sonnet 5** no nó de Diagnóstico (T28) · **Opus 5** no planejamento |
+
+> **A regra é do degrau, não da marca.** Escreva "camada rápida" e "camada forte" — nunca prenda a
+> regra ao nome de um fornecedor. Modelo troca de nome e de preço a cada poucos meses; **o degrau
+> permanece.** É a mesma lição do `id_crm` e do `campaign_id` sem prefixo: **não grave no nome o que
+> pertence a outro campo.**
+>
+> **Teste prático:** *se a resposta certa está determinada pelo dado de entrada, é camada rápida. Se
+> duas pessoas competentes responderiam diferente, é camada forte.*
+>
+> ⚠️ **Antes de trocar de modelo para economizar, meça.** Custo estimado no papel já nos levou a
+> discutir soluções trabalhosas para economizar valor que ninguém tinha medido.
+
 ### R9 — A ordem do trabalho: alinhar → planejar → isolar → revisar
 1. **Entrevista de alinhamento antes do primeiro token de execução.** Perguntar até a ambiguidade
    acabar. Ambiguidade não resolvida vira retrabalho, não vira criatividade.

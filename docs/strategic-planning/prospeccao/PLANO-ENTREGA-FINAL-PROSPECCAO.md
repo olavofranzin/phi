@@ -58,22 +58,42 @@
 
 # COMPLEMENTO (Claude, 2026-09-14)
 
-## 3. 🔴 O plano inteiro apoia numa base que hoje NÃO está sendo alimentada
+## 3. A base de aprendizagem — corrigido pelo Olavo (2026-09-14)
 
 O item mais importante do §1 é este: *"o desfecho final vai para a planilha para formar a base de
-aprendizagem dos agentes"*. **Quase tudo do §2 come dessa base** — o agente analista, a priorização,
-a abordagem, o ICP.
+aprendizagem"*. Quase tudo do §2 come dessa base.
 
-> **Essa alimentação está quebrada.** Medido em 2026-09-13: as colunas `id_hubspot` e
-> `data_sync_hubspot` foram renomeadas para `id_crm` / `data_sync_crm`, e os nós do **P5** e do **P6**
-> continuam apontando para os nomes antigos. Com `onError: continueRegularOutput`, **falham em
-> silêncio** — sem erro, sem alerta. Ver ressalva 1 do `CONTRATO-PROSPECCAO.md`.
+> ✅ **Correção do Olavo:** *"estas alterações estavam a cargo de um sub-chat e foram parcialmente
+> sanadas."* O alarme de 13/09 (`id_hubspot` → `id_crm` quebrando P5/P6 em silêncio) **já foi
+> parcialmente resolvido**. Registrado aqui porque **hipótese desmentida também se registra** (R6).
 
-**Consequência para o planejamento:** não adianta desenhar agentes que aprendem com desfechos se
-desfecho nenhum está chegando. **Isto é pré-requisito, não tarefa paralela.** Já está endereçado no
-brief `2026-09-13-prosp05-prosp06-odoo-subchat-brief.md`.
+**Mas a verificação precisa olhar a coluna certa.** O Olavo citou que *"vários leads já possuem até os
+enriquecimentos preenchidos"* — e isso é verdade, **mas prova outra coisa**:
 
-**Falta descobrir:** *desde quando* parou. Define o tamanho do buraco na base de treino.
+| Coluna preenchida | Quem escreve | O que prova |
+|---|---|---|
+| `enriquecimento`, `enriquecimento_site`, `analise_gbp_ia` | **P4** | que o **enriquecimento** funciona — o P4 nunca quebrou |
+| `status_crm`, `motivo_perda`, `motivo_ganho`, `data_fechamento`, `data_sync_crm` | **P6** | que a **base de aprendizagem** está sendo alimentada |
+
+**São workflows diferentes.** Enriquecimento é o que sabemos *antes* de falar com o lead; desfecho é o
+que aprendemos *depois*. O aprendizado vive no segundo.
+
+> ✅ **Checagem de 2 minutos, para fechar o assunto:** filtrar na planilha os leads que **já foram
+> fechados** (ganho ou perdido no CRM) e ver se `status_crm` e `motivo_*` estão preenchidos **com data
+> recente**. Se estiverem, a base está viva e o §3 sai do caminho crítico.
+
+### 3.1 🔴 O backup está incompleto — e a base de aprendizagem é o ativo
+
+> *"o bkp ainda não pega algumas colunas apesar de eu já ter trocado no db nativo do n8n."* — Olavo
+
+Isso é mais sério do que parece. **Se a planilha é a base de aprendizagem de toda a área comercial,
+um backup que perde colunas é uma perda silenciosa do ativo principal.**
+
+**A causa é de desenho:** um backup que lista colunas **uma a uma** fica desatualizado a cada coluna
+nova — e já criamos `sync_por`, e vamos criar mais.
+
+**A correção:** o backup deve copiar **a aba inteira**, sem enumerar coluna. Backup que precisa ser
+mantido em dia não é backup — é mais um lugar para esquecer. *(Tarefa pequena, entra no §7.)*
 
 ## 4. ⚖️ A tensão central do plano: volume × custo
 
@@ -99,8 +119,24 @@ irrefutável). Só que o corte é **exatamente o mecanismo que governa gasto de 
    preserva o I5.
 3. **Aceitar o custo** e sair do limite gratuito, com teto declarado.
 
-⚠️ **Antes de decidir, falta um número que ninguém tem: o custo por lead enriquecido.** Levantar isso
-é barato e muda a conversa inteira. *(Ver §7, item 0.)*
+**4ª saída, proposta pelo Olavo:** *"criar várias credenciais do Apify... seria trabalhoso mas
+manteria o volume × custo."*
+
+⚠️ **Funciona tecnicamente, mas carrega dois riscos que precisam estar escritos antes de virar plano:**
+1. **Termos de uso.** Criar contas múltiplas para contornar o limite gratuito costuma ser proibido
+   expressamente pelos termos. O risco não é a multa — é o **banimento**, e aí a prospecção inteira
+   para de uma vez, sem aviso.
+2. **Custo operacional escondido.** Rodízio de credencial, controle de qual esgotou, falha
+   intermitente quando uma cai. É trabalho recorrente para sempre, não uma vez.
+
+> **E o principal:** essa decisão estaria sendo tomada **para economizar um valor que ainda não
+> medimos**. Pode ser que o pay-as-you-go custe pouco o bastante para o rodízio não valer o risco.
+
+⚠️ **Falta o número que decide tudo: o custo por lead enriquecido.** Levantar é barato e muda a
+conversa. **Sem ele, qualquer das quatro saídas é chute.** *(Ver §7, item 0.)*
+
+**Alavanca que vale mais que credencial nova:** não chamar a API duas vezes pelo mesmo lead. Dedup por
+`place_id` e cache do que já foi coletado reduzem chamada sem custar termo de uso nenhum.
 
 ## 5. O ponto final — o que é "Prospecção pronta"
 
@@ -117,6 +153,10 @@ critérios, no mesmo espírito da `DEFINICAO-DE-PRONTO-PHI-V1.md`:
 | **P6** | Os **enriquecimentos são skills versionadas no git** | o prompt vivo é byte-idêntico ao do repositório |
 | **P7** | Cada **dimensão do score tem definição escrita** e status de evidência | ler o doc e achar as 6 |
 | **P8** | O **custo por lead é conhecido** e cabe no teto decidido | uma conta, escrita |
+
+> 🟡 **Estes 8 critérios são PROPOSTA — aguardam aprovação do Olavo** (ele pediu que fossem criados
+> em 14/09). Ao aprovar, este bloco vira a **Definição de Pronto da Prospecção** e entra como frente
+> própria na `DEFINICAO-DE-PRONTO-PHI-V1.md`.
 
 > **Regra de escopo (herdada):** corta escopo, não empurra a data. Um critério que não couber, sai da
 > v1 explicitamente — não fica "para depois" sem dono.
@@ -152,7 +192,7 @@ de onde ler.
 | # | Etapa | Por quê primeiro |
 |---|---|---|
 | **0** | **Levantar o custo por lead enriquecido** | é o número que decide o §4, e falta |
-| **1** | **Consertar a volta do desfecho** (P5/P6 → Odoo) | sem isso não há base de aprendizagem |
+| **1** | **Confirmar a volta do desfecho** (§3) + **corrigir o backup para copiar a aba inteira** (§3.1) | sem isso não há base de aprendizagem — e o que há não está protegido |
 | **2** | **Documentar as 6 dimensões do score** | nada pode ser avaliado sem isso — ver `2026-09-14-leitura-pesquisa-gbp-impacto-no-score.md` |
 | **3** | **Workflow de 1 lead (P1)** | vira o banco de ensaio de todo o resto |
 | **4** | **Enriquecimentos viram skills** (item 3) | versiona o que hoje só existe dentro do n8n |
@@ -162,11 +202,18 @@ de onde ler.
 ## 8. Perguntas em aberto — o que só o Olavo decide
 
 1. **§4:** qual das três saídas para volume × custo?
-2. **O "DB de estratégias de vendas e objeções" mora onde?** Notion, git, ou skill? (Se for consumido
-   por agente a cada lead, git/skill é mais barato; se for editado por humano toda semana, Notion.)
+2. ✅ **DECIDIDO — o "DB de estratégias de vendas e objeções" será arquivo `.md` no GitHub.**
+   (Olavo, 14/09: *"ainda não existe no Notion mas poderá ser também um arquivo .md salvo no
+   GitHub."*) Consequências boas: versionado, revisável por diff, e — pela **R8** — ele nasce já no
+   formato de **skill**, que é exatamente "instrução determinística em pasta". Local sugerido:
+   `docs/comercial/base-vendas/`. **Falta definir o conteúdo mínimo da v1** (quantas objeções, em que
+   estrutura).
 3. **Item 12:** qual a fonte de dados das redes sociais — Apify, coleta própria, ou nenhuma por ora?
 4. **DM no Instagram** é canal de contato oficial? (tem implicação de termos de uso e de volume)
-5. **Quais são os ramos do Miro?** — ver §9.
+5. 🟡 **Ramos do Miro — board identificado, leitura pendente de aprovação.**
+   `Board Agência` → `https://miro.com/app/board/uXjVHecmR7c=/` (existe também uma `Cópia de Board
+   Agência`, `uXjVHI3gP6s=` — **confirmar qual é a vigente**, duas cópias é o mesmo problema de dois
+   donos). A leitura do conteúdo pediu aprovação e ficou pendente.
 
 ## 9. Sobre "uma pasta para cada ramo do projeto"
 
