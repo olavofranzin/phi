@@ -78,9 +78,19 @@ enriquecimentos preenchidos"* — e isso é verdade, **mas prova outra coisa**:
 **São workflows diferentes.** Enriquecimento é o que sabemos *antes* de falar com o lead; desfecho é o
 que aprendemos *depois*. O aprendizado vive no segundo.
 
-> ✅ **Checagem de 2 minutos, para fechar o assunto:** filtrar na planilha os leads que **já foram
-> fechados** (ganho ou perdido no CRM) e ver se `status_crm` e `motivo_*` estão preenchidos **com data
-> recente**. Se estiverem, a base está viva e o §3 sai do caminho crítico.
+> ✅ **Resposta do Olavo (2026-09-14): "o processo ainda não está rodando".** Não há lead fechado
+> para conferir. **O alarme se dissolve — mas vira outra coisa, mais importante:**
+>
+> 🎯 **A base de aprendizagem não está quebrada: ela está VAZIA, e o caminho até ela nunca foi
+> percorrido inteiro.** Ninguém jamais marcou ganho/perdido no CRM e viu chegar na planilha.
+>
+> **Isso muda o critério P4.** Ele não se verifica por consulta — só se verifica **fechando um lead de
+> verdade**. E enquanto isso não acontecer, todo agente que "aprende com o desfecho" está sendo
+> desenhado sobre um caminho **não testado**.
+>
+> **Consequência prática para a ordem de trabalho:** o **primeiro lead fechado ponta a ponta vale mais
+> que qualquer lote**. Ele é que prova o circuito — prospectar → CRM → contato → desfecho → planilha.
+> Antes disso, escalar volume é multiplicar algo que ainda não se sabe se fecha o ciclo.
 
 ### 3.1 🔴 O backup está incompleto — e a base de aprendizagem é o ativo
 
@@ -180,6 +190,7 @@ um lote — e isso é o que torna as outras sete tratáveis.
 | pesquisa para o DB de objeções | **`deep-research`** · **`customer-research`** | ✅ usar |
 | CRM / Odoo | **`phi-odoo-crm`**, **`odoo-19-dev`** | ✅ já em uso |
 | 11 e 12 — descobrir e analisar redes sociais | **procurei: NÃO existe skill instalada** | ❌ **construir** |
+| entrevista de alinhamento (`grill-me`) | **procurei: NÃO existe** — nem instalada, nem no catálogo | ❌ **candidata a virar skill nossa** (R8: é tarefa repetida e estruturada) |
 
 **Sobre o item 12 (analisar redes sociais) — o que eu faria:** a parte difícil não é a análise, é a
 **coleta**. Seguidores, posts e frequência não saem de API oficial sem autorização do dono do perfil.
@@ -210,10 +221,12 @@ de onde ler.
    estrutura).
 3. **Item 12:** qual a fonte de dados das redes sociais — Apify, coleta própria, ou nenhuma por ora?
 4. **DM no Instagram** é canal de contato oficial? (tem implicação de termos de uso e de volume)
-5. 🟡 **Ramos do Miro — board identificado, leitura pendente de aprovação.**
-   `Board Agência` → `https://miro.com/app/board/uXjVHecmR7c=/` (existe também uma `Cópia de Board
-   Agência`, `uXjVHI3gP6s=` — **confirmar qual é a vigente**, duas cópias é o mesmo problema de dois
-   donos). A leitura do conteúdo pediu aprovação e ficou pendente.
+5. ✅ **Miro — board vigente confirmado (Olavo, 14/09): `Board Agência`**
+   → `https://miro.com/app/board/uXjVHecmR7c=/`. A leitura do conteúdo pediu aprovação e ficou
+   pendente; com ela eu mapeio os ramos contra as pastas que já existem.
+   ⚠️ A `Cópia de Board Agência` (`uXjVHI3gP6s=`) **não é a vigente** — renomear com prefixo
+   `[HISTÓRICO]` ou arquivar, pela **R5**. Board duplicado é o mesmo risco de doc duplicada:
+   alguém planeja em cima do errado.
 
 ## 9. Sobre "uma pasta para cada ramo do projeto"
 
