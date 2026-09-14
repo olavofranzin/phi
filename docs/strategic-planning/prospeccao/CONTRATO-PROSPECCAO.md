@@ -171,19 +171,36 @@ Lidos da instância em **2026-09-14** (execução `38884`, leitura pura):
 > **Só existe um lote hoje.** Leads de outros meses de extração precisam do lote correspondente.
 > Ver a regra de auto-cura abaixo.
 
-### Lote de campanha que ainda não existe — a regra de auto-cura
+### Lote de campanha — fixo em `PROSP-2026-09`
 
-O lote vem do **mês de extração do lead** (`PROSP-yyyy-MM`), nunca de `$now`. Se o lote de um mês
-ainda não existir no Odoo, o P5 **cria o lead assim mesmo, com `campaign_id` vazio, e NÃO carimba
-`data_envio_crm`**.
+> ✅ **Decisão do Olavo, 2026-09-14, registrada a pedido dele:**
+> *"Insira PROSP-2026-09 em todos e anote que foi minha decisão."*
 
-Consequência: a linha continua aparecendo na fila da reconciliação e é reprocessada na rodada
-seguinte — quando o lote já existirá. O upsert por `gbp_place_id` garante que reprocessar
-**atualiza**, nunca duplica.
+**Todos os leads levados ao CRM recebem `campaign_id = 1` (`PROSP-2026-09`), independentemente do
+mês de extração.** O P5 **não calcula** o lote a partir de `mês extração` e **não cria** lote
+nenhum.
 
-**Não carimbar a data quando a escrita saiu incompleta é o que torna a fila auto-corretiva.**
-Carimbar sempre transformaria uma falha parcial em perda permanente e silenciosa — que é
-exatamente a doença que o `onError: continueRegularOutput` causou no P6.
+Isto **substitui** o desenho do brief (§4.8), que derivava `PROSP-yyyy-MM` do mês de extração. O
+motivo de o brief querer a derivação continua válido — rodar de novo no mês seguinte não pode
+reetiquetar todo mundo —, mas com lote fixo o problema não existe: não há o que recalcular.
+
+**O que se perde, dito com clareza:** deixa de ser possível separar no CRM as safras de extração
+por lote. Essa informação **não se perde do sistema** — `mês extração` e `data extração` continuam
+na planilha, dono **P2**. Se um dia a segmentação por safra for necessária, ela é reconstruível
+dali.
+
+**Quando revisitar:** se passarem a existir campanhas de prospecção com objetivos diferentes
+convivendo, um lote só deixa de distinguir o que precisa ser distinguido.
+
+### A regra que continua valendo: escrita incompleta não carimba data
+
+Independente do lote, se a escrita no CRM sair incompleta, o P5 **não carimba `data_envio_crm`**.
+A linha continua na fila da reconciliação e é reprocessada; o upsert por `gbp_place_id` garante
+que reprocessar **atualiza**, nunca duplica.
+
+**Não carimbar quando a escrita falhou é o que torna a fila auto-corretiva.** Carimbar sempre
+transformaria falha parcial em perda permanente e silenciosa — que é exatamente a doença que o
+`onError: continueRegularOutput` causou no P6 por duas semanas.
 
 ### Os 6 estágios — ID, nome e sequência
 
