@@ -127,3 +127,18 @@ Declarar isto é metade do valor do documento — é o que impede o projeto de c
 - Quando os 15 estiverem ✅, o **PHI v1 está pronto** e abre-se a discussão do v2.
 
 *Sem linha de chegada, todo esforço parece insuficiente.*
+
+---
+
+## Adendo 2026-09-15 — fora da v1, mas com gatilho
+
+| Item | Estado | Gatilho |
+|---|---|---|
+| **Automação da entrega de GBP** (1º pedaço real da Fase 2 do PHI) | **fora da v1** | **CK5 — ao fechar o 3º cliente de GBP** |
+| **Bônus de "saúde digital"** no cliente de GBP (risco RE2) | **fora da v1** | **mesmo gatilho** — exige acessos e tempo do cliente, e na fase manual a entrega não tem folga |
+
+> **Por que gatilho e não data:** tarefa sem data apodrece; **gatilho dispara sozinho quando a condição
+> acontece.** É o mesmo mecanismo do gate do Meta Ads.
+>
+> Fonte: `prospeccao/PLANO-ENTREGA-FINAL-PROSPECCAO.md` §13.7 e §12.2.
+> ⚠️ A **Prospecção tem critérios próprios** (P1–P7, P9) no §15 daquele plano — ainda 🟡 proposta.

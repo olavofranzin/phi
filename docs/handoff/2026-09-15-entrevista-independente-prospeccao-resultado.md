@@ -274,3 +274,13 @@ cadência padrão única — Q9).
   depois das perdas; ajustar quando S3 mostrar a fatia sem canal.
 - **Os 2 setores devem ser parecidos ou contrastantes?** Parecidos comparam melhor a mensagem;
   contrastantes mostram mais sobre o ICP.
+
+### 6.4 ✅ Critério S5 — acrescentado pelo chat-mãe (2026-09-15)
+
+| # | Pergunta | Por que importa | Como responder |
+|---|---|---|---|
+| **S5** | **O setor tem restrição a publicidade?** (saúde, odontologia, advocacia, farmácia…) | ⬆️ **conta A FAVOR**, não contra. **A gestão de GBP não é publicidade** — então é exatamente onde o concorrente que anuncia tem **menos espaço**, e onde a nossa oferta de entrada passa por portas fechadas para ele | verificar se o conselho de classe do setor restringe anúncio; um setor restrito **sobe** na ordenação |
+
+> Origem: comentário do Olavo na Q4 da entrevista estratégica — *"o GBP pode ser um bom quebra-barreira
+> porque não será publicidade"*. **Inverte um critério de eliminação em critério de atração.**
+> ⚠️ **Cidade da v1 definida: São José do Rio Preto** (§6.3 fica respondido).

@@ -238,7 +238,37 @@ de onde ler.
 nova, **colocar um `CLAUDE.md` curto em cada pasta que já existe**, dizendo: o que é a frente, qual o
 doc canônico, o que ler antes de agir, e o que **não** mexer.
 
-**Preciso da lista dos ramos do Miro** para conferir se algum não tem pasta ainda.
+### ✅ Board lido (2026-09-15) — e ele não é o que eu supunha
+
+**`Board Agência`** = *"Planejamento Estratégico Para Criação De Procedimentos Em Áreas De Uma
+Agência"* — 252 blocos de texto, 251 conectores, em mapa mental.
+
+> 🎯 **Os ramos dele são ÁREAS DA AGÊNCIA e seus PROCEDIMENTOS — não frentes de software.**
+> São **dois eixos diferentes**, e os dois são legítimos:
+>
+> | Eixo | Onde vive hoje | Exemplo |
+> |---|---|---|
+> | **frente de software** | `docs/strategic-planning/<frente>/` | prospecção, saúde-digital, T28 |
+> | **área da agência** | ⬜ **não existe no repositório** | Comercial, Operações, Atendimento |
+
+**Recomendação: NÃO reorganizar o repositório por área.** As pastas atuais são referenciadas por
+ADRs, contratos e todos os briefs; trocar o eixo quebraria tudo por ganho nenhum. **Criar um lugar
+novo** — `docs/operacao/<area>/` — para o que o board descreve, que é **procedimento operacional**,
+não design de software.
+
+### 🔴 O que o board revela sobre o nosso buraco
+
+Entre os nós lidos estão: **"Passagem De Bastão Entre Comercial E Operações"**, "Planejamento De
+Entregas", "Pontos De Contato", "Plantão De Dúvidas", "Monitorar A Adoção", "Responsáveis",
+"Procedimentos da Área Comercial".
+
+> **O board já tinha o que nos faltava.** O buraco que apareceu três vezes neste plano — *quem entrega
+> depois de vendido* (§11.3-c), *o escopo do projeto que o cliente recebe* (§15) — **está desenhado
+> ali, no ramo de Operações.** Planejamos a Prospecção isolada de um mapa que já previa a passagem de
+> bastão.
+
+⬜ **A enumeração completa dos ramos é leitura pesada — vai para sub-chat** (R1). O que fica decidido
+aqui é o **eixo**: software em `strategic-planning/`, operação em `operacao/`.
 
 ---
 
@@ -578,7 +608,7 @@ Pedido **60 dias** após **resultado visível** = o placar mensal melhorou contr
 | # | Risco | Condição proposta |
 |---|---|---|
 | **RE1** | palavra-chave **no nome** da empresa **suspende o perfil** do cliente | regra escrita: palavra-chave **só** em descrição, serviços e respostas — **nunca no nome**. *(O Olavo já havia dito "descrição e respostas"; a regra existe para o executor não derivar.)* |
-| **RE2** | bônus de saúde digital exige acessos e tempo **na fase manual** | começa **junto com o gatilho** da automação |
+| **RE2** | ✅ **DECIDIDO (15/09):** o bônus de saúde digital **começa junto com o gatilho** da automação (CK5). Registrado na `DEFINICAO-DE-PRONTO` |
 | **RE3** | campanha teste paga com parte dos R$ 500 → verba de ~R$ 100–150 dá pouco resultado e vira argumento **contra** o upsell | verba **paga à parte** pelo cliente, com mínimo declarado |
 | **RE4** | **o placar pós-venda depende de dado de dentro do perfil** — ligações e rotas não saem do Apify | ⬇️ **reenquadrado, ver abaixo** |
 
@@ -725,8 +755,8 @@ produzir um documento que compara pessoas que se conhecem.
 | **M10** — riscos RE1–RE4 | ✅ aplicado (§13.7) |
 | **M5** — preço e fidelidade no `catalogo-produtos-servicos.md` | ✅ aplicado |
 | **M6** — CK5 ganha 2ª ação (abrir a automação) | ✅ aplicado (§12.2) |
-| **M7** — `DEFINICAO-DE-PRONTO` §4: automação da entrega, fora da v1, com gatilho | ⬜ pendente — outro doc |
-| **M8** — critério **S5** (setor com restrição a publicidade conta **a favor**) | ⬜ pendente — roteiro da pesquisa |
+| **M7** — `DEFINICAO-DE-PRONTO`: automação da entrega, fora da v1, com gatilho | ✅ aplicado |
+| **M8** — critério **S5** (setor com restrição a publicidade conta **a favor**) | ✅ aplicado |
 | **M11** — definir "resultado visível" | ✅ aplicado (§13.6) |
 
 ---
