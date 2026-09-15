@@ -306,7 +306,10 @@ por semana. **Não cabe em agenda nenhuma.** É o modo mais comum de uma máquin
 não por falta de lead, mas por afogamento — e acontece na semana 4, quando já se investiu tudo.
 
 **Decidido:** follow-up **automatizado** + **número de toques reduzido**.
-⬜ **Falta fixar o número.** Proposta: **4 toques**. ⚠️ O contrato hoje assume **cadência ≥ 8**
+✅ **DECIDIDO (Olavo, 15/09): 4 toques no piloto; o número real se fixa depois de medir.**
+É o **RQ2** aplicado — o piloto mostra **em que toque as respostas chegam**, e aí o número vira dado em
+vez de palpite. ⬜ **O contrato precisa registrar "4 (provisório, revisto após o piloto)"**, não 4 fixo.
+⚠️ O contrato hoje assume **cadência ≥ 8**
 (`tentativas_contato`) — **ao fixar, atualizar o CONTRATO** (R2).
 
 ## 10.5 🔴 O conflito que a entrevista abriu: DM automatizada no Instagram
@@ -532,7 +535,9 @@ profissional acham fornecedor **perguntando a alguém**, e ~**48%** do negócio 
 | Fonte | dados **já coletados** — sem custo novo | enriquecimento completo |
 | Uso | 1º contato e resposta a "quanto custa?" | entrega e renovação |
 
-⬜ **Detalhe a decidir (ver §14.3):** os 3 concorrentes aparecem **com nome** ou anônimos?
+✅ **DECIDIDO (Olavo, 15/09): sem nome** — *"os 3 melhores da sua busca"*. Os números aparecem, a
+identidade não. Entrega a mesma informação útil sem produzir um documento que compara pessoas que se
+conhecem — e os concorrentes citados **também estão na nossa base** (§14.3).
 
 ## 13.4 Posicionamento e promessa
 
