@@ -728,3 +728,44 @@ produzir um documento que compara pessoas que se conhecem.
 | **M7** — `DEFINICAO-DE-PRONTO` §4: automação da entrega, fora da v1, com gatilho | ⬜ pendente — outro doc |
 | **M8** — critério **S5** (setor com restrição a publicidade conta **a favor**) | ⬜ pendente — roteiro da pesquisa |
 | **M11** — definir "resultado visível" e onde mora o placar mensal | ⬜ pendente |
+
+---
+
+# 15. Os critérios de pronto da Prospecção (v1)
+
+> **Status:** 🟡 proposta — 8 critérios. P1–P7 vêm do §5; **P8 saiu**; **P9 entrou**.
+> Ao serem aprovados, entram como frente própria na `DEFINICAO-DE-PRONTO-PHI-V1.md`.
+
+| # | Critério | Como se verifica | Piloto cobre |
+|---|---|---|---|
+| **P1** | um lead entra e sai **analisado** pelo workflow de lead único | rodar com 1 lead real | ✅ |
+| **P2** | um **recorte completo** (os 2 setores) roda ponta a ponta **sem intervenção** | 1 execução, ninguém toca | ❌ ciclo de 100 |
+| **P3** | todo lead no CRM chega com **oferta, prioridade, abordagem e NBA** | abrir 10 leads e conferir | ✅ |
+| **P4** | o **desfecho volta à planilha** com motivo, automaticamente | fechar no CRM e ver chegar | ✅ |
+| **P5** | a **cadência roda**, registra tentativas e **para na resposta** | `tentativas_contato` avança; quem responde sai da fila | ✅ |
+| **P6** | enriquecimentos são **skills versionadas no git** | prompt vivo byte-idêntico ao repositório | ❌ |
+| **P7** | cada **dimensão do score** tem definição escrita e status de evidência | ler o doc e achar as 6 | ❌ |
+| **P9** | o **mini-diagnóstico é gerado sem trabalho manual** para qualquer lead da base | pedir para 3 leads e receber os 3 | ✅ |
+
+### O que saiu, e por quê
+
+**P8 — "custo por lead conhecido"** → vira o **CK1**. *Saber* um custo não é entrega, é medição; como
+critério, cumpria-se escrevendo um número numa planilha.
+
+**P10 — "o relatório mensal do cliente existe"** → **fora desta frente** (decisão do Olavo, 15/09):
+
+> *"ele é um entregável, ele é operacional e como relato dos serviços prestados, estará no escopo do
+> projeto que será apresentado ao lead que contratar; na prospecção pode apenas constar que o perfil
+> será constantemente monitorado e os resultados apontados conforme será acordado no escopo."*
+
+**Está certo:** é entrega do **serviço**, não da **prospecção**. A Prospecção acha e contata; o que
+vem depois da assinatura é outra frente. ⚠️ **O risco não sumiu — mudou de endereço:**
+
+| | |
+|---|---|
+| **Onde mora agora** | no **escopo do projeto** — o documento de proposta apresentado ao lead |
+| **Quando vence** | **30 dias depois do 1º cliente assinar** |
+| **O problema** | ⬜ **esse documento ainda não existe.** Documentamos a prospecção à exaustão; **o que vamos vender não tem spec** |
+
+**Redação aprovada para o pré-venda:** *"o perfil será constantemente monitorado e os resultados
+apontados conforme acordado no escopo do projeto."* — diz o que se faz, sem prometer número (§13.4).
