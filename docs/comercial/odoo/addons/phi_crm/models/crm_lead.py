@@ -235,15 +235,26 @@ class CrmLead(models.Model):
         help="[IA] Sinal de ouro: o perfil existe e ninguem reivindicou.",
     )
 
-    # ATENCAO: as chaves sao as que o normalizador do PROSP-02 produz, nao
-    # rotulos escolhidos aqui. A funcao classificarSite() so tem tres saidas:
-    # 'none' (sem URL ou URL invalida), 'social' (host e rede social) e 'own'
-    # (qualquer outro host). Qualquer chave diferente disso faz o Odoo recusar
-    # a escrita inteira com ValueError - nao grava parcial, nao avisa antes.
+    # ATENCAO: as chaves sao as que os produtores gravam na planilha, nao
+    # rotulos escolhidos aqui. Os dois produtores VIVOS (classificarSite() no
+    # PROSP-02 e a copia dela no PROSP-03) emitem so 'none' (sem URL), 'social'
+    # (host de rede social) e 'own' (qualquer outro host).
+    #
+    # 'google' e LEGADO: nenhum produtor atual o emite, mas ele esta gravado em
+    # linhas antigas da planilha que nunca foram repontuadas - foi assim que
+    # quebrou a escrita do lead Niti em 15/09. Fica aqui porque a coluna e
+    # historica: o Odoo recusa a escrita INTEIRA quando ve chave fora da lista,
+    # e um valor que existe na base precisa ter onde cair.
+    #
+    # Se um quinto valor aparecer, o P5 NAO quebra: o payload so envia chave
+    # que esta nesta lista (whitelist SITE_TIPOS no no [P5] Montar payload
+    # Odoo). Dominio fechado vindo de fonte externa nunca deve poder derrubar
+    # a escrita de um lead inteiro por causa de um campo.
     gbp_site_tipo = fields.Selection(
         selection=[
             ("own", "Site proprio"),
             ("social", "Rede social"),
+            ("google", "Site no Google (legado)"),
             ("none", "Sem site"),
         ],
         string="Tipo de Site (GBP)",

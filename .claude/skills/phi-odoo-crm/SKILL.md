@@ -143,6 +143,25 @@ escreveu o campo.
 Antes de declarar um `Selection` que recebe dado de fora, abra o nó ou o arquivo
 que gera o valor e copie as chaves de lá.
 
+**E ler o produtor não basta.** Em 15/09 o smoke quebrou com
+`gbp_site_tipo: 'google'` — um valor que **nenhum produtor vivo emite**. Era
+legado, gravado por uma versão antiga do pipeline numa linha que nunca foi
+repontuada. Os dois produtores atuais (`classificarSite()` no PROSP-02 e a cópia
+dela no PROSP-03) só emitem `own`, `social` e `none`.
+
+A lição não é "acrescente google à lista". É esta:
+
+> **Um campo de domínio fechado vindo de fonte externa nunca pode derrubar a
+> escrita do registro inteiro.**
+
+O Odoo recusa o `write` completo quando vê uma chave fora da lista — o lead não
+entra por causa de um campo. Então o writer filtra: envia só chave conhecida e
+**omite** o resto (`SITE_TIPOS` no `[P5] Montar payload Odoo`). O lead entra sem
+o campo, em vez de não entrar. Vazio é "não sei", que é o I3.
+
+Uma coluna antiga guarda o histórico de todas as regras que já passaram por ela,
+não só da regra de hoje.
+
 ## Verificação antes de fechar qualquer alteração
 
 0. **O módulo foi atualizado no Odoo**, não só commitado

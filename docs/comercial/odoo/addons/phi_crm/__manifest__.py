@@ -1,6 +1,6 @@
 {
     "name": "PHI CRM",
-    "version": "19.0.1.3.0",
+    "version": "19.0.1.4.0",
     "summary": "Campos de diagnostico GBP/IA e pipeline do PHI sobre o CRM do Odoo",
     "description": """
 PHI CRM
