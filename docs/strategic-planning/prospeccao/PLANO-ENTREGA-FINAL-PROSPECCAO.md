@@ -621,8 +621,59 @@ oferta definida, anotar à mão é trivial. **A premissa caiu; a decisão merece
 máquina — **valida a oferta que ela vai escalar**. É também o que prova o circuito completo (§3) e
 destrava o **B2**.
 
-⬜ **Decisão do Olavo.** *(A alternativa é manter a espera, aceitando que tudo siga estimativa até
-dezembro — o que o §12.1 RQ2 pede para evitar.)*
+### ✅ DECIDIDO (Olavo, 2026-09-15) — piloto pequeno, mas com a MÁQUINA rodando
+
+> *"o piloto deve ocorrer já com a máquina em tese em funcionamento porque devemos também analisar o
+> funcionamento dos agentes, as indicações e abordagens e as automações do follow-up... com um pequeno
+> número de leads mas com a máquina funcionando."*
+
+**A proposta do chat-mãe era mais estreita que o problema.** Ela testava a **oferta**; o Olavo quer
+testar o **circuito** — e o circuito inclui o agente escrevendo a abordagem, o NBA, o follow-up
+disparando e o desfecho voltando. **Nada disso se observa com contato manual.**
+
+E com 10–20 leads não é preciso amostra estatística: **é preciso ver funcionar.** Um smoke test não
+mede taxa de conversão — mede se o circuito fecha. É o mesmo raciocínio do §3 (*"o primeiro lead
+fechado ponta a ponta vale mais que qualquer lote"*), agora completo: o circuito inclui os agentes.
+
+> ⚠️ **O risco que sobra, e como tratá-lo:** com oferta e máquina estreando juntas, ninguém sabe se o
+> silêncio veio da **mensagem** ou do **mercado**. **Mitigação barata:** antes de enviar, **ler as 20
+> abordagens que o agente escreveu**. Se estiverem ruins, o problema é a máquina e se descobre **antes**
+> de gastar os leads. Julgamento humano de 20 textos custa meia hora.
+
+## 14.2.1 🎯 O piloto vira a especificação da primeira entrega
+
+A decisão não adia o piloto — ela **define o que construir primeiro**. Tudo que as 20 abordagens não
+exigem sai do caminho crítico e vira v1.1.
+
+### O que o piloto EXIGE (caminho crítico, nesta ordem)
+
+| # | Peça | Estado |
+|---|---|---|
+| 1 | **F3** — PROSP-05 escrevendo no Odoo (lead, oferta, campos GBP) | brief escrito, não executado |
+| 2 | **Mini-diagnóstico** (3 falhas + × 3 concorrentes, **sem score**) | dados já coletados; falta montar a peça |
+| 3 | **Agente de abordagem + NBA** escrevendo no CRM | não existe |
+| 4 | **Cadência com follow-up** pelo servidor de e-mail do Odoo | não existe |
+| 5 | **PROSP-06** trazendo o desfecho de volta | existe, apontado para o HubSpot |
+| 6 | **Colunas novas:** canal do contato (N5), `aquecimento` (N6), motivo "sem resposta" (N4), `data_envio_crm` | a criar |
+| 7 | **Item 10** — e-mail do lead extraído do site | pré-requisito da cadência (N2) |
+
+### O que o piloto NÃO exige — e por isso NÃO se constrói antes
+
+| Peça | Por que sai do caminho crítico |
+|---|---|
+| **Documentar as 6 dimensões do score** | 🎯 **o mini-diagnóstico não usa score** (decisão Q6/M4). Continua necessário para o produto — **não para o piloto** |
+| **Fila ordenada por score** | com 20 leads, a ordem é escolhida a dedo |
+| **Skills de redes sociais** (itens 11–12) | para 20 leads, checagem manual resolve |
+| **Pesquisa dos 2 setores** | 20 leads podem sair de um setor qualquer; a pesquisa serve ao **ciclo de 100** |
+| **Vazão ajustável (RQ1)** | com 20 leads não há o que estrangular — mas **o padrão do `Set` no topo já se adota desde o 1º nó** |
+| **Automação da entrega de GBP** | já estava fora da v1, com gatilho no CK5 |
+
+> **O reordenamento mais relevante:** a documentação das 6 dimensões era o **passo 2** da ordem do §7.
+> Sai do caminho crítico do piloto — porque a peça que vai ao lead **não mostra score**. Continua
+> obrigatória antes de qualquer promessa apoiada em score, e antes do ciclo de 100.
+
+⬜ **Consequência a aceitar:** o piloto depende do **F3** (Odoo). Ele é agora **a peça que governa a
+data** de tudo. Se houver qualquer aceleração possível no projeto, é ali.
 
 ## 14.3 Um efeito colateral do mini-diagnóstico, numa cidade só
 
