@@ -151,6 +151,18 @@ Antes de finalizar QUALQUER tarefa:
 | **Prospecção** (leads, GBP, planilha, CRM) | `docs/strategic-planning/prospeccao/CLAUDE.md` |
 | **Score de mídia** (campanhas, BigQuery) | `docs/strategic-planning/saude-digital/` + ADR-37/ADR-38 |
 | **CRM Odoo** | skills `phi-odoo-crm` e `odoo-19-dev` |
+| **Procedimentos da agência** (quem faz o quê, entrega, atendimento) | **Miro — `Board Agência`** · `https://miro.com/app/board/uXjVHecmR7c=/` |
+
+> **O `Board Agência` é o mapa da OPERAÇÃO, não do software.** *"Planejamento Estratégico Para Criação
+> De Procedimentos Em Áreas De Uma Agência"* — mapa mental com ~250 blocos, organizado por **área**
+> (Comercial, Operações, Atendimento) e seus **procedimentos**: *Passagem de Bastão entre Comercial e
+> Operações · Planejamento de Entregas · Pontos de Contato · Plantão de Dúvidas · Monitorar a Adoção ·
+> Responsáveis*. ⚠️ Existe uma `Cópia de Board Agência` — **não é a vigente**.
+>
+> **São dois eixos, não confundir:** frente de **software** mora em `docs/strategic-planning/<frente>/`;
+> **área da agência** é o board (e, quando for para o git, `docs/operacao/<area>/`).
+> **Consulte-o antes de planejar qualquer coisa que envolva o depois da venda** — em 2026-09-15
+> descobrimos que ele já previa a passagem de bastão que o plano da Prospecção tinha deixado sem dono.
 
 > ⚠️ **Dois scores diferentes, não confundir:** `phi_value` (saúde da **campanha**) e
 > `potencial_comercial` (qualidade do **lead**). Frentes, donos e ADRs distintos.

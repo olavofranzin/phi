@@ -2,7 +2,8 @@
 
 | | |
 |---|---|
-| **Status** | 🟡 **RASCUNHO** — base escrita pelo Olavo em 2026-09-14, complementada neste documento |
+| **Status** | ✅ **FECHADO / VIGENTE** desde **2026-09-15** — os 8 critérios foram aprovados pelo Olavo |
+| **⚠️ A partir de agora** | vale o **controle de mudança do §12.3**: nada entra ou sai sem **justificativa** e **pelo menos uma alternativa**. Se algo entra, **algo sai** |
 | **Papel** | **Documento-base do planejamento da frente Prospecção.** Trabalha junto com o `CLAUDE.md` |
 | **Método** | Desenhar o **ponto final** primeiro; depois engenharia reversa até o que existe hoje |
 | **Por que só Prospecção** | é a frente-piloto. O que aprendermos aqui vai para as outras |
@@ -763,7 +764,7 @@ produzir um documento que compara pessoas que se conhecem.
 
 # 15. Os critérios de pronto da Prospecção (v1)
 
-> **Status:** 🟡 proposta — 8 critérios. P1–P7 vêm do §5; **P8 saiu**; **P9 entrou**.
+> **Status:** ✅ **APROVADOS pelo Olavo em 2026-09-15.** P1–P7 vêm do §5; **P8 saiu** (virou CK1); **P9 entrou**.
 > Ao serem aprovados, entram como frente própria na `DEFINICAO-DE-PRONTO-PHI-V1.md`.
 
 | # | Critério | Como se verifica | Piloto cobre |

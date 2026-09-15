@@ -142,3 +142,22 @@ Declarar isto é metade do valor do documento — é o que impede o projeto de c
 >
 > Fonte: `prospeccao/PLANO-ENTREGA-FINAL-PROSPECCAO.md` §13.7 e §12.2.
 > ⚠️ A **Prospecção tem critérios próprios** (P1–P7, P9) no §15 daquele plano — ainda 🟡 proposta.
+
+---
+
+## Frente PROSPECÇÃO — 8 critérios (aprovados 2026-09-15)
+
+| # | Critério | Placar |
+|---|---|---|
+| **P1** | um lead entra e sai **analisado** pelo workflow de lead único | ⬜ |
+| **P2** | um **recorte completo** (2 setores) roda ponta a ponta **sem intervenção** | ⬜ |
+| **P3** | todo lead no CRM chega com **oferta, prioridade, abordagem e NBA** | ⬜ |
+| **P4** | o **desfecho volta à planilha** com motivo, automaticamente | ⬜ |
+| **P5** | a **cadência roda**, registra tentativas e **para na resposta** | ⬜ |
+| **P6** | enriquecimentos são **skills versionadas no git** | ⬜ |
+| **P7** | cada **dimensão do score** tem definição escrita e status de evidência | ⬜ |
+| **P9** | o **mini-diagnóstico é gerado sem trabalho manual** | ⬜ |
+
+**Placar: 0 de 8.** Documento canônico: `prospeccao/PLANO-ENTREGA-FINAL-PROSPECCAO.md` (§15).
+**Fora desta frente:** o relatório mensal do cliente — é entregável do **serviço**, vive no escopo do
+projeto. **P8 saiu** e virou o checkpoint **CK1** (custo por lead): saber um custo é medição, não entrega.
