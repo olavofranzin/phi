@@ -217,7 +217,7 @@ há trava para quando a entrega aos clientes consumir o tempo de prospecção.**
 | **N7** | **1º ciclo com cadência padrão única** e 2 setores | com 100 contatos/setor, variar cadência por lead impede saber o que funcionou | cadência por lead só no 2º ciclo; ciclo de 2 setores dura ~2× o estimado em §10.2 |
 | **N8** | **Resposta do lead interrompe a cadência** + tarefa com prazo; **pausa geral** na ausência | evita follow-up automático para quem já respondeu e lead ignorado | requisito da etapa 6 (cadência) |
 | **N9** | **Mini-diagnóstico** como resposta a "quanto custa?"; objeção registrada; Olavo decide faixa de preço ou reunião | reaproveita o enriquecimento e diferencia a agência | 1º item do DB de objeções (`docs/comercial/base-vendas/`) |
-| **N10** | **Pesquisa profunda para escolher 2 setores** | não há critério de setor hoje | critérios: volume no município · capacidade de pagar até R$ 500 · presença ativa no Instagram · falha digital visível nos nossos dados |
+| **N10** | **Pesquisa profunda para escolher 2 setores** | não há critério de setor hoje | roteiro da pesquisa na **§6** |
 | **N11** | **Risco aceito:** nenhuma trava entre carga de entrega e prospecção | primeiros clientes consomem o tempo de contato justamente quando a venda funciona | registrar como risco sem dono; revisitar ao fechar o 1º cliente |
 
 ---
@@ -239,3 +239,38 @@ há trava para quando a entrega aos clientes consumir o tempo de prospecção.**
 5. **§10.5 — o problema não é só "automatizar DM".** A API oficial **não permite iniciar** conversa com
    desconhecido; qualquer semi-automação de 1º contato já cai fora dos termos. Por isso a decisão do
    Olavo (quebra-gelo manual para alguns leads sorteados) é mais segura que a saída 1 do §10.5.
+
+---
+
+## 6. Roteiro da pesquisa de mercado — escolha dos 2 setores
+
+> Origem: resposta à pergunta do Olavo na Q8 (*"o que acha?"*) e ponto **N10**. Adicionado a pedido do
+> Olavo em 2026-09-14. **Isto é roteiro, não execução** — a pesquisa roda em sessão própria.
+
+**Objetivo:** escolher **2 setores** da cidade da v1 para o 1º ciclo de contato (100 contatos cada,
+cadência padrão única — Q9).
+
+### 6.1 As quatro perguntas
+
+| # | Pergunta | Por que importa | Como responder | Onde buscar |
+|---|---|---|---|---|
+| **S1** | **Quantas empresas do setor existem na cidade?** | o ciclo precisa de **100 contatos** *depois* das perdas (sem canal, fechadas, duplicadas) | contar empresas ativas do setor | descoberta barata do Maps (P2, sem IA) · dados abertos de CNPJ por CNAE e município |
+| **S2** | **O setor consegue pagar até R$ 500/mês — e tem de onde crescer a conta?** | ticket de entrada é isca (§10.6): setor que só paga R$ 500 nunca vira conta maior | estimar faturamento típico e ticket do serviço do setor; ver se já **investem** em marketing | pesquisa de mercado do setor · biblioteca de anúncios da Meta e central de transparência do Google (quem já anuncia na cidade) |
+| **S3** | **Qual a fatia com Instagram ativo?** | quebra-gelo e 1º contato dependem disso (Q1, Q2); fatia baixa joga o setor para outro canal | amostra de ~30 empresas: tem perfil? postou nos últimos 30 dias? | busca manual na amostra (a skill do item 11 ainda não existe) |
+| **S4** | **A falha digital aparece nos nossos dados?** | o mini-diagnóstico (Q12) só convence se houver **problema visível** para mostrar | % com nota baixa, poucas avaliações, sem site ou PageSpeed ruim | a própria planilha `leads` (P2/P3/P4) — sem custo novo |
+
+### 6.2 Como decidir
+
+1. **Eliminatório:** setor com **menos empresas do que o ciclo precisa** (S1) ou que **não paga R$ 500**
+   (S2) sai da lista.
+2. **Entre os que passam:** ordenar por **S4** (tem o que mostrar) e depois **S3** (dá para contatar).
+3. **Entrega da pesquisa:** uma tabela com os setores avaliados, as 4 respostas de cada um com a
+   fonte, e os 2 escolhidos com o motivo.
+
+### 6.3 Em aberto (decisão do Olavo, na abertura da pesquisa)
+
+- **Qual a cidade da v1** — confirmar no brief da pesquisa.
+- **Quantas empresas no mínimo em S1** — proposta: **~250 descobertas** para garantir 100 contatos
+  depois das perdas; ajustar quando S3 mostrar a fatia sem canal.
+- **Os 2 setores devem ser parecidos ou contrastantes?** Parecidos comparam melhor a mensagem;
+  contrastantes mostram mais sobre o ICP.
