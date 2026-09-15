@@ -264,6 +264,10 @@ doc canônico, o que ler antes de agir, e o que **não** mexer.
 
 ## 10.2 O dimensionamento que sai daí
 
+> ⚠️ **CORRIGIDO — ver §11.** A conta abaixo supõe que **toda** a capacidade diária vai para contato
+> **novo**. Com follow-up manual e quebra-gelo, parte dos 4–10/dia é toque de lead antigo: **o número
+> real de contatos novos é menor.**
+
 | Conta | Valor |
 |---|---|
 | Contatos por mês | **88 a 220** (4–10/dia × ~22 dias) |
@@ -283,6 +287,8 @@ doc canônico, o que ler antes de agir, e o que **não** mexer.
 >   semana, quais são?"**
 
 ## 10.3 Decisões de desenho (derivadas, a confirmar)
+
+> ⚠️ **DD1, DD3 e DD4 foram corrigidos pela entrevista independente — ver §11.**
 
 | # | Decisão | Por quê |
 |---|---|---|
@@ -338,3 +344,78 @@ serviço seguinte. Sem isso, a conta nunca cresce e a carteira fica cheia de cli
 custam a mesma conversa de um de R$ 3.000.
 
 ⬜ **Não é da v1**, mas tem de estar no plano — senão "isca" vira só "barato".
+
+---
+
+# 11. Correções vindas da entrevista independente (2026-09-15)
+
+> **Fonte:** `docs/handoff/2026-09-15-entrevista-independente-prospeccao-resultado.md`
+> (sub-chat, 12 perguntas, sem ler §10.2–§10.6 antes de concluir).
+> **R6:** o que foi desmentido fica escrito.
+
+## 11.1 O que o sub-chat corrigiu no meu trabalho
+
+| # | Eu havia escrito | A correção | Gravidade |
+|---|---|---|---|
+| 1 | **DD4** — follow-up automatizado do 2º toque | **Não havia canal permitido.** A `DEFINICAO-DE-PRONTO` §4 corta **WhatsApp Cloud API** e **ESP de e-mail próprio**. Saída: servidor de e-mail do **Odoo** | 🔴 recomendei algo que o escopo do próprio projeto proíbe |
+| 2 | **§10.5** — "automatizar DM arrisca banimento" | Mais forte: a API oficial **não permite iniciar** conversa com desconhecido. Qualquer semi-automação de 1º contato já está fora dos termos | 🔴 o problema era maior do que descrevi |
+| 3 | **§10.2** — 88 a 220 contatos/mês | Supõe capacidade **inteira** em contato novo. Parte dela é follow-up manual e quebra-gelo → **o número real é menor** | 🟠 meu dimensionamento era otimista |
+| 4 | **DD6** — quem não responde permanece na base | Permanecer não basta: com o rótulo **"perdido"**, o dado **ensina errado**. Precisa de motivo **"sem resposta"**, distinto de "recusou" | 🟠 a base de treino era o objetivo — eu errei o rótulo |
+| 5 | **DD3** — um setor por vez | O Olavo escolheu **2 setores simultâneos** com **cadência padrão única**. Ciclo passa de ~1 para **~2 meses** | 🟡 decisão do Olavo, não erro |
+| 6 | **DD1** — enriquecimento caro só na fila | O motivo mais forte não é custo: é o **dado envelhecer** entre enriquecer e contatar | 🟡 razão incompleta |
+
+## 11.2 Os achados que só ele teve
+
+1. **Item 10 (e-mail do lead) virou pré-requisito da cadência** — sem e-mail não há toque automático.
+2. **O B2 cai por calendário** se o contato só começa com o Odoo pronto → **lead piloto** no F3.
+3. **Registrar o canal de cada contato** — com multi-canal, resultado sem canal não é comparável.
+4. **LLM não sorteia.** "Escolha metade ao acaso" vira escolha por característica, e o teste do
+   quebra-gelo perde o sentido. Sorteio é **regra fixa** (R8), derivada do `place_id`.
+5. **Variáveis demais para amostra pequena** — com 100 contatos e 2–5 clientes esperados, não se separa
+   o que funcionou. Cadência por lead só no **2º ciclo**.
+6. **A cadência precisa parar quando o lead responde** — e pausar na ausência. Sem isso o automático
+   segue mandando para quem já respondeu: o jeito mais rápido de queimar um lead quente.
+7. **O enriquecimento já é o mini-diagnóstico** — é a resposta pronta para "quanto custa?", e é
+   diferencial. O ativo que construímos para consumo interno também é peça comercial.
+
+## 11.3 🔴 O que só aparece juntando as duas entrevistas
+
+### (a) O calendário não fecha
+
+O Olavo decidiu **esperar o Odoo** para contatar em volume (Q4). O Odoo (F3/F5) está previsto para
+perto de **30/11** — que é **a data-alvo do projeto inteiro**.
+
+> **Consequência:** a Prospecção começa a ser testada **em dezembro**. Nenhum dos critérios **P1–P8**
+> pode ser cumprido até 30/11 — e o **B2** só sobrevive pelo lead piloto.
+
+**Não é problema de execução, é de plano.** Três saídas, e é decisão do Olavo:
+1. **Prospecção ganha data-alvo própria** (ex.: 31/01), e a de 30/11 vale para as outras frentes;
+2. **antecipar o F3** para liberar o contato antes;
+3. **contatar antes do Odoo**, anotando o desfecho à mão — foi a opção **B** da Q4, que o Olavo
+   recusou. *(Registrado porque a recusa pode mudar agora que o custo dela está claro.)*
+
+### (b) "Enriquecer tudo agora" briga com "pesquisar para escolher 2 setores"
+
+Na Q8 o Olavo escolheu **"A, mas neste início B"** — enriquecer tudo — **e** propôs uma **pesquisa para
+escolher 2 setores**. As duas coisas não convivem:
+
+| Se a pesquisa escolhe 2 setores | então enriquecer "tudo" paga por setores que **não serão contatados** |
+|---|---|
+| **E somando o calendário (a):** | enriquecido em setembro, contatado em dezembro = **3 meses de envelhecimento**, no volume máximo, pago adiantado |
+
+> É a pior combinação possível: **custo máximo, o mais cedo possível, no dado que mais envelhece, para
+> a frente que ainda não foi provada.**
+
+**Proposta:** **descoberta barata de tudo agora** (Maps puro — forma a base do ICP e alimenta a
+pesquisa de setores, item S4) · **pesquisa escolhe os 2 setores** · **enriquecimento caro só dos 2
+setores, perto do ciclo de contato.** Isso é o DD1 aplicado, e a pesquisa passa a se pagar.
+
+### (c) O buraco que continua sem dono: quem ENTREGA
+
+A Q11 tratou do **tempo** (pausa por ausência), mas ninguém perguntou **quem executa o serviço depois
+de vendido**. O Olavo aceitou a trava só para ausência — logo o risco segue aberto:
+
+> Dimensionamos com cuidado quantos clientes dá para **vender**. Não dimensionamos quantos dá para
+> **atender**. Se a máquina funcionar, ela entrega o problema na porta de quem construiu.
+
+⬜ **Risco registrado, sem dono.** Revisitar ao fechar o primeiro cliente — que é quando ele aparece.
