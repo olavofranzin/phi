@@ -832,3 +832,68 @@ que a ligação dupla do `Criar deal` (§9.4, correção 4) produzia.
 
 ⚠️ **Ordem obrigatória:** o `1º Enriquecimento` e o `L2` só são arquivados **depois** que o 04, o 05
 e o 02 estiverem rodando. Hoje o `1º Enriquecimento` é o único que cria deals.
+
+---
+
+## 10. Os 95 leads que já estão no Odoo — as-built de 2026-09-15
+
+> **R2/R6: o real vence o plano.** A carga inicial do CRM novo **não** foi feita pelo PROSP-05.
+> Foi feita por um workflow temporário, `TMP Inserção odoo crm` (`7COGAPeoofZCh58B`, criado
+> 09/09). Isso está registrado aqui porque muda o que o P5 encontra quando rodar, e porque
+> explica dois sintomas que custaram caro para diagnosticar.
+
+**O que existe hoje:** leads com `id_crm` de **1 a 95**, todos no estágio **Prospecção**, nenhum
+movido à mão (Olavo, 15/09).
+
+### 10.1 O filtro que dizia cortar em 60 e não cortava
+
+O nó `Filter` do TMP compara `potencial_comercial` com o operador **`notEmpty`** — e o `60` ficou
+ao lado, como valor de um operador que não compara nada. **O corte nunca existiu ali.** Entrou
+todo lead com o campo preenchido, inclusive abaixo de 60.
+
+> É a mesma família do `onError: continueRegularOutput` que escondeu a quebra do P6 por duas
+> semanas: **o nó roda verde e não faz o que o nome diz.** Por isso o corte do P5 mora num `Set`
+> visível (`[P5] Config`), junto da vazão — número de corte enterrado dentro de nó é número que
+> ninguém confere.
+
+Os leads abaixo de 60 **não saem sozinhos**: o corte do P5 tem a cláusula `id_crm !== ""`, que
+deixa passar quem já está no CRM. É proposital — quem já está lá merece dado correto. Removê-los
+é apagar lead, e fica para depois do piloto, se o Olavo mandar.
+
+### 10.2 A causa real do "Potencial Comercial zerado"
+
+O `Create an opportunity` do TMP mapeia 22 campos e **`gbp_potencial_comercial` não é um deles**
+(só aparece no ramo `Update`). Os leads nasceram sem o número.
+
+Não era o módulo, não era `Integer` truncando, não era o IPC descontinuado — era **campo ausente
+no mapeamento do workflow**. Fica registrado para que a próxima investigação não refaça o mesmo
+caminho: **quando um campo está vazio no CRM, olhe primeiro quem devia tê-lo escrito.**
+
+### 10.3 O ping-pong que o TMP criava
+
+O `Update` do TMP escrevia **`ia_abordagem_sugerida`** a partir da coluna `abordagem_ia` da
+planilha. Mas `abordagem_ia` é do bloco **aprendizado** (§6, linha 95): dono **P6**, sentido
+**CRM → planilha**. Mandar de volta ao CRM apaga o que o agente de abordagem escreveu lá dentro.
+
+Provavelmente não destruiu nada ainda, porque o P6 está parado desde 08/09 e a coluna deve estar
+vazia. **O P5 não escreve esse campo, e não deve passar a escrever.**
+
+### 10.4 O que o P5 herda do TMP, por decisão
+
+| Campo | Regra no P5 | Por quê |
+|---|---|---|
+| `lead_status = novo` | **só na criação** (`[P5] Payload para criar`) | no update desfaria a mão do vendedor a cada 6h: um lead marcado "em cadência" voltaria para "novo" sozinho |
+| `gbp_score_tecnico ← score_gbp` | payload comum | o TMP já gravava esse par nos 95; sem ele, os leads novos do piloto nasceriam diferentes dos antigos |
+
+### 10.5 O TMP é um segundo escritor e precisa sair
+
+O §12.1 do brief de 13/09 proíbe uploader separado: dois escritores no `crm.lead` quebram o **I8**.
+O TMP existiu para destravar a carga e cumpriu o papel — **não é crítica retroativa.** Mas quando
+o P5 fechar o smoke, ele sai pelo procedimento da **R5**: nó chamador desabilitado, workflow
+desativado, renomeado `[APOSENTADO <data>]`, sticky dizendo por que e proibindo reuso.
+
+### 10.6 A vazão (RQ1)
+
+`lote_max` vive no `[P5] Config`, ao lado do corte. O primeiro uso real é um **piloto de 10–20
+leads** (brief §12.2), não a planilha inteira. Para rodar tudo, sobe-se o número no `Set` —
+nunca dentro do nó.
