@@ -272,3 +272,51 @@ aparecer nos dois lados, **pare** — é erro de desenho, não detalhe de implem
 ## 11. Fora de escopo
 
 - **Desligar o HubSpot** · **migrar histórico** (F5) · mexer na frente do Score/BigQuery (ADR-38).
+
+---
+
+# 12. ⚠️ ATUALIZAÇÃO 2026-09-15 — leia antes de continuar
+
+Muita coisa foi decidida depois que este brief foi escrito. **Isto substitui o que conflitar acima.**
+
+## 12.1 Este brief absorveu o F3
+`docs/handoff/2026-09-08-f3-integracao-n8n-odoo-subchat-brief.md` foi **supersedido** por este.
+Duas regras de lá continuam valendo e passam a ser suas:
+- **Não criar uploader separado.** A carga usa o próprio PROSP-05 em modo backfill — um segundo
+  escritor no `crm.lead` violaria o **I8** no primeiro dia do CRM novo.
+- **Dívida do ADR-36 §4.4** — a correção dos nomes de coluna no PROSP-05/06, adiada para o cutover.
+
+## 12.2 O alvo mudou: é um PILOTO de 10–20 leads, não a planilha inteira
+O Olavo decidiu (15/09) que o primeiro uso real é um **piloto pequeno com a máquina rodando** —
+para observar o circuito inteiro: agente de abordagem, NBA, follow-up e desfecho voltando.
+
+> **Consequência para você:** o PROSP-05 precisa aceitar um **lote pequeno e escolhido a dedo**.
+> Não precisa dar conta da planilha inteira agora. **Vazão configurável num `Set` no topo** (RQ1) —
+> nunca volume escrito dentro do nó.
+
+## 12.3 A oferta existe — e muda o que o PROSP-05 escreve
+| | |
+|---|---|
+| **Produto de entrada** | **Gestão do GBP** (`SVC-GBP`), **R$ 500/mês**, fidelidade **6 meses** |
+| **Cidade da v1** | **São José do Rio Preto** |
+| **Impacto** | `oferta_recomendada` deixa de ser abstrato: o caminho padrão é `SVC-GBP` |
+
+## 12.4 Colunas novas — as duas JÁ EXISTEM na planilha
+| Coluna | Dono | Estado |
+|---|---|---|
+| `sync_por` | P6 | ✅ criada |
+| `data_envio_crm` | **P5** | ✅ **criada — coluna BM** |
+| canal do 1º contato (N5) | P5 | ⬜ a criar |
+| `aquecimento` (N6) | P5 | ⬜ a criar — preenchida por **regra fixa** derivada do `place_id`, **nunca por agente** (LLM não sorteia) |
+| motivo **"sem resposta"** (N4) | P6 | ⬜ nova opção em `motivo_perda`, distinta de "recusou" |
+
+## 12.5 Confirmado desde 13/09
+- ✅ **`gbp_place_id` existe** no módulo, com `UNIQUE`. O bloqueio do ADR-36 §3 acabou.
+- ✅ **As 6 descrições de workflow foram aprovadas pelo Olavo (15/09)** — pode aplicar (R5).
+- ✅ **Cadência: 4 toques no piloto**, número real fixado depois de medir. Registrar no contrato como
+  **"4 (provisório)"**, não como 4 fixo. *(O contrato ainda diz ≥8.)*
+- ✅ **A cadência para quando o lead responde** — requisito, não melhoria.
+
+## 12.6 O que NÃO é seu
+Mini-diagnóstico · agente de abordagem/NBA · pesquisa de setores · documentar as 6 dimensões do score.
+São peças irmãs do piloto, em outras sessões. **Você entrega o caminho planilha ↔ Odoo.**

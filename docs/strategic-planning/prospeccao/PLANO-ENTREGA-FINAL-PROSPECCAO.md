@@ -253,7 +253,7 @@ doc canônico, o que ler antes de agir, e o que **não** mexer.
 | Meta de clientes/mês | **ainda não sei — descobrir rodando** |
 | Quem contata | **só o Olavo** |
 | Ticket de entrada | ~~até R$ 500/mês, isca~~ → **gestão do GBP (`SVC-GBP`), R$ 500/mês com fidelidade** (definido em 15/09 — ver §13.2) |
-| Escopo v1 | vários setores, uma cidade |
+| Escopo v1 | vários setores, uma cidade — ✅ **São José do Rio Preto** (15/09) |
 | Capacidade real | **4 a 10 contatos novos por dia** |
 | Setores | **prospectar todos, contatar um por vez** |
 | Sinal de aprendizado | **os três em etapas:** respondeu → aceitou conversa → virou cliente |
@@ -475,7 +475,7 @@ lembrete ignorado.
 | **CK2** | **Capacidade real de contato** | após **2 semanas** de contato | contar contatos **novos** por dia e comparar com os 4–10 estimados. O número real redimensiona o ciclo |
 | **CK3** | **Taxa de resposta** | aos **30 contatos** de um ciclo | se muito baixa, parar e decidir: o problema é **o alvo** ou **a mensagem**? Não esperar os 100 |
 | **CK4** | 🔴 **Afogamento de follow-up** | quando os toques pendentes do dia **passarem** dos contatos novos do dia | acionar o RQ1: **reduzir a entrada** até a fila drenar. É o alarme do §10.4 |
-| **CK5** | 🔴 **Carga de entrega** | ao fechar o **3º cliente** | é "a hora" do §11.3-c. Decidir quem entrega **antes** de a agenda estourar |
+| **CK5** | 🔴 **Carga de entrega** | ao fechar o **3º cliente** | **duas ações:** (1) decidir **quem entrega**, antes de a agenda estourar; (2) **abrir a construção da automação da entrega de GBP** (§13.7) |
 | **CK6** | **Envelhecimento do dado** | quando um setor for contatado **mais de 60 dias** após o enriquecimento | re-enriquecer aquele setor (decisão §11.3-b) |
 
 > **CK4 e CK5 são os que salvam o projeto.** Os dois avisam de um problema que, quando percebido sem
@@ -522,7 +522,7 @@ profissional acham fornecedor **perguntando a alguém**, e ~**48%** do negócio 
 | | |
 |---|---|
 | **Produto** | **Gestão do Google Business Profile** (`SVC-GBP`) |
-| **Preço** | **R$ 500/mês**, com **fidelidade mínima** (prazo ⬜ a fixar) |
+| **Preço** | **R$ 500/mês**, fidelidade de **6 meses** (Olavo, 15/09) — tempo de o placar mostrar evolução |
 | **Por que GBP** | entrega leve e controlável · é o que o diagnóstico mostra fraco · **não é publicidade** — entra em setores com restrição a anúncio |
 | **Por que NÃO anúncios na entrada** | abaixo de ~R$ 2.000/mês de verba o resultado é fraco → cancela → **prova social negativa na mesma cidade que estamos prospectando** |
 
@@ -566,7 +566,7 @@ Cada degrau prepara o seguinte. **Condições:** RE2 e RE3 (§13.7).
 ## 13.6 Indicação
 
 Pedido **60 dias** após **resultado visível** = o placar mensal melhorou contra os concorrentes.
-⬜ definição a confirmar.
+✅ **M11 aplicado:** *resultado visível* = **o placar mensal melhorou** contra os concorrentes.
 
 ## 13.7 Entrega, gatilho e riscos estratégicos
 
@@ -723,11 +723,11 @@ produzir um documento que compara pessoas que se conhecem.
 | **M4** — mini-diagnóstico sem score | ✅ aplicado (§13.3) |
 | **M9** — `grill-me`/`grilling` existem | ✅ aplicado (§6) |
 | **M10** — riscos RE1–RE4 | ✅ aplicado (§13.7) |
-| **M5** — preço e fidelidade no `catalogo-produtos-servicos.md` | ⬜ pendente — outro doc |
-| **M6** — CK5 ganha 2ª ação (abrir a automação) | ⬜ pendente |
+| **M5** — preço e fidelidade no `catalogo-produtos-servicos.md` | ✅ aplicado |
+| **M6** — CK5 ganha 2ª ação (abrir a automação) | ✅ aplicado (§12.2) |
 | **M7** — `DEFINICAO-DE-PRONTO` §4: automação da entrega, fora da v1, com gatilho | ⬜ pendente — outro doc |
 | **M8** — critério **S5** (setor com restrição a publicidade conta **a favor**) | ⬜ pendente — roteiro da pesquisa |
-| **M11** — definir "resultado visível" e onde mora o placar mensal | ⬜ pendente |
+| **M11** — definir "resultado visível" | ✅ aplicado (§13.6) |
 
 ---
 

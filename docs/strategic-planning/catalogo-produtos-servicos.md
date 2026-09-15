@@ -19,3 +19,21 @@
 
 > v1 é a lista-base. Detalhar depois: descrição comercial, faixa de ticket, ICP por serviço,
 > pré-requisitos de entrega — quando abrirmos a frente Comercial.
+
+---
+
+## ✅ SVC-GBP — produto de ENTRADA (decidido 2026-09-15)
+
+| | |
+|---|---|
+| **Papel** | **produto de entrada da prospecção ativa** — é por ele que o lead entra na carteira |
+| **Preço** | **R$ 500/mês** |
+| **Fidelidade** | **6 meses** |
+| **Por que este e não anúncios** | entrega leve e controlável · é o que o diagnóstico mostra fraco · **não é publicidade**, então entra em setores com restrição a anúncio. Anúncio com verba pequena dá resultado fraco → cancela → **prova social negativa na cidade que estamos prospectando** |
+| **Escada** | GBP → saúde digital como bônus → campanha teste → `SVC-ADS` |
+| **Se promete** | o **trabalho** (perfil completo, avaliações respondidas, fotos e posts, palavras-chave na descrição e nas respostas) |
+| **Nunca se promete** | "mais clientes", "1º lugar no Maps", "aparecer nas IAs" — o Google declara **distância** como fator de ranking, e ninguém a controla |
+
+> Fonte: `docs/strategic-planning/prospeccao/PLANO-ENTREGA-FINAL-PROSPECCAO.md` §13.
+> ⚠️ Os outros serviços **seguem sem preço definido** — foi isso que deixou "R$ 500" solto por treze
+> rodadas de planejamento, sem ser preço de nada.

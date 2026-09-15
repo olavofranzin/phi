@@ -1,4 +1,20 @@
-# [BRIEF sub-chat] F3 — Integração n8n ↔ Odoo (inclui a carga inicial dos leads)
+# [SUPERSEDIDO 2026-09-15] BRIEF F3 — não abrir este
+
+> 🛑 **NÃO ABRA UM SUB-CHAT COM ESTE ARQUIVO.** O trabalho que ele descreve **já está em andamento**
+> desde 2026-09-13, no brief `docs/handoff/2026-09-13-prosp05-prosp06-odoo-subchat-brief.md`.
+>
+> **A sobreposição é quase total:** os itens 1 (PROSP-05 → Odoo) e 2 (PROSP-06 ← Odoo) da missão
+> abaixo são **exatamente** o escopo daquele brief, que já leu os campos do Odoo ao vivo e escreveu a
+> tabela de mapeamento no `CONTRATO-PROSPECCAO.md`. Abrir este aqui colocaria **dois sub-chats
+> escrevendo no mesmo workflow** — o mesmo erro dos dois writers, um nível acima.
+>
+> **O único item que era só daqui** — a carga inicial — mudou de natureza: não é mais "subir a
+> planilha inteira", são **10–20 leads de piloto** (PLANO §14.2).
+>
+> **Mantido como histórico** porque as §1 (por que não criar uploader separado) e §3 (dívida do
+> ADR-36 §4.4) continuam valendo e foram absorvidas. Procedimento da **R5**.
+
+---
 
 > **Como usar:** sessão nova, cole este arquivo como 1ª mensagem. Auto-contido. **Modelo:** Opus.
 > **Repo:** `olavofranzin/phi` · **Branch:** `claude/consolidacao-2026-08`
