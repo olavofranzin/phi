@@ -190,7 +190,7 @@ um lote — e isso é o que torna as outras sete tratáveis.
 | pesquisa para o DB de objeções | **`deep-research`** · **`customer-research`** | ✅ usar |
 | CRM / Odoo | **`phi-odoo-crm`**, **`odoo-19-dev`** | ✅ já em uso |
 | 11 e 12 — descobrir e analisar redes sociais | **procurei: NÃO existe skill instalada** | ❌ **construir** |
-| entrevista de alinhamento (`grill-me`) | **procurei: NÃO existe** — nem instalada, nem no catálogo | ❌ **candidata a virar skill nossa** (R8: é tarefa repetida e estruturada) |
+| entrevista de alinhamento | ~~não existe~~ → ✅ **`grill-me` e `grilling` instaladas em 2026-09-14** | ✅ usar (corrigido em 15/09) |
 
 **Sobre o item 12 (analisar redes sociais) — o que eu faria:** a parte difícil não é a análise, é a
 **coleta**. Seguidores, posts e frequência não saem de API oficial sem autorização do dono do perfil.
@@ -252,7 +252,7 @@ doc canônico, o que ler antes de agir, e o que **não** mexer.
 |---|---|
 | Meta de clientes/mês | **ainda não sei — descobrir rodando** |
 | Quem contata | **só o Olavo** |
-| Ticket de entrada | **até R$ 500/mês** — e é **isca para crescer a conta depois** |
+| Ticket de entrada | ~~até R$ 500/mês, isca~~ → **gestão do GBP (`SVC-GBP`), R$ 500/mês com fidelidade** (definido em 15/09 — ver §13.2) |
 | Escopo v1 | vários setores, uma cidade |
 | Capacidade real | **4 a 10 contatos novos por dia** |
 | Setores | **prospectar todos, contatar um por vez** |
@@ -343,7 +343,7 @@ R$ 500 como **isca** só funciona se existir um **segundo passo desenhado**: qua
 serviço seguinte. Sem isso, a conta nunca cresce e a carteira fica cheia de clientes de R$ 500 que
 custam a mesma conversa de um de R$ 3.000.
 
-⬜ **Não é da v1**, mas tem de estar no plano — senão "isca" vira só "barato".
+✅ **FECHADO em 15/09** — o segundo passo existe e é a escada do **§13.5**: GBP → saúde digital como bônus → campanha teste → `SVC-ADS`.
 
 ---
 
@@ -494,3 +494,163 @@ passos"*. **O fechamento é o corte.**
 > É a mesma disciplina do ADR, aplicada ao plano: **invariante não muda sem justificativa e
 > alternativa.** A diferença é que aqui a alternativa é obrigatória — proibir mudança sem oferecer
 > saída é como o plano morre engessado.
+
+---
+
+# 13. A estratégia de entrada — o que a prospecção vende
+
+> Origem: `docs/handoff/2026-09-15-entrevista-estrategica-prospeccao-resultado.md` (12 perguntas).
+> **Este capítulo não existia — e era o que faltava.** O plano tinha máquina e não tinha oferta.
+
+## 13.1 Por que prospecção ativa
+
+É o **canal principal da v1** porque indicação exige carteira, e a carteira ainda não existe.
+
+⚠️ **É escolha, não desconhecimento:** a pesquisa do próprio repositório
+(`pesquisa-jornada-lead-crm-agencias.md` §1.10) mostra que **71%** dos compradores de serviço
+profissional acham fornecedor **perguntando a alguém**, e ~**48%** do negócio novo em valor vem de
+**indicação**. Construímos a máquina para o canal **minoritário**. Por isso:
+1. o **canal de cada cliente é registrado** (N5);
+2. a indicação ganha regra desde o 1º cliente (§13.6);
+3. quando houver carteira, os dois canais são **comparados**, não presumidos.
+
+## 13.2 A oferta de entrada
+
+| | |
+|---|---|
+| **Produto** | **Gestão do Google Business Profile** (`SVC-GBP`) |
+| **Preço** | **R$ 500/mês**, com **fidelidade mínima** (prazo ⬜ a fixar) |
+| **Por que GBP** | entrega leve e controlável · é o que o diagnóstico mostra fraco · **não é publicidade** — entra em setores com restrição a anúncio |
+| **Por que NÃO anúncios na entrada** | abaixo de ~R$ 2.000/mês de verba o resultado é fraco → cancela → **prova social negativa na mesma cidade que estamos prospectando** |
+
+## 13.3 Mini-diagnóstico (grátis) × diagnóstico completo (cliente)
+
+| | **Mini** — para o lead | **Completo** — para o cliente |
+|---|---|---|
+| Conteúdo | **3 falhas mais visíveis**, traduzidas em **clientes perdidos** + **você × 3 concorrentes da mesma busca** | tudo do enriquecimento, incluindo o score |
+| Score | **não aparece** | aparece |
+| Fonte | dados **já coletados** — sem custo novo | enriquecimento completo |
+| Uso | 1º contato e resposta a "quanto custa?" | entrega e renovação |
+
+⬜ **Detalhe a decidir (ver §14.3):** os 3 concorrentes aparecem **com nome** ou anônimos?
+
+## 13.4 Posicionamento e promessa
+
+**Posicionamento:** *resultado medido todo mês, feito para você.*
+
+**Promete-se:** o **trabalho** (perfil completo, avaliações respondidas, fotos e posts em dia,
+palavras-chave do setor **na descrição e nas respostas**) e o **placar mensal** contra 3 concorrentes.
+
+**Nunca se promete:** "mais clientes", "1º lugar no Maps", "aparecer nas IAs". O Google declara
+**distância** como fator de ranking — e ninguém a controla.
+
+## 13.5 A escada de upsell
+
+```
+GBP (R$ 500/mês, fidelidade) → saúde digital como bônus → campanha teste → SVC-ADS
+```
+Cada degrau prepara o seguinte. **Condições:** RE2 e RE3 (§13.7).
+
+## 13.6 Indicação
+
+Pedido **60 dias** após **resultado visível** = o placar mensal melhorou contra os concorrentes.
+⬜ definição a confirmar.
+
+## 13.7 Entrega, gatilho e riscos estratégicos
+
+- **Início:** entrega de GBP **manual**.
+- **Direção:** entrega **automatizada pelo PHI** — a carteira cresce com software, não com horas.
+- **Gatilho:** **3º cliente de GBP** (= **CK5**). **Fora da v1**, mas com gatilho, não "para depois".
+- **Sem teto de clientes declarado** — o gatilho é a única proteção da agenda na fase manual.
+
+| # | Risco | Condição proposta |
+|---|---|---|
+| **RE1** | palavra-chave **no nome** da empresa **suspende o perfil** do cliente | regra escrita: palavra-chave **só** em descrição, serviços e respostas — **nunca no nome**. *(O Olavo já havia dito "descrição e respostas"; a regra existe para o executor não derivar.)* |
+| **RE2** | bônus de saúde digital exige acessos e tempo **na fase manual** | começa **junto com o gatilho** da automação |
+| **RE3** | campanha teste paga com parte dos R$ 500 → verba de ~R$ 100–150 dá pouco resultado e vira argumento **contra** o upsell | verba **paga à parte** pelo cliente, com mínimo declarado |
+| **RE4** | 🔴 **o placar pós-venda não tem fonte** — ligações e rotas não saem do Apify | até existir, o placar usa **só o que se vê por fora** |
+
+> 🔴 **RE4 merece destaque: estamos prometendo "resultado medido todo mês" sem ter de onde medir
+> metade.** Antes do 1º cliente, ou a fonte existe, ou a promessa muda de redação.
+
+---
+
+# 14. O que aparece cruzando as três entrevistas
+
+> Escrito pelo chat-mãe em 2026-09-15, depois de ler o resultado da entrevista estratégica.
+
+## 14.1 O erro mais fundo do planejamento foi meu
+
+A entrevista estratégica descobriu que **`catalogo-produtos-servicos.md` não tem preço em nenhum dos
+4 serviços** — "faixa de ticket: detalhar depois".
+
+> Na minha rodada 1, eu perguntei *"qual a faixa de ticket do primeiro serviço vendido?"* e aceitei
+> "até R$ 500". **Aquele número não era o preço de nada.** Toda a conta que veio depois — economia
+> unitária, custo por lead, se a máquina se paga — foi construída sobre um número sem objeto.
+
+**Por que eu não vi:** não apliquei a minha própria **R7** — procurar antes de perguntar. O catálogo
+estava no repositório. A pergunta certa não era *"qual o ticket?"*, era ***"qual serviço, e ele tem
+preço definido?"***
+
+**Hoje existe oferta:** `SVC-GBP`, R$ 500/mês, com fidelidade (§13.2).
+
+## 14.2 🔴 A decisão que o cruzamento força: vender antes de terminar a máquina
+
+Três fatos que só se encontram agora:
+
+| Fato | De onde vem |
+|---|---|
+| Vender GBP exige **só** Maps + mini-diagnóstico + contato manual | entrevista estratégica, conclusão 7 |
+| Contatar em volume **espera o Odoo** (~30/11) | entrevista independente, Q4 |
+| **Zero leads fechados**, base de aprendizagem **vazia**, tudo ainda é estimativa | §3, §12.1 (RQ2) |
+
+**E a premissa que sustentava a espera mudou.** A Q4 escolheu esperar o Odoo **porque o desfecho
+precisava ser registrado em algum lugar** — e a opção "anotar à mão" pareceu frágil. Mas ela foi
+recusada **quando a oferta não existia e o volume era grande**. Com **10 a 20 leads-piloto** e uma
+oferta definida, anotar à mão é trivial. **A premissa caiu; a decisão merece ser reaberta (R6).**
+
+> 🎯 **O argumento decisivo:** a máquina inteira foi desenhada **antes de existir uma oferta**. Tudo
+> o que foi planejado em treze rodadas serve para vender algo que só foi definido hoje.
+>
+> **Continuar construindo antes de vender é apostar que a oferta funciona.** Vender primeiro
+> transforma seis checkpoints — CK1 custo, CK2 capacidade, CK3 taxa de resposta — de **estimativa em
+> medição**, meses antes. E se a oferta não pegar, descobrimos com 20 contatos manuais em vez de com
+> a máquina pronta.
+
+**Proposta:** um **piloto manual de 10 a 20 leads**, agora, em paralelo à construção. Não substitui a
+máquina — **valida a oferta que ela vai escalar**. É também o que prova o circuito completo (§3) e
+destrava o **B2**.
+
+⬜ **Decisão do Olavo.** *(A alternativa é manter a espera, aceitando que tudo siga estimativa até
+dezembro — o que o §12.1 RQ2 pede para evitar.)*
+
+## 14.3 Um efeito colateral do mini-diagnóstico, numa cidade só
+
+O mini compara o lead com **3 concorrentes da mesma busca** — e esses concorrentes, por construção,
+**também estão na nossa base** (mesma `Searchstring`).
+
+> Ou seja: mandaríamos ao lead **A** um documento dizendo que **B** está à frente e, semanas depois,
+> mandaríamos a **B** um documento nosso onde **A** aparece melhor em outra dimensão. **Numa cidade
+> onde os donos se conhecem, os dois documentos podem se encontrar.**
+
+**Correção barata:** **não nomear o concorrente.** Dizer *"os 3 melhores da sua busca"* e mostrar os
+números sem identificar quem é. Entrega a mesma informação útil — *você está atrás nisto* — sem
+produzir um documento que compara pessoas que se conhecem.
+
+⬜ **Decidir antes do primeiro envio.** Depois de enviado, não tem volta.
+
+## 14.4 Aplicado deste relatório
+
+| Mudança | Estado |
+|---|---|
+| **M1** — §13 novo (oferta, mini, posicionamento, escada, indicação, entrega) | ✅ aplicado |
+| **M2** — ticket vira "gestão do GBP, R$ 500 com fidelidade" | ✅ aplicado |
+| **M3** — §10.6 fechada pela escada | ✅ aplicado |
+| **M4** — mini-diagnóstico sem score | ✅ aplicado (§13.3) |
+| **M9** — `grill-me`/`grilling` existem | ✅ aplicado (§6) |
+| **M10** — riscos RE1–RE4 | ✅ aplicado (§13.7) |
+| **M5** — preço e fidelidade no `catalogo-produtos-servicos.md` | ⬜ pendente — outro doc |
+| **M6** — CK5 ganha 2ª ação (abrir a automação) | ⬜ pendente |
+| **M7** — `DEFINICAO-DE-PRONTO` §4: automação da entrega, fora da v1, com gatilho | ⬜ pendente — outro doc |
+| **M8** — critério **S5** (setor com restrição a publicidade conta **a favor**) | ⬜ pendente — roteiro da pesquisa |
+| **M11** — definir "resultado visível" e onde mora o placar mensal | ⬜ pendente |
