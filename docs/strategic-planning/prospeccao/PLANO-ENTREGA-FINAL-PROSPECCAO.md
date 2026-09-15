@@ -380,7 +380,17 @@ custam a mesma conversa de um de R$ 3.000.
 
 ## 11.3 🔴 O que só aparece juntando as duas entrevistas
 
-### (a) O calendário não fecha
+### (a) ~~O calendário não fecha~~ — PREMISSA CORRIGIDA PELO OLAVO (2026-09-15)
+
+> **Correção:** *"A data da Prospecção é uma data **limite**, não o dia de lançamento... acredito que
+> esta data será antecipada."*
+>
+> **Meu alarme media a coisa errada.** Uma data-limite não é violada por começar o teste depois dela —
+> é violada por **chegar nela sem ter andado**. O instrumento certo não é a data: é o **checkpoint**
+> (ver §12.2). O texto abaixo fica como registro do raciocínio (R6), mas **não é mais um problema
+> aberto.**
+
+### (a-histórico) O que eu havia escrito
 
 O Olavo decidiu **esperar o Odoo** para contatar em volume (Q4). O Odoo (F3/F5) está previsto para
 perto de **30/11** — que é **a data-alvo do projeto inteiro**.
@@ -394,7 +404,16 @@ perto de **30/11** — que é **a data-alvo do projeto inteiro**.
 3. **contatar antes do Odoo**, anotando o desfecho à mão — foi a opção **B** da Q4, que o Olavo
    recusou. *(Registrado porque a recusa pode mudar agora que o custo dela está claro.)*
 
-### (b) "Enriquecer tudo agora" briga com "pesquisar para escolher 2 setores"
+### (b) ✅ RESOLVIDO — "enriquecer tudo agora" (Olavo, 2026-09-15)
+
+> *"se preciso for faremos novamente, será um custo mais aceitável do que percebermos que alguns
+> pontos deveriam ser tratados antes."*
+>
+> **Decidido: enriquecer agora e, se envelhecer, re-enriquecer.** A troca é consciente — paga-se
+> re-trabalho para **descobrir cedo** o que estaria errado. Fica registrado que o custo do
+> envelhecimento (§11.3-b) foi **visto e aceito**, não ignorado.
+
+### (b-histórico) O raciocínio que levou à decisão
 
 Na Q8 o Olavo escolheu **"A, mas neste início B"** — enriquecer tudo — **e** propôs uma **pesquisa para
 escolher 2 setores**. As duas coisas não convivem:
@@ -418,4 +437,60 @@ de vendido**. O Olavo aceitou a trava só para ausência — logo o risco segue 
 > Dimensionamos com cuidado quantos clientes dá para **vender**. Não dimensionamos quantos dá para
 > **atender**. Se a máquina funcionar, ela entrega o problema na porta de quem construiu.
 
-⬜ **Risco registrado, sem dono.** Revisitar ao fechar o primeiro cliente — que é quando ele aparece.
+> ✅ **Posição do Olavo (2026-09-15):** *"iremos atacar quando for a hora... todos estes passos devem
+> ser capazes de terem seus fluxos aumentados ou diminuídos conforme nossa necessidade."*
+>
+> **Aceito — e vira requisito de desenho (RQ1, §12.1).** Com uma condição: *"quando for a hora"*
+> precisa de **alarme**, senão "a hora" é descoberta quando já virou crise. O gatilho está no §12.2.
+
+---
+
+# 12. Como este documento se governa
+
+> Escrito a partir das definições do Olavo em 2026-09-15.
+
+## 12.1 Requisitos que nasceram das decisões
+
+| # | Requisito | De onde vem |
+|---|---|---|
+| **RQ1** | **Toda etapa tem vazão ajustável.** Nenhum passo pode ter volume fixo no código: descoberta, enriquecimento, entrada na fila e disparo de cadência precisam de um limite configurável, para cima e para baixo | *"nada é extremamente fixo"* |
+| **RQ2** | **Os números do plano são estimativa, não compromisso.** Estão aqui para dimensionar e para serem **comparados com o real** — não para travar decisão | *"temos que estimar mas não travar"* |
+| **RQ3** | **Nenhum número entra sem um checkpoint que o confronte.** Estimativa sem medição vira folclore: seis meses depois ninguém lembra que era chute | consequência do RQ2 |
+
+> **O RQ1 tem consequência prática imediata:** ao construir, **nunca escrever o volume dentro do nó**.
+> Um `Set` no topo do workflow com os limites — o mesmo padrão já adotado para o `corte_potencial`
+> (§2). Volume enterrado em nó é o que impede aumentar ou diminuir sem mexer no código.
+
+## 12.2 Checkpoints — os alarmes que protegem a data-limite
+
+Um checkpoint só serve se tiver **gatilho** e **o que fazer**. Data no calendário sem condição vira
+lembrete ignorado.
+
+| # | O que observa | Quando dispara | O que fazer |
+|---|---|---|---|
+| **CK1** | **Custo por lead** | ao enriquecer os **primeiros 100** | comparar com a estimativa. Se destoar muito, rever a escolha de ferramenta **antes** de enriquecer o resto |
+| **CK2** | **Capacidade real de contato** | após **2 semanas** de contato | contar contatos **novos** por dia e comparar com os 4–10 estimados. O número real redimensiona o ciclo |
+| **CK3** | **Taxa de resposta** | aos **30 contatos** de um ciclo | se muito baixa, parar e decidir: o problema é **o alvo** ou **a mensagem**? Não esperar os 100 |
+| **CK4** | 🔴 **Afogamento de follow-up** | quando os toques pendentes do dia **passarem** dos contatos novos do dia | acionar o RQ1: **reduzir a entrada** até a fila drenar. É o alarme do §10.4 |
+| **CK5** | 🔴 **Carga de entrega** | ao fechar o **3º cliente** | é "a hora" do §11.3-c. Decidir quem entrega **antes** de a agenda estourar |
+| **CK6** | **Envelhecimento do dado** | quando um setor for contatado **mais de 60 dias** após o enriquecimento | re-enriquecer aquele setor (decisão §11.3-b) |
+
+> **CK4 e CK5 são os que salvam o projeto.** Os dois avisam de um problema que, quando percebido sem
+> alarme, já é crise: a fila afogada e a agenda estourada **acontecem exatamente quando a máquina
+> começa a funcionar** — o pior momento possível para descobrir.
+
+## 12.3 Controle de mudança — o que vale depois de fechado
+
+> *"a partir do momento em que fecharmos o documento, nada poderá ser acrescentado ou retirado sem uma
+> boa justificativa e sem apresentação de uma opção."* — Olavo, 2026-09-15
+
+**Regra:** com o documento **FECHADO**, toda mudança exige, por escrito:
+1. **o que muda**; 2. **por que** (o dado ou o fato que mudou); 3. **pelo menos uma alternativa**, com
+a consequência de cada uma; 4. **o que sai**, se algo entra — escopo não cresce de graça.
+
+**Enquanto está 🟡 RASCUNHO**, tudo é revisitável — inclusive decisões anteriores, *"à luz dos novos
+passos"*. **O fechamento é o corte.**
+
+> É a mesma disciplina do ADR, aplicada ao plano: **invariante não muda sem justificativa e
+> alternativa.** A diferença é que aqui a alternativa é obrigatória — proibir mudança sem oferecer
+> saída é como o plano morre engessado.
