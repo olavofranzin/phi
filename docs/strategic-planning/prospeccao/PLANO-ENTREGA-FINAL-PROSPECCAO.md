@@ -538,8 +538,15 @@ profissional acham fornecedor **perguntando a alguém**, e ~**48%** do negócio 
 
 **Posicionamento:** *resultado medido todo mês, feito para você.*
 
-**Promete-se:** o **trabalho** (perfil completo, avaliações respondidas, fotos e posts em dia,
-palavras-chave do setor **na descrição e nas respostas**) e o **placar mensal** contra 3 concorrentes.
+> ✅ **Precisão do Olavo (2026-09-15):** *"não disse que a medição fazia parte da promessa mas sim do
+> entregável para o lead que contratar."* **A medição é ENTREGÁVEL, não promessa.** A diferença não é
+> retórica: "eu meço e te mostro" é trabalho — verificável; "você vai ter mais clientes" é resultado —
+> que depende de fatores fora do nosso controle (a **distância**, entre eles).
+
+**Promete-se ao LEAD:** o **trabalho** (perfil completo, avaliações respondidas, fotos e posts em dia,
+palavras-chave do setor **na descrição e nas respostas**).
+
+**Entrega-se ao CLIENTE:** o trabalho **mais o placar mensal** contra 3 concorrentes.
 
 **Nunca se promete:** "mais clientes", "1º lugar no Maps", "aparecer nas IAs". O Google declara
 **distância** como fator de ranking — e ninguém a controla.
@@ -568,10 +575,21 @@ Pedido **60 dias** após **resultado visível** = o placar mensal melhorou contr
 | **RE1** | palavra-chave **no nome** da empresa **suspende o perfil** do cliente | regra escrita: palavra-chave **só** em descrição, serviços e respostas — **nunca no nome**. *(O Olavo já havia dito "descrição e respostas"; a regra existe para o executor não derivar.)* |
 | **RE2** | bônus de saúde digital exige acessos e tempo **na fase manual** | começa **junto com o gatilho** da automação |
 | **RE3** | campanha teste paga com parte dos R$ 500 → verba de ~R$ 100–150 dá pouco resultado e vira argumento **contra** o upsell | verba **paga à parte** pelo cliente, com mínimo declarado |
-| **RE4** | 🔴 **o placar pós-venda não tem fonte** — ligações e rotas não saem do Apify | até existir, o placar usa **só o que se vê por fora** |
+| **RE4** | **o placar pós-venda depende de dado de dentro do perfil** — ligações e rotas não saem do Apify | ⬇️ **reenquadrado, ver abaixo** |
 
-> 🔴 **RE4 merece destaque: estamos prometendo "resultado medido todo mês" sem ter de onde medir
-> metade.** Antes do 1º cliente, ou a fonte existe, ou a promessa muda de redação.
+> **RE4 — reenquadrado (2026-09-15).** Com a medição sendo **entregável** e não promessa, o risco
+> muda de natureza e **diminui**: quem paga é **dono do próprio perfil**, e como gestores do GBP temos
+> acesso aos números de dentro (ligações, rotas, visualizações). **A fonte existe — o que não existe é
+> a integração** que tira esse dado e monta o relatório mensal.
+>
+> ⚠️ **Mas o prazo aperta em vez de afrouxar:** promessa não cumprida custa reputação; **entregável
+> não cumprido custa reembolso**. O relatório mensal do 1º cliente vence **30 dias depois de ele
+> assinar** — e é item de construção que ainda não estava em lista nenhuma.
+>
+> ⬜ **Entra no caminho crítico como item 8 do §14.2.1** (depois do piloto começar, antes do 1º
+> fechamento).
+>
+> **Antes da venda**, o placar usa só o que se vê por fora (Apify) — isso já funciona hoje.
 
 ---
 
