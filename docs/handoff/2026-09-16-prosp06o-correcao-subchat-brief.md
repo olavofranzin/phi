@@ -114,7 +114,20 @@ mesma nos dois casos, porque a escrita do P6 é `update` em linha que já existe
 **O que fazer:** **zerar o cursor antes da primeira rodada de verdade.** Não gaste tempo
 investigando se alguma escrita passou.
 
-🔴 **Isto é um bloqueio, e não é seu.** As ferramentas de Data Table criam tabela, criam coluna,
+✅ **FEITO — o Olavo apagou a linha em 16/09.** O cursor não existe mais; o `[P6] Calcular since` vai
+cair no padrão de 30 dias na próxima rodada. **O passo 4 da §3 está cumprido.**
+
+🔴 **Mas a ordem inverteu, e isso tem uma consequência.** A linha foi apagada **antes** do conserto.
+Enquanto o loop estiver lá e o `executeOnce` faltando, **qualquer execução do workflow agora puxa os
+~115 leads de uma vez** — estoura a cota outra vez e pode empurrar o cursor para frente de novo.
+
+**O workflow está inativo**, então nada dispara sozinho. **Não rode nada antes dos passos 2 e 3.** Se
+por qualquer motivo ele rodar antes, **avise e peça para o Olavo apagar a linha de novo** — não
+prossiga com o cursor sujo.
+
+---
+
+**Como era o bloqueio, para memória:** As ferramentas de Data Table criam tabela, criam coluna,
 renomeiam e **inserem** linha — **não atualizam nem apagam** linha existente (procurado em 16/09,
 R7). **Quem apaga é o Olavo**, na mão: *Data Tables → `gbp_sync_cursor` → linha com
 `chave = odoo_leads_sync` → apagar a linha.*
@@ -238,8 +251,8 @@ Nesta ordem, e **provando cada passo antes do próximo**:
    parâmetro de criação — passado na criação, some sem erro. **Depois leia o workflow de volta e
    confirme que pegou.** Se não pegou, diga; não siga em frente supondo.
    **No mesmo commit:** a nota no `[P6] Gravar na planilha` sobre o `onError` vazio (§2.5).
-4. **Esperar o Olavo apagar a linha do cursor** `odoo_leads_sync` (§2.3). **Você não consegue fazer
-   isso, e não deve contornar.**
+4. ✅ **Cursor zerado** — o Olavo apagou a linha `odoo_leads_sync` em 16/09 (§2.3). **Feito, mas
+   feito antes do conserto:** não rode nada antes dos passos 2 e 3, senão o cursor suja de novo.
 5. **Rodar com `maxItems: 3` ainda.** Os quatro números que reprovam ou aprovam:
    **`[P6] Ler a planilha` executou 1 vez · `_lidos_no_odoo` > 0 · zero erro 429 · 3 linhas
    carimbadas na planilha.** Qualquer um fora do lugar, reprovado.
