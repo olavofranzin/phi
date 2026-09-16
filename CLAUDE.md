@@ -13,6 +13,34 @@ Sistema automatizado de monitoramento e gestão de campanhas de tráfego pago (G
 
 ---
 
+## Frente estratégica ativa: Otimização (cérebro de análise — "Módulo 28" / T28)
+
+> Camada de **análise cognitiva** sobre o score: o "cérebro" (Maestro + especialistas)
+> que traduz o PHI·Mídia Score em **diagnóstico + decisão recomendada** — o humano dá o
+> "play". Design canônico em **Git** (`docs/strategic-planning/`); estado operacional em
+> **Notion**. Complementa o contexto de pipeline abaixo.
+
+- **Ler primeiro (git):** `docs/strategic-planning/ESTADO-DO-PROJETO.md` (doc mestre,
+  snapshots datados) · `docs/strategic-planning/MAPA-DE-DOCUMENTACAO.md` (navegação) ·
+  `docs/strategic-planning/roster-de-agentes.md` (agentes, staging E0→E3) ·
+  `docs/modulo-28-analise-cognitiva.md` (os 7 prompts: Maestro + 6 especialistas) ·
+  `docs/strategic-planning/saude-digital/adr-rascunhos/` (ADRs de design).
+- **Workflow n8n:** `WF-T28-Analise-Campaign` (`fhYmJH0o9BW1IO4i`). Diagnóstico (Agente 3)
+  **vive**; **Maestro (E1) no rascunho**, não ativado — ver **ADR-28**.
+- **DB de entrega:** `PHI - ANÁLISES` (`38fb65e5-c72b-80db-a425-e5939fc35c7a`).
+- **Credencial LLM:** `Anthropic account` (`YifaYCQuGWjdd1Oh`) — existe; confirmar binding
+  nos nós + smoke antes de ativar.
+- **Guardrails de dado (BLOCO COMUM, regras 8/9):** `conversions=0 ⇒ CPA/ROAS indefinidos`
+  (nunca "cpa 0 = ótimo"); `source_status error/missing ⇒ N/D` (não 0).
+- **Autoridade do score (ADR-003):** não recalcular `phi_value`/flags/severidade — são fato.
+- **Memória de Decisão:** design → ADR (git); execução → Ledger "PHI — Registro de
+  Execuções" (Notion, ADR-32).
+- **Disciplina de token:** validar prompts pela skill `phi-diagnostico` (`.claude/skills/`,
+  byte-idêntica ao nó vivo) com payload real no chat **antes** de gastar token no n8n; não
+  ativar/executar workflow sem OK de budget do Olavo.
+
+---
+
 ## Stack
 
 | Camada | Tecnologia |
@@ -80,7 +108,7 @@ como confirmar".
 2. **Nodes INSERT/MERGE:** `Always Output Data = true` obrigatório
 3. **`primary_metric_goal`** = FLOAT64 (valor numérico ex: `5.20`). **`primary_metric_type`** = STRING (ex: `'CPA'`)
 4. **`client_id`** = `CLI-4` (identificador). **`client_slug`** = `KIL` (sigla 3 letras). São campos diferentes
-5. **splitInBatches v3:** branch 0 = loop, branch 1 = done
+5. **splitInBatches v3:** branch 0 = done (dispara uma vez, ao fim), branch 1 = loop (dispara a cada item). O último node do corpo do loop DEVE reconectar ao splitInBatches, senão só o 1º item é processado. (Confirmado no SDK n8n: `.onDone` = saída 0, `.onEachBatch` = saída 1.)
 6. **IF nodes:** branch 0 = TRUE, branch 1 = FALSE
 7. **Conexões no JSON n8n:** usar NOMES dos nodes como chaves, não UUIDs
 8. **Queries dinâmicas:** montar SQL no Code node, nunca usar `{{ }}` dentro da query BigQuery
@@ -128,10 +156,179 @@ como confirmar".
 
 ---
 
+## Por onde começar, por assunto
+
+| Se a conversa é sobre… | Leia primeiro |
+|---|---|
+| **Onde o projeto está** | `docs/strategic-planning/ESTADO-DO-PROJETO.md` (§0 PAINEL) |
+| **Quanto falta para acabar** | `docs/strategic-planning/DEFINICAO-DE-PRONTO-PHI-V1.md` |
+| **Achar qualquer documento** | `docs/strategic-planning/MAPA-DE-DOCUMENTACAO.md` |
+| **Prospecção** (leads, GBP, planilha, CRM) | `docs/strategic-planning/prospeccao/CLAUDE.md` |
+| **Score de mídia** (campanhas, BigQuery) | `docs/strategic-planning/saude-digital/` + ADR-37/ADR-38 |
+| **CRM Odoo** | skills `phi-odoo-crm` e `odoo-19-dev` |
+| **Procedimentos da agência** (quem faz o quê, entrega, atendimento) | **Miro — `Board Agência`** · `https://miro.com/app/board/uXjVHecmR7c=/` |
+
+> **O `Board Agência` é o mapa da OPERAÇÃO, não do software.** *"Planejamento Estratégico Para Criação
+> De Procedimentos Em Áreas De Uma Agência"* — mapa mental com ~250 blocos, organizado por **área**
+> (Comercial, Operações, Atendimento) e seus **procedimentos**: *Passagem de Bastão entre Comercial e
+> Operações · Planejamento de Entregas · Pontos de Contato · Plantão de Dúvidas · Monitorar a Adoção ·
+> Responsáveis*. ⚠️ Existe uma `Cópia de Board Agência` — **não é a vigente**.
+>
+> **São dois eixos, não confundir:** frente de **software** mora em `docs/strategic-planning/<frente>/`;
+> **área da agência** é o board (e, quando for para o git, `docs/operacao/<area>/`).
+> **Consulte-o antes de planejar qualquer coisa que envolva o depois da venda** — em 2026-09-15
+> descobrimos que ele já previa a passagem de bastão que o plano da Prospecção tinha deixado sem dono.
+
+> ⚠️ **Dois scores diferentes, não confundir:** `phi_value` (saúde da **campanha**) e
+> `potencial_comercial` (qualidade do **lead**). Frentes, donos e ADRs distintos.
+
 ## Regras que você deve seguir
+
+### Comunicação
 - Fale comigo sempre em português, de forma simples e sem jargão.
 - Antes de mudar algo grande, me explique o plano e espere eu aprovar.
 - Prefira a solução mais simples que resolve. Nada de complicar sem motivo.
+
+### R1 — Seu papel no chat-mãe é PLANEJAMENTO ESTRATÉGICO, não execução
+Este chat é o **chat-mãe**: estratégia, arquitetura, decisão, priorização, ADR, roadmap.
+**Execução longa vai para sub-chat** — construir workflow, escrever módulo, depurar infra,
+mexer em servidor, caçar bug.
+
+**Como agir:**
+- Tarefa de execução com mais de ~3 passos, ou que exija ler muitos arquivos/logs/telas →
+  **PARE. Escreva o brief** (`docs/handoff/AAAA-MM-DD-<tema>-subchat-brief.md`) e **devolva o
+  brief**. Não execute aqui.
+- Se já gastou **várias rodadas em troubleshooting**, isso por si só é o sinal: diga
+  explicitamente "isto virou execução, deveria ser sub-chat" e proponha a migração.
+- **Fica no chat-mãe:** decisão, ADR, priorização, roadmap, leitura de estado, revisão de plano,
+  desenho de arquitetura e escrita de brief.
+
+> **Motivo:** quando a execução mora aqui, o contexto lota de detalhe operacional e **o
+> planejamento — que é o que só este chat faz — se perde.**
+
+### R2 — Etapa concluída = documentação atualizada NA MESMA SESSÃO
+**Nenhuma etapa é "concluída" enquanto a documentação não refletir isso.** Ao terminar uma entrega:
+1. Atualizar o **doc canônico** da frente (ADR / contrato / spec).
+2. Registrar o **as-built** quando o real divergir do planejado — **o real vence o plano**.
+3. Pôr **banner de HISTÓRICO** no topo de todo doc que virou retrato de um momento passado.
+4. **Commit no git.**
+
+> **Motivo:** em 2026-09-08 descobrimos que a doc da Prospecção descrevia workflows que já não
+> existiam havia semanas — e por isso não sabíamos que a frente estava praticamente pronta.
+> **Doc desatualizada custa mais caro que doc inexistente: ela faz decidir errado.**
+> Regra curta: **se não está escrito, não aconteceu.**
+
+### R3 — Sub-chat é OBRIGADO a registrar no Notion (senão o digest diário morre)
+Existe um workflow n8n **ativo**: `PHI — Digest Diário de Progresso (Registro de Execuções)`
+(`rhobbBEeQaiWIuiF`, 08:30 BRT). Ele lê a DB Notion **"PHI — Registro de Execuções (Sub-chats)"**
+e manda o andamento do projeto no Telegram do Olavo.
+**Hoje ele avisa "sem progresso" — não porque nada anda, mas porque ninguém escreve na DB.**
+
+**Todo sub-chat DEVE**, ao **começar** e ao **encerrar** cada bloco de trabalho, criar/atualizar
+uma linha na DB com: **frente · o que foi feito · estado** (em andamento / concluído / bloqueado)
+**· próximo passo · link do artefato**. Sem isso o Olavo perde a visão do projeto. (Ver ADR-32.)
+
+### R5 — Todo artefato carrega a própria história (descrição fiel)
+A **descrição** de um workflow (n8n), módulo ou tabela deve dizer, em duas frases: **o que ele faz**
+e **por que existe** — incluindo **o que ele substituiu e por quê**.
+
+- Ao criar ou alterar um artefato, **atualize a descrição na mesma sessão**.
+- **Descrição copiada de outro artefato é bug** (foi o caso de 3 workflows da Prospecção).
+
+> **Motivo:** em 2026-09-08 a auditoria por inventário **não descobriu** que o `Daily Entry` tinha
+> sido desativado **porque** o `sw metricas campanhas` entrou no lugar. Isso só existia na cabeça do
+> Olavo. **Inventário pega estrutura; intenção só existe se alguém escrever.**
+>
+> Teste prático: **se a auditoria semanal precisa perguntar ao Olavo para entender, a descrição
+> falhou.** (Generaliza o invariante I10 do ADR-35 para o projeto inteiro.)
+
+**Procedimento canônico de aposentadoria** (precedente `[APOSENTADO 2026-07-21] PHI - Loop Alerta
+Fase 1` — o único workflow do parque que hoje passa no teste da R5):
+1. consolidar a função no workflow que fica; 2. **desabilitar o nó chamador**; 3. desativar o
+workflow; 4. **renomear com o prefixo `[APOSENTADO <data>]`**; 5. sticky note dizendo **por que** e
+**proibindo reuso**. Nunca apagar sem esses 5 passos — o nome e o sticky são a memória.
+
+### R6 — Plano aceito não dispensa verificação (o dado vence o plano)
+Antes de uma ação **irreversível ou em produção**, **verifique a premissa que a justifica** — mesmo
+que o plano já esteja **aceito** num ADR. Se o dado desmentir o plano:
+**pare, não execute, corrija o ADR e registre o porquê.**
+
+> **Motivo:** em 2026-09-08 a **Fase 0.2 do ADR-37 foi cancelada na hora de executar**. O inventário
+> tinha visto "dois workflows escrevem o mesmo campo" e chamado de conflito; a leitura do fluxo,
+> feita antes de desabilitar qualquer nó, mostrou **três transições distintas** — e que executar o
+> plano teria **quebrado a Fase 3** (Regra Crítica nº 11: a ordem é imutável). Nada foi desabilitado.
+>
+> **Executar um plano aceito que o dado já desmentiu é o pior dos dois mundos** — tem a autoridade do
+> ADR e a consequência do erro.
+>
+> **Corolário:** **hipótese desmentida também se registra.** Se a refutação não for escrita, a
+> próxima auditoria levanta o mesmo alarme e o trabalho se repete.
+
+### R7 — Nada se cria sem plano pronto. E todo plano começa procurando o que já existe
+**Antes de construir qualquer coisa nova** — workflow, skill, agente, coluna, tabela, pasta — **tem de
+existir um plano escrito e aprovado pelo Olavo.**
+
+E **em cada etapa do plano**, antes de propor construir, responder por escrito:
+1. **Existe skill instalada** que já faz isso? (`ListSkills` / `SearchSkills` — não confie na memória)
+2. **Existe workflow** que já faz? **Existe coluna** que já guarda?
+3. Se procurei e **não existe**, **registrar que procurei** — senão a próxima sessão procura de novo.
+
+> **Motivo:** é a **R2** e a **R6** aplicadas *antes* do fato, e não depois. Corrigir um plano em texto
+> custa minutos; corrigir uma construção custa semanas — foi o que aconteceu com o `1º Enriquecimento`,
+> com o `id_hubspot` e com as 6 dimensões do score. **O caro nunca foi construir: foi construir o que
+> já existia, ou o que não podia ser auditado depois.**
+
+### R8 — Skill primeiro; subagente é a exceção
+**O padrão é a skill** — instrução determinística, versionada em pasta. **Orquestrar vários agentes é
+exceção**, reservada a tarefa de alta volatilidade.
+
+| Escolha **skill** quando | Escolha **agente/subagente** quando |
+|---|---|
+| a tarefa se repete **com a mesma forma** | cada execução é diferente e exige **decidir** |
+| é frequente e estruturada | precisa de **humano no loop** antes de publicar |
+| você quer previsibilidade e custo baixo | há **paralelismo real** ou depuração ao vivo |
+
+> **Teste prático:** *"se eu escrevesse isso num checklist, outra pessoa executaria igual?"* Se sim, é
+> skill. Se a resposta depende de julgamento a cada caso, é agente.
+>
+> **Motivo:** skill tem carga de contexto baixa e saída previsível; orquestração tem o efeito oposto e
+> só se paga quando a tarefa realmente exige autonomia. O `phi-diagnostico` é o exemplo da casa: um
+> agente que virou skill e passou a poder ser testado sem gastar token no n8n.
+
+### R10 — Modelo caro só onde há julgamento (escada de modelos)
+Tarefa básica usa **modelo rápido e barato**; tarefa que exige **raciocínio e qualidade de entrega**
+usa **modelo forte**. Escolher o modelo é decisão de arquitetura, não detalhe.
+
+| Camada | Para quê | O que usamos hoje |
+|---|---|---|
+| **Rápido / barato** | extrair, estruturar, classificar, formatar, redigir com molde pronto | **Gemini Flash** (`gemini-2.5-flash`) na cadeia de enriquecimento |
+| **Forte** | diagnosticar, decidir, priorizar, escrever abordagem, planejar | **Claude Sonnet 5** no nó de Diagnóstico (T28) · **Opus 5** no planejamento |
+
+> **A regra é do degrau, não da marca.** Escreva "camada rápida" e "camada forte" — nunca prenda a
+> regra ao nome de um fornecedor. Modelo troca de nome e de preço a cada poucos meses; **o degrau
+> permanece.** É a mesma lição do `id_crm` e do `campaign_id` sem prefixo: **não grave no nome o que
+> pertence a outro campo.**
+>
+> **Teste prático:** *se a resposta certa está determinada pelo dado de entrada, é camada rápida. Se
+> duas pessoas competentes responderiam diferente, é camada forte.*
+>
+> ⚠️ **Antes de trocar de modelo para economizar, meça.** Custo estimado no papel já nos levou a
+> discutir soluções trabalhosas para economizar valor que ninguém tinha medido.
+
+### R9 — A ordem do trabalho: alinhar → planejar → isolar → revisar
+1. **Entrevista de alinhamento antes do primeiro token de execução.** Perguntar até a ambiguidade
+   acabar. Ambiguidade não resolvida vira retrabalho, não vira criatividade.
+2. **Plano barato antes da construção** (é a **R7**).
+3. **Contexto isolado por camada** — cada sub-chat com o seu (é a **R1**).
+4. **Quem revisa não é quem executou**, e o critério de aceite é **escrito antes**. Reprovou, volta com
+   relatório do defeito. **Limite de 3 voltas** — na terceira, o problema é o plano, não a execução.
+
+> **O que falta hoje na nossa versão:** temos executor e revisor separados (sub-chat × chat-mãe), mas
+> **sem critério de aceite escrito antes**. É o buraco que a R9 fecha.
+
+### R4 — Uma pergunta que todo chat responde antes de fechar
+> *"Onde estamos, quanto falta, e o que eu atualizei para provar isso?"*
+Se não souber responder, a etapa não acabou.
 
 ---
 
@@ -167,4 +364,4 @@ Refer to CLAUDE.md for full command reference.
    
 ---
 
-*PHI™ v1.5 — Atualizado em 27/07/2026*
+*PHI™ v1.5 — Atualizado em 27/07/2026. Adendo 2026-07-31: frente Otimização/T28 (cérebro de análise) — ver `ESTADO-DO-PROJETO.md` (snapshot 2026-07-31) + ADR-28.*
