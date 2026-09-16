@@ -72,9 +72,18 @@ O `Loop Over Items` (`splitInBatches`) e o `Wait` **não têm o prefixo `[P6]`**
 parâmetro configurado** — nem tamanho de lote, nem tempo de espera. E o `updatedAt` do workflow é
 **16/09 13:16:28**, ou seja: entre a execução `39827` (13:14, erro de cota) e a `39835` (13:21).
 
-**A leitura mais provável:** alguém tentou consertar a cota **batendo o lote**. É um instinto certo
-com a execução errada — porque **o que custa ficou dentro do loop**. O número de leituras da planilha
-não caiu: continuou em ~100, agora uma por volta, com uma espera no meio.
+**Quem fez e por quê — dito pelo Olavo em 16/09:** foi ele, tentando conter a demanda que travava o
+nó do Google Sheets, na hipótese de que **as atualizações chegam todas de uma vez**.
+
+**A preocupação é legítima, mas é do outro nó.** O erro das execuções `39663` e `39827` diz, com
+todas as letras, `Quota exceeded for quota metric 'Read requests'` — **leitura**, não escrita. E o nó
+de escrita recebe hoje **no máximo 3 itens** (`[P6] Vazao do lote` = 3): ele não teria como estourar
+nada.
+
+**O loop não atacou nem uma coisa nem outra.** Como o que custa — a leitura da aba inteira — ficou
+**dentro** do loop, o número de leituras não caiu: continuou em ~100, agora uma por volta, com uma
+espera no meio. E as escritas também não diminuíram, porque o `[P6] So os modificados` reentrega a
+lista inteira a cada volta e o `Vazao do lote` corta sempre os **mesmos** 3.
 
 **E o loop não pagina nada.** O `[P6] So os modificados` não lê o lote: ele lê
 `$('[P6] Juntar').all()`, ou seja, **a lista inteira, toda vez**. O `since` também é fixo, calculado
@@ -101,12 +110,19 @@ pior que repetir"*. A escrita do P6 é `update` em linha que já existe — repe
 antes da primeira rodada de verdade. Não gaste tempo investigando se alguma escrita passou: a ação
 segura é a mesma nos dois casos.
 
-### 2.4 A vazão está em 3, e tem de voltar para 50
+### 2.4 A vazão está em 3 — sobe para 20, não para 50
 
 `[P6] Vazao do lote` está com `maxItems: 3`, baixado para a estreia. **Config mudada para teste e não
 devolvida** foi exatamente como o carimbo do modo passou a mentir no P5 (§11.9 do contrato).
 
-Devolva para **50** depois que a rodada limpa passar — não antes.
+O desenho original dizia 50. **Suba para 20, não para 50** — 20 é o único número de que temos prova:
+o PROSP-05O fez **quatro rodadas de 20 atualizações no Sheets, com zero erro**. 50 é estimativa.
+Depois de uma rodada limpa em 20, subir é decisão do Olavo, e com o número medido na mão (RQ1: a
+vazão é ajustável de propósito).
+
+**Se um dia for preciso mesmo espaçar as escritas**, a forma certa é o loop **em volta do nó de
+escrita apenas**, com a leitura da planilha **fora** dele. Foi a inversão disso que criou o problema
+de hoje: o barato dentro do loop, o caro repetido.
 
 ---
 
@@ -125,7 +141,7 @@ Nesta ordem, e **provando cada passo antes do próximo**:
    ficaram de fora e por quê.
 6. **Conferir na planilha** as 3 linhas escritas: `sync_por = PROSP-06O`, `data_sync_crm` de hoje, e
    **nenhuma coluna do P5 tocada**.
-7. **Devolver a vazão para 50** e rodar até a fila esvaziar.
+7. **Subir a vazão para 20** (não 50 — §2.4) e rodar até a fila esvaziar.
 8. **Provar o CA5 com o Olavo:** ele marca um lead como ganho ou perdido no Odoo, e o desfecho
    aparece na planilha na rodada seguinte. **É a única prova que vale.**
 9. **Só então** propor ativar o gatilho de 6 h — e **ativar depende de OK do Olavo**.
@@ -156,8 +172,10 @@ entrevista, é autópsia** (R9).
 
 Responda por escrito, no seu primeiro relato:
 
-1. **Se o `Loop Over Items` tiver sido posto de propósito por alguém** e você apagá-lo, o que se
-   perde? Você consegue enxergar algum motivo para ele existir que eu não vi?
+1. **O loop foi posto pelo Olavo para espaçar as escritas no Sheets** (§2.2). Apagá-lo devolve o
+   fluxo ao desenho original. **Que sinal apareceria** se a preocupação dele estivesse certa e as
+   escritas em lote realmente travassem o nó? Descreva o sintoma antes de rodar, para saber
+   reconhecê-lo.
 2. **`[P6] Ler a planilha` lê a aba inteira a cada rodada.** Com o P5 escrevendo linha a linha ao
    mesmo tempo, os dois podem estourar a cota do Sheets juntos. Como você saberia se isso aconteceu,
    em vez de descobrir pelo erro?
