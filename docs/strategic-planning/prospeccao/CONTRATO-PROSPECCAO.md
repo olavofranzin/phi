@@ -1013,3 +1013,33 @@ recomendação de esperar o cutover (ADR-36 C3).
    criada na aba `leads`.
 2. **O nó do Telegram está desabilitado**, à espera do `chatId`. A credencial escolhida foi
    `Telegram phi_prospeccao`.
+
+### 11.8 Smoke de 16/09 — 5 dos 11 critérios de aceite provados
+
+Com a coluna `erro_envio_crm` criada, o smoke rodou com **`lote_max = 1`** — a rede armada antes,
+não depois. Três execuções, e cada uma provou alguma coisa:
+
+| Execução | O que aconteceu | O que provou |
+|---|---|---|
+| `39631` | parou em 1,6 s no nó de leitura, **zero escritas** | **a trava do filtro vazio funciona**: sem `place_id`, o lookup procura `__SEM_PLACE_ID__` e o fluxo para |
+| `39633` | achou a Niti, montou o payload, **a escrita falhou** | **CA2** (`_contato_preservado: phone,website,street,zip,city`) e **CA3** — o erro foi para a planilha e a fila seguiu, exatamente como desenhado |
+| `39634` | **passou**: 1 lead, `id_crm` 11, planilha carimbada | **CA1, CA4, CA11** — e `erro_envio_crm` foi **limpo**, apagando o erro da rodada anterior |
+
+**O defeito da 39633 era meu, e é uma regra nova.** Eu tinha posto `_contato_preservado` **dentro do
+payload**, para deixar visível o que a D1 havia respeitado. Com `autoMapInputData`, **toda chave do
+payload vira campo do `crm.lead`** — e esse campo não existe. O Odoo recusou a escrita inteira.
+
+> **Regra:** no payload do P5, **toda chave tem de ser um campo real do `crm.lead`**. Diagnóstico e
+> telemetria vão para `console.log`, nunca para o objeto que é enviado.
+
+**O `[SMOKE] Lead de teste` deixou de ser um `Set`.** Ele entregava item **vazio** nas execuções
+39612, 39616 e 39631 — o `place_id` nunca chegava ao nó seguinte, e foi essa a origem do incidente
+de 15/09. **Não descobri a causa**; troquei por um `Code`, que não depende de valor-padrão que o n8n
+retira ao salvar. É contorno, e está registrado como contorno.
+
+**Também melhorei a captura do erro.** O `error.message` do Odoo é sempre o genérico *"The service
+was not able to process your request"*. O nó agora procura o detalhe em seis lugares, do mais
+específico ao menos, e joga o erro cru inteiro no log da execução.
+
+**Ainda não provados:** CA5 (desfecho pelo P6 — o P6 Odoo não existe), CA6, CA7 (lead arquivado),
+CA8 (guarda do modo), CA9, CA10.
