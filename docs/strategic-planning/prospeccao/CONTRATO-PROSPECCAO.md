@@ -1158,3 +1158,44 @@ graça quantos leads ainda faltam enriquecer, número que não se consegue tirar
 
 ⚠️ **Custo:** o P4 gasta Apify + PageSpeed + Gemini Flash por lead, com `LIMITE_LOTE = 10`
 (~35 min/rodada, escolha do Olavo em 02/09). Cada rodada é gasto real e depende do OK dele.
+
+### 11.11 Achado na leitura do lead 115 — o P5O pode estar mapeando `score_gbp` errado
+
+Ao ler um lead real do Odoo para construir o P6 (execução `39660`, lead `id` 115, AGROLU), apareceu
+`gbp_score_tecnico: 56`. O `[P5] Montar payload Odoo` faz `inteiro("gbp_score_tecnico", j.score_gbp)`.
+
+A skill `phi-odoo-crm` diz o contrário, com todas as letras:
+
+> **`score_gbp` (planilha) NÃO é o `gbp_score_tecnico`.** É a **média das dimensões disponíveis**,
+> que são percentis dentro do grupo. Grandeza diferente do score técnico do modelo antigo.
+> **Não mapeie.**
+
+**Não corrigi** — é escopo do P5, não do P6, e mexer num writer que acabou de carregar 81 leads sem
+plano seria a R7 ao contrário. Fica registrado para decisão.
+
+O mesmo lead traz `gbp_ipc: 0`, e a skill diz que esse campo **não tem fonte** e deveria ficar vazio
+(I3). Aqui a causa é provavelmente outra — campo `Integer` no Odoo armazena `0` quando ninguém
+escreve — mas vale confirmar antes de tratar como violação.
+
+### 11.12 O P6 do HubSpot estava ativo, e ninguém sabia
+
+`Comercial - Sync HubSpot -> Planilha (loop de aprendizado)` (`WRFU2NM8rLJU7bRT`) rodava **a cada
+6 horas**. Não aparecia em nenhuma busca por "PROSP" porque **nunca foi renomeado** para o padrão, e
+a descrição dele era **`null`** — o caso que a R5 descreve: inventário pega estrutura, intenção só
+existe se alguém escrever.
+
+**Por que não causou dano:** o cursor estava congelado em **08/09** e a busca por deals modificados
+voltava vazia. Rodava em 0,7 s e parava ali — verde, sem escrever.
+
+**Por que era uma arma carregada:** bastava alguém tocar num deal do HubSpot para ele acordar, trazer
+tudo desde 08/09 de uma vez e escrever na planilha com o mapeamento antigo. E o mapeamento dele casa
+por **`id_hubspot`** e escreve **`data_sync_hubspot`** — duas colunas que **não existem mais**. Com
+`onError: continueRegularOutput` no nó de escrita, é exatamente o bug das duas semanas da R11, ainda
+armado.
+
+**Desativado em 16/09** com OK do Olavo, antes de o substituto existir. A aposentadoria formal (nome
+e sticky) fica para quando o PROSP-06O estiver provado — pôr `[APOSENTADO]` num workflow cujo
+substituto ainda não roda seria mentir no nome.
+
+**O `[APOSENTADO 2026-09-16] PROSP-05 CRM-out (deal + id)`** (`94lSWJfxfu653KdN`), esse sim, completou
+os cinco passos da R5 no mesmo dia.
