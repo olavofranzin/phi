@@ -282,13 +282,17 @@ Vieram da entrevista de execução (R9). Você **prova ou reprova**; não reescr
 
 | # | Critério | Hoje |
 |---|---|---|
-| **P6-1** | Nunca cria linha na planilha. Sem `id_crm` correspondente, o item é desviado **e contado** | não testado |
-| **P6-2** | Não escreve em nenhuma coluna do P5 (`id_crm`, `data_envio_crm`, campos GBP) | não testado |
-| **P6-3** | O desfecho vem de `won_status` + `lost_reason_id`, nunca da probabilidade do estágio | não testado |
-| **P6-4** | O cursor **não avança** se a escrita falhar | atendido hoje **por acidente**, não por desenho (§2.5) |
-| **P6-5** | Fila vazia é visível: a execução diz "0 leads modificados", não passa batido | não testado |
-| **P6-6** | Com P5 e P6 rodando, nenhum campo tem dois donos (é o **CA6**) | não testado |
-| **P6-7** | Lead marcado ganho/perdido no Odoo aparece na planilha na rodada seguinte (é o **CA5**) | não testado |
+| **P6-1** | Nunca cria linha na planilha. Sem `id_crm` correspondente, o item é desviado **e contado** | não testado — contador zerado não é prova (§11.6) |
+| **P6-2** | Não escreve em nenhuma coluna do P5 (`id_crm`, `data_envio_crm`, campos GBP) | ✅ **provado** (execução `39937`, linha do `id_crm` 11) |
+| **P6-3** | O desfecho vem de `won_status` + `lost_reason_id`, nunca da probabilidade do estágio | não testado — depende do Olavo marcar um lead |
+| **P6-4** | O cursor **não avança** se a escrita falhar | atendido hoje **por acidente**, não por desenho (§2.5) — vira desenho na rodada 2 |
+| **P6-5** | Fila vazia é visível: a execução diz "0 leads modificados", não passa batido | 🔴 **reprovado** (execução `39937`) — conserto em §11.1 |
+| **P6-6** | Com P5 e P6 rodando, nenhum campo tem dois donos (é o **CA6**) | não testado — o P6-2 é evidência parcial |
+| **P6-7** | Lead marcado ganho/perdido no Odoo aparece na planilha na rodada seguinte (é o **CA5**) | não testado — depende do Olavo marcar um lead |
+
+> **Placar em 16/09, fim da rodada 1:** 1 provado · 1 reprovado · 1 atendido por acidente · 4 não
+> testados. A rodada 1 provou o que se propôs a provar: **a cota parou de estourar e o P6 escreve só
+> o que é dele.**
 
 ---
 
@@ -486,3 +490,103 @@ chamada com domínio de verdade — e aí sim vira tarefa.
   **É o Olavo que apaga, na mão, no n8n.** E ele fez certo em recusar o atalho de mexer no
   `[P6] Calcular since` "só para este teste": config mudada para teste é config que alguém tem de
   lembrar de devolver.
+
+---
+
+## 11. Rodada 1 fechada (16/09) — decisões do chat-mãe
+
+**O conserto funcionou.** 7 execuções, **100 leads, 100 escritas, zero erro de cota, zero erro de
+escrita**. A contabilidade fechou sozinha em toda rodada: `_modificados` caiu exatamente 20 e
+`_fora_nao_modificado` subiu exatamente 20 — **prova de que cada lote foi escrito e de que o cursor
+avançou sobre o que foi escrito, sem pular nem repetir**, sem precisar abrir a planilha. **P6-2
+provado** na linha do `id_crm` 11.
+
+### 11.1 O P6-5 vai pela opção (b) — e **não se mede a (a)**
+
+Fila vazia derruba a execução: o sentinela `__SEM_LEAD__` não tem `_write_ms` e o
+`[P6] Ordenar pelo mais antigo` exige o campo.
+
+**Decisão: (b), o IF antes da ordenação. Não gaste uma execução medindo a (a).**
+
+O executor propôs medir o que o nó do Sheets faz com uma chave que não casa. A pergunta é boa, mas
+**a resposta não muda nada aqui**, porque a (a) está descartada por desenho mesmo que funcione:
+
+> A (a) manda um **item falso para dentro do nó de escrita** em toda rodada vazia — e rodada vazia
+> passa a ser o estado **normal** do P6. Um nó chamado `Gravar na planilha` sendo convidado, quatro
+> vezes por dia, para sempre, a gravar algo que não é um lead. **Basta alguém trocar `update` por
+> `appendOrUpdate` um dia** — que é o erro que criou as linhas órfãs que o PROSP-LO existe para
+> limpar — e `__SEM_LEAD__` **vira linha nova na planilha**. É arma carregada, e esta casa já tem
+> cinco (R11).
+>
+> **"Nada a fazer" tem de significar "pare", não "mande um item falso adiante".**
+
+A curiosidade sobre o Sheets fica registrada como pergunta aberta (§11.6), fora do caminho crítico.
+
+### 11.2 🔴 A condição do IF **não** pode ser `_modificados > 0`
+
+A proposta diz *"um IF antes da ordenação: `_modificados > 0` segue, senão para"*. **Isso quebraria o
+caminho normal**, e o motivo está no código do `[P6] So os modificados`:
+
+```js
+return saida.map(function (l, i) {
+  return { json: i === 0 ? Object.assign({}, l, diagnostico) : l };
+});
+```
+
+**O diagnóstico só é colado no item 0.** Os itens 1 em diante **não têm `_modificados`**. E o nó IF
+avalia **item a item** — então numa rodada de 20 leads, o item 0 passaria e os **19 outros cairiam**
+com `undefined > 0`. Escreveria 1 linha em vez de 20, sem erro nenhum. É a R11 outra vez, e desta vez
+a gente pegou no papel.
+
+**A condição certa é `id_crm` diferente de `__SEM_LEAD__`.** Está em **todo** item, é o próprio
+marcador do sentinela, e o nó passa a ler exatamente como o que faz.
+
+> **A regra que generaliza, e vale para todo nó desta casa:** *filtro item a item só pode testar
+> campo que existe em todo item.* Campo que só o primeiro item carrega é **diagnóstico**, não
+> critério.
+
+### 11.3 Commitar agora, com o reprovado dentro
+
+O executor segurou o commit *"para não documentar como pronto o que reprovou"*. **A intenção é certa,
+a leitura da R2 não.** A regra não é *documentar quando ficar pronto* — é **documentar o que
+aconteceu**, e o real vence o plano.
+
+Uma drenagem de 100 leads com 100 escritas e zero erro é **fato**, e vale escrito mesmo com o P6-5
+aberto. **Se a sessão morrer agora, esse conhecimento morre junto.** O as-built entra com o placar
+como ele está — inclusive o 🔴 do P6-5. **Se não está escrito, não aconteceu.**
+
+### 11.4 A rodada 2 ganha um terceiro item: o empate de segundo
+
+O executor achou, e é da mesma família do cursor: leads criados em lote ficam a ~2 segundos um do
+outro (`02:02:23`, `02:02:25`, `02:02:27`). Se dois leads tiverem **o mesmo `write_date`** e a vazão
+cortar entre eles, o que ficou de fora volta com `w <= since` na rodada seguinte — **e é descartado
+para sempre**.
+
+**O invariante:** *o corte nunca pode cair no meio de um segundo sem sobreposição.*
+
+Duas formas, ambas de uma linha — escolha uma e **escreva por que**: recuar o cursor em 1 segundo
+(`maxMs - 1000`), ou trocar o filtro para `w < since`. As duas repetem, no pior caso, os leads de um
+segundo — e **repetir é inofensivo** (`update` em linha existente), enquanto perder é irreversível.
+
+### 11.5 `data_criacao_deal` mudou de significado — registrar, não desfazer
+
+Na linha do `id_crm` 11 o campo era `2026-05-06` e virou `2026-09-09`. **O comportamento é o
+desenhado** — é coluna do P6 e o valor é o `create_date` real do Odoo. Não desfaça.
+
+**Mas o significado mudou sem aviso, e isso precisa estar escrito:** para os ~100 leads migrados, o
+`dias_no_funil` passou a contar **a partir da migração**, não a partir do primeiro contato. Quem ler
+a base de aprendizado daqui a três meses vai achar que esses leads fecharam muito rápido.
+
+**Vai para o as-built, com essa frase.** Se um dia quisermos o funil de verdade, a planilha ainda tem
+a coluna `data extração` — mas isso é mudança de desenho, não conserto, e não é agora.
+
+### 11.6 Perguntas abertas — registradas para não voltarem como dúvida
+
+- **O que o nó do Sheets faz com uma chave que não casa em `update`?** Não sabemos, e depois da
+  §11.1 **não precisamos saber para seguir**. Fica para quando aparecer em outro workflow.
+- **P6-1 nunca foi exercitado** — `_fora_sem_linha_na_planilha` deu 0 nas 7 rodadas, e o executor faz
+  bem em não contar contador zerado como prova. **O teste é real e barato:** o Olavo **cria um lead à
+  mão no Odoo** (uma indicação, um contato que chegou sozinho). Ele não tem linha na planilha, e o
+  desvio tem de contá-lo sem criar linha. É o mesmo gesto que um dia vai acontecer sem ninguém pedir.
+- **`notes` de nó não é gravável** pelas ferramentas disponíveis — por isso a nota do `onError` virou
+  **sticky**. Aceito, e vale para as próximas: **sticky é o substituto legítimo do `notes`.**
