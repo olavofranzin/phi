@@ -897,3 +897,35 @@ desativado, renomeado `[APOSENTADO <data>]`, sticky dizendo por que e proibindo 
 `lote_max` vive no `[P5] Config`, ao lado do corte. O primeiro uso real é um **piloto de 10–20
 leads** (brief §12.2), não a planilha inteira. Para rodar tudo, sobe-se o número no `Set` —
 nunca dentro do nó.
+
+### 10.7 Incidente 2026-09-15 — o "smoke de 1 lead" que escreveu em 20
+
+**O que aconteceu.** As execuções `39612` e `39616` do PROSP-05O foram disparadas como
+smoke de um lead só. Cada uma processou **20 leads** e os escreveu no Odoo. A 39612 parou no
+meio (erro do `site_tipo` legado); a 39616 completou os 20: `id_crm` 96, 11, 15, 18, 19, 20,
+21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33 e 34.
+
+**A causa.** O `[SMOKE] Lead de teste` entregou item vazio, sem `place_id`. O nó do Google
+Sheets filtra por `lookupValue = {{ $json.place_id }}` — e **filtro vazio no Google Sheets não
+devolve zero linhas: devolve a planilha inteira.** Não avisa, não falha, execução verde.
+
+**O que conteve.** A vazão do lote (`lote_max = 20`), instalada minutos antes por causa do
+piloto. Sem ela teriam entrado os 95 e todo lead acima do corte. O limite de segurança pegou
+um erro que não era o que ele fora desenhado para pegar — que é justamente para o que servem.
+
+**Dano.** Nenhum lead criado, nenhum estágio movido, nada apagado. Foram `update` em leads que
+já existiam, completando campos que estavam vazios — o backfill previsto, feito sem o OK
+explícito para aquele volume. Na planilha, `id_crm` e `data_envio_crm` foram carimbados nas 20
+linhas.
+
+**A correção.** O `lookupValue` cai em `__SEM_PLACE_ID__` quando não há `place_id`: uma chave
+que não existe na planilha. Sem entrada válida o fluxo **para**, em vez de processar todo mundo.
+
+> **Regra que fica, e vale para qualquer nó de busca deste projeto:**
+> **a falta de critério nunca pode significar "todos".**
+> É a mesma família do filtro `notEmpty` do TMP (§10.1) e do `onError` que escondeu o P6: nó
+> que roda verde fazendo o contrário do que o nome diz.
+
+**E uma regra de método, para mim:** antes de chamar uma execução de "smoke", conferir
+**quantos itens entraram na fila**. Afirmar escopo sem medir é o mesmo erro do plano que não
+verifica a premissa (R6), só que mais rápido.
