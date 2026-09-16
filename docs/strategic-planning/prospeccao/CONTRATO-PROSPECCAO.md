@@ -929,3 +929,87 @@ que não existe na planilha. Sem entrada válida o fluxo **para**, em vez de pro
 **E uma regra de método, para mim:** antes de chamar uma execução de "smoke", conferir
 **quantos itens entraram na fila**. Afirmar escopo sem medir é o mesmo erro do plano que não
 verifica a premissa (R6), só que mais rápido.
+
+---
+
+## 11. As decisões da entrevista de execução (2026-09-16) — as-built
+
+> Origem: `docs/handoff/2026-09-16-entrevista-execucao-prosp05-06-resultado.md`.
+> Cinco decisões do Olavo, construídas no mesmo dia. Aqui fica o **as-built**: o que existe no
+> workflow, não o que foi planejado.
+
+### 11.1 Contato só preenche vazio (D1)
+
+Nos campos **`phone`, `email_from`, `website`, `street`, `zip`, `city`**, o P5 escreve **apenas se
+estiverem vazios no Odoo**. Implementado no `[P5] Payload para atualizar`, que lê o lead na busca e
+remove do payload cada campo de contato já preenchido.
+
+**Por que não bastava a trava de estágio:** ela protege quem já **saiu** de Prospecção. O lead que o
+vendedor corrigiu **dentro** de Prospecção era sobrescrito pela planilha a cada 6h.
+
+**Custo real quase zero:** o P4 não escreve `contato`, `site` nem endereço na planilha. O único
+campo de contato que o enriquecimento melhora é o `e-mail`, que nasce vazio.
+
+**Os campos GBP não entram nessa regra.** Score, dimensões, eixos, oferta e flags são **cálculo**,
+refeitos pelo P3 a cada rodada — sobrescrever é o correto neles.
+
+### 11.2 Lead arquivado é pulado (D2)
+
+Marcar um lead como perdido no Odoo **arquiva** o registro (`active = False`), e a busca padrão não
+o devolve. Sem tratamento, o P5 concluiria "não existe", tentaria criar, e bateria na
+`UNIQUE(gbp_place_id)` — **erro em toda rodada, para sempre, em todo lead perdido**.
+
+Novo ramo: `[P5] Buscar entre arquivados` → `[P5] Esta arquivado?`. Achou: **nada é escrito**,
+carimba a planilha e segue. Perdido é desfecho humano.
+
+⚠️ **Premissa a verificar (CA7):** o filtro cita `active` de propósito — quando o domínio menciona
+esse campo, o ORM do Odoo desliga o `active_test`. É o comportamento documentado, **não medido
+nesta instância**.
+
+### 11.3 Falha parcial não trava a fila (D3)
+
+As duas escritas no Odoo passaram a ter **saída de erro**. O lead que falha recebe data e motivo em
+**`erro_envio_crm`** (coluna nova, dono P5), o aviso vai ao Telegram, e a fila continua. Sem
+`data_envio_crm`, a rodada seguinte tenta de novo. **O sucesso limpa a coluna.**
+
+**Os dois canais, e não um:** o Telegram avisa **na hora**, a coluna guarda **depois**. Só Telegram
+some quando ninguém lê a mensagem — foi assim que a quebra do `id_hubspot` passou semanas invisível.
+
+O motivo vem de `error.description`: o `error.message` do Odoo é sempre o genérico *"The service was
+not able to process your request"*, que não diz nada.
+
+### 11.4 Modo explícito (D4)
+
+`modo` (`backfill` / `continuo`) no `[P5] Config`, junto do corte e da vazão. No `backfill`,
+`lote_max` é **obrigatório** — sem ele o filtro não deixa passar nada.
+
+**Por quê:** em 15/09 o modo era decidido por **qual trigger entrava**, o trigger errado entrou
+calado, e um teste de 1 lead virou 20 escritas (§10.7). Nada no dado dizia em que modo a execução
+rodou.
+
+### 11.5 O telefone do Apify entra na planilha (D5)
+
+O `[P4] Sinais do Apify` captura um telefone que **nunca entrava na planilha** — ia direto ao P5 por
+parâmetro. Como o P5O lê **só da planilha**, ele se perdia, e o campo ficava preenchido com o dado
+pior (o da Places).
+
+Agora o P4 grava **`contato`**, com a regra de D1 embutida: só quando o Apify achar **e** a coluna
+estiver vazia. O valor já gravado nunca é desfeito.
+
+### 11.6 O P4 aponta para o Odoo (M6)
+
+O nó `[P5] CRM-out` dentro do P4 apontava para `94lSWJfxfu653KdN` — o P5 do **HubSpot**. Cada
+enriquecimento alimentava o CRM antigo.
+
+**Repontado em 16/09** para `0H1mdPuICHsyWGxt` (PROSP-05O). Decisão do Olavo, contra a
+recomendação de esperar o cutover (ADR-36 C3).
+
+> O `PROSP-05 CRM-out (deal + id)` do HubSpot **continua existindo e ativo**. Aposentadoria pelos 5
+> passos da R5 quando o Olavo decidir. **Não apagar antes.**
+
+### 11.7 ⚠️ Duas pendências que bloqueiam a primeira rodada
+
+1. **A coluna `erro_envio_crm` não existe na planilha.** O nó que a escreve vai falhar até ela ser
+   criada na aba `leads`.
+2. **O nó do Telegram está desabilitado**, à espera do `chatId`. A credencial escolhida foi
+   `Telegram phi_prospeccao`.
