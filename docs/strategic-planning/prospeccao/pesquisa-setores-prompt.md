@@ -55,6 +55,42 @@ encontrei" — nunca estime sem dizer que está estimando.**
 
 ---
 
+## PARTE A2 — O portfólio inteiro (informa, mas NÃO decide)
+
+> ⚠️ **Leia a diferença, ela é o ponto:** a **Parte A decide** (o setor entra no ciclo?). A **Parte A2
+> informa** (o que mais esse setor compraria depois?). **A2 nunca muda o veredito de A** — porque o
+> primeiro ciclo vende **GBP**, e escolher um setor por um serviço que ainda não vendemos na entrada
+> daria uma lista de leads que não sabemos converter.
+
+**O portfólio completo:**
+
+| Código | Serviço | O problema que resolve |
+|---|---|---|
+| `SVC-GBP` | **Gestão do Google Business Profile** | não aparece / perfil abandonado · **é a oferta de entrada** |
+| `SVC-SITE` | **Criação de site e landing pages** | não tem site, ou tem um que não converte |
+| `SVC-ADS` | **Gestão de tráfego pago** (Google e Meta) | precisa de demanda além da orgânica |
+| `SVC-IA` | **Agentes de IA e automação** | perde lead por demora, atende no improviso, processo manual · ticket mais alto |
+
+**Para cada setor, responda:**
+
+1. **Qual serviço esse setor mais precisa — e qual ele mais PERCEBE que precisa?**
+   As duas respostas costumam ser diferentes, e a diferença é a dificuldade da venda.
+2. **Em que ordem ele compraria?** Monte a escada provável do setor, começando pelo GBP.
+3. **Há algum serviço do portfólio que esse setor NÃO compraria nunca?** Por quê.
+4. **Existe uma dor recorrente do setor que o portfólio atual NÃO resolve?**
+   Isso vale mais que um "sim" — aponta um serviço que talvez falte.
+
+⚠️ **Sobre preço:** hoje **só o `SVC-GBP` tem preço definido** (R$ 500/mês). **Não estime o que
+cobraríamos** pelos outros. Responda por **necessidade e urgência**, não por capacidade de pagar um
+valor que ainda não existe. Se a resposta depender do preço, **diga isso.**
+
+> **Por que A2 existe:** a pesquisa custa o mesmo analisando um serviço ou quatro. E o que queremos
+> descobrir de verdade é **o ICP da agência** — quais negócios são bons clientes — não apenas quais
+> são bons clientes de GBP. A2 também alimenta a **escada de upsell** e o **mini-diagnóstico**: saber
+> que falha típica o setor tem ajuda a mostrar o problema certo no primeiro contato.
+
+---
+
 ## PARTE B — Contexto de mercado (só o que sustenta a decisão)
 
 Não escreva panorama genérico. **Cada item abaixo só entra se mudar a decisão da Parte A.**
@@ -90,6 +126,9 @@ Não escreva panorama genérico. **Cada item abaixo só entra se mudar a decisã
 
 Termine com **uma tabela comparando os dois setores** nas 5 perguntas, e uma recomendação de **qual
 começar primeiro**, com o motivo.
+
+Inclua também **uma linha por serviço do portfólio** mostrando qual setor tem mais aderência a cada
+um — é o mapa de upsell dos dois setores lado a lado.
 
 Responda também: **os dois setores são parecidos ou contrastantes?**
 - **Parecidos** → comparam melhor **a mensagem** (a diferença de resposta é da abordagem).
