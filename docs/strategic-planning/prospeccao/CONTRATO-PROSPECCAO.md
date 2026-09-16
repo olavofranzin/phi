@@ -980,8 +980,15 @@ not able to process your request"*, que não diz nada.
 
 ### 11.4 Modo explícito (D4)
 
-`modo` (`backfill` / `continuo`) no `[P5] Config`, junto do corte e da vazão. No `backfill`,
-`lote_max` é **obrigatório** — sem ele o filtro não deixa passar nada.
+`modo` (`backfill` / `continuo`), junto do corte e da vazão. No `backfill`, `lote_max` é
+**obrigatório** — sem ele o filtro não deixa passar nada.
+
+> ⚠️ **Corrigido em 16/09 — ver §11.9.** O `modo` morava no `[P5] Config`, que é **único e serve aos
+> dois caminhos**. Resultado: a guarda aceitava `continuo` como valor válido e não discriminava nada,
+> e o backfill da execução `39647` rodou inteiro carimbado como `continuo`. Hoje o `Config` guarda só
+> os números, e **cada ramo carimba o próprio modo** antes dele (`[P5] Modo: continuo` /
+> `[P5] Modo: backfill`). Caminho novo que esquecer de carimbar deixa `modo` indefinido e a guarda
+> barra tudo — falta de critério **para** o fluxo, não libera (R11, regra 1).
 
 **Por quê:** em 15/09 o modo era decidido por **qual trigger entrava**, o trigger errado entrou
 calado, e um teste de 1 lead virou 20 escritas (§10.7). Nada no dado dizia em que modo a execução
@@ -1051,3 +1058,54 @@ específico ao menos, e joga o erro cru inteiro no log da execução.
 
 **Ainda não provados:** CA5 (desfecho pelo P6 — o P6 Odoo não existe), CA6, CA7 (lead arquivado),
 CA8 (guarda do modo), CA9, CA10.
+
+### 11.9 A primeira rodada de backfill (16/09) — 20 leads, e um carimbo que mentia
+
+A carga de lote rodou pela primeira vez ponta a ponta. **Execução `39647`**, 50 s, entrada pelo
+`[P5] Reconciliacao 6h` com a planilha inteira:
+
+| Desfecho | Quantos | Quais |
+|---|---|---|
+| Atualizados (já existiam no Odoo) | **18** | `id_crm` 35 a 52 |
+| Criados | **2** | `id_crm` 97 e 98 |
+| Erros | 0 | — |
+| Arquivados / lead do vendedor | 0 | — |
+
+**CA11 provado no cenário real.** A fila parou em exatamente 20 (`maxRunIndex: 20`) com a planilha
+inteira na entrada. É o contrário exato do incidente de 15/09 (§10.7): lá a falta de critério virou
+"todos"; aqui a vazão segurou sozinha.
+
+**CA1 provado com 20 leads, não com 1.** 18 dos 20 já existiam, foram achados pelo `gbp_place_id` e
+atualizados. Nenhuma duplicata.
+
+**Confirmado:** os leads que o `TMP Inserção odoo crm` inseriu estão **sem `data_envio_crm`** e por
+isso voltam à fila do backfill. Não é desperdício — cada um desses updates grava o
+`gbp_potencial_comercial` que o TMP nunca mapeou (§10.2). Mas a fila consome lead velho antes de
+chegar ao lead novo, e isso muda o número de rodadas do piloto.
+
+**O defeito: a rodada mentiu sobre si mesma.** A execução entrou pelo gatilho de horário, mas o
+`[P5] Config` estava em `modo: continuo`. A guarda D4 deixou passar porque `continuo` é um valor
+válido. Não houve dano — o comportamento é idêntico —, mas **o campo que existe para dizer que tipo
+de rodada foi aquela registrou o oposto**. É a R11 na sua forma mais pura: verde, correto no
+resultado, mentindo no carimbo.
+
+**Conserto (16/09):** o `modo` saiu do `Config`. Cada caminho carimba o seu — `[P5] Modo: continuo`
+(entre `Ler a linha do lead` e o `Config`) e `[P5] Modo: backfill` (entre `Ainda nao enviado?` e o
+`Config`). O `Config` ficou só com `corte_potencial` e `lote_max`. **Execução `39649`** provou o ramo
+contínuo depois do conserto: `modo: "continuo"` carimbado pelo nó novo, 1 lead, `id_crm` 11, zero
+erro. **CA8 passa a ser verificável** — antes não era.
+
+> **A lição, que generaliza:** configuração global que serve a dois caminhos **não é carimbo, é
+> chute**. Quem sabe em que modo a rodada está é o caminho por onde ela entrou — então é ele que
+> assina. Config que alguém precisa lembrar de trocar antes de rodar é processo que já falhou.
+
+**Limitação registrada:** o backfill **só pode ser disparado por quem tem o editor aberto**. Ele
+pendura no gatilho de horário, e gatilho de horário só dispara com o workflow **ativo** — o que
+significaria rodar sozinho a cada 6 h, sem OK de budget. A execução por MCP entra sempre pelo
+`[SMOKE] Trigger manual`. Foi o que aconteceu na `39639`: pedi backfill, saiu smoke.
+
+**Ainda não sei:** quantas rodadas faltam (os nós de filtro carregam a planilha inteira e não há como
+contá-los sem puxar tudo), nem por que a fila começou no `id_crm` 35 e não nos primeiros.
+
+**Critérios de aceite — placar em 16/09:** provados **CA1, CA2, CA3, CA4, CA8, CA11**. Faltam CA5
+(depende do P6 Odoo, que não existe), CA6, CA7, CA9, CA10.
