@@ -317,7 +317,7 @@ usa **modelo forte**. Escolher o modelo é decisão de arquitetura, não detalhe
 > **Entrevista atrasada não é entrevista — é autópsia.**
 
 ### R11 — Sucesso silencioso é o modo de falha desta casa
-**Nó que roda verde fazendo o contrário do que o nome diz** já nos custou caro **quatro vezes**:
+**Nó que roda verde fazendo o contrário do que o nome diz** já nos custou caro **cinco vezes**:
 
 | Caso | O que parecia | O que era |
 |---|---|---|
@@ -325,14 +325,18 @@ usa **modelo forte**. Escolher o modelo é decisão de arquitetura, não detalhe
 | `Filter` do TMP com operador `notEmpty` e o `60` ao lado | "corta em 60" | **não cortava nada** — entraram leads abaixo do corte |
 | `lookupValue` vazio no Google Sheets | "busca 1 lead" | **devolveu a planilha inteira** → smoke de 1 virou escrita em 20 |
 | `INNER JOIN` com `client_config` no score | score rodando | **descartava 100%** das linhas de um writer |
+| `Loop Over Items` posto para conter a cota no P6 | "agora vai de pouco em pouco" | **o que custava ficou dentro do loop** — mesmas ~100 leituras, agora com espera no meio |
 
-**As três regras que saem daí:**
+**As quatro regras que saem daí:**
 1. 🔴 **A falta de critério nunca pode significar "todos".** Filtro sem valor, busca sem chave, lote
    sem limite → o fluxo **para**, não processa tudo. Use uma chave impossível (`__SEM_VALOR__`) em vez
    de deixar vazio.
 2. **`onError: continueRegularOutput` só com destino visível para o erro** — coluna, alerta, tabela.
    Erro que só existe no log de execução **não existe**.
-3. **Antes de chamar algo de "smoke", conte quantos itens entraram na fila.** Afirmar escopo sem medir
+3. **Nó do n8n roda uma vez por item de entrada.** Chamada cara com muitos itens na entrada é
+   **multiplicação**, não leitura. E **loop não conserta cota se o que custa ficou dentro dele** —
+   antes de bater lote, pergunte o que está sendo repetido.
+4. **Antes de chamar algo de "smoke", conte quantos itens entraram na fila.** Afirmar escopo sem medir
    é a **R6** quebrada, só que mais rápido.
 
 > **Teste prático:** *"se este nó fizesse silenciosamente o oposto do que eu espero, eu perceberia?"*
