@@ -244,3 +244,100 @@ Responda por escrito, no seu primeiro relato:
 3. O que você mudou e **por quê**, nó a nó.
 4. **O que você não sabe.** Com grau de confiança, como a análise anterior fez. Foi a melhor parte
    dela.
+
+---
+
+## 10. Decisões do chat-mãe sobre o relatório de alinhamento (16/09)
+
+O executor respondeu as 6 perguntas da §5 **antes** de alterar qualquer nó, e o sub-chat da primeira
+análise revisou as respostas. Esta seção fecha o que ficou em aberto. **É a última análise; o que
+está aqui vale mais que o que está acima.**
+
+### 10.1 Não juntar conserto com melhoria
+
+Os passos 2 e 3 (tirar o loop, pôr o `executeOnce`) são **conserto**: devolvem o workflow ao desenho
+que já estava aprovado. As duas propostas da §10.2 e §10.3 são **melhoria**.
+
+**Vão em rodadas separadas.** Conserto primeiro, rodada limpa em `maxItems: 3`, e só depois a
+melhoria. Se as duas coisas entrarem juntas e algo quebrar, ninguém sabe qual delas quebrou — e o
+teste da pergunta 5 (o `[P6] Ler a planilha` executou 1 vez?) deixa de provar o que foi desenhado
+para provar.
+
+### 10.2 O cursor passa a ler o que foi escrito — **aprovado, com uma correção no desenho**
+
+A proposta do executor está certa no diagnóstico: hoje o `[P6] Calcular novo cursor` lê a **entrada**
+do nó de escrita (`[P6] Vazao do lote`), então ele calcula o cursor sobre os leads que *deveriam* ter
+sido escritos, não sobre os que *foram*. Só não há perda porque o nó de escrita **não tem `onError`**
+e qualquer falha derruba a execução inteira. A frase dele é exata:
+
+> *"A trava de segurança do P6-4 é hoje a ausência de uma configuração, e ausência não se documenta
+> sozinha."*
+
+⚠️ **Mas a implementação proposta — ler `$('[P6] Gravar na planilha').all()` — provavelmente não
+funciona.** O `_write_ms` é um campo **auxiliar**, não está no mapeamento de colunas do nó do Sheets.
+O que o nó devolve na saída são as colunas mapeadas. Se o `_write_ms` não sobreviver, o
+`maxMs` dá zero, o nó devolve `[]`, **o cursor nunca avança** e o workflow reprocessa a mesma fila
+para sempre.
+
+**O desenho certo, e é quase o mesmo trabalho:** a saída do Sheets diz **quais `id_crm` foram
+escritos**; o `_write_ms` de cada um vem do `[P6] Vazao do lote`, casando pelo `id_crm`. Assim o
+cursor avança sobre o que foi escrito de fato, sem depender de um campo auxiliar atravessar um nó
+que não o conhece.
+
+**Ordem obrigatória:** rodar uma vez, **olhar o que a saída do nó de escrita traz de verdade**, e só
+então escrever o código. **Nunca escrever esse código no escuro** — é a R6, e é o mesmo erro do
+`executeOnce`: a instrução parecia certa e não existia.
+
+**E agora, de graça:** pôr uma **nota no `[P6] Gravar na planilha`** dizendo que o `onError` vazio é
+**proposital** e por quê. Custa zero, vale hoje, e é a R5. Fazer isso no mesmo commit do conserto.
+
+### 10.3 `acerto_previsao` leva a régua dentro do texto — **aprovado (opção b)**
+
+`"acertou (>=60 -> ganhou)"` em vez de `"acertou (alto->ganhou)"`. Cada linha passa a dizer com que
+régua foi julgada, e as linhas velhas se explicam sozinhas quando a régua mudar.
+
+**Uma distinção que ninguém fez, e que muda onde o número mora:** há **dois 60 diferentes** no
+projeto, iguais hoje por coincidência de quem escreveu, não por necessidade.
+
+| | O que decide | De quem é |
+|---|---|---|
+| **Corte de entrada** (`potencial_comercial >= 60` no P5) | quais leads vão para o CRM | é **temporário**, e o Olavo já disse que sobe |
+| **Régua de aprendizado** (`pot >= 60` no `acerto_previsao`) | o que conta como "alto" ao julgar o acerto | é uma pergunta de **análise**, não de operação |
+
+**Um não deve seguir o outro.** Quando o corte de entrada subir para 70, a régua de aprendizado não
+tem obrigação nenhuma de subir junto — são perguntas diferentes.
+
+**Onde o número mora:** **no código do `[P6] So os modificados`, escrito à mão, e carimbado em toda
+linha que ele escreve.** Não vai para nó de config. Config é fácil de trocar em silêncio — foi
+exatamente assim que o carimbo do modo passou a mentir (§11.9 do contrato). Em código, trocar a régua
+exige um commit, que fica na história; e o carimbo garante que nenhuma linha antiga fique órfã de
+régua.
+
+### 10.4 O `[P6] Ler leads ativos` sem filtro — teto conhecido, não se conserta agora
+
+O nó traz **todo lead ativo** do CRM em toda rodada; o corte por `write_date` só acontece depois, no
+código. Não é descuido: **o nó Odoo v2 só filtra por igualdade**, não tem operador `>`. Com ~115
+leads não dói.
+
+**Fica registrado como teto, com um sinal que não precisa de alarme nenhum:** a **duração do próprio
+nó**, visível em toda execução. Quando ela começar a incomodar, a saída é trocar o nó por uma
+chamada com domínio de verdade — e aí sim vira tarefa.
+
+> Vale a parte da crítica que é de escrita: isso **não estava escrito em lugar nenhum**. Decisão
+> consciente que não vira texto é indistinguível de descuido (R5).
+
+### 10.5 O que foi conferido e está encerrado
+
+- **61 vs 62** — **não é erro.** 61 é o total das quatro rodadas de backfill; 62 inclui a atualização
+  da Niti na execução `39649`, o smoke do ramo contínuo, fora das rodadas. `62 + 19 criações = 81`.
+  **Trocar 62 por 61 criaria o erro em vez de corrigi-lo.**
+- **`[P6] Juntar` sem parâmetro** — foi **escolha**, não descuido: criado com `mode: "append"` e
+  `numberInputs: 2` explícitos, e o editor do n8n **limpa valores-padrão ao salvar**. Pode riscar da
+  lista de incertezas. E reforça a armadilha da §6: no n8n, *"o parâmetro não está lá"* pode
+  significar **"foi ignorado"** ou **"é o padrão e foi limpo"** — e **não dá para distinguir olhando
+  o JSON**.
+- **Zerar o cursor** — o executor procurou e tem razão (R7): as ferramentas de Data Table criam
+  tabela, criam coluna, renomeiam e **inserem** linha; **não atualizam nem apagam** linha existente.
+  **É o Olavo que apaga, na mão, no n8n.** E ele fez certo em recusar o atalho de mexer no
+  `[P6] Calcular since` "só para este teste": config mudada para teste é config que alguém tem de
+  lembrar de devolver.
