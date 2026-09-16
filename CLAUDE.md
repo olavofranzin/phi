@@ -308,8 +308,35 @@ usa **modelo forte**. Escolher o modelo é decisão de arquitetura, não detalhe
 4. **Quem revisa não é quem executou**, e o critério de aceite é **escrito antes**. Reprovou, volta com
    relatório do defeito. **Limite de 3 voltas** — na terceira, o problema é o plano, não a execução.
 
-> **O que falta hoje na nossa versão:** temos executor e revisor separados (sub-chat × chat-mãe), mas
-> **sem critério de aceite escrito antes**. É o buraco que a R9 fecha.
+> ✅ **Praticado pela 1ª vez em 2026-09-16** (PROSP-05/06): 11 critérios de aceite escritos antes de
+> construir.
+>
+> ⚠️ **E a lição de quem escreve o brief — minha:** a entrevista de alinhamento **viaja junto com o
+> brief de construção**, nunca depois. Em 16/09 pedi a entrevista a um sub-chat que construía desde
+> 13/09; quando ela chegou, quatro das nove perguntas **já tinham sido respondidas por incidente**.
+> **Entrevista atrasada não é entrevista — é autópsia.**
+
+### R11 — Sucesso silencioso é o modo de falha desta casa
+**Nó que roda verde fazendo o contrário do que o nome diz** já nos custou caro **quatro vezes**:
+
+| Caso | O que parecia | O que era |
+|---|---|---|
+| `onError: continueRegularOutput` no P5/P6 | tudo certo | **duas semanas** escrevendo em coluna inexistente após o `id_hubspot` → `id_crm` |
+| `Filter` do TMP com operador `notEmpty` e o `60` ao lado | "corta em 60" | **não cortava nada** — entraram leads abaixo do corte |
+| `lookupValue` vazio no Google Sheets | "busca 1 lead" | **devolveu a planilha inteira** → smoke de 1 virou escrita em 20 |
+| `INNER JOIN` com `client_config` no score | score rodando | **descartava 100%** das linhas de um writer |
+
+**As três regras que saem daí:**
+1. 🔴 **A falta de critério nunca pode significar "todos".** Filtro sem valor, busca sem chave, lote
+   sem limite → o fluxo **para**, não processa tudo. Use uma chave impossível (`__SEM_VALOR__`) em vez
+   de deixar vazio.
+2. **`onError: continueRegularOutput` só com destino visível para o erro** — coluna, alerta, tabela.
+   Erro que só existe no log de execução **não existe**.
+3. **Antes de chamar algo de "smoke", conte quantos itens entraram na fila.** Afirmar escopo sem medir
+   é a **R6** quebrada, só que mais rápido.
+
+> **Teste prático:** *"se este nó fizesse silenciosamente o oposto do que eu espero, eu perceberia?"*
+> Se a resposta for não, **falta um limite ou um carimbo** — não falta confiança.
 
 ### R4 — Uma pergunta que todo chat responde antes de fechar
 > *"Onde estamos, quanto falta, e o que eu atualizei para provar isso?"*
