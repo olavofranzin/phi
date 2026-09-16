@@ -1109,3 +1109,52 @@ contá-los sem puxar tudo), nem por que a fila começou no `id_crm` 35 e não no
 
 **Critérios de aceite — placar em 16/09:** provados **CA1, CA2, CA3, CA4, CA8, CA11**. Faltam CA5
 (depende do P6 Odoo, que não existe), CA6, CA7, CA9, CA10.
+
+### 11.10 As 4 rodadas de backfill (16/09) — o piloto fechou em 19 leads
+
+| Rodada | Execução | Atualizados | Criados | Erros |
+|---|---|---|---|---|
+| 1 | `39647` | 18 (`id_crm` 35–52) | 2 (97, 98) | 0 |
+| 2 | `39652` | 19 (53–71) | 1 (99) | 0 |
+| 3 | `39653` | 19 (72–90) | 1 (100) | 0 |
+| 4 | `39656` | 5 (91–95) | **15** (101–115) | 0 |
+
+**Total: 81 linhas carimbadas, 62 atualizações, 19 leads novos, zero erro em 81 escritas.** A vazão
+segurou a fila em exatamente 20 nas quatro rodadas.
+
+**A rodada 4 foi o ponto de virada**, e era previsível: o maior `id_crm` do TMP era 95, então ao
+chegar nele o estoque antigo acabou e a fila passou a ser criação pura. A previsão foi escrita antes
+da rodada e bateu — 5 atualizações e 15 criações.
+
+**Decisão do Olavo (16/09): parar aqui.** O brief definia piloto de 10–20 leads; são 19. Continuar
+batendo "próxima rodada" transformaria o piloto em carga total por inércia, e o piloto existe
+justamente para descobrir se a oferta cola **antes** de gastar 100 leads descobrindo.
+
+**O `TMP Inserção odoo crm` (`7COGAPeoofZCh58B`) está obsoleto.** Todos os 95 leads dele passaram
+pelo P5O e foram corrigidos — inclusive o `gbp_potencial_comercial` que ele nunca mapeou (§10.2).
+Pode entrar no procedimento de aposentadoria da R5.
+
+#### O enriquecimento que falta não se resolve com backfill
+
+Muitos dos leads criados estão **sem enriquecimento** no CRM — nasceram crus porque a carga rodou
+antes do PROSP-04. A reação natural (*"rodar amanhã uma rodada só de atualização"*) **não
+funcionaria**: o filtro `[P5] Ainda nao enviado?` corta toda linha com `data_envio_crm`, e as 81
+estão carimbadas. A fila viria vazia, e a conclusão errada seria "não há nada a atualizar".
+
+**Quem resolve é o próprio P4**, e sem rodada extra:
+
+1. A fila dele pula quem já tem `enriquecimento_site` bom — não paga token duas vezes.
+2. Ao terminar cada lead ele chama o `[P5] CRM-out`, que é o P5O em **modo contínuo**.
+3. Esse caminho entra pelo `[P5] Entrada` e **não passa** pelo filtro do `data_envio_crm` — o lead é
+   atualizado no Odoo mesmo já tendo sido enviado.
+
+> **Enriquecer já é sincronizar.** Os dois caminhos do P5O existem para isso: o backfill é
+> *"leve quem nunca foi"*, o contínuo é *"leve este agora, de novo se preciso"*. Quem confunde os
+> dois conclui que o dado sumiu.
+
+**E o contador que faltava está no P4, não no P5.** O `[P4] Fila` emite `_elegiveis`, `_na_fila`,
+`_adiados_pelo_limite` e `_fora_ja_enriquecido` no primeiro item — a próxima execução dele diz de
+graça quantos leads ainda faltam enriquecer, número que não se consegue tirar do P5.
+
+⚠️ **Custo:** o P4 gasta Apify + PageSpeed + Gemini Flash por lead, com `LIMITE_LOTE = 10`
+(~35 min/rodada, escolha do Olavo em 02/09). Cada rodada é gasto real e depende do OK dele.
