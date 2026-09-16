@@ -74,8 +74,11 @@ comportou como se a linha não existisse.
 **Consequência:** o nó roda **uma vez por item**. Com ~100 leads vindos do Odoo, são ~100 leituras da
 planilha inteira em poucos segundos. A cota de "leituras por minuto" estoura na hora, sempre.
 
-O `[P6] Calcular novo cursor` tem o **mesmo problema** — também foi criado com `executeOnce` e
-também deve estar sendo ignorado.
+> **Correção (16/09, depois da conferência do sub-chat).** Eu havia escrito aqui que o
+> `[P6] Calcular novo cursor` tinha **o mesmo problema**. **Estava errado.** Ele é um nó Code
+> `typeVersion 2` sem `mode`, ou seja **Run Once for All Items** por padrão — roda uma vez
+> independentemente do `executeOnce`. O `executeOnce` ali era inócuo, não um defeito. **O único nó a
+> corrigir é o `[P6] Ler a planilha`.**
 
 > **É a R11 de novo, na forma mais traiçoeira: a instrução foi escrita, aceita sem erro, e não
 > existe.** O nó parece configurado. A tela não mente — o schema é que não tinha onde guardar.
@@ -106,9 +109,10 @@ descrito neste documento pode já não corresponder ao que está no n8n.
 
 1. **Ler o workflow como ele está hoje** (`Yc4shCqDzqiYHR3s`) antes de tocar em qualquer nó, e
    comparar com o desenho da §2. Registrar o que mudou e por quê.
-2. **Corrigir o `executeOnce`** do `[P6] Ler a planilha` e do `[P6] Calcular novo cursor` — via
-   **ajuste de nó** (`setNodeSettings`), não como parâmetro de criação. Depois **confirmar lendo o
-   workflow de volta**: nesta sessão o ajuste foi aceito sem erro e não existia.
+2. **Corrigir o `executeOnce` do `[P6] Ler a planilha`** — via **ajuste de nó**
+   (`setNodeSettings`), não como parâmetro de criação. Depois **confirmar lendo o workflow de
+   volta**: nesta sessão o ajuste foi aceito sem erro e não existia. (Só esse nó — ver a correção
+   em §3.1.)
 3. **Recuar o cursor** `odoo_leads_sync` na Data Table `gbp_sync_cursor` (`zPnW2B39G0ovWjpA`). Ele
    está adiantado em relação ao que foi escrito (nada foi). Zerar, ou recuar para antes do lead mais
    antigo que precisa voltar.
@@ -177,6 +181,23 @@ Foram escritos **antes** da construção (R9, item 4). Quem corrigir não os ree
 - **Notion:** "PHI — Registro de Execuções (Sub-chats)", linha de 16/09
 
 ---
+
+## 8.1 Os números 61 e 62 — não há erro a corrigir
+
+A conferência do sub-chat apontou uma divergência entre o §11.10 do contrato ("62 atualizações") e a
+soma da tabela por rodada (18+19+19+5 = **61**). **Os dois números estão certos**, e é importante que
+ninguém "conserte" o que está certo:
+
+- **61** é o total das **quatro rodadas de backfill**.
+- **62** inclui também a **atualização da Niti** (`id_crm` 11) na execução `39649`, que foi o smoke do
+  ramo contínuo, fora das quatro rodadas.
+
+A conta fecha: **62 atualizações + 19 criações = 81 linhas carimbadas**, que é o número repetido em
+toda a documentação. Se alguém trocar 62 por 61, o total passa a ser 80 e aí sim há um erro.
+
+> Vale como lição de escrita: uma tabela por rodada ao lado de um total que inclui algo **fora** das
+> rodadas convida exatamente a essa correção errada. O número não estava errado; a legenda estava
+> incompleta.
 
 ## 9. Grau de confiança desta análise
 
