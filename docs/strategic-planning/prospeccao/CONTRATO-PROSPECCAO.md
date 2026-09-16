@@ -1007,12 +1007,20 @@ recomendação de esperar o cutover (ADR-36 C3).
 > O `PROSP-05 CRM-out (deal + id)` do HubSpot **continua existindo e ativo**. Aposentadoria pelos 5
 > passos da R5 quando o Olavo decidir. **Não apagar antes.**
 
-### 11.7 ⚠️ Duas pendências que bloqueiam a primeira rodada
+### 11.7 As duas pendências — resolvidas em 16/09
 
-1. **A coluna `erro_envio_crm` não existe na planilha.** O nó que a escreve vai falhar até ela ser
-   criada na aba `leads`.
-2. **O nó do Telegram está desabilitado**, à espera do `chatId`. A credencial escolhida foi
-   `Telegram phi_prospeccao`.
+1. ~~A coluna `erro_envio_crm` não existe~~ → **criada pelo Olavo**, e já exercitada: a execução
+   39633 gravou um erro nela e a 39634 o limpou.
+2. ~~O nó do Telegram está desabilitado~~ → **ligado**, com o `chatId` informado pelo Olavo e a
+   credencial `Telegram phi_prospeccao`. *(O número mora no n8n, não no git.)*
+
+⚠️ **O nó do Telegram ainda não foi exercitado.** O ramo de erro foi provado até a planilha
+(execução 39633), mas naquele momento este nó estava desabilitado. O primeiro erro real depois de
+16/09 é que vai provar o último elo.
+
+**Uma exceção consciente à R11 neste nó:** ele tem `onError: continueRegularOutput`. A regra diz que
+isso só vale com destino visível para o erro — e aqui existe: o erro **já foi gravado** na planilha
+antes de chegar ao Telegram. Se o Telegram cair, a fila não pode parar por causa do aviso.
 
 ### 11.8 Smoke de 16/09 — 5 dos 11 critérios de aceite provados
 
