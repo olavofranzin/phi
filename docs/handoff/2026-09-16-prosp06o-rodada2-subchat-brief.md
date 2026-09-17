@@ -354,3 +354,90 @@ passa por ele, ele vira "não modificado" e **some do relatório**.
 **Não é defeito** — o P6 cuida do desfecho, não de órfãos. **Mas muda o teste do P6-1:** quando o
 Olavo criar o lead à mão, **a janela de prova é uma rodada só.** Se passar, o contador zera e o lead
 fica invisível. Escrever isso no contrato.
+
+---
+
+## 12. Fim da rodada 2 (17/09) — o que passou e o que falta
+
+**Doze previsões declaradas antes, doze certas.** Reli o workflow no n8n. O conserto do §11.2 está
+correto: `throw` de verdade, com mensagem que diz **o que fazer** (`aumente o maxItems`) e é honesta
+sobre o estado (*"as linhas deste lote JÁ foram gravadas e o cursor NÃO avançou"*). É o oposto de um
+alarme mudo.
+
+**Placar: P6-2, P6-4 e P6-5 provados.** O P6-4 provado em cadeia — o cursor que sai de A é o `since`
+de B, o de B é o de C, **sem buraco**. E o P6-5 re-provado *acontecendo*, não montado.
+
+### 12.1 O P6 escreve `id_crm` — e não é violação, é estrutura
+
+O mapeamento do `[P6] Gravar na planilha` inclui `id_crm` no payload, e `id_crm` é **coluna do P5**.
+
+**Não é bug, e não dá para remover:** o nó do Sheets em `defineBelow` exige a coluna de casamento
+dentro dos valores — é por ela que ele acha a linha. O valor escrito é **idêntico** ao que ele acabou
+de casar.
+
+🔴 **Mas isso precisa estar escrito no contrato, ao lado do I1.** Senão a próxima auditoria marca
+como violação e alguém "conserta" removendo a chave — quebrando o casamento e transformando `update`
+em nada. **É a R5: benigno por desenho só é benigno se estiver escrito.**
+
+> Redação sugerida para o contrato: *"O P6 escreve `id_crm` porque o nó do Google Sheets exige a
+> coluna de casamento no payload. O valor é sempre o mesmo que ele leu para achar a linha. Não
+> remover — remover quebra o `update`."*
+
+### 12.2 O gatilho — o último risco antes da ativação
+
+Os dois gatilhos são de 6 em 6 horas. O do P6 é `hoursInterval: 6` **sem minuto declarado**, e o
+padrão do n8n é **minuto 0**.
+
+⚠️ **Se o do P5 também estiver no padrão, os dois disparam no mesmo minuto — e colidem na cota do
+Sheets em toda rodada.** É o problema que custou a rodada 1 inteira, voltando por outra porta.
+
+**Antes de propor a ativação:** leia o minuto do gatilho do P5, diga qual é, e **declare um minuto
+diferente para o P6**. Não é para ficar por conta da sorte, e não é para descobrir pelo erro.
+
+### 12.3 Os três critérios que fecham com dois gestos do Olavo — **numa rodada só**
+
+| Gesto do Olavo | Fecha |
+|---|---|
+| **Marcar um lead como ganho ou perdido** no Odoo | **P6-3** e **P6-7 / CA5** |
+| **Criar um lead à mão** no Odoo (sem linha na planilha) | **P6-1** |
+
+**Os dois na mesma sessão, e depois UMA rodada do P6.** O lead marcado entra na fila (tem linha); o
+criado aparece em `_fora_sem_linha_na_planilha` com o id em `_sem_linha_ids`. **Os dois no mesmo
+diagnóstico.**
+
+🔴 **Leia o diagnóstico dessa rodada antes de rodar de novo** — a janela do P6-1 é **uma rodada**
+(§11.5).
+
+### 12.4 O P6-6 / CA6 não exige ativar nada
+
+*"Com P5 e P6 rodando, nenhum campo tem dois donos."* Não precisa dos dois **ativos** — precisa dos
+dois **tendo rodado sobre a mesma linha**.
+
+**O teste:** rode o P6 sobre um lead, anote a linha inteira; rode o P5 sobre o mesmo lead; leia a
+linha de novo. **As colunas do P6 não podem ter mudado, e as do P5 não podem ter sido tocadas pelo
+P6** — com a exceção do `id_crm` da §12.1, que muda para o mesmo valor.
+
+### 12.5 O recuo de 1 s fica rotulado, não forçado
+
+Provado **fora do n8n** contra dados reais da `39936`; `_empate_cortado: false` em todas as rodadas
+reais porque os leads estão a ~2 s um do outro. **Forçar um empate artificial seria fabricar o
+teste.** O rótulo no contrato é exatamente esse: *"provado em teste fora do n8n, não exercitado em
+produção"*. O momento em que ele será exercido de verdade já é conhecido: **a próxima carga em lote no
+Odoo**.
+
+### 12.6 A higiene do workflow descartável
+
+O `uFcx8z2kvadipVrO` foi criado só para rebobinar o cursor (não há ferramenta MCP que escreva linha em
+Data Table) e está **arquivado** — confirmado: o n8n recusa até a leitura dele.
+
+**Está certo assim.** Não cabe o procedimento de aposentadoria da R5: ele não substituiu nada, foi
+ferramenta de uma vez. **O que o torna seguro é estar registrado no contrato** — a R5 é sobre
+intenção, e a intenção está escrita.
+
+### 12.7 A descrição do workflow — a última coisa, e nessa ordem
+
+A descrição ainda termina em **"EM CONSTRUCAO"**, e ele está certo em não mexer antes: **descrição que
+diz "pronto" antes dos critérios fecharem mente**, e é exatamente o que a R5 existe para impedir.
+
+**A ordem é:** os dois gestos do Olavo → uma rodada → P6-1/P6-3/P6-7 → o teste do P6-6 → **então** a
+descrição, e **então** a proposta de ativação com o minuto do gatilho.
