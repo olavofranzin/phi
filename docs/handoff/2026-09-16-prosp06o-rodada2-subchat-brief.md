@@ -679,3 +679,83 @@ então.
 2. **CA6 por leitura** (§15.2) — cinco minutos, zero escrita
 3. **A descrição do P6O** — só depois dos sete critérios
 4. **A proposta de ativação**, com o minuto do gatilho e a resposta sobre o aviso de erro
+
+---
+
+## 16. Os sete fecharam (17/09) — e o que a resposta abriu
+
+**CA6 provado por leitura, interseção vazia.** E a distinção que ele fez é a certa: as duas
+sobreposições são **de chave, não de valor** — o `id_crm` (§12.1) e o `place_id`. A observação sobre o
+`row_number` ser metadado do nó, não coluna de negócio, evita um falso achado numa auditoria futura.
+**Bom reflexo: registrar o que parece problema e não é.**
+
+**A resposta do §15.3 era a terceira hipótese, e é a melhor das três:** o caminho P4 → P5O **nunca foi
+exercitado**. A descrição não mentia sobre a ligação — **errava no tempo verbal**.
+
+### 16.1 🔴 O `onError` do `[P5] CRM-out` — antes da próxima prospecção
+
+```
+onError: "continueRegularOutput"   retryOnFail: true   waitForSubWorkflow: true
+```
+
+Com o `[P5] Entrada` desabilitado, o P4 seguiria **verde**: nenhum lead no CRM, `id_crm` vazio, e
+**nem `erro_envio_crm` gravado** — porque o ramo de erro do P5O nunca chegaria a rodar. *"Estava
+armado, não disparado"*, como ele escreveu. A única razão de não ter custado nada é que ninguém rodou
+o P4 desde 10/09.
+
+**A recomendação, e é mais simples do que parece: tirar o `onError`, não dar destino a ele.**
+
+O raciocínio: o que falha ali é **a chamada do sub-workflow**, não um lead. Falha de lead **já tem
+tratamento dentro do P5O** — é a D3, que grava `erro_envio_crm` e avisa no Telegram, e que provou
+funcionar na execução `39633`. Se a **chamada** falha, não é *"este lead deu problema"*, é **"a perna
+do CRM está fora do ar"** — e isso vai falhar para todos os leads igualmente.
+
+> **Continuar em silêncio quando a perna inteira caiu é o pior comportamento possível.** O
+> `retryOnFail` fica (cobre a falha passageira); sem o `onError`, o que sobrar **para e aparece**.
+
+⚠️ **Por que NÃO dar a ele um ramo que grava `erro_envio_crm`:** essa coluna é do **P5**. O P4
+escrevendo nela criaria **dois donos** — exatamente o que o CA6 acabou de provar que não existe.
+
+**É o P4, outra perna. Vai como proposta ao Olavo, não como conserto do sub-chat.**
+
+### 16.2 Um error workflow para o parque, não um aviso por nó
+
+A pergunta *"se o P6 quebrar, quem avisa?"* e a pergunta *"se o P4 quebrar, quem avisa?"* **têm a
+mesma resposta** — e não devem virar duas construções.
+
+O n8n tem **error workflow por workflow**: um único workflow de erro, apontado por todos, recebe a
+execução que morreu e avisa. **Um artefato, não um nó de Telegram em cada perna.**
+
+> Isso é diferente do Telegram que já existe **dentro** do P5O: aquele é **por lead** (D3, o erro que
+> vai para a coluna). O error workflow é **por execução** — *"isto morreu"*. Os dois convivem e
+> respondem perguntas diferentes.
+
+**Vai junto com a proposta de ativação.**
+
+### 16.3 ⚠️ E o CA9 e o CA10? — não deixar fechar a frente sem resposta
+
+Os critérios de aceite da entrevista de execução iam de **CA1 a CA11**. Estão provados: CA1, CA2,
+CA3, CA4, CA5, CA6, CA7, CA8, CA11.
+
+**O CA9 e o CA10 nunca foram mencionados desde o §11.8** — nem como provados, nem como descartados.
+
+🔴 **Antes de declarar a frente pronta, os dois precisam de um veredito escrito**: provado, reprovado,
+ou **explicitamente retirado com justificativa**. É a pior hora para perder dois critérios — quando
+todo mundo está contando os que passaram.
+
+### 16.4 Resposta: sim, siga com os dois
+
+**A descrição do P6O** — agora é honesto escrevê-la. Ela tem de dizer, em duas frases, **o que ele
+faz, por que existe e o que substituiu** (o `Sync HubSpot -> Planilha`, desativado em 16/09). É a R5,
+e o P6O vai ser o segundo workflow do parque a passar nesse teste.
+
+**A proposta de ativação**, com quatro coisas dentro:
+
+1. o minuto do P6 (**20**, já declarado) e o **minuto a declarar no P5O** quando ele for ativado;
+2. a resposta do §16.2 — o error workflow do parque;
+3. a recomendação do §16.1 sobre o `onError` do P4, como item separado, **para antes da próxima
+   prospecção**;
+4. o veredito do **CA9 e CA10** (§16.3).
+
+**E a precisão dele sobre o `notes` entra nas armadilhas:** não é *"não é gravável"* nem *"é
+gravável"* — é **gravável na criação, não depois**. Nó que já existe só recebe **sticky**.
