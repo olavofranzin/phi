@@ -1665,3 +1665,94 @@ A descrição do P5O diz *"chamado pelo P4 desde 16/09"*. Mas o `[P5] Entrada`, 
 
 **É a perna P5 do pipeline, não é escopo do P6, e não dá para descobrir sem olhar uma execução do P4.**
 Fica registrado como a pergunta mais urgente da frente.
+
+### 11.23 A resposta da §11.22 — nem descrição mentindo, nem quebra: **arma que nunca disparou**
+
+**A última execução do `PROSP-04` é de `2026-09-10T01:18Z` (`37437`, com erro). Não há nenhuma desde
+então** — e a religação para o Odoo é de **16/09**. Como o chat-mãe antecipou: a ausência de execução
+**já é a resposta**.
+
+Então as duas hipóteses da §11.22 estavam as duas erradas, e a verdade é uma terceira:
+
+> **O caminho `P4 → P5O` nunca foi exercitado.** A descrição não mentia sobre a ligação — a fiação
+> foi mesmo feita em 16/09. Ela mentia sobre o **tempo verbal**: *"chamado pelo P4"* descreve algo
+> que **nunca aconteceu nem uma vez**.
+
+#### 11.23.1 🔴 E estava armado para falhar em silêncio
+
+O nó chamador, o **`[P5] CRM-out` dentro do `PROSP-04`**, está assim:
+
+```
+onError: "continueRegularOutput"     retryOnFail: true
+options: { waitForSubWorkflow: true }
+```
+
+Com o `[P5] Entrada` desabilitado, a chamada não teria entrada válida. E com
+`continueRegularOutput`, **o P4 seguiria verde**: nenhum lead chegaria ao CRM, `id_crm` ficaria vazio,
+e **nem `erro_envio_crm` seria gravado** — porque o ramo de erro do P5O nunca chegaria a rodar.
+
+**É o modo de falha da casa, exatamente:** verde por fora, nada por dentro. É o mesmo desenho que
+custou as duas semanas do `id_hubspot`. A única razão de não ter acontecido é que **ninguém rodou o
+P4 desde 10/09**.
+
+⚠️ **Recomendação, fora do escopo do P6 e não executada:** o `onError` do `[P5] CRM-out` precisa de
+**destino visível** (R11, regra 2) — ou vira `continueErrorOutput` com um ramo que grava
+`erro_envio_crm`, ou sai. Erro que só existe no log de execução não existe. **Decisão do dono do P4.**
+
+#### 11.23.2 O que foi feito
+
+| Item | Estado |
+|---|---|
+| `[P5] Entrada` religado | ✅ `disabled: false`, confirmado na releitura |
+| Sticky `[P5] Por que o Entrada fica LIGADO` | ✅ diz por que ele fica ligado, que o chamador tem `onError`, e que **desabilitar exige quem, quando e até quando por escrito** |
+| Descrição do P5O corrigida | ✅ agora diz *"Religado ao P4 em 16/09, mas o P4 não roda desde 10/09: esse caminho nunca foi exercitado"* |
+
+⚠️ **Precisão sobre o `notes` de nó** (refina a §11.18): ele é gravável **só na criação do nó**
+(`addNode` aceita `notes`). Para nó que já existe **não há operação que escreva `notes`** — por isso
+esta nota virou **sticky**. A afirmação original ("não é gravável") estava errada; a correção da
+§11.18 ("é gravável") estava incompleta. **O certo é: gravável na criação, não depois.**
+
+### 11.24 P6-6 / CA6 provado por leitura, sem executar nada
+
+O critério é *"com P5 e P6 rodando, nenhum campo tem dois donos"*. **Prova por leitura**: listar o que
+cada um escreve e mostrar que não se cruzam. Não precisa de execução — e executar o P5O por MCP
+**criaria leads novos no CRM** (§11.21).
+
+**Todos os nós do Google Sheets no `PROSP-05O`** — quatro, e só dois escrevem:
+
+| Nó | Operação | Casa por | Colunas escritas |
+|---|---|---|---|
+| `[P5] Ler a linha do lead` | leitura | — | — |
+| `[P5] Ler a planilha inteira` | leitura | — | — |
+| `[P5] Gravar id_crm e data_envio_crm` | `update` | **`id`** (place_id) | `id_crm`, `data_envio_crm`, `erro_envio_crm` |
+| `[P5] Gravar o erro na planilha` | `update` | **`id`** (place_id) | `erro_envio_crm` |
+
+**O único nó de escrita do `PROSP-06O`:**
+
+| Nó | Operação | Casa por | Colunas escritas |
+|---|---|---|---|
+| `[P6] Gravar na planilha` | `update` | **`id_crm`** | `status_crm`, `motivo_perda`, `valor`, `probabilidade`, `via_aquisicao`, `data_criacao_deal`, `data_fechamento`, `dias_no_funil`, `nba_recomendada`, `nba_aceite`, `acerto_previsao`, `data_sync_crm`, `sync_por` |
+
+**O cruzamento:**
+
+```
+P5O (valor proprio): data_envio_crm, erro_envio_crm, id_crm
+P6  (valor proprio): acerto_previsao, data_criacao_deal, data_fechamento, data_sync_crm,
+                     dias_no_funil, motivo_perda, nba_aceite, nba_recomendada,
+                     probabilidade, status_crm, sync_por, valor, via_aquisicao
+
+INTERSECAO = VAZIA
+```
+
+🟢 **CA6 / P6-6 PASSA.** Nenhuma coluna tem dois donos. As duas sobreposições que existem são de
+**chave**, não de valor:
+
+- **`id_crm`** — dono é o **P5O**, que o cria. O P6 o reescreve **com o mesmo valor que leu**, por
+  exigência do nó do Sheets (*Exceção documentada ao I1*, §4). **Provado campo a campo** na §11.19.5:
+  a coluna não mudou nas duas linhas.
+- **`id`** (place_id) — chave do P5O. O **P6 não escreve essa coluna**, e a §11.19.5 confirma que ela
+  ficou intacta.
+
+**Uma observação menor, não é violação:** o `[P5] Gravar id_crm e data_envio_crm` inclui `row_number`
+no mapeamento — metadado do próprio nó do Sheets, não coluna de negócio, e não é coluna do P6. Fica
+anotado para não virar falso achado numa auditoria.
