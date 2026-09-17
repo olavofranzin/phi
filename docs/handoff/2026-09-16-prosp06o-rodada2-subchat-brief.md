@@ -263,3 +263,94 @@ cuidado redobrado e **releia o código antes de salvar**.
 3. O placar dos sete critérios: provado, reprovado ou não testado.
 4. O que mudou, **nó a nó, e por quê**.
 5. **O que você não sabe**, com grau de confiança. Foi a melhor parte dos seus dois relatórios.
+
+---
+
+## 11. Rodada 2 — a análise do chat-mãe (17/09)
+
+Li o `Yc4shCqDzqiYHR3s` no n8n antes de endossar qualquer coisa. Os quatro consertos estão lá:
+`executeOnce` presente, `[P6] Tem lead?` testando `id_crm` (não `_modificados`), vazão em 20, sticky
+do `onError` no lugar, `REGUA_ACERTO` usada na comparação **e** no texto.
+
+### 11.1 A §2.3 do brief estava errada — ele viu e eu não
+
+Eu mandei escolher entre **`maxMs - 1000` sempre** ou **`w < since` sempre**. **As duas estão
+erradas, e pelo mesmo motivo que ele descreveu:**
+
+| Variante | O que acontece na rodada seguinte |
+|---|---|
+| cursor `= maxMs`, filtro `w < since` | o lead da fronteira tem `w == since` → **passa**. Volta para sempre |
+| cursor `= maxMs - 1000`, filtro `w <= since` | o lead da fronteira tem `w > since` → **passa**. Volta para sempre |
+
+**Consequência:** a fila **nunca ficaria vazia**. O lead da fronteira (hoje o `id_crm` 115) seria
+reescrito 4× por dia, indefinidamente — e o caminho de fila vazia, que é o P6-5 que acabamos de
+provar, **nunca aconteceria em produção**. Eu teria mandado consertar um invariante quebrando outro.
+
+**O desenho dele é o certo: recuar 1 s só quando um empate foi mesmo cortado.** Mesmo invariante, sem
+o custo. Está implementado comparando a fila ordenada com o conjunto gravado — fonte certa, chave
+certa.
+
+> **Registro da hipótese desmentida (R6):** a versão de uma linha que eu pedi fica **descartada**, com
+> o motivo escrito. Se não ficar registrado, a próxima sessão propõe de novo.
+
+### 11.2 A trava contra parada eterna esconde uma perda — fechar **antes da ativação**
+
+O nó tem uma guarda correta: se recuar 1 s levasse o cursor a não passar do `since` da rodada, ele
+**avança assim mesmo** e registra `_empate_maior_que_o_lote: true`.
+
+**A decisão de não travar está certa. O destino do aviso, não.** Nesse ramo um lead **é perdido de
+verdade**, e o único sinal é uma linha no log da execução — que é literalmente a R11, regra 2: *erro
+que só existe no log de execução não existe*.
+
+**Quando acontece:** quando **um único segundo tem mais leads do que a vazão inteira**. Não é
+fantasia — é o que uma carga em lote ou uma edição em massa no Odoo produz.
+
+**O invariante que sai daí, e que vale escrever no contrato:**
+
+> **A vazão precisa ser maior que o maior grupo de leads que compartilham o mesmo segundo.** O cursor
+> tem resolução de 1 segundo; o lote não pode ser mais fino que ela.
+
+**A correção:** nesse ramo, **a execução para com erro** em vez de avançar. Parar é recuperável —
+sobe-se a vazão e roda de novo. Avançar perde o lead **para sempre**. É o mesmo raciocínio do
+`onError` ausente, aplicado um nível acima: **parar é melhor que perder.**
+
+🔴 **Prazo: antes da ativação.** Depois que o gatilho de 6 h estiver ligado, ninguém está olhando.
+
+### 11.3 O recuo de 1 s fica provado **fora** do n8n — e está certo assim
+
+Ele verificou cinco casos contra os dados reais da `39936`, fora do n8n, e não conseguiu exercitar o
+ramo em produção porque os leads estão a ~2 s um do outro.
+
+**Aceito, e o rótulo vai para o contrato exatamente assim:** *"provado em teste fora do n8n, não
+exercitado em produção"*. Forçar um empate artificial seria fabricar o teste. **O momento em que ele
+vai ser exercido de verdade já é conhecido:** a próxima carga em lote no Odoo.
+
+### 11.4 O teste dos 37 leads — **recomendado**
+
+Voltar o cursor para `2026-09-16T02:00:16Z` recoloca 37 leads na fila.
+
+**Custo real:** 37 `update` em linhas que já existem, com os mesmos valores. Só o `data_sync_crm`
+muda — e mudar é honesto, o P6 realmente tocou naquelas linhas. **Nunca cria linha.**
+
+**O que só esse teste prova:**
+
+1. o `[P6] Ler a planilha` executa **1 vez** com fila cheia;
+2. **o lote de 20 é escrito inteiro** — é aqui que uma condição errada no IF apareceria como **1 linha
+   em vez de 20**. É a regressão da §2.1, e não tem outro jeito de pegá-la;
+3. o cursor avança sobre o **escrito**, em duas rodadas seguidas.
+
+⚠️ **Não é alternativa ao gesto do Olavo, é complemento.** Marcar um lead põe **1** lead na fila —
+prova o desfecho (P6-3, P6-7), **não** prova o lote. São testes diferentes.
+
+**Ao fim:** confirmar que o cursor parou onde se espera e que a fila **voltou a ficar vazia** —
+fechando o ciclo e re-provando o P6-5 em sequência, que é mais forte que prová-lo isolado.
+
+### 11.5 Um efeito colateral do cursor que ninguém tinha notado
+
+Lead que existe no CRM **e não tem linha na planilha** é contado em
+`_fora_sem_linha_na_planilha` — **mas só na rodada seguinte à sua modificação.** Depois que o cursor
+passa por ele, ele vira "não modificado" e **some do relatório**.
+
+**Não é defeito** — o P6 cuida do desfecho, não de órfãos. **Mas muda o teste do P6-1:** quando o
+Olavo criar o lead à mão, **a janela de prova é uma rodada só.** Se passar, o contador zera e o lead
+fica invisível. Escrever isso no contrato.
