@@ -1274,3 +1274,73 @@ quisermos o funil de verdade — mas isso é mudança de desenho, não conserto.
 **Pergunta aberta, fora do caminho crítico:** o que o nó do Google Sheets faz com uma chave que não
 casa em `update`? Não sabemos, e depois da decisão de pôr um IF antes da ordenação **não precisamos
 saber para seguir**. Fica registrado para não voltar como dúvida.
+
+### 11.14 PROSP-06O rodada 2 (17/09) — os quatro consertos, e o P6-5 provado
+
+Quatro mudanças no `Yc4shCqDzqiYHR3s`, nó a nó.
+
+**1. `[P6] Tem lead?` (novo, IF, antes da ordenação) — fecha o P6-5.**
+Condição: `id_crm` **diferente de** `__SEM_LEAD__`. Saída verdadeira segue para o
+`[P6] Ordenar pelo mais antigo`; **a falsa não vai a lugar nenhum** — o fluxo para de propósito, e o
+diagnóstico continua visível na saída do `[P6] So os modificados`.
+
+🔴 **Por que não é `_modificados > 0`:** o diagnóstico só é colado no **item 0**. O IF avalia item a
+item, então numa rodada de 20 leads o item 0 passaria e os **19 outros cairiam** com `undefined > 0`
+— 1 linha escrita em vez de 20, sem erro nenhum. **Filtro item a item só pode testar campo que
+existe em todo item.** Campo que só o primeiro item carrega é diagnóstico, não critério.
+
+**2. `[P6] Calcular novo cursor` — o cursor passa a avançar sobre o que foi escrito.**
+Antes lia a **entrada** da escrita. Agora lê a **saída** do `[P6] Gravar na planilha` e busca o tempo
+de cada lead no `[P6] Vazao do lote`, **casando por `id_crm`**.
+
+O desvio existe porque o `_write_ms` é campo auxiliar e **não está no mapeamento de colunas**: a
+saída do nó de escrita traz as 14 colunas mapeadas e mais nada. **Conferido na execução `39936`
+antes de escrever o código** — ler o que a saída traz de verdade, em vez de supor, é a R6.
+
+Se nenhum gravado casar com um tempo conhecido, o nó devolve `[]` e **o cursor não se mexe**.
+
+**3. O empate de segundo — corte com sobreposição condicional.**
+Se um lead que ficou **de fora** do lote tem exatamente o mesmo `_write_ms` do último gravado, o
+cursor **recua 1 segundo** para que ele volte na rodada seguinte. Sem isso ele voltaria com
+`w <= since` e seria **descartado para sempre**.
+
+⚠️ **Não é nenhuma das duas formas de uma linha que o brief ofereceu** (`maxMs - 1000` sempre, ou
+`w < since` sempre), e o motivo é que as duas têm a **mesma consequência não prevista**: elas
+re-incluem o segundo do cursor **em toda rodada**, inclusive quando nada mudou. O lead da fronteira
+seria reescrito 4× por dia para sempre, e **a fila nunca ficaria vazia** — o que contradiz a premissa
+da §2.1 (*"rodada vazia passa a ser o estado normal do P6"*) e o próprio P6-5 (*"a execução diz 0
+leads modificados"*).
+
+Recuar **só quando um empate foi mesmo cortado** dá o mesmo invariante sem o custo: nenhuma repetição
+em regime, e nenhuma perda na fronteira. **Trava contra parada eterna:** se recuar 1 s não fizesse o
+cursor passar do `since` da rodada (só acontece se um único segundo tiver mais leads que a vazão
+inteira), o nó **avança e carimba `_empate_maior_que_o_lote: true`** no log — progresso visível é
+melhor que travar em silêncio.
+
+**4. `acerto_previsao` leva a régua dentro do texto.**
+`"acertou (>=60 -> ganhou)"` no lugar de `"acertou (alto->ganhou)"`. O número está **escrito à mão**
+no código do `[P6] So os modificados`, numa constante usada **tanto na comparação quanto no texto** —
+assim o carimbo não pode discordar da régua que o produziu. **Não foi para nó de config:** config se
+troca em silêncio, e foi assim que o carimbo do modo passou a mentir (§11.9).
+
+⚠️ **Os dois `60` do projeto não são a mesma coisa.** O **corte de entrada** do P5
+(`potencial_comercial >= 60`) decide quais leads vão ao CRM e é **temporário** — o Olavo já disse que
+sobe. A **régua de aprendizado** decide o que conta como "alto" ao julgar o acerto, e é pergunta de
+**análise**. Quando o corte subir para 70, a régua **não tem obrigação de subir junto**. Está escrito
+no comentário do nó.
+
+**O que ficou provado (execução `40249`, 17/09):**
+
+| Cenário da §3 | Resultado |
+|---|---|
+| **Fila vazia** | ✅ **provado**. Execução **verde**. `_lidos_no_odoo: 100`, `_modificados: 0`, `_regua_acerto: 60`. O `[P6] Tem lead?` mandou o sentinela para a saída falsa, **`lastNodeExecuted` parou nele**: zero linha escrita e **o cursor não se mexeu** (segue em `2026-09-16T02:02:27Z`) |
+| **Fila com leads** | ⏸️ **não testado — sem fila para testar.** Os 100 leads estão todos abaixo do cursor e ninguém tocou no Odoo. É justamente o cenário que reprovaria a condição errada do IF |
+
+**O código do cursor foi verificado fora do n8n**, contra os dados reais da `39936`, em cinco casos:
+caminho normal, empate cortado (recua 1 s), nada gravado (devolve `[]`), empate maior que o lote
+(avança e avisa) e gravado sem tempo casado (ignora sem derrubar). Os cinco deram o esperado. **Não
+há skill instalada de JavaScript de nó Code** — registrado para a próxima sessão não procurar de novo.
+
+**Achado de §0 que corrige o brief:** `notes` de nó **é gravável** pelas ferramentas disponíveis — o
+`[P6] Tem lead?` foi criado com `notes` e o campo está lá na releitura. A afirmação de que não era
+(§11.6 da rodada 1) está errada. **Sticky continua legítimo**, mas não por falta de alternativa.
