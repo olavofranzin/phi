@@ -1423,6 +1423,11 @@ gesto precisa ser repetido. Quem for provar o P6-1: rode **uma** vez e leia
 
 ### 11.16 O gatilho do P6 — e o achado de que não há gatilho do P5
 
+> 🔴 **CORRIGIDO EM 17/09 — a conclusão desta seção está ERRADA. Ver §11.20.**
+> O `PROSP-05O` **tem** um gatilho agendado (`[P5] Reconciliacao 6h`), e ele cai no **minuto 0**.
+> A colisão que a §12.2 temia é **real**. O resto da seção (o P6 ser o único agendado *hoje*, por o
+> P5O estar inativo, e a decisão do minuto 20) continua de pé.
+
 O brief (§12.2) pedia: leia o minuto do gatilho do P5, e declare um diferente para o P6. **Li o
 parque inteiro, e a premissa não se sustenta.**
 
@@ -1580,3 +1585,83 @@ então ele **continua na contagem** até que algum lead mais recente seja gravad
 
 A `40264` também re-provou o P6-5 pela terceira vez: `_modificados: 0`, verde, **zero escrita**,
 cursor parado.
+
+### 11.20 Correção da §11.16 — o P5O TEM gatilho agendado, e ele cai no minuto 0
+
+**Eu errei na §11.16.** Escrevi que nenhum workflow da cadeia P1→P5O tem gatilho agendado. O
+`PROSP-05O CRM-out Odoo` (`0H1mdPuICHsyWGxt`) tem:
+
+```
+[P5] Reconciliacao 6h   scheduleTrigger   { field: "hours", hoursInterval: 6 }
+                                          SEM triggerAtMinute  ->  padrao = minuto 0
+```
+
+E ele **não está desabilitado** — ao contrário dos outros dois gatilhos do mesmo workflow
+(`[P5] Entrada` e `[SMOKE] Trigger manual`, os dois `disabled`).
+
+**Como eu errei:** confiei no `triggerCount: 0` que a listagem de workflows devolve. **`triggerCount`
+conta gatilhos ATIVOS, não gatilhos declarados** — o P5O está inativo, então reporta `0` mesmo tendo
+um `scheduleTrigger` dentro. Para o P1 e o P4 eu li os nós um a um; para o P5O aceitei o número da
+listagem e a descrição (*"chamado pelo P4"*). **É a R11 aplicada ao próprio método de auditoria: um
+campo que roda verde dizendo o contrário do que o nome sugere.**
+
+> **A regra que sai daí:** *para saber se um workflow tem gatilho, leia os NÓS. `triggerCount` só
+> responde se ele está disparando agora.*
+
+**O que isso muda — e o que não muda:**
+
+| | |
+|---|---|
+| **A §12.2 estava certa** | os dois gatilhos são de 6 em 6 horas, e o do P5O está no **minuto 0** por omissão. No dia em que o P5O for ativado, com o P6 no padrão, **os dois disparariam no mesmo minuto, em toda rodada** |
+| **O minuto 20 do P6 deixa de ser higiene e vira conserto** | foi declarado por precaução e agora está **justificado por dado**: `:20` contra `:00` |
+| **Hoje ainda não colidem** | o P5O está **inativo**. O risco é na ativação dele, não agora |
+| **Fica uma recomendação para o P5O** | quando for ativado, **declarar o minuto dele também**, em vez de herdar o `0`. Dois workflows no padrão é uma colisão esperando o segundo ser ligado |
+
+### 11.21 Por que o teste do P6-6 não pode ser feito como foi pedido
+
+A instrução era *"rodar o P5O direto pelo MCP, `lote_max = 1`, sobre o lead 66"*. **Li o workflow
+antes de executar, e por este caminho isso não existe.** Os três gatilhos do P5O:
+
+| Gatilho | Estado | Para onde vai |
+|---|---|---|
+| `[P5] Entrada` (sub-workflow) | **desabilitado** | `[P5] Ler a linha do lead` — o caminho de UM lead |
+| `[SMOKE] Trigger manual` | **desabilitado** | `[SMOKE] Lead de teste` → o mesmo caminho de um lead |
+| `[P5] Reconciliacao 6h` | **ativo** | `[P5] Ler a planilha inteira` — o caminho de LOTE |
+
+**Executar o P5O por MCP hoje entra pelo único gatilho habilitado, o de reconciliação.** E o primeiro
+filtro desse caminho é:
+
+```
+[P5] Ainda nao enviado?   ->   data_envio_crm VAZIO
+```
+
+🔴 **O lead 66 já tem `id_crm` e `data_envio_crm` preenchidos. Ele é descartado no primeiro filtro.**
+O que esse caminho faria é pegar até `lote_max` leads **que nunca foram enviados** e **criar leads
+novos no CRM de produção** — o oposto exato de um teste controlado sobre uma linha conhecida.
+`lote_max = 1` reduziria o estrago a um lead, mas **ainda seria um lead novo, e não o 66**.
+
+**O caminho cirúrgico existe e está desligado.** O `[SMOKE] Lead de teste` é um nó Code com o
+`place_id` escrito à mão (hoje o da Niti), e o comentário dele diz *"Trocar aqui para testar outro
+lead"*. O `place_id` do lead 66 é **`ChIJRbRZHD6tvZQRnfJIsYfMH8Q`**.
+
+**Procedimento proposto, não executado** (mexe em workflow que não é desta frente e escreve no CRM):
+1. **Desabilitar** `[P5] Reconciliacao 6h` — senão há risco de o MCP entrar pelo gatilho errado e
+   criar até 20 leads novos no CRM.
+2. **Habilitar** `[SMOKE] Trigger manual`.
+3. Trocar o `place_id` do `[SMOKE] Lead de teste` para o do lead 66.
+4. Rodar **uma vez**.
+5. **Desfazer os três** — restaurar o `place_id` da Niti, desabilitar o smoke, reabilitar o 6h.
+
+### 11.22 🔴 Pergunta aberta — o `[P5] Entrada` está desabilitado
+
+A descrição do P5O diz *"chamado pelo P4 desde 16/09"*. Mas o `[P5] Entrada`, que é o
+`executeWorkflowTrigger` — **a única porta pela qual o P4 consegue chamá-lo** — está **desabilitado**.
+
+**Não sei dizer qual das duas coisas é verdade**, e as duas são graves de formas diferentes:
+- ou a **descrição está desatualizada** e o P4 não chama mais o P5O (R5 quebrada, e a passagem
+  P4→P5 não existe);
+- ou o **P4 chama e a chamada não entra**, e a perna do P5 está quebrada em silêncio desde que o nó
+  foi desabilitado.
+
+**É a perna P5 do pipeline, não é escopo do P6, e não dá para descobrir sem olhar uma execução do P4.**
+Fica registrado como a pergunta mais urgente da frente.
