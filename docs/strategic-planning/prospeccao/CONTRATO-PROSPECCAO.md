@@ -1225,15 +1225,18 @@ escrita**.
 **A cadeia não tem buraco:** o cursor que sai de uma rodada é exatamente o `since` da seguinte. É
 isso que prova que nenhum lead foi pulado nem repetido — **sem abrir a planilha**.
 
-**A contabilidade fecha em 100.** Na `39936` o diagnóstico traz `_lidos_no_odoo: 100`,
-`_modificados: 17`, `_fora_nao_modificado: 83` — **83 + 17 = 100**. Na `39937`,
-`_fora_nao_modificado: 100` e `_modificados: 0`: não sobrou nada.
+**A contabilidade fecha em 100.** A fila por rodada foi
+**100 → 97 → 77 → 57 → 37 → 17 → 0**, ou seja **3 + 20 + 20 + 20 + 20 + 17 = 100** escritas.
+A primeira rodada escreveu **3** porque a vazão ainda estava em 3, do smoke do conserto; só depois
+subiu para 20. A última escreveu **17** porque era o que sobrava. Conferido na `39936`
+(`_lidos_no_odoo: 100`, `_modificados: 17`, `_fora_nao_modificado: 83` — **83 + 17 = 100**) e na
+`39937` (`_modificados: 0`, `_fora_nao_modificado: 100`): não sobrou nada.
 
 ⚠️ **Correção ao relatório da rodada 1:** ele diz que `_modificados` caiu 20 e
-`_fora_nao_modificado` subiu 20 **em toda rodada**. **A última rodada escreveu 17, não 20** — as
-cinco primeiras somam os outros 83. A conclusão (a contabilidade fecha sozinha) continua de pé; o
-número por rodada, não. Fica escrito porque número afirmado sem medir é a R6 quebrada, e porque
-quem ler daqui a três meses vai conferir a soma.
+`_fora_nao_modificado` subiu 20 **em toda rodada**. **Nas duas pontas não foi 20** — foi 3 na
+primeira e 17 na última. A conclusão (a contabilidade fecha sozinha, sem abrir a planilha)
+continua de pé; o número por rodada, não. Fica escrito porque número afirmado sem medir é a R6
+quebrada, e porque quem ler daqui a três meses vai conferir a soma.
 
 **O placar dos sete critérios, como ficou:**
 
