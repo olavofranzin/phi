@@ -1199,3 +1199,75 @@ substituto ainda não roda seria mentir no nome.
 
 **O `[APOSENTADO 2026-09-16] PROSP-05 CRM-out (deal + id)`** (`94lSWJfxfu653KdN`), esse sim, completou
 os cinco passos da R5 no mesmo dia.
+
+### 11.13 PROSP-06O rodada 1 (16/09) — a drenagem dos 100, e o P6-5 reprovado
+
+**As-built da rodada 1 do `PROSP-06O Sync Odoo -> Planilha`** (`Yc4shCqDzqiYHR3s`, inativo). Escrito
+**com o reprovado dentro**: a regra não é documentar quando ficar pronto, é documentar o que
+aconteceu (R2).
+
+**O que aconteceu.** Sete execuções manuais em 16/09. Seis drenaram, a sétima expôs o defeito. Os
+100 leads que o Odoo devolve foram todos escritos na planilha, **zero erro de cota e zero erro de
+escrita**.
+
+**A cadeia do cursor, execução a execução** — lida das próprias execuções, não do relatório:
+
+| Execução | `since` que entrou | cursor que saiu |
+|---|---|---|
+| `39926` | `2026-08-17T19:58:55Z` (recuo de 30 dias — **o cursor estava vazio**) | `2026-09-16T00:03:08Z` |
+| `39932` | `2026-09-16T00:03:08Z` | `2026-09-16T01:44:05Z` |
+| `39933` | `2026-09-16T01:44:05Z` | `2026-09-16T01:56:30Z` |
+| `39934` | `2026-09-16T01:56:30Z` | `2026-09-16T02:00:16Z` |
+| `39935` | `2026-09-16T02:00:16Z` | `2026-09-16T02:01:52Z` |
+| `39936` | `2026-09-16T02:01:52Z` | `2026-09-16T02:02:27Z` |
+| `39937` | `2026-09-16T02:02:27Z` | 🔴 **erro** — fila vazia |
+
+**A cadeia não tem buraco:** o cursor que sai de uma rodada é exatamente o `since` da seguinte. É
+isso que prova que nenhum lead foi pulado nem repetido — **sem abrir a planilha**.
+
+**A contabilidade fecha em 100.** Na `39936` o diagnóstico traz `_lidos_no_odoo: 100`,
+`_modificados: 17`, `_fora_nao_modificado: 83` — **83 + 17 = 100**. Na `39937`,
+`_fora_nao_modificado: 100` e `_modificados: 0`: não sobrou nada.
+
+⚠️ **Correção ao relatório da rodada 1:** ele diz que `_modificados` caiu 20 e
+`_fora_nao_modificado` subiu 20 **em toda rodada**. **A última rodada escreveu 17, não 20** — as
+cinco primeiras somam os outros 83. A conclusão (a contabilidade fecha sozinha) continua de pé; o
+número por rodada, não. Fica escrito porque número afirmado sem medir é a R6 quebrada, e porque
+quem ler daqui a três meses vai conferir a soma.
+
+**O placar dos sete critérios, como ficou:**
+
+| # | Estado | Por quê |
+|---|---|---|
+| **P6-1** | não testado | `_fora_sem_linha_na_planilha` deu `0` nas sete rodadas. **Contador zerado não é prova** — nenhum lead sem linha foi exercitado |
+| **P6-2** | ✅ **provado** | execução `39937`, na linha do `id_crm` 11: nenhuma coluna do P5 foi tocada |
+| **P6-3** | não testado | depende de um lead marcado ganho ou perdido no Odoo |
+| **P6-4** | atendido **por acidente** | o `[P6] Calcular novo cursor` lê a **entrada** da escrita. Só não há perda porque o `[P6] Gravar na planilha` **não tem `onError`** e qualquer falha derruba a execução. **A trava é hoje a ausência de uma configuração, e ausência não se documenta sozinha** |
+| **P6-5** | 🔴 **reprovado** | execução `39937`. Fila vazia derruba a execução: o sentinela `__SEM_LEAD__` não tem `_write_ms` e o `[P6] Ordenar pelo mais antigo` morre com *"Couldn't find the field '_write_ms' in the input data"* |
+| **P6-6** (CA6) | não testado | exige P5 e P6 rodando juntos |
+| **P6-7** (CA5) | não testado | mesmo bloqueio do P6-3 |
+
+**O que a rodada 1 deixou armado, e a rodada 2 desarma:**
+
+1. **P6-5** — fila vazia derruba a execução, e **rodada vazia passa a ser o estado normal do P6**.
+2. **O cursor lê o que *deveria* ter sido escrito**, não o que foi. A trava é a ausência de
+   `onError` — basta alguém pôr um para virar perda silenciosa e permanente.
+3. **O empate de segundo.** Os leads criados em lote ficam a ~2 s um do outro (`02:02:23`,
+   `02:02:25`, `02:02:27`). Com o filtro `w <= since`, se dois leads tiverem o **mesmo**
+   `write_date` e a vazão cortar entre eles, o que ficou de fora **é descartado para sempre**. Não
+   aconteceu nesta rodada; está armado.
+4. **`acerto_previsao` guarda um veredito já julgado** (`"acertou (alto->ganhou)"`), com a régua do
+   dia em que a linha foi escrita, e **nada na linha diz qual régua foi**. Como este campo é a base
+   de aprendizado do score, misturar duas réguas sem etiqueta não deixa a base imprecisa: deixa
+   **inutilizável**, e o estrago é **retroativo**.
+
+**`data_criacao_deal` mudou de significado — registrar, não desfazer.** Na linha do `id_crm` 11 o
+campo era `2026-05-06` e virou `2026-09-09`. **O comportamento é o desenhado** — é coluna do P6 e o
+valor é o `create_date` real do Odoo. Mas para os ~100 leads migrados o **`dias_no_funil` passa a
+contar da migração, não do primeiro contato**. Quem ler a base de aprendizado daqui a três meses vai
+achar que esses leads fecharam muito rápido. A planilha ainda tem a coluna `data extração` se um dia
+quisermos o funil de verdade — mas isso é mudança de desenho, não conserto.
+
+**Pergunta aberta, fora do caminho crítico:** o que o nó do Google Sheets faz com uma chave que não
+casa em `update`? Não sabemos, e depois da decisão de pôr um IF antes da ordenação **não precisamos
+saber para seguir**. Fica registrado para não voltar como dúvida.
