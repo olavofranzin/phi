@@ -377,6 +377,22 @@ Se o P5 escrevesse essas três, ele apagaria a cada 6h o que o agente acabou de 
 | **I10** | Todo workflow ativo tem descrição **fiel**. Descrição copiada é bug | 3 workflows hoje têm descrição de outro |
 | **I11** | O lead é sempre um **DEAL**. `Company` só é criada quando o lead **vira cliente**, por processo de pós-venda — nunca pela Prospecção | Decisão Olavo 2026-08-28 (D1). Evita 353 companies órfãs no CRM |
 
+### Exceção documentada ao I1 — o `id_crm` no payload do P6
+
+O `[P6] Gravar na planilha` inclui **`id_crm`** no mapeamento de colunas, e `id_crm` é **coluna do
+P5**. Parece violação do I1. **Não é.**
+
+O nó do Google Sheets em `mappingMode: defineBelow` **exige a coluna de casamento dentro dos
+valores** — é por ela que ele encontra a linha. O valor escrito é **idêntico** ao que ele acabou de
+ler para casar: o P6 não decide nada sobre esse campo, só o devolve.
+
+> **O P6 escreve `id_crm` porque o nó do Google Sheets exige a coluna de casamento no payload. O
+> valor é sempre o mesmo que ele leu para achar a linha. Não remover — remover quebra o `update`.**
+
+Está escrito aqui porque a próxima auditoria vai marcar como violação, e o "conserto" óbvio —
+tirar a chave do mapeamento — transformaria o `update` em nada, em silêncio. **Benigno por desenho
+só é benigno se estiver escrito** (R5).
+
 ---
 
 ## 5. Regras de escrita
@@ -1404,3 +1420,70 @@ lead mais recente for escrito. **Depois disso ele some do contador.**
 disso é a prova do P6-1. Se alguém rodar o workflow sem olhar o diagnóstico, **a janela fecha** e o
 gesto precisa ser repetido. Quem for provar o P6-1: rode **uma** vez e leia
 `_fora_sem_linha_na_planilha` e `_sem_linha_ids` na saída do `[P6] So os modificados`.
+
+### 11.16 O gatilho do P6 — e o achado de que não há gatilho do P5
+
+O brief (§12.2) pedia: leia o minuto do gatilho do P5, e declare um diferente para o P6. **Li o
+parque inteiro, e a premissa não se sustenta.**
+
+🔴 **Nenhum workflow da cadeia P1→P2→P3→P4→P5O tem gatilho agendado.** Conferido um a um:
+
+| Workflow | Ativo? | Gatilho |
+|---|---|---|
+| `PROSP-01 Intake (Telegram)` | sim | **`[P1] Telegram Trigger`** — e só |
+| `PROSP-02 Descoberta` | sim | nenhum — chamado pelo P1 |
+| `PROSP-03 Scoring` | sim | nenhum — chamado pelo P2 |
+| `PROSP-04 Enriquecimento` | sim | `executeWorkflowTrigger` — chamado pelo P1 |
+| `PROSP-05O CRM-out Odoo` | não | nenhum — chamado pelo P4 |
+
+A cadeia inteira **só anda quando uma pessoa manda "Iniciar prospecção" no Telegram e aperta o botão
+de aprovação** (`[P1] Aprovar prospeccao?`, com `approverIds` travado no chat que iniciou). O P6 será
+**o primeiro e único workflow agendado da Prospecção**.
+
+**O que isso muda no risco:**
+
+- **A colisão determinística de minuto não existe.** Não há dois cron caindo em `:00`. O medo da
+  §12.2 era real como categoria e não se materializa aqui.
+- **O que resta é sobreposição aleatória:** alguém inicia uma prospecção pelo Telegram e uma rodada
+  de 6 h do P6 cai no meio. Um minuto escolhido **reduz** a chance de coincidir no minuto exato, mas
+  **não elimina** a janela — uma rodada de prospecção dura vários minutos.
+- **O que de fato contém:** o P6 é barato no Sheets — **1 leitura da aba** (`executeOnce`) e **no
+  máximo 20 escritas** por rodada. Foi o loop da rodada 1 que multiplicava leitura, e ele não existe
+  mais.
+
+**Decisão, escrita em vez de herdada:** `triggerAtMinute: 20`, `hoursInterval: 6`. O padrão do
+`scheduleTrigger` é minuto `0`, e estava **sem declarar** — o minuto 20 tira o P6 do topo da hora,
+onde tudo que fica no padrão se junta. **Não é proteção contra o P5; é higiene contra o resto da
+instância.**
+
+### 11.17 Como provar o P6-6 / CA6 sem ativar nada
+
+O critério é *"com P5 e P6 rodando, nenhum campo tem dois donos"*. **Não precisa dos dois ativos —
+precisa dos dois tendo rodado sobre a mesma linha.**
+
+**O teste, em quatro passos:**
+1. Rodar o **P6** sobre um lead e **anotar a linha inteira**.
+2. Rodar o **P5** sobre o **mesmo** lead.
+3. **Ler a linha de novo.**
+4. Comparar.
+
+**O que tem de acontecer:** as colunas do P6 **não podem ter mudado**, e as colunas do P5 **não podem
+ter sido tocadas pelo P6** — com a única exceção do **`id_crm`**, que o P6 reescreve com o **mesmo
+valor** por exigência do nó do Sheets (ver a *Exceção documentada ao I1*, no §4).
+
+### 11.18 Rótulos honestos do que ficou
+
+- **O recuo de 1 segundo:** *provado em teste fora do n8n, contra os dados reais da `39936`; **não
+  exercitado em produção***. Em todas as rodadas reais `_empate_cortado` deu `false`, porque os leads
+  estão a ~2 s um do outro. **Forçar um empate artificial seria fabricar o teste.** O momento em que
+  ele será exercido de verdade já é conhecido: **a próxima carga em lote no Odoo**.
+- **O `[TEMP 2026-09-17] Rebobinar cursor do P6O`** (`uFcx8z2kvadipVrO`): ferramenta de uma vez,
+  **arquivada**. Não cabe o procedimento de aposentadoria da R5 — ele não substituiu nada. O que o
+  torna seguro é estar registrado aqui: **a R5 é sobre intenção, e a intenção está escrita.**
+- **A descrição do workflow** ainda termina em `EM CONSTRUCAO`, e fica assim **de propósito** até os
+  sete critérios fecharem. **Descrição que diz "pronto" antes da prova mente**, e é exatamente o que
+  a R5 existe para impedir.
+
+**A ordem do que falta:** os dois gestos do Olavo no Odoo → **uma** rodada do P6 (janela única,
+§11.15.2) → P6-1, P6-3 e P6-7/CA5 → o teste do §11.17 → **então** a descrição → **então** a proposta
+de ativação.
