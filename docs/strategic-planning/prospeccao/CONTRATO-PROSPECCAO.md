@@ -1919,3 +1919,117 @@ existe** (o acerto da previsão é a base do aprendizado do score) e **o que sub
 **O teste prático da R5 — *"a auditoria semanal precisa perguntar ao Olavo para entender?"* — passa.**
 É o segundo workflow do parque a conseguir, depois do `[APOSENTADO 2026-07-21] PHI - Loop Alerta
 Fase 1`.
+
+### 11.28 Ativação do PROSP-06O (17/09) — e o furo que a ativação destapou
+
+#### 11.28.1 🟢 §17.2 — a rede está provada, e revelou um incidente vivo
+
+O `PHI - Alerta de Falha (errorWorkflow)` (`UZ7sIE5cWrrO8xea`) **já disparou** — **cinco vezes só em
+17/09** (03:00, 07:00 duas vezes, 10:00 e 11:00 UTC), todas `mode: "error"` e `status: "success"`.
+
+**Provado end-to-end**, não só "existe": na execução `40137` dá para ver a cadeia inteira — Error
+Trigger → `Montar mensagem do erro` → **`Avisar no Telegram` com `message_id: 629` entregue no chat do
+Olavo**. **Ligamos com rede de verdade, não com a foto de uma rede.**
+
+🔴 **Mas cinco disparos num dia é um alarme tocando, não um teste.** O que está falhando:
+
+> **`PHI - Vigia de Frescor dos Dados`** (`JMgc0HdLPOFPnFYb`), no nó `Buscar lacunas de ontem`:
+> *"The credential **Google BigQuery account** needs to be reconnected."* — `Access could not be
+> refreshed because the connected account has revoked access, the refresh token expired, or the
+> account password or permissions changed.*
+
+**É outra frente** (saúde digital / BigQuery), **e só o Olavo pode reconectar** — a própria mensagem
+do alerta diz isso. Credencial `UhLRAanVarQeOpQy`. Fica registrado aqui porque foi esta rodada que
+encontrou, e porque um vigia de frescor de dados parado é justamente quem deveria avisar que os dados
+pararam.
+
+#### 11.28.2 🟢 §17.3 — `PHI - Alerta de Erro (Telegram)` aposentado pelos cinco passos
+
+| Passo da R5 | Estado |
+|---|---|
+| 1. função consolidada no que fica | ✅ o `UZ7sIE5cWrrO8xea` faz o trabalho, e agora está **provado** |
+| 2. desabilitar o chamador | ✅ sem chamador por nó; o "chamador" é o `errorWorkflow` das pernas, e as três que tocamos (P6O, P5O, P4) apontam para o `UZ7sIE5cWrrO8xea` |
+| 3. desativar o workflow | ✅ já estava inativo |
+| 4. prefixo | ✅ **`[APOSENTADO 2026-09-17] PHI - Alerta de Erro (Telegram)`** |
+| 5. sticky com o porquê e proibindo reuso | ✅ diz que o substituto é o `UZ7sIE5cWrrO8xea` e onde configurar |
+
+⚠️ **Limite honesto do passo 2:** não varri o `errorWorkflow` de **todos** os workflows da instância —
+só das três pernas desta frente. Se outro workflow apontar para o aposentado, o rename **não quebra
+nada** (a referência é por id), mas o alerta dele vai para um workflow que ninguém liga.
+
+#### 11.28.3 🔴 O PROSP-04 ATIVO ainda chama o P5 do HubSpot APOSENTADO
+
+Ao tentar aplicar a remoção do `onError`, o n8n recusou:
+
+```
+Cannot publish workflow: Node "[P5] CRM-out" references workflow 94lSWJfxfu653KdN
+("[APOSENTADO 2026-09-16] PROSP-05 CRM-out (deal + id)") which is not published.
+```
+
+A leitura que isso forçou:
+
+| | aponta para | `onError` |
+|---|---|---|
+| **Rascunho** do P4 | `0H1mdPuICHsyWGxt` — o **P5O Odoo** | `stopWorkflow` (já com o meu conserto) |
+| **Versão ATIVA** do P4 | **`94lSWJfxfu653KdN`** — o **P5 do HubSpot, APOSENTADO** | `continueRegularOutput` |
+
+**E o P4 está `active: true`.**
+
+> **A repontagem de 16/09 foi salva no RASCUNHO e nunca publicada.** O que roda — se alguém rodar o
+> P4 — ainda chama o P5 do HubSpot, que está aposentado e inativo. E com `continueRegularOutput`,
+> **falharia em silêncio**.
+
+Isto **substitui** a conclusão da §11.23. Lá eu escrevi *"nem descrição mentindo, nem quebra: arma que
+nunca disparou"*. A parte de "nunca disparou" continua certa (o P4 não roda desde 10/09). **A parte
+de "a fiação foi mesmo feita em 16/09" estava errada: foi feita no rascunho.** A descrição do P5O que
+eu corrigi — *"Religado ao P4 em 16/09"* — **também está errada pelo mesmo motivo**, e fica marcada
+aqui até alguém publicar o P4.
+
+#### 11.28.4 A regra nova — irmã da R12
+
+Eu li o P4 duas vezes e as duas vezes li o **rascunho**, porque é isso que `get_workflow_details`
+devolve em `workflow.nodes`. O que **roda** está em `workflow.activeVersion.nodes`, e o próprio
+retorno traz **`sameAsDraft: false`** quando os dois divergem — eu tinha esse campo na tela e não
+olhei.
+
+> **Em workflow ativo, `nodes` é o rascunho. O que roda é `activeVersion.nodes`. Antes de afirmar o
+> que um workflow ativo faz, compare `versionId` com `activeVersionId` — e se `sameAsDraft` for
+> `false`, o rascunho é uma proposta, não o sistema.**
+
+É exatamente a R12 noutra roupa: **estado divergente que não tem cor, não tem alarme e não aparece em
+lista nenhuma.**
+
+**E uma mecânica a não esquecer:** `update_workflow` num workflow **ativo** salva o rascunho **e
+depois** tenta publicar. Quando a publicação é recusada, **a alteração do rascunho permanece**. Foi o
+que aconteceu: o `onError: stopWorkflow` e o `errorWorkflow` **estão no rascunho do P4**, sem
+publicar. Não é atômico através da fronteira da publicação.
+
+#### 11.28.5 O que ficou no ar, e o que não
+
+| Item da §11.26.4 | Estado |
+|---|---|
+| 1. `triggerAtMinute: 40` no `[P5] Reconciliacao 6h` | ✅ gravado |
+| 2. `errorWorkflow` → `UZ7sIE5cWrrO8xea` | ✅ nas três pernas (P6O, P5O, e no rascunho do P4) |
+| 3. remover o `onError` do `[P5] CRM-out` | 🟡 **no rascunho, não publicado** — bloqueado pela §11.28.3 |
+| 4. **ativar o `PROSP-06O`** | ✅ **NO AR** |
+| 5. ativar o `PROSP-05O` | ⏸️ não feito, por desenho — espera as duas rodadas do P6O |
+
+**O `PROSP-06O` está ativo**, confirmado na releitura: `active: true`,
+`versionId === activeVersionId === 54a43b23`, `triggerCount: 1` — e o `triggerCount` só virou `1`
+**porque agora está ativo**, que é a R12 se confirmando na prática.
+
+#### 11.28.6 As duas rodadas a observar (§17.4)
+
+`hoursInterval: 6` com `triggerAtMinute: 20` — *estimativa, não verificada*: o n8n monta disso um cron
+equivalente a `20 */6 * * *`, ou seja **00:20, 06:20, 12:20 e 18:20 UTC** (21:20, 03:20, 09:20 e 15:20
+BRT). O P5O, quando for ativado, cai nos `:40` dos mesmos horários.
+
+1. **A rodada cheia vem primeiro, e é de propósito.** O Olavo marcou um lead como perdido **com
+   motivo**, e ele está na fila agora. **Não rodei na mão** justamente para não gastá-lo: o §17.4 pede
+   que a primeira rodada com `_modificados > 0` seja **em horário automático**, e é ela que fecha o
+   último furo do P4 — o `motivo_perda` preenchido, que nunca foi exercido.
+2. **A rodada vazia** vem na sequência, e prova que o gatilho dispara mesmo sem trabalho.
+
+**O que olhar na cheia:** `_modificados >= 1`, **`motivo_perda` preenchido** na linha do lead perdido,
+`acerto_previsao` com a régua, e o cursor avançando. **O que olhar na vazia:** verde, `_modificados: 0`,
+zero escrita, cursor parado.
