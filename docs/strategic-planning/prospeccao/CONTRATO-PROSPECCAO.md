@@ -1487,3 +1487,96 @@ valor** por exigência do nó do Sheets (ver a *Exceção documentada ao I1*, no
 **A ordem do que falta:** os dois gestos do Olavo no Odoo → **uma** rodada do P6 (janela única,
 §11.15.2) → P6-1, P6-3 e P6-7/CA5 → o teste do §11.17 → **então** a descrição → **então** a proposta
 de ativação.
+
+### 11.19 A rodada dos dois gestos (17/09) — P6-1, P6-3, P6-7/CA5 e o CA7 medido pela 1ª vez
+
+Olavo marcou **um lead ganho** (`id_crm` 66), **um perdido** (`id_crm` 43) e **criou um à mão**
+(`id_crm` 116, sem linha na planilha). **Uma rodada** — execução **`40263`** — fechou os três
+critérios de uma vez. Números declarados antes de rodar.
+
+| Campo | Esperado | Obtido | |
+|---|---|---|---|
+| `_modificados` | 2 | **2** | ✅ |
+| `_fora_sem_linha_na_planilha` | 1 | **1** | ✅ |
+| `_sem_linha_ids` | o id do novo | **`116`** | ✅ |
+| `_lidos_no_odoo` | ~116 | **101** | ⚠️ ver abaixo |
+| linhas escritas | 2 | **2** | ✅ |
+| cursor | avança | **`2026-09-17T19:13:05Z`** (o `write_date` do 66) | ✅ |
+
+#### 11.19.1 🟢 CA7 **PASSA** — o `active_test` está sendo desligado
+
+Este é o número que ninguém tinha medido: o ramo `[P6] Ler leads arquivados` **nunca tinha tido um
+lead arquivado para ler**. Agora teve.
+
+**`_lidos_no_odoo` deu `101`, não `231`.** E o ramo arquivado devolveu **exatamente 1 item** — o lead
+43. Ou seja: o filtro `active=false` **está** desligando o `active_test` nesta instância, os dois
+ramos são disjuntos (100 ativos + 1 arquivado = 101) e **nenhum lead entra duas vezes**.
+
+**Dito com todas as letras: o CA7 passou.** Se tivesse dado ~202, cada lead estaria entrando duas
+vezes e todo o resto desta rodada seria suspeito.
+
+⚠️ **O `101` contraria a estimativa de `~116` do brief, e o certo é o `101`.** O maior `id_crm` hoje é
+**116**, mas **id não é contagem**: há buracos na sequência. **Não tenho como confirmar** o que
+consumiu os 15 ids que faltam — leads apagados, fundidos, ou ids queimados em tentativas de criação.
+Fica registrado como pergunta aberta, porque `101` é o número que a base devolve e `116` era uma
+inferência a partir do último id.
+
+#### 11.19.2 🟢 P6-1 — conta sem criar linha
+
+O lead `116` não tem linha na planilha. Ele apareceu em `_fora_sem_linha_na_planilha: 1` com o id em
+`_sem_linha_ids`, e **a planilha continuou com 314 linhas**: foi **contado, não criado**.
+
+#### 11.19.3 🟢 P6-3 — o desfecho vem do `won_status`, não do estágio
+
+O lead 43 é a prova limpa. No Odoo ele está assim:
+
+```
+stage_id: [1, "Prospecção"]   active: false   won_status: "lost"
+lost_reason_id: false          probability: 0  date_closed: 2026-09-17 19:12:35
+```
+
+**O estágio dele ainda é "Prospecção" e a probabilidade é 0** — perder no Odoo **arquiva**, não move
+de estágio. Ainda assim a planilha recebeu **`status_crm: Perdido`**. Se o rótulo viesse do estágio,
+diria "Prospecção"; se viesse da probabilidade, diria qualquer outra coisa. **Veio do desfecho.**
+
+O mesmo vale para o 66: o estágio dele também não é um estágio de ganho, e a linha recebeu **`Ganho`**
+porque `won_status` é `won`.
+
+#### 11.19.4 🟢 P6-7 / CA5 — o desfecho chegou à planilha na rodada seguinte
+
+Marcados no Odoo às `19:12:35` e `19:13:05`; a rodada das `19:17` levou os dois à planilha.
+
+#### 11.19.5 A linha, antes e depois — nenhuma coluna do P5 tocada
+
+Comparação da linha inteira, lida da aba **antes** (execução `40263`) e **depois** (execução `40264`):
+
+| `id_crm` | linha | o que mudou | o que **não** mudou |
+|---|---|---|---|
+| **43** | 29 | `status_crm` `Prospecção`→`Perdido` · `data_fechamento` vazio→`2026-09-17T19:12:35Z` · `acerto_previsao` vazio→`acertou (<60 -> perdeu)` · `dias_no_funil` 7→8 · `data_sync_crm` | **NENHUMA outra.** `potencial_comercial` 52, `score_gbp` 59, dimensões, `id`, `data extração` — intactos |
+| **66** | 52 | `status_crm` `Prospecção`→`Ganho` · `data_fechamento` vazio→`2026-09-17T19:13:05Z` · `acerto_previsao` vazio→`acertou (>=60 -> ganhou)` · `probabilidade` vazio→100 · `dias_no_funil` 7→8 · `data_sync_crm` | **NENHUMA outra.** `potencial_comercial` 97, `score_gbp` 99 — intactos |
+
+**O `id_crm` foi reescrito com o mesmo valor nas duas**, exatamente como a *Exceção documentada ao I1*
+prevê. **É a comparação campo a campo que fecha isso**, não a leitura do mapeamento.
+
+A **régua bate com o dado** nos dois casos: o 43 tem `potencial_comercial` **52** (`< 60`) e perdeu —
+`acertou`; o 66 tem **97** (`>= 60`) e ganhou — `acertou`.
+
+#### 11.19.6 `motivo_perda` vazio é o I3, não defeito
+
+A linha do perdido ficou com **`motivo_perda` vazio**. Conferido na origem antes de chamar de bug:
+no Odoo o lead 43 tem **`lost_reason_id: false`** — ele foi marcado como perdido **sem escolher um
+motivo**. Campo não observado grava **vazio**, nunca `0` nem um motivo inventado. **É o I3
+funcionando.**
+
+Para exercitar o `motivo_perda` de verdade, basta marcar um lead como perdido **escolhendo um motivo**
+na tela do Odoo. **Não é pendência do P6.**
+
+#### 11.19.7 A janela do P6-1 não fechou
+
+A execução `40264` (feita só para reler a aba) mostrou `_fora_sem_linha_na_planilha: 1` de novo, com
+`_sem_linha_ids: 116`. O cursor parou em `19:13:05Z` e o `write_date` do 116 é **posterior** a isso,
+então ele **continua na contagem** até que algum lead mais recente seja gravado. A janela da §11.15.2
+é real, mas **neste caso ela ainda está aberta**.
+
+A `40264` também re-provou o P6-5 pela terceira vez: `_modificados: 0`, verde, **zero escrita**,
+cursor parado.
