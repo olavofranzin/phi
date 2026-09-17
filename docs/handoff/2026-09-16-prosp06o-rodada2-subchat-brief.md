@@ -501,3 +501,85 @@ poder rodar sem vigilância.
 4. **O teste do §11.17** fecha o **P6-6**
 5. **A descrição do workflow** — só agora, senão mente
 6. **A proposta de ativação**, já com a resposta do §13.2
+
+---
+
+## 14. A rodada dos gestos (17/09) — seis provados, e um número em aberto
+
+**P6-1 · P6-2 · P6-3 · P6-4 · P6-5 · P6-7/CA5 · CA7 — provados.** Falta o **P6-6/CA6**.
+
+**O P6-3 saiu limpo, e é a prova mais elegante da série.** O lead 43 está no Odoo com
+`stage_id: [1, "Prospecção"]` e `probability: 0` — perder **arquiva, não move** —, e a planilha
+recebeu **`Perdido`**. Se o rótulo viesse do estágio, diria "Prospecção". **Veio do desfecho.**
+
+**CA7 passou e foi medido pela primeira vez:** 100 ativos + 1 arquivado = 101, ramos **disjuntos**. O
+`active = false` **desliga** o `active_test` nesta instância. Estava documentado desde 16/09 e nunca
+tinha sido medido.
+
+### 14.1 🔴 O 101 não pode ser fechado como "buracos na sequência"
+
+Meu `~116` estava errado — **id não é contagem**, e ele tem razão. Mas a conclusão de que *"a base
+devolve 101"* **não está verificada**, e há duas explicações possíveis:
+
+| | O que seria | Gravidade |
+|---|---|---|
+| **A** | 15 leads foram **apagados** do Odoo | benigno **se** o Olavo apagou |
+| **B** | os 15 **existem** e o P6 **não os vê** | 🔴 ponto cego silencioso |
+
+**A hipótese B é concreta:** o nó usa `resource: opportunity`. No Odoo, `crm.lead` tem um campo
+`type` (`lead` / `opportunity`), e **é preciso descartar** que o nó esteja filtrando por ele. Se
+estiver, existem registros no CRM que o P6 nunca vai ler — **e nada no diagnóstico diria isso**.
+
+> **"Não tenho como confirmar" não é o mesmo que "não é problema."** Um número que não fecha ou é
+> explicado ou continua aberto — não vira nota de rodapé.
+
+**O teste custa 10 segundos e é do Olavo:** abrir o pipeline do CRM no Odoo e ler o total.
+**101 → o P6 vê tudo** (e os 15 foram apagados). **116 → o P6 é cego para 15 leads**, e isso vira a
+prioridade da frente.
+
+⚠️ Vale lembrar que os 15 ids que faltam são **quase exatamente** os que ele tinha previsto como "sem
+linha na planilha" antes da drenagem (1–10, 12, 13, 14, 16, 17) — e que voltaram **zero**. As duas
+anomalias podem ser a mesma. Não é prova; é motivo para não fechar.
+
+### 14.2 A §11.5 estava exagerada — a janela do P6-1 é maior
+
+Eu escrevi que a janela do P6-1 era **uma rodada**. **Não é**, e a observação é dele: na execução
+`40264` o lead 116 **continuou sendo contado**.
+
+**O motivo:** o cursor só avança até o `write_date` do último lead **gravado**. Um lead sem linha na
+planilha **nunca é gravado**, então ele só sai do contador quando **outro** lead, mais recente, for
+escrito. Enquanto isso, `_sem_linha_ids` é um **sinal persistente**, não um relâmpago.
+
+**Melhor do que eu tinha dito, e vale corrigir no contrato:** o P6 tem um detector de órfãos que se
+mantém aceso sozinho.
+
+### 14.3 `motivo_perda` vazio é o I3 — e a lição é operacional, não de código
+
+O lead 43 tem `lost_reason_id: false` no Odoo: foi marcado como perdido **sem escolher motivo**. Ele
+conferiu **na origem antes** de chamar de defeito, que é o procedimento certo.
+
+**Mas `motivo_perda` é um dos campos mais valiosos da base de aprendizado** — é ele que vai responder
+*"por que a gente perde"*. Um funil cheio de perdas sem motivo não ensina nada.
+
+> **Isto é hábito de operação, não conserto de workflow:** *ao marcar um lead como perdido, sempre
+> escolher o motivo na tela.* O lugar disso é o procedimento comercial — o `Board Agência` —, não o
+> código. Nenhuma trava técnica substitui.
+
+### 14.4 O P6-6/CA6 — como disparar o P5
+
+O `PROSP-05O` é sub-workflow, sem gatilho próprio. **Decisão: executar o P5O direto pelo MCP, com
+`lote_max = 1`, sobre o lead `66`.**
+
+**Por que não rodar o P4:** ele enriquece — **custa Apify + Gemini e depende de OK de budget**. É um
+canhão para matar um mosquito, e faz muito mais coisa do que o teste precisa.
+
+**Por que o lead 66 e não o 43:** o 66 é o **ganho** — está **ativo** (o 43 está arquivado, e o P5
+não escreveria nada nele) e é o que tem **mais colunas do P6 preenchidas**: `status_crm`,
+`data_fechamento`, `acerto_previsao`, `probabilidade`. Mais superfície para o teste pegar.
+
+**Esperado:** o P5 escreve `id_crm`, `data_envio_crm`, `erro_envio_crm` e os campos GBP — e **não
+toca em nenhuma coluna do P6**.
+
+⚠️ **O que NÃO é anomalia:** depois do P5 escrever no CRM, o `write_date` do lead 66 muda e ele
+**volta à fila do P6** na rodada seguinte. Isso é o circuito funcionando, **não** ping-pong: o
+workflow é bidirecional, **o campo é sempre de mão única**.
