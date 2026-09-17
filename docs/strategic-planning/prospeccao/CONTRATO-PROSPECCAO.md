@@ -1344,3 +1344,63 @@ há skill instalada de JavaScript de nó Code** — registrado para a próxima s
 **Achado de §0 que corrige o brief:** `notes` de nó **é gravável** pelas ferramentas disponíveis — o
 `[P6] Tem lead?` foi criado com `notes` e o campo está lá na releitura. A afirmação de que não era
 (§11.6 da rodada 1) está errada. **Sticky continua legítimo**, mas não por falta de alternativa.
+
+### 11.15 PROSP-06O rodada 2 (17/09) — a sequência de três rodadas que fecha P6-4 e P6-5
+
+**O problema de método:** os 100 leads estavam todos abaixo do cursor e ninguém tinha tocado no
+Odoo, então o cenário *"fila com leads"* — **o único que reprovaria a condição errada do IF** — não
+tinha fila para acontecer. Com OK do Olavo, o cursor foi **rebobinado** para
+`2026-09-16T02:00:16Z`, recolocando 37 leads na fila. Repetir é inofensivo: o P6 faz `update` em
+linha que já existe, nunca `appendOrUpdate` (I2).
+
+Como **não há ferramenta MCP que escreva linha em Data Table**, isso exigiu um workflow descartável,
+`[TEMP 2026-09-17] Rebobinar cursor do P6O` (`uFcx8z2kvadipVrO`), **arquivado logo após o teste**.
+Registrado para a próxima sessão não procurar a ferramenta de novo.
+
+**Os números foram declarados ANTES de rodar** (R11, regra 4) e conferidos depois:
+
+| Rodada | Execução | `since` | `_modificados` | escritas | cursor ao fim | previsto? |
+|---|---|---|---|---|---|---|
+| **A** | `40254` | `02:00:16Z` | 37 | **20** | `02:01:52Z` | ✅ |
+| **B** | `40256` | `02:01:52Z` | 17 | **17** | `02:02:27Z` | ✅ |
+| **C** | `40257` | `02:02:27Z` | **0** | **0** | parado | ✅ |
+
+**As três coisas que isso prova, e que provar isolado não provaria:**
+
+1. 🟢 **A condição do IF está certa** — a rodada A escreveu **20 linhas, não 1**. Se o teste fosse
+   `_modificados > 0`, o item 0 passaria e os 19 outros cairiam com `undefined > 0`. **É o teste que
+   o brief mandou fazer, e ele passou.**
+2. 🟢 **P6-4 — o cursor avança sobre o que foi escrito.** A cadeia A→B→C não tem buraco: o cursor que
+   sai de uma rodada é o `since` da seguinte, e para exatamente no `write_date` do último lead
+   **gravado** (`id_crm` 101 em A, o 115 em B). Agora isso vale **por desenho**, não pela ausência de
+   um `onError`.
+3. 🟢 **P6-5 re-provado em sequência**, que vale mais que isolado: a fila **voltou a ficar vazia
+   sozinha**, ao fim da drenagem, e a execução terminou **verde** com `_modificados: 0`, zero linha
+   escrita e o cursor parado. É o estado normal do P6 acontecendo de verdade, não montado.
+
+O `[P6] Ler a planilha` executou **1 vez por rodada** nas três — o `executeOnce` segue de pé.
+
+**O que estas três rodadas NÃO provam:** o recuo de 1 segundo. Os leads estão ~2 s um do outro, o
+corte de A caiu limpo e `_empate_cortado` deu `false`. Esse ramo segue provado **só fora do n8n**, no
+teste contra os dados reais da `39936`. **Não invente que foi provado em execução.**
+
+#### 11.15.1 O ramo do empate maior que o lote passa a PARAR, não a avançar
+
+Decisão do chat-mãe, e está certa: na primeira versão, quando um único segundo tivesse mais leads que
+a vazão inteira, o nó **avançava o cursor e só avisava no log** — e ali **um lead é perdido de
+verdade**. Agora o `[P6] Calcular novo cursor` **lança erro e para**.
+
+As linhas daquele lote **já foram gravadas** e o cursor **não avança**, então a rodada seguinte as
+repete — inofensivo. A mensagem do erro diz o que fazer: **aumentar o `maxItems` do
+`[P6] Vazao do lote`**. **Parar é recuperável; perder não é.** Entrou antes da ativação, como pedido.
+
+#### 11.15.2 A janela de prova do P6-1 é UMA rodada
+
+Lead sem linha na planilha é contado em `_fora_sem_linha_na_planilha` **na rodada seguinte à
+modificação dele** — e ele **nunca é gravado**, então o cursor passa por cima dele assim que outro
+lead mais recente for escrito. **Depois disso ele some do contador.**
+
+**Consequência prática:** quando o Olavo criar o lead à mão no Odoo, a **primeira** rodada depois
+disso é a prova do P6-1. Se alguém rodar o workflow sem olhar o diagnóstico, **a janela fecha** e o
+gesto precisa ser repetido. Quem for provar o P6-1: rode **uma** vez e leia
+`_fora_sem_linha_na_planilha` e `_sem_linha_ids` na saída do `[P6] So os modificados`.
