@@ -441,3 +441,63 @@ diz "pronto" antes dos critérios fecharem mente**, e é exatamente o que a R5 e
 
 **A ordem é:** os dois gestos do Olavo → uma rodada → P6-1/P6-3/P6-7 → o teste do P6-6 → **então** a
 descrição, e **então** a proposta de ativação com o minuto do gatilho.
+
+---
+
+## 13. O §12.2 estava errado, e o que ele revela (17/09)
+
+**Não existe gatilho do P5 para ler.** Eu avisei sobre colisão de minuto entre dois cron sem
+verificar que havia dois cron. **A cadeia inteira da Prospecção só anda quando alguém manda "Iniciar
+prospecção" no Telegram e aperta o botão** — P2, P3, P4 e P5O não têm gatilho nenhum, são chamados.
+
+A colisão determinística **não tinha como existir**. Hipótese desmentida, registrada (R6).
+
+**O raciocínio dele sobre o que sobra é o certo, e a frase merece ficar:**
+
+> *"Um minuto escolhido reduz a chance de coincidir no minuto exato, mas não elimina a janela, porque
+> uma rodada de prospecção dura vários minutos. **Não quero te vender proteção que não entrego.**"*
+
+**E o `triggerAtMinute: 20` fica pelo motivo certo:** higiene contra o resto da instância, onde tudo
+que fica no padrão se junta no topo da hora. **Não** proteção contra o P5.
+
+### 13.1 Uma precisão para quando a instância crescer
+
+A cota do Google Sheets é **por credencial**, não por planilha. Então a pergunta certa, no dia em que
+isso voltar a incomodar, não é *"quem mexe nesta planilha?"* — é **"quais workflows agendados usam a
+credencial `Google Sheets account` (`1syGXHEXgjrxSblV`)?"**
+
+**Hoje não vale a auditoria.** O P6 gasta **1 leitura + no máximo 20 escritas** por rodada, 4× por
+dia — uma fração da cota. O que estourou na rodada 1 foram ~100 leituras em segundos, e a causa não
+existe mais. **Fica a pergunta formulada, não a tarefa aberta.**
+
+### 13.2 🔴 O P6 será o primeiro workflow da Prospecção que roda sozinho
+
+Isso muda uma coisa que ninguém tinha dito em voz alta: **até hoje, nada nesta frente acontece sem
+alguém apertar um botão.** Depois da ativação, o P6 roda 4× por dia, para sempre, **sem ninguém
+olhando**.
+
+**A pergunta que falta responder antes de ativar: se ele quebrar, quem avisa?**
+
+O workflow não tem *error workflow* configurado. Uma execução vermelha fica no log — e **erro que só
+existe no log de execução não existe** (R11, regra 2). Pior: com a fila vazia quase sempre, *"não
+aconteceu nada"* e *"parou de funcionar"* **têm exatamente a mesma aparência**.
+
+**Duas saídas, e é decisão do Olavo:**
+
+| | Custo | O que entrega |
+|---|---|---|
+| **Error workflow apontando para o Telegram** | pouco — a credencial `Telegram phi_prospeccao` já existe e o P5 já usa esse canal | quebra vira aviso na hora, no mesmo lugar onde os erros do P5 já chegam |
+| **Nada, e uma conferida manual por semana** | zero | depende de alguém lembrar — foi assim que a quebra do `id_hubspot` passou duas semanas |
+
+**Recomendo o primeiro.** É o mesmo canal, a credencial existe, e é a única peça que falta para o P6
+poder rodar sem vigilância.
+
+### 13.3 A ordem final, sem mudanças
+
+1. **Os dois gestos do Olavo** (marcar um lead · criar um à mão)
+2. **Uma rodada do P6**, e **ler o diagnóstico antes de qualquer outra coisa** — a janela do P6-1 é
+   essa rodada
+3. Fecham **P6-1, P6-3 e P6-7/CA5**
+4. **O teste do §11.17** fecha o **P6-6**
+5. **A descrição do workflow** — só agora, senão mente
+6. **A proposta de ativação**, já com a resposta do §13.2
