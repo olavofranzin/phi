@@ -603,3 +603,79 @@ tentativas de criação que falharam (o `UNIQUE(gbp_place_id)`, a recusa do payl
 >
 > O sub-chat estava certo ao dizer que o número certo era 101. **Ele só não podia fechar sem
 > descartar o ponto cego** — e agora está descartado com medição, não com raciocínio.
+
+---
+
+## 15. Os três achados do P5O (17/09) — e a prioridade muda
+
+### 15.1 O `triggerCount` mentiu, e eu tenho a mesma evidência
+
+**Confirmado por conta própria:** quando li o `Yc4shCqDzqiYHR3s`, ele reportava `triggerCount: 0`
+**tendo o `[P6] A cada 6h` dentro**. O campo conta gatilhos **ativos**, não declarados — e workflow
+inativo reporta zero.
+
+**Então o §12.2 estava certo e o §11.16 errado.** O `[P5] Reconciliacao 6h` existe, está habilitado, e
+está **no padrão (minuto 0)**. O `triggerAtMinute: 20` do P6 **deixa de ser higiene e vira conserto
+justificado por dado**.
+
+**Vai para a R12 do `CLAUDE.md`:** *para saber que gatilhos um workflow tem, leia os nós — nunca o
+número.*
+
+**E a recomendação dele é aceita:** quando o P5O for ativado, **declarar o minuto dele também**. Dois
+workflows no padrão é uma colisão esperando o segundo ser ligado.
+
+### 15.2 O P6-6 não precisa das cinco mexidas — prova-se lendo
+
+Ele está certo: executar o P5O por MCP entra pelo gatilho de reconciliação, cujo primeiro filtro é
+`data_envio_crm VAZIO`. **O lead 66 seria descartado**, e o caminho pegaria leads nunca enviados e
+**criaria leads novos no CRM de produção**. Minha instrução tinha esse defeito.
+
+**Mas a proposta de cinco mexidas está descartada — e não por risco, por ser inferior.**
+
+O CA6 pergunta: *"nenhum campo tem dois donos"*. **Metade já está provada empiricamente** — hoje, nas
+linhas 43 e 66, **nenhuma coluna do P5 mudou** além do `id_crm` da §12.1. A outra metade — *o P5 toca
+alguma coluna do P6?* — se responde **lendo o mapeamento de escrita do P5O**.
+
+| | Cobertura |
+|---|---|
+| **Uma execução** | as colunas que **por acaso** mudarem naquele lead |
+| **Ler o mapeamento** | **todas** as colunas que o P5 é capaz de escrever, sempre |
+
+**A leitura é mais forte, custa zero e não escreve no CRM de produção.**
+
+**O método:** listar **todos** os nós do Google Sheets que escrevem no `PROSP-05O` e as colunas
+mapeadas em cada um; pôr ao lado a lista do P6; mostrar que os dois conjuntos são **disjuntos**,
+com a única interseção sendo o `id_crm` já documentado. **Se houver qualquer outra interseção, aí sim
+é achado — e aí a execução vira necessária.**
+
+### 15.3 🔴 O `[P5] Entrada` desabilitado é a prioridade da frente
+
+**Passa na frente do P6-6, e não é perto.** O P6-6 virou leitura de cinco minutos. Isto é um caminho
+de produção possivelmente quebrado na perna que **alimenta o CRM**.
+
+**A hipótese mais provável não é nenhuma das duas que ele listou, é uma terceira:** o nó foi
+desabilitado **durante o smoke de 16/09**, para o P4 não disparar nada no meio do teste, **e não foi
+religado**. É o terceiro caso do mesmo padrão — **a R12 nasceu disto**.
+
+**Se for isso, a consequência é séria:** a repontagem do M6 (§11.6), feita em 16/09 contra a
+recomendação de esperar o cutover, **nunca foi exercida**. Na próxima prospecção que o Olavo rodar, o
+enriquecimento não alimentaria o CRM — e **ninguém saberia**, porque não há execução do P4 desde
+então.
+
+**O que fazer, nesta ordem:**
+
+1. **Ler a última execução do P4** e ver o que o nó `[P5] CRM-out` devolveu. Se não houver execução
+   desde 16/09, **isso por si só é a resposta**: o caminho nunca foi exercido.
+2. **Ver se o `[P5] CRM-out` do P4 tem `onError`.** Se tiver `continueRegularOutput`, a chamada pode
+   estar falhando em silêncio há dias — é literalmente o bug das duas semanas.
+3. **Religar o `[P5] Entrada`** — com nota dizendo por que ele existe e que **não se desabilita sem
+   prazo de religar**.
+4. **Corrigir a descrição do P5O**, que afirma um fato (*"chamado pelo P4 desde 16/09"*) que o
+   workflow contradiz. **Descrição que mente é pior que descrição ausente** (R5).
+
+### 15.4 A ordem revisada até o fim da frente
+
+1. **`[P5] Entrada`** (§15.3) — primeiro, e não é negociável
+2. **CA6 por leitura** (§15.2) — cinco minutos, zero escrita
+3. **A descrição do P6O** — só depois dos sete critérios
+4. **A proposta de ativação**, com o minuto do gatilho e a resposta sobre o aviso de erro

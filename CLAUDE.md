@@ -342,6 +342,27 @@ usa **modelo forte**. Escolher o modelo é decisão de arquitetura, não detalhe
 > **Teste prático:** *"se este nó fizesse silenciosamente o oposto do que eu espero, eu perceberia?"*
 > Se a resposta for não, **falta um limite ou um carimbo** — não falta confiança.
 
+### R12 — Configuração mudada para teste volta na mesma sessão
+**Estado temporário sem prazo vira estado permanente invisível.** Já nos custou **três vezes**:
+
+| O que foi mudado para testar | O que aconteceu por não voltar |
+|---|---|
+| `modo: continuo` no `[P5] Config` | o backfill inteiro rodou **carimbado como contínuo** — o campo que existe para dizer que rodada foi aquela registrou o oposto |
+| vazão do P6 em **3**, baixada para a estreia | ficou em 3 depois de o motivo acabar; só não custou caro porque alguém reparou |
+| `[P5] Entrada` **desabilitado** durante o smoke de 16/09 | a porta pela qual o P4 chama o P5O ficou fechada — e a repontagem do M6 **nunca foi exercida** |
+
+**As duas regras:**
+1. **Antes de fechar a sessão, liste o que foi mudado para teste e releia o artefato confirmando que
+   voltou.** Voltar se prova **lendo, não lembrando**.
+2. **Ao desabilitar algo para testar, a nota ou o sticky diz quando religar.** Nó desabilitado não
+   tem cor, não tem alarme e não aparece em lista nenhuma — **é a mudança mais silenciosa que existe
+   no n8n.**
+
+> ⚠️ **E `triggerCount` não conta gatilhos, conta gatilhos ATIVOS.** Workflow inativo com
+> `scheduleTrigger` dentro reporta `triggerCount: 0`. Foi assim que um gatilho agendado do P5O passou
+> despercebido numa auditoria. **Para saber que gatilhos um workflow tem, leia os nós — nunca o
+> número.**
+
 ### R4 — Uma pergunta que todo chat responde antes de fechar
 > *"Onde estamos, quanto falta, e o que eu atualizei para provar isso?"*
 Se não souber responder, a etapa não acabou.
