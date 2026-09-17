@@ -583,3 +583,23 @@ toca em nenhuma coluna do P6**.
 ⚠️ **O que NÃO é anomalia:** depois do P5 escrever no CRM, o `write_date` do lead 66 muda e ele
 **volta à fila do P6** na rodada seguinte. Isso é o circuito funcionando, **não** ping-pong: o
 workflow é bidirecional, **o campo é sempre de mão única**.
+
+### 14.5 O 101 está fechado — não há ponto cego (17/09)
+
+O Olavo leu o pipeline do CRM no Odoo: **100 leads**. A listagem padrão esconde arquivados, então
+são **100 ativos + 1 arquivado (o lead 43) = 101** — **exatamente** o que o `_lidos_no_odoo` devolveu.
+
+🟢 **A hipótese B está descartada. O P6 lê 100% do que existe no CRM.** O `resource: opportunity` não
+está escondendo nada, e o CA7 continua de pé.
+
+**Os 15 ids que faltam foram consumidos, não perdidos.** A explicação mecânica é banal: no
+PostgreSQL, **a sequência de id não volta atrás quando um `INSERT` falha** — e esta frente teve várias
+tentativas de criação que falharam (o `UNIQUE(gbp_place_id)`, a recusa do payload na execução
+`39633`). Cada uma queimou um id sem deixar registro.
+
+> **A lição, e o erro era meu:** **id nunca é contagem.** Eu estimei `~116` a partir do maior id e
+> mandei procurar 15 leads que não existiam. Em qualquer base com sequência, **buraco de id é o
+> estado normal** — a única fonte de contagem é contar.
+>
+> O sub-chat estava certo ao dizer que o número certo era 101. **Ele só não podia fechar sem
+> descartar o ponto cego** — e agora está descartado com medição, não com raciocínio.
