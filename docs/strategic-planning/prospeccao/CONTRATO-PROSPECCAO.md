@@ -1756,3 +1756,166 @@ INTERSECAO = VAZIA
 **Uma observação menor, não é violação:** o `[P5] Gravar id_crm e data_envio_crm` inclui `row_number`
 no mapeamento — metadado do próprio nó do Sheets, não coluna de negócio, e não é coluna do P6. Fica
 anotado para não virar falso achado numa auditoria.
+
+### 11.25 Veredito do CA9 e do CA10 — os dois que quase passaram batido
+
+Os critérios da entrevista de execução iam de CA1 a CA11. O **CA9** e o **CA10** não eram
+mencionados desde a §11.8. **Vereditos, por leitura, como o CA6.**
+
+#### 11.25.1 🟢 CA10 — **PROVADO**
+
+> *"Estágio nunca é escrito. Mover um lead para 'Em Cadência' e rodar o P5: o lead continua em 'Em
+> Cadência' e nenhum campo dele foi alterado."*
+
+Duas travas independentes, as duas lidas no `PROSP-05O`:
+
+1. **`[P5] Estagio ainda aberto?`** — IF com `stage_id[0] === 1` (Prospecção). Saída **verdadeira**
+   vai para `[P5] Payload para atualizar`; a **falsa** vai para um nó cujo nome é o próprio critério:
+   **`[P5] Lead e do vendedor - nao mexer`**. Lead em "Em Cadência" é estágio 3 → cai no falso →
+   **nada é escrito nele**.
+2. **`stage_id` nunca entra no payload.** O `[P5] Montar payload Odoo` não o monta em lugar nenhum, e
+   a skill `phi-odoo-crm` proíbe com todas as letras: *"Nunca escrever `stage_id`, won/lost, nem
+   qualquer campo computado"*.
+
+**Passa.** E passa por desenho, não por acidente — a entrevista já dizia *"CA10 já é atendido pelo
+desenho atual (trava de estágio)"*; **faltava alguém verificar, e agora está verificado.**
+
+#### 11.25.2 CA9 — **metade provada, metade RETIRADA com justificativa**
+
+> *"Zero honesto × zero falso. Lead com `dim_seo = 0` e outro com `dim_seo` vazio: o primeiro mostra
+> `0` no Odoo; o segundo mostra **vazio** — não `0`."*
+
+**A metade da escrita: 🟢 PROVADA.** O `[P5] Montar payload Odoo` usa `autoMapInputData`, em que
+**campo ausente do payload não é enviado**. E a função que decide:
+
+```js
+function num(v) {
+  const s = txt(v).replace(",", ".");
+  if (s === "") return null;          // vazio -> null -> campo OMITIDO
+  const n = Number(s);
+  return Number.isFinite(n) ? n : null;
+}
+function inteiro(campo, valor) { const n = num(valor); if (n !== null) p[campo] = Math.round(n); }
+```
+
+`num("")` devolve `null` → o campo **some do payload**. `num(0)` devolve **`0`**, que é `!== null` →
+**o zero é enviado**. É a diferença entre `=== ""` e um `if (!n)` descuidado — e é ela que salva o
+sinal. **O `gbp_dim_engajamento = 0` da Niti, que é o achado crítico do diagnóstico e não ausência de
+dado, sobrevive.**
+
+**A metade da leitura: 🔴 RETIRADA — o critério pede o que o desenho recusa de propósito.**
+
+`gbp_dim_seo` é **Integer** no `phi_crm`. Coluna Integer no PostgreSQL **não guarda "vazio"**: lead
+novo nasce com `0`. Não existe configuração que faça um Integer "mostrar vazio" — a §11.11 já tinha
+anotado esse comportamento sem tirar a conclusão.
+
+E o módulo **decidiu não resolver isso campo a campo**. A skill `phi-odoo-crm` é explícita:
+
+> *"a ausência é marcada **no conjunto** (`gbp_score_atualizado_em` vazio esconde o card inteiro), e
+> **nunca campo a campo**"* — e, na lista de verificação: *"Um `0` num campo GBP continua aparecendo
+> como `0`"*.
+
+**Por que o desenho está certo e o critério errado:** marcar ausência por campo obrigaria a
+distinguir "vazio" de `0` em seis Integers, e **qualquer esquema que apague zeros destrói o sinal
+mais valioso** — o zero da Niti. O módulo escolheu o contrário: **o zero é sempre zero, e a ausência
+é do conjunto**. O `gbp_score_atualizado_em` vazio diz *"o PHI nunca rodou neste lead"*, e o campo
+computado `gbp_diagnostico` esconde o card inteiro.
+
+**O CA9 foi escrito antes de o desenho do card estar claro.** Fica retirado, e no lugar dele o que
+vale e está provado:
+
+> **CA9 (revisado):** *o P5 omite campo GBP não observado e envia o zero observado; a ausência de
+> dado é sinalizada no conjunto, por `gbp_score_atualizado_em` vazio, nunca campo a campo.*
+
+⚠️ **Consequência a não esquecer:** como o Integer nasce `0`, **ler um `0` num lead sem
+`gbp_score_atualizado_em` não significa "dimensão zero"** — significa "o PHI nunca rodou". Quem for
+usar as dimensões em análise **tem de filtrar por `gbp_score_atualizado_em` preenchido primeiro.**
+
+### 11.26 Proposta de ativação do PROSP-06O — **proposta, não executada**
+
+**Pré-requisitos, todos atendidos:** os sete critérios do P6 provados, mais CA6 e CA7; a descrição do
+workflow reescrita (§11.27); CA9 e CA10 com veredito escrito.
+
+#### 11.26.1 Os minutos
+
+| Workflow | Gatilho | Minuto | Estado |
+|---|---|---|---|
+| `PROSP-06O` | `hours`, a cada 6 | **20**, declarado | ✅ já gravado |
+| `PROSP-05O` | `[P5] Reconciliacao 6h`, a cada 6 | **sem declarar → 0 por omissão** | 🔴 **declarar antes de ativar** |
+
+**Recomendação: `triggerAtMinute: 40` no P5O.** Fica a 20 minutos do P6 nos dois sentidos — é o
+espaçamento máximo possível entre dois gatilhos de 6 h, e tira os dois do `:00`, onde tudo que fica
+no padrão se junta. **O P6 é barato** (1 leitura da aba + no máximo 20 escritas), mas espaçar custa
+zero e a §11.20 mostrou o que custa não decidir.
+
+#### 11.26.2 O error workflow — **já existe, não construir** (R7)
+
+Procurei antes de propor construção. **Existe e está ativo:**
+
+> **`PHI - Alerta de Falha (errorWorkflow)`** — `UZ7sIE5cWrrO8xea`
+> *"Handler de erro compartilhado: dispara quando um workflow do PHI falha em producao e manda o
+> motivo no Telegram do Olavo. Existe porque a falha morria na lista de execucoes do n8n — foi o caso
+> da credencial do BigQuery em 09/09."*
+
+**A proposta é uma linha de configuração, não um artefato:** apontar o `errorWorkflow` do `PROSP-06O`
+(e das demais pernas) para `UZ7sIE5cWrrO8xea`. Hoje o P6O **não tem `errorWorkflow` nenhum**.
+
+**É diferente do Telegram que já existe dentro do P5O**, e os dois convivem:
+
+| | Pergunta que responde | Granularidade |
+|---|---|---|
+| Telegram dentro do P5O (D3) | *"este lead deu problema"* | **por lead** |
+| `PHI - Alerta de Falha` | *"esta execução morreu"* | **por execução** |
+
+⚠️ **Duas ressalvas honestas:**
+1. **Error workflow só dispara em execução de produção**, nunca em manual/teste. Todas as provas
+   desta rodada foram manuais — **o alerta nunca foi exercitado no P6O**, e só será depois de ativar.
+2. Existe um **`PHI - Alerta de Erro (Telegram)`** (`Oj1RbA0laZTzJZPx`), **inativo**, que parece ser o
+   antecessor do `UZ7sIE5cWrrO8xea`. **Não apagar sem os cinco passos da R5** — mas vale decidir se
+   ele é legado, porque dois workflows com o mesmo nome-conceito é a próxima confusão de auditoria.
+
+#### 11.26.3 Item separado, para antes da próxima prospecção: o `onError` do `[P5] CRM-out`
+
+**Não é do P6 e não foi executado.** Recomendação do chat-mãe, acatada e registrada aqui para não se
+perder: **remover o `onError` do `[P5] CRM-out` (no `PROSP-04`), não dar destino a ele.**
+
+O que falha ali é **a chamada do sub-workflow**, não um lead. Falha de lead já tem tratamento dentro
+do P5O (D3: grava `erro_envio_crm` e avisa no Telegram, provado na `39633`). Se a **chamada** falha,
+não é *"este lead deu problema"* — é **"a perna do CRM está fora do ar"**, e vai falhar para todos
+igualmente. **Continuar em silêncio quando a perna inteira caiu é o pior comportamento possível.**
+O `retryOnFail` fica, que cobre falha passageira; sem o `onError`, o que sobrar **para e aparece** —
+e agora aparece no Telegram, via `errorWorkflow`.
+
+**E por que NÃO dar a ele um ramo que grave `erro_envio_crm`:** essa coluna é do **P5**. O P4
+escrevendo nela criaria **dois donos** — exatamente o que o CA6 acabou de provar que não existe.
+
+#### 11.26.4 A ordem sugerida para ligar
+
+1. Declarar `triggerAtMinute: 40` no `[P5] Reconciliacao 6h`.
+2. Apontar o `errorWorkflow` das duas pernas para `UZ7sIE5cWrrO8xea`.
+3. Remover o `onError` do `[P5] CRM-out` (§11.26.3).
+4. **Ativar o `PROSP-06O` primeiro, sozinho**, e observar **uma** rodada de produção: ela deve
+   terminar verde com `_modificados: 0` — é o estado normal dele.
+5. Só depois ativar o `PROSP-05O`, que é quem escreve no CRM.
+
+> **Por que o P6 primeiro:** ele **só lê** o Odoo e escreve em colunas que são só dele. Se algo der
+> errado, o estrago é uma coluna de desfecho desatualizada. O P5 cria lead no CRM — e é o que já
+> custou caro duas vezes nesta frente.
+
+**Nada disso foi executado. Aguarda o OK do Olavo.**
+
+### 11.27 A descrição do PROSP-06O — o segundo workflow do parque a passar na R5
+
+Antes terminava em **`EM CONSTRUCAO`**. Agora que os critérios fecharam, ficou honesto escrevê-la:
+
+> *"P6 do CONTRATO na versao Odoo. So LE o crm.lead (I8) e devolve a planilha o desfecho: status,
+> perda, datas e o acerto da previsao, base do aprendizado do score. Substituiu o Sync HubSpot ->
+> Planilha, desativado em 16/09, que casava por id_hubspot."*
+
+Ela responde as três perguntas da R5: **o que faz** (só lê o CRM e devolve o desfecho), **por que
+existe** (o acerto da previsão é a base do aprendizado do score) e **o que substituiu, e por quê** (o
+`Sync HubSpot -> Planilha`, que casava por `id_hubspot` — coluna que não existe mais).
+
+**O teste prático da R5 — *"a auditoria semanal precisa perguntar ao Olavo para entender?"* — passa.**
+É o segundo workflow do parque a conseguir, depois do `[APOSENTADO 2026-07-21] PHI - Loop Alerta
+Fase 1`.
