@@ -759,3 +759,83 @@ e o P6O vai ser o segundo workflow do parque a passar nesse teste.
 
 **E a precisão dele sobre o `notes` entra nas armadilhas:** não é *"não é gravável"* nem *"é
 gravável"* — é **gravável na criação, não depois**. Nó que já existe só recebe **sticky**.
+
+---
+
+## 17. Fechamento (17/09) — o que move no placar, e os últimos quatro
+
+**A descrição passa no teste da R5:** diz o que faz, por que existe e **o que substituiu**. Segundo
+workflow do parque a conseguir.
+
+**O CA10 estava atendido pelo desenho e faltava alguém verificar** — duas travas independentes, e um
+nó chamado `[P5] Lead e do vendedor - nao mexer`, que é descrição dentro do nome.
+
+**E o error workflow já existia** (`UZ7sIE5cWrrO8xea`, ativo desde 10/09). Ele **procurou antes de
+propor construir** (R7) e achou. Era uma linha de configuração, não um artefato novo.
+
+### 17.1 O CA9 revisado — endosso, mas a palavra é do Olavo
+
+**O raciocínio está certo.** Coluna `Integer` no Odoo devolve `0` para quem nunca escreveu: pelo ORM,
+**ausência e zero são indistinguíveis no campo**. Um critério que exige o que o armazenamento não
+representa não é critério — é desejo. E a alternativa que ele propôs mantém o que importa: o zero
+observado chega, e a ausência é marcada **no conjunto**, por `gbp_score_atualizado_em` vazio.
+
+**A parte mais valiosa do achado é o aviso, não o critério:**
+
+> **Um `0` num lead sem `gbp_score_atualizado_em` não é "dimensão zero" — é "o PHI nunca rodou".**
+> Quem usar as dimensões em análise **filtra por `gbp_score_atualizado_em` preenchido primeiro.**
+
+⚠️ **Mas retirar critério é controle de mudança (§12.3 do plano), e a decisão é do Olavo.** Ele
+apresentou justificativa e alternativa, que é exatamente o que o controle pede. **Falta a palavra.**
+
+### 17.2 A rede de segurança nunca foi testada
+
+Ele mesmo registrou: **error workflow só dispara em produção, nunca em execução manual.** Então o
+alerta do P6O **nunca foi exercido**.
+
+**A pergunta que decide se vamos ligar com rede ou com a foto de uma rede:** o
+`PHI - Alerta de Falha` **já disparou alguma vez?** Ele foi criado em 10/09 por causa da credencial do
+BigQuery — se disparou naquele dia, está provado. Se nunca disparou, estamos confiando num aviso que
+ninguém viu funcionar. **Uma olhada na lista de execuções dele responde.**
+
+### 17.3 O `PHI - Alerta de Erro (Telegram)` inativo — aposentar, não deixar
+
+Dois workflows com o mesmo nome-conceito é **a próxima confusão de auditoria**, e ele tem razão em
+apontar. **Procedimento da R5, cinco passos** — o que importa aqui é o **prefixo `[APOSENTADO
+2026-09-17]` e o sticky** dizendo que o substituto é o `UZ7sIE5cWrrO8xea`. Dois minutos, e evita que
+alguém aponte a perna errada daqui a um mês.
+
+### 17.4 A ordem de ligar — aceita, com dois acréscimos
+
+O raciocínio de ligar **o P6 primeiro** está certo: ele só lê o Odoo e escreve em colunas que são só
+dele; o pior caso é uma coluna de desfecho desatualizada. O P5 **cria lead no CRM** — e já custou caro
+duas vezes.
+
+**Dois acréscimos:**
+
+1. **Não basta ver uma rodada vazia.** A primeira rodada com `_modificados > 0` é a **primeira
+   escrita de produção em horário automático** — essa também tem de ser olhada. A vazia prova que o
+   gatilho dispara; a cheia prova que ele trabalha.
+2. **O `triggerAtMinute: 40` do P5O está aceito.** 20 minutos de separação é folga de sobra para um
+   P6 que faz 1 leitura e no máximo 20 escritas.
+
+### 17.5 O que isso move no placar da frente
+
+| | Antes | Agora |
+|---|---|---|
+| **P4** — *o desfecho volta à planilha com motivo, automaticamente* | ⬜ | 🟡 **máquina provada**; falta **ativar** e um perdido **com motivo** |
+| **A3** — *loop de aprendizado escreve as 17 colunas* | 🟡 *"pode ter parado"* | 🟡 **resolvido**; ✅ quando ativado |
+| **A2** — *lead vira lead no CRM canônico sem toque humano* | 🟡 | 🔴 **o caminho P4 → P5O nunca rodou** |
+
+🔴 **O A2 piorou, e é honesto que tenha piorado.** Ele estava 🟡 com base numa premissa que a leitura
+do §15.3 desmentiu: o P4 foi repontado em 16/09 e **nunca chamou o P5O nem uma vez**. O critério não
+regrediu — **a nossa informação sobre ele melhorou.**
+
+### 17.6 Um gesto de 10 segundos fecha o P4 direito
+
+O `motivo_perda` voltou **vazio** porque o lead 43 foi marcado como perdido **sem motivo**. O I3
+funcionou. **Mas o caminho do motivo nunca foi exercido** — e o critério P4 diz, com todas as letras,
+*"o desfecho volta à planilha **com motivo**"*.
+
+**Marcar um lead como perdido escolhendo um motivo na tela** fecha o último furo. É o mesmo gesto que
+vira **hábito de operação** (§14.3): perda sem motivo não ensina nada.
