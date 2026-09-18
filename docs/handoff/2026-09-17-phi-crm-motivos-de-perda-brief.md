@@ -187,3 +187,50 @@ O lead volta *"após um período"*. Procurei o que já existe antes de propor ca
   arquivado, o robô **pula** o lead, de propósito. Quando um humano desarquivar, o P5O volta a
   atualizá-lo normalmente. **Funciona — mas precisa estar escrito**, senão alguém vai esperar que a
   automação traga o lead de volta sozinha, e ela nunca vai.
+
+### 7.3 Por que marcar perdido, e como o lead volta (18/09)
+
+**O motivo da perda é operacional, não moral:** *"para que 'saia' da contagem de leads 'rodando' no
+pipeline"*. O lead não é descartado — ele é tirado de vista para o funil dizer a verdade sobre o que
+está em jogo agora.
+
+O Olavo levantou três caminhos. **Procurei antes de opinar (R7), e o segundo já está construído.**
+
+🟢 **O `lead_status` já tem `reciclado`.** `crm_lead.py` linha 59, quatro valores
+(`novo` · `aceito` · `em_cadencia` · `reciclado`), campo `[HUM]`, com este `help`:
+
+> *"Nuance da cadencia, em paralelo ao estagio. O estagio nunca retrocede; **a reciclagem se registra
+> aqui**."*
+
+O campo foi desenhado para marcar **quem voltou**, não quem saiu. Isso encaixa perda e reciclagem sem
+conflito, em eixos diferentes — **e responde a pergunta em aberto da §7.1: é a leitura (b).**
+
+**Recomendação — A e B, cada uma no seu momento, sem construir nada:**
+
+| Momento | O que o humano faz | Onde o dado fica |
+|---|---|---|
+| **Sai** (fim da cadência) | botão Perdido + motivo `Sem resposta` | `lost_reason_id` → `motivo_perda` · `date_closed` → `data_fechamento` — **as duas o P6O já escreve** |
+| **Volta** (campanha) | desarquiva + `lead_status = reciclado` | campo que já existe; o estágio não retrocede |
+
+O monitoramento *"fechado há X tempo"* sai dessas duas colunas, sem coluna nova. E desarquivar devolve
+o histórico inteiro: chatter, tentativas, campos GBP.
+
+#### 🔴 Contra o segundo pipeline — o custo é no PROSP-06O
+
+**Perder arquiva o lead** (`active = false`). Para viver num pipeline "Reciclados" ele teria de ficar
+**ativo** — e aí **não sai da contagem**, só muda de funil. O objetivo declarado só se cumpre se toda
+contagem, de todo mundo, for sempre por funil.
+
+**E o desfecho pararia de voltar.** O `[P6] So os modificados` deriva o desfecho de `won_status`,
+`lost_reason_id` e `active`. Lead ativo em outro funil chega como **aberto**: `status_crm` viraria o
+nome do estágio do funil Reciclados e **o `motivo_perda` nunca seria gravado**. A base de aprendizado
+perderia a categoria mais volumosa — a que mede o gargalo declarado do projeto.
+
+Há ainda o custo comum: dois conjuntos de estágios para manter, e relatórios que precisam somar dois
+funis para responder *"quantos leads temos"*.
+
+#### Pendência menor, registrada e não proposta
+
+O `lead_status` **não volta para a planilha**: o P6O não o mapeia e não há coluna para ele. Não
+atrapalha o monitoramento acima. Se um dia for preciso filtrar "reciclados" direto na planilha, é uma
+coluna nova mais uma linha no mapeamento — **decisão do Olavo, não deste brief.**
