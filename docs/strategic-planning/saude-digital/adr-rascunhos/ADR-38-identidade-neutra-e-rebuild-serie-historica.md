@@ -1339,3 +1339,161 @@ qualquer mudança de identidade futura.
 
 Plano: `docs/handoff/2026-09-18-adr38-etapa8-adr37-fases1e2-subchat-brief.md`, **Fase 0** — antes de
 qualquer consolidação de writer.
+
+---
+
+# 22. Fase 0 executada — a varredura de consumidores (2026-09-18)
+
+> O chat-mãe mudou o escopo antes de eu começar: não era "consertar o ramo do Notion", era **varrer
+> todo consumidor de `campaign_id`, dizer um por um se quebrou, e só então consertar** — porque
+> *"consertar um e não procurar os irmãos foi como o `id_hubspot` viveu duas semanas"*. Estava certo:
+> a varredura achou **quatro** coisas, e a mais grave **não era a que nenhum de nós dois previa**.
+
+## 22.1 🔴 A causa raiz do P-24 não é o prefixo. Sou eu, em 10/09.
+
+A hipótese era que o ramo do Notion casasse por `campaign_id` **com prefixo**. **Falsa.** O
+`Code Clean Campanhas F3` lê `campaign_id` direto do campo do Notion, sem montar prefixo, e a página
+já tem o id nativo. Os dois lados batem.
+
+O que a execução de hoje (`40470`) mostra é outra coisa:
+
+```
+"lastNodeExecuted": "Checar unicidade do score"
+"Checar unicidade do score": data.main = [[]]     ← ZERO itens
+```
+
+**O `Checar unicidade do score` — o nó que EU acrescentei em 10/09 para a P-19 — devolve zero linhas
+no caso saudável.** E **zero itens interrompe o ramo no n8n**. Desde a publicação de 10/09 22:42,
+tudo a jusante parou de existir:
+
+| O que morreu | Desde |
+|---|---|
+| `Sync Scores to Notion` (Score Diário, Status, `phi_ultima_execucao`) | 11/09 |
+| **A Fase 3 inteira** — abertura, escalada, fechamento, auto-close, Log de Otimizações | 11/09 |
+
+**Oito dias, com a execução verde todo dia.** O `alwaysOutputData` que a §17.2 afirma ter ligado
+**nunca esteve ligado** — li o nó: estava nulo. **A §17.2 documentou a intenção, não o artefato.**
+
+> **A lição é dura e é minha:** eu construí a P-19 para que a duplicata *gritasse*, e o nó que eu
+> pus para gritar **emudeceu o pipeline**. O caso saudável de uma checagem é **não achar nada** — e
+> num fluxo do n8n "não achar nada" significa "pare tudo". **Todo nó de verificação no meio de uma
+> cadeia precisa de `alwaysOutputData`.** É a R11 aplicada ao próprio instrumento de medição.
+
+**Corrigido e publicado** (`e4f6d90a`): `alwaysOutputData = true` mais uma nota no nó proibindo
+desligar. Diff rascunho × no ar conferido antes de publicar (P-21): **um único nó diferente**, SQL e
+conexões idênticos, e todos os `validationWarnings` marcados `[pre-existing]`.
+
+**Prova funcional pendente:** a rodada natural das **07h BRT de 19/09**. Não rodei o `Pipeline_v2` à
+mão de propósito — ele executa a Fase 3, que cria e move tarefa no Notion, e a Regra Crítica nº 11
+torna a ordem imutável.
+
+## 22.2 🔴 `PHI - Fechar Otimização` está quebrado desde o corte
+
+Este **é** do tipo que o chat-mãe previu. O nó `Buscar Campanha` casa o `campaign_id` da DB **Tasks**
+com o da DB **Campanhas**:
+
+| DB | valor hoje |
+|---|---|
+| Campanhas | `21149189736` ✅ atualizado em 09/09 |
+| **Tasks** | **`GADS-21149189736`** ❌ nunca atualizado |
+
+Execução `40619` (hoje, 20h): as 3 tarefas caíram todas em `Sem Campanha Ativa`, e
+`Desmarcar Otimização Ativa` **não rodou**. O workflow roda **de hora em hora, verde, sem fazer
+nada**, desde 09/09.
+
+**A etapa 3 deste ADR dizia, com todas as letras:** *"atualizar o campo `campaign_id` no Notion
+(Campanhas **+ Tasks abertas**)"*. Campanhas foi feito. **Tasks não.** A etapa foi marcada ✅ pela
+metade.
+
+**Não corrigido nesta sessão** — é reparo de dado no Notion e precisa de decisão: só as tarefas
+abertas, ou o histórico todo? Vira a **P-25**.
+
+## 22.3 🟡 O rótulo de plataforma perdeu a informação
+
+`Buscar Campanhas Alertas` (Pipeline_v2) ainda faz:
+
+```sql
+CASE WHEN STARTS_WITH(sa.campaign_id, 'GADS-') THEN 'GOOGLE ADS'
+     WHEN STARTS_WITH(sa.campaign_id, 'META-') THEN 'META ADS'
+     ELSE 'GOOGLE ADS' END AS plataforma
+```
+
+Com o prefixo extinto, **tudo cai no `ELSE`**. Para campanha Google acerta por acidente; para uma
+campanha Meta diria **'GOOGLE ADS'**. Não quebra hoje porque não há campanha Meta ativa — mas é
+mentira esperando cliente.
+
+**A correção não é de uma linha:** a `phi_score_current` foi criada antes da P-13 e **não expõe a
+coluna `platform`**, embora ela exista em `phi_score_history`. Então hoje não há de onde ler a
+plataforma depois da view. É preciso (a) `CREATE OR REPLACE VIEW` incluindo `h.platform`, e só então
+(b) trocar o `CASE`. **Mexer numa view do caminho do score é mudança grande — não fiz, fica para o
+seu OK.** Vira a **P-26**.
+
+## 22.4 ⚪ Prefixo vestigial no writer das 00h/04h
+
+`Code Prep Tendência` (`sw metricas campanhas`) ainda monta:
+
+```js
+if (idG > 0) campaign_id = 'GADS-' + idG;
+else if (idM > 0) campaign_id = 'META-' + idM;
+```
+
+**Ninguém consome esse valor.** O `Code Montar SQL` passou a usar o id nativo na etapa 2, e o único
+outro leitor (`Code Tendência Real`) usa o item por índice, não o `campaign_id`. O dado prova:
+zero prefixos em `raw_campaign_data`.
+
+Mas é **uma variável chamada `campaign_id` guardando o formato velho, viva, num workflow ativo** —
+armadilha para quem religar. Vira a **P-27** (remover ou renomear com nota).
+
+## 22.5 ✅ O que a varredura inocentou (e a refutação registrada)
+
+| Consumidor | Veredito |
+|---|---|
+| **As 8 views do BigQuery** | ✅ nenhuma usa prefixo. Li a `view_definition` de todas |
+| `phi_score_current` | ✅ funciona — devolve as 2 campanhas KIL |
+| `Enrich for Sync` / `Code Clean Campanhas F3` | ✅ casam nativo × nativo — **a hipótese do prefixo era falsa** |
+| `Update a database page` (04h) | ✅ casa por índice, não por id |
+| `PHI — Agregador Multi-fonte` | ✅ **refutado que estivesse parado:** é **semanal** (rodou 07/09 e 14/09, domingos). A `t28_campaign` sem dado desde 13/09 é o esperado; o próximo ciclo é 21/09 |
+| `operador unico metricas`, `Vigia de Frescor` | ✅ não casam por `campaign_id` |
+
+> **R6 — hipótese desmentida também se registra:** eu ia tratar a `t28_campaign` como terceira
+> vítima. O calendário de execução desmentiu antes de eu mexer.
+
+**Achado lateral:** a `t28_campaign` guarda **três identidades na mesma coluna** — 276 linhas
+`GADS-`, 318 `CMP.SLUG.CAMP-N` e 19 nativas (a partir de 07/09). Não está quebrada, mas **a série
+histórica do cérebro T28 está partida em três** e qualquer comparação que cruze 09/09 vê a mesma
+campanha como três. Mesmo tratamento que o `phi_score_history` recebeu. Vira a **P-28**.
+
+## 22.6 Cobertura honesta desta varredura
+
+Li **no ar** (`versionId == activeVersionId` conferido em todos): `PHI - Pipeline_v2`,
+`sw metricas campanhas`, `PHI - Fechar Otimização`, `PHI - Vigia de Frescor`,
+`operador unico metricas`. Li por dado: as 8 views e todas as tabelas com coluna de campanha.
+
+**Não abri:** `sw metricas conjuntos`, `sw metricas anuncios` (escrevem em `raw_ad_data` e
+`raw_adset_data_rollup`, **ambas com 0 linhas** — não produzem nada hoje, o que é achado próprio e
+alheio a este ADR) e `PHI - Subworkflow Campanhas` (o dado prova que grava id nativo). Os inativos
+(`Daily Entry`, `PHI - Fase 2/3`, `WF-T28-*`) não podem ter quebrado produção, **mas quebrarão
+quando forem ligados** — quem religar tem de reler.
+
+## 22.7 A lição que fica para mudança de identidade
+
+A §15 ensinou: *mudar uma chave é mudar um contrato — reconfira todo **produtor** dela.*
+A §21 acrescentou: *e todo **consumidor**.*
+Esta seção acrescenta a terceira, que é a mais difícil de ver:
+
+> **O maior estrago não veio da mudança de identidade. Veio da salvaguarda que eu instalei para
+> protegê-la.** A P-19 existe para a duplicata gritar; ela emudeceu o pipeline inteiro por oito dias.
+> **Salvaguarda também é código novo em produção, e precisa do mesmo smoke que a mudança que ela
+> protege.** O teste que faltou não é "a checagem pega duplicata?" — é **"o que acontece no dia em
+> que ela não pega nada?"**
+
+## 22.8 Pendências novas
+
+| # | Pendência |
+|---|---|
+| **P-25** | `campaign_id` da DB **Tasks** ainda tem prefixo — `PHI - Fechar Otimização` não fecha nada desde 09/09 |
+| **P-26** | `phi_score_current` não expõe `platform`; enquanto isso o rótulo de plataforma mente para Meta |
+| **P-27** | Prefixo vestigial em `Code Prep Tendência` |
+| **P-28** | `t28_campaign` com 3 identidades — série histórica do T28 partida |
+
+**P-23 resolvida:** o `PHI - Pipeline_v2` saiu desta sessão **com descrição** (R5).
