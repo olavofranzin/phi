@@ -647,3 +647,61 @@ reportou fielmente que nada mudou.
 > notícia.
 
 **Próxima janela: 06:20 BRT (09:20 UTC).** Qualquer lead marcado até lá entra nela.
+
+---
+
+## 20. O mistério do "perdido com motivo" (18/09) — a máquina estava certa
+
+Li o ramo de arquivados da execução `40460` (09:20 UTC = 06:20 BRT). Ele devolveu **dois** leads:
+
+| id | `write_date` | `lost_reason_id` | linha na planilha? |
+|---|---|---|---|
+| **116** | `2026-09-17 23:49:35` | `[1, "Too expensive"]` | ❌ **não tem** |
+| **43** | `2026-09-17 19:12:35` | `false` (sem motivo) | ✅ tem |
+
+**O lead marcado como perdido com motivo foi o 116 — o que o Olavo criou à mão.** Ele **não tem linha
+na planilha**, então o P6 o **desviou e contou**, exatamente como manda o P6-1:
+`_fora_sem_linha_na_planilha: 1`, `_sem_linha_ids: "116"`.
+
+**E o lead 43 ficou de fora por um motivo legítimo:** `write_date 19:12:35` é **30 segundos anterior**
+ao cursor (`19:13:05`, o `write_date` do lead ganho). Já tinha sido processado.
+
+> **Nada falhou. O P6 fez as três coisas certas ao mesmo tempo**: leu o arquivado novo, reconheceu que
+> ele não tem linha, e recusou-se a criar uma. **A contabilidade fecha:** 99 ativos + 2 arquivados =
+> 101, e `0 + 100 + 1 = 101`.
+
+**Eu é que conclui rápido demais** na §19.3, ao ler `_fora_nao_modificado: 100` e deduzir que nada
+tinha mudado no CRM. **Tinha mudado — só que no lead que o desenho manda ignorar.** A leitura certa
+era abrir o ramo de arquivados antes de afirmar. É a R6 na versão barata: **o número agregado não
+substitui o registro.**
+
+### 20.1 O que fecha o P4, com precisão
+
+**Marcar como perdido, com motivo, um lead que VEIO DA PLANILHA** — qualquer um dos ~100, não o 116.
+O 116 nasceu no CRM e nunca terá linha; marcá-lo de novo não fecha nada.
+
+### 20.2 🔴 A máquina lê `"Too expensive"`, não `"Muito caro"`
+
+O `lost_reason_id` voltou como **`[1, "Too expensive"]`** — o nome **de fábrica, em inglês** —, embora
+a tela do Olavo mostre **"Muito caro"**.
+
+**A tradução é da interface; o `txt()` do P6 pega `v[1]`, que é o nome que a API devolve no idioma do
+usuário da integração** (o `n8n@`, em inglês). **Então o `motivo_perda` da planilha receberia
+`"Too expensive"`.**
+
+**Isso vai direto para o brief dos motivos** (`2026-09-17-phi-crm-motivos-de-perda-brief.md`), e é
+mais forte que a regra que já estava lá:
+
+> **O nome que o vendedor vê e o nome que a máquina grava podem ser diferentes.** Não basta escolher
+> bem os nomes — é preciso garantir que o **nome-base** do registro seja o português, e **conferir na
+> API**, não na tela, o que sai de lá. Senão a base de aprendizado nasce em inglês e com os rótulos
+> de fábrica que este brief existe para substituir.
+>
+> **Teste de aceite do brief dos motivos:** ler um lead perdido **pela API** e ver o nome em
+> português.
+
+### 20.3 O Vigia passou — credencial fechada
+
+`40483`, 18/09 11:00 UTC = **08:00 BRT**, `success` em **1,7 s** — a mesma duração das rodadas
+saudáveis de 11 a 16/09. **A reconexão do BigQuery está provada em execução agendada**, não em
+palavra.
