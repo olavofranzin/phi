@@ -1274,9 +1274,68 @@ para sempre.
 | P-21 | Comparar rascunho × versão no ar antes de publicar | **virou regra da casa (R13)** |
 | P-22 | CLI-13 de teste segue sendo ingerido | 🔴 **cresceu**: 9 linhas, 09/09 → 17/09, uma por dia |
 | **P-23** | **`PHI - Pipeline_v2` está sem `description`** — viola a R5, e é o consumidor central do score | 🔴 nova |
-| **P-24** | **`phi_ultima_execucao` da campanha Salão no Notion parou em 10/09**, embora a página seja escrita todo dia e o `Score Diário` esteja atualizado (68,7) | 🟡 nova, a confirmar |
+| **P-24** | **O score não chega mais ao Notion** — ver §21 | 🔴 **CONFIRMADA e grave** |
 
 ## 20.7 O que resta do ADR-38
 
 **Só a etapa 8:** retomar as Fases 1 e 2 do ADR-37 sob a identidade única. Tudo o mais está feito,
 em produção e conferido.
+
+
+---
+
+# 21. 🔴 P-24 confirmada — o score é calculado e não chega ao Notion
+
+Levantada como suspeita na §20.6 (*"`phi_ultima_execucao` parou em 10/09"*) e conferida no mesmo
+dia, a pedido do chat-mãe: **10/09 é o dia em que os writers foram alterados pelo ADR-38, então
+valia conferir antes de planejar qualquer outra coisa.** Estava certo conferir.
+
+## 21.1 O que se vê
+
+| Onde | O que diz |
+|---|---|
+| BigQuery `phi_score_history`, Salão, 17/09 | **`phi_value = 44,59`** |
+| Notion, página do Salão | **`Score Diário = 68,7`** · `Status Geral = GOOD` |
+| Notion `phi_ultima_execucao` | **10/09** |
+
+`68,7` **não é nenhum dos últimos 10 dias** do Salão: 50,76 · 65,1 · 57,51 · 53,41 · 44,47 ·
+**25,54** · 38,86 · 43,48 · 48,36 · 44,59. É valor anterior a 08/09.
+
+**O problema não é o carimbo — é a entrega.** O score está sendo calculado e gravado todo dia; o
+que parou foi a escrita no Notion. O gestor está vendo **GOOD / 68,7** numa campanha que está em
+**44,59**, e **não viu a queda para 25,54 em 13/09**.
+
+## 21.2 Por que nada disparou
+
+É a **R11** inteira: o `Pipeline_v2` roda verde, o `phi_score_history` recebe a linha, a checagem de
+unicidade da P-19 passa — e a entrega ao humano não acontece. **O vigia da P-14 também não pega**,
+porque ele confere `raw_campaign_data` e `phi_score_history`, e **as duas estão corretas**.
+
+> **O vigia cobre até o BigQuery. Existe um trecho depois do BigQuery que ninguém vigia — e é
+> justamente o trecho que o gestor enxerga.**
+
+## 21.3 Hipótese (não confirmada) e por que ela importa
+
+A página foi editada hoje às **07:00 UTC (04h BRT)** — janela do `sw metricas campanhas` — e **não**
+às 10:00 UTC, janela do `Pipeline_v2`. Alguém ainda escreve nela; **quem parou foi o ramo do score**.
+
+A hipótese principal é que esse ramo **procure a página do Notion por `campaign_id` com o prefixo
+`GADS-`**. Com a identidade nova (`21116045403`) a busca não acha nada e o ramo não escreve. Seria
+**efeito colateral direto da etapa 2 deste próprio ADR**.
+
+**Não está confirmado** — exige ler o nó dentro do `Pipeline_v2`, que é a primeira tarefa do plano
+da etapa 8.
+
+## 21.4 A lição, que é maior que o defeito
+
+A §15 já tinha ensinado que **mudar uma chave é mudar um contrato, e todo produtor dela precisa ser
+reconferido**. O que faltou desta vez foi o outro lado: **todo CONSUMIDOR dela também.** Eu conferi
+os dois writers e o SQL do score. Não conferi quem lê `campaign_id` para casar com o Notion.
+
+**Um inventário de produtores não é um inventário de consumidores.** Fica como item obrigatório de
+qualquer mudança de identidade futura.
+
+## 21.5 Onde isso é tratado
+
+Plano: `docs/handoff/2026-09-18-adr38-etapa8-adr37-fases1e2-subchat-brief.md`, **Fase 0** — antes de
+qualquer consolidação de writer.
