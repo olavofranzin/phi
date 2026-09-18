@@ -1428,7 +1428,7 @@ plataforma depois da view. É preciso (a) `CREATE OR REPLACE VIEW` incluindo `h.
 (b) trocar o `CASE`. **Mexer numa view do caminho do score é mudança grande — não fiz, fica para o
 seu OK.** Vira a **P-26**.
 
-## 22.4 ⚪ Prefixo vestigial no writer das 00h/04h
+## 22.4 ⚪ ~~Prefixo vestigial~~ no writer das 00h/04h — 🔴 **ESTA SEÇÃO ESTAVA ERRADA, ver §23.1**
 
 `Code Prep Tendência` (`sw metricas campanhas`) ainda monta:
 
@@ -1443,6 +1443,11 @@ zero prefixos em `raw_campaign_data`.
 
 Mas é **uma variável chamada `campaign_id` guardando o formato velho, viva, num workflow ativo** —
 armadilha para quem religar. Vira a **P-27** (remover ou renomear com nota).
+
+> 🔴 **CORREÇÃO (2026-09-18, mesma sessão): o parágrafo acima é falso.** O valor **é** consumido —
+> na linha seguinte do próprio nó, dentro do `WHERE campaign_id` do `_bq_sql_serie`. Eu procurei
+> consumidores de `bq_campaign_id` em **outros** nós e não olhei o resto do próprio arquivo.
+> **Ver §23.1**, que mede o estrago.
 
 ## 22.5 ✅ O que a varredura inocentou (e a refutação registrada)
 
@@ -1497,3 +1502,112 @@ Esta seção acrescenta a terceira, que é a mais difícil de ver:
 | **P-28** | `t28_campaign` com 3 identidades — série histórica do T28 partida |
 
 **P-23 resolvida:** o `PHI - Pipeline_v2` saiu desta sessão **com descrição** (R5).
+
+---
+
+# 23. Fase 0, parte 2 — as decisões executadas (2026-09-18)
+
+## 23.1 🔴 A P-27 não era cosmética. Era a quinta quebra — e eu a tinha arquivado como inofensiva
+
+A §22.4 afirmou que o prefixo em `Code Prep Tendência` era **vestigial, sem consumidor**. A decisão do
+chat-mãe foi *"corrija agora — zero consumidor, uma linha"*. **Ao abrir o nó para fazer a linha, a
+premissa caiu.** Sete linhas abaixo de onde o prefixo é montado:
+
+```js
++ " WHERE campaign_id = '" + idSql + "'"
+```
+
+O valor entra no `_bq_sql_serie`, que o nó **`BigQuery Série Diária`** executa contra
+`raw_campaign_data`. Como nenhuma linha tem prefixo desde o corte, **o `WHERE` casa zero linhas**.
+
+**Medido na execução `40425` (hoje, 04h), nas três campanhas:**
+
+```
+BigQuery Série Diária → n_dias: "0", cost_3: null, conv_3: null, …
+Code Tendência Real   → tendencia_real: null, tendencia_metodo: "sem_historico", tendencia_n_dias: 0
+```
+
+**O PHI vinha reportando "sem histórico" em campanhas com 250 dias de série, todo dia, desde 09/09.**
+
+Não parou o fluxo porque a query é **agregada**: `SELECT COUNT(*), SUM(...)` sem `GROUP BY` devolve
+**sempre uma linha** — zerada. O oposto exato do caso da P-19: lá o vazio **parou** o ramo; aqui o
+vazio **passou** como se fosse resposta. **As duas faces da regra 5 da R11, no mesmo pipeline, na
+mesma semana.**
+
+**Por que eu errei:** procurei quem consome `bq_campaign_id` em **outros** nós, achei só um
+(`Code Tendência Real`, que pareia por índice) e concluí "sem consumidor". **Não li o resto do
+próprio nó.** A variável é usada onde é nascida. *Procurar consumidor fora do arquivo e não dentro
+dele é meia varredura.*
+
+**Corrigido e publicado** (`a9bd0584`): id nativo, e usando o **valor cru** em vez do numérico —
+porque `Number()` corromperia um id de Meta acima de 2^53 (P-15). Diff rascunho × no ar conferido
+(P-21): um nó, `Schedule Trigger1` habilitado, `={{ }}` do `BigQuery Série Diária` intacto.
+
+⚠️ **O que deixei registrado e não corrigi:** o `WHERE` filtra **só por `campaign_id`**, sem
+`client_id` nem `platform`. Com 2 clientes e ids nativos distintos não há colisão hoje, mas é uma
+chave parcial logo depois de um ADR que existe para tornar a chave completa. **Fica para a Fase A/B.**
+
+## 23.2 ✅ P-25 — as 3 tarefas abertas, e só elas
+
+Decisão do chat-mãe: corrigir **apenas as abertas**, deixar as fechadas como estão, **e registrar a
+escolha**. Verifiquei antes de agir (R6) — o número estava certo:
+
+| Estado | Antes | Depois |
+|---|---|---|
+| A Fazer (Salão) | 2 × `GADS-21116045403` | ✅ 2 × `21116045403` |
+| Em Andamento (Barbearia) | 1 × `GADS-21149189736` | ✅ 1 × `21149189736` |
+| **Concluído** (Barbearia) | 3 × `GADS-21149189736` | ⬜ **intocadas, de propósito** |
+
+Conferido relendo a base depois de escrever, não de memória (R13.3).
+
+> **A escolha, escrita para a próxima auditoria não estranhar:** tarefa **fechada** com id antigo não
+> faz mal — nada a procura — e reescrever história custa mais do que vale. Se um dia alguém cruzar
+> Tasks com `raw_campaign_data` por `campaign_id`, **essas 3 linhas não vão casar, e isso é
+> esperado.**
+
+## 23.3 🟡 P-26 — aprovada, adiada de propósito
+
+O rótulo `plataforma` do `Buscar Campanhas Alertas` cai todo no `ELSE`. Aprovado corrigir **na Fase
+A/B**, não agora: hoje só afeta o **CLI-13**, que é teste, e empilhar uma alteração de view sobre um
+conserto ainda não provado é sequência ruim. A correção exige duas etapas, nesta ordem:
+(a) `CREATE OR REPLACE VIEW phi_score_current` incluindo `h.platform`; (b) trocar o `CASE`.
+
+## 23.4 A `t28_campaign` não é pendência — é lacuna de escopo deste ADR
+
+> Registrado no corpo por decisão do chat-mãe: *"o ADR unificou a tabela crua e não a derivada"*.
+
+Este ADR trocou a identidade de `raw_campaign_data` e migrou a chave de `phi_score_history`.
+**Não tocou nas tabelas derivadas.** A `t28_campaign` — que alimenta o cérebro de análise T28 —
+guarda hoje **três identidades na mesma coluna**:
+
+| formato | linhas | `business_date` |
+|---|---|---|
+| `GADS-…` | 276 | 01/06 → 06/09 |
+| `CMP.SLUG.CAMP-N` | 318 | 01/07 → 06/09 |
+| **nativo** | 19 | **07/09 → 13/09** |
+
+Não está quebrada: o Agregador é **semanal** e já grava nativo, porque lê da tabela crua já
+unificada. Mas **a série histórica do T28 está partida em três**, e qualquer leitura que cruze 09/09
+vê a mesma campanha como três campanhas diferentes. **O tratamento é o mesmo que o
+`phi_score_history` recebeu na etapa 5** — tirar o prefixo e normalizar o formato velho —, e é
+trabalho do escopo do T28, não deste ADR. **Fica escrito aqui para que o T28 não descubra sozinho.**
+
+## 23.5 O placar da Fase 0
+
+| # | Achado | Estado |
+|---|---|---|
+| 1 | `Checar unicidade do score` matava a Fase 3 inteira | ✅ corrigido, `e4f6d90a` |
+| 2 | `Fechar Otimização` não casava as tarefas | ✅ corrigido (3 abertas) |
+| 3 | Série de tendência zerada há 9 dias | ✅ corrigido, `a9bd0584` |
+| 4 | Rótulo de plataforma sem fonte | 🟡 adiado para a Fase A/B (P-26) |
+| 5 | `t28_campaign` com 3 identidades | 📄 §23.4, escopo do T28 |
+
+**Três quebras em produção, das quais duas eram minhas** — a salvaguarda da P-19 e a meia-varredura
+da §22.4. **A terceira (o `Fechar Otimização`) foi a única que o método previu antes de olhar.**
+
+## 23.6 O que ainda não está provado
+
+**Nada disto tem prova funcional ainda.** As três correções são estruturais; a prova é a rodada
+natural das **07h BRT de 19/09**, com os critérios escritos antes no §Y.3 do plano da etapa 8.
+Continua valendo não rodar o `Pipeline_v2` à mão: a Fase 3 cria e move tarefa no Notion e a ordem
+dela é imutável (Regra Crítica nº 11).
