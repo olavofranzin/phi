@@ -339,6 +339,7 @@ usa **modelo forte**. Escolher o modelo é decisão de arquitetura, não detalhe
 | `INNER JOIN` com `client_config` no score | score rodando | **descartava 100%** das linhas de um writer |
 | `Loop Over Items` posto para conter a cota no P6 | "agora vai de pouco em pouco" | **o que custava ficou dentro do loop** — mesmas ~100 leituras, agora com espera no meio |
 | `Checar unicidade do score` posto para a duplicata gritar | "checagem instalada" | **zero linhas no caso saudável = zero itens = fim do ramo.** Matou o `Sync Scores to Notion` e **a Fase 3 inteira por 8 dias**, verde todo dia |
+| `Série Diária` com `WHERE campaign_id = 'GADS-'+id` | "sem histórico" | **query agregada sempre devolve linha** — "não achei" saiu como **`n_dias = 0`** em campanhas com **250 dias de série** |
 
 **As cinco regras que saem daí:**
 1. 🔴 **A falta de critério nunca pode significar "todos".** Filtro sem valor, busca sem chave, lote
@@ -351,11 +352,23 @@ usa **modelo forte**. Escolher o modelo é decisão de arquitetura, não detalhe
    antes de bater lote, pergunte o que está sendo repetido.
 4. **Antes de chamar algo de "smoke", conte quantos itens entraram na fila.** Afirmar escopo sem medir
    é a **R6** quebrada, só que mais rápido.
-5. 🔴 **O comportamento no caso VAZIO se escolhe de propósito, nos dois sentidos.** É o espelho da
-   regra 1: lá, *nenhum critério* não pode virar **"todos"**; aqui, *nenhum achado* não pode virar
-   **"pare"**. **No n8n, zero itens encerra o ramo** — então toda checagem cujo sucesso é *não achar
-   nada* precisa de `alwaysOutputData` ou de um item-sentinela. **Nunca deixe o vazio herdar o padrão
-   do nó:** o padrão é diferente em cada um.
+5. 🔴 **O comportamento no caso VAZIO se escolhe de propósito. O vazio tem TRÊS caras, e as três já
+   nos morderam:**
+
+   | O vazio vira | Onde | O estrago |
+   |---|---|---|
+   | **"todos"** | filtro sem valor, busca sem chave | smoke de 1 virou escrita em 20 |
+   | **"pare"** | nó n8n que devolve 0 itens | Fase 3 morta 8 dias, verde |
+   | **"zero"** | **query agregada** (`COUNT`/`SUM` sem `GROUP BY`) | *"sem histórico"* em campanha com 250 dias |
+
+   **A terceira é a mais traiçoeira: a query sempre devolve uma linha, então "não achei" e "achei
+   zero" saem idênticos** — e o consumidor não tem como distinguir. É a mesma doença dos guardrails
+   8/9 (`conversions=0 ⇒ CPA indefinido`) e do **I3** da Prospecção (*vazio nunca é 0*), agora na
+   forma de **shape de consulta**, não de dado. **Se um zero pode significar "não encontrei", traga
+   junto a contagem do que casou.**
+
+   **Nunca deixe o vazio herdar o padrão** — do nó, da query, da linguagem. **O padrão é diferente em
+   cada um, e nenhum deles foi escolhido pensando no seu caso.**
 
 > 🔴 **E a lição mais cara da casa, de 2026-09-18:** *"o maior estrago não veio da mudança de
 > identidade — veio da **salvaguarda** que instalei para protegê-la."*
