@@ -1,5 +1,24 @@
 # [BRIEF sub-chat] ADR-38 — identidade neutra + rebuild da série histórica
 
+> 🔴 **LEIA ISTO ANTES DA MISSÃO — atualizado em 2026-09-18.**
+> **Este brief é de 09/09 e o mundo andou depois dele.** Em **10/09 às 22:45** o
+> `sw metricas campanhas` (`W571K320aqIHsdtH`) foi alterado **e publicado**
+> (`versionId == activeVersionId`, conferido em 18/09), e a descrição dele passou a dizer:
+> *"ADR-38: client_id do Notion, id nativo, chave com platform, conversions FLOAT64"*.
+> O `operador unico metricas` (`cLcimNoefTOnVVbd`) também foi tocado no mesmo minuto.
+>
+> **Ou seja: a etapa 2 pode já estar feita, no todo ou em parte — e ninguém marcou no quadro.**
+>
+> **Sua PRIMEIRA tarefa deixa de ser executar e passa a ser conferir:** ir etapa por etapa do §2 e
+> dizer, com evidência, o que já está feito e o que não está. Só então executar o que falta.
+>
+> ⚠️ **Descrição é alegação, não prova (R5).** Em 17/09 pegamos uma descrição que afirmava um fato
+> que o próprio workflow contradizia. **Confira no nó, não no texto.**
+>
+> ⚠️ **E confira o que está NO AR, não o rascunho (R13).** Compare `versionId` com `activeVersionId`
+> antes de afirmar o que qualquer workflow ativo faz. Em 16/09 uma repontagem ficou no rascunho por
+> dois dias, com o caminho de produção quebrado em silêncio.
+
 > **Como usar:** cole este arquivo como 1ª mensagem **no sub-chat da consolidação dos writers**
 > (o que já rodou o Lote 1). É o mesmo território — `raw_campaign_data` e os dois writers — e ele já
 > tem o contexto. Se aquele sub-chat estiver fechado, abra um novo e cole também o
