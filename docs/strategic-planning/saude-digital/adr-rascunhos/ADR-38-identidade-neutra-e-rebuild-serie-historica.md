@@ -6,7 +6,7 @@
 | **Substitui** | a "Opção A" do `2026-09-09-decisao-P-10-identidade-canonica.md` (prefixo `GADS-`/`META-`) |
 | **Fecha** | **P-10** do ADR-37 |
 | **Impacto** | `raw_campaign_data`, os 2 writers, o SQL do score, `phi_score_history` · critérios **C1** e **C2** |
-| **Data efetiva do corte** | ⬜ **ainda não ocorreu.** Etapas 2 e 3 prontas em rascunho em 2026-09-09; o corte só acontece quando 2→6 rodarem no mesmo bloco (ver §10.2) |
+| **Data efetiva do corte** | ✅ **2026-09-09** — etapas 1 a 7 executadas; reconferido em produção em **2026-09-18** (ver §20). Resta só a etapa 8 (Fases 1 e 2 do ADR-37) |
 
 ---
 
@@ -123,13 +123,13 @@ Um relatório de campanha traz métricas. **Não traz** o resto da linha:
 | # | Etapa | Por quê |
 |---|---|---|
 | 1 | **P-11** — descobrir por que o `client_id` sai vazio | ✅ **RESOLVIDO 2026-09-09 — ver §9. Mudou o custo: o `client_id` nunca foi extraído do Notion** |
-| 2 | Ajustar **os dois writers** para a identidade nova (`campaign_id` nativo + `platform` + `client_id`) | senão a carga é repoluída no dia seguinte |
-| 3 | Ajustar **os consumidores**: `MERGE` pela chave nova, remover o `STARTS_WITH` do score **e atualizar o campo `campaign_id` no Notion (Campanhas + Tasks abertas)** — ver §9.5 | senão o score não acha nada **e a Fase 3 inteira para** |
-| 4 | **Backup** de `raw_campaign_data` | irreversível |
-| 5 | **Migrar a chave** de `phi_score_history` (`UPDATE` tirando o prefixo) — §5.1 | senão o histórico duplica em silêncio a partir do dia seguinte |
-| 6 | **Apagar e recarregar** de janeiro até a data do corte, com `ingestion_step = 'BACKFILL_2026-09'` | |
-| 7 | Smoke nas 2 campanhas KIL + conferir que os dois writers **agora colidem** no `MERGE` | é o teste real |
-| 8 | Retomar as Fases 1 e 2 do ADR-37 sob a identidade única | |
+| 2 | Ajustar **os dois writers** para a identidade nova (`campaign_id` nativo + `platform` + `client_id`) | ✅ **FEITO 2026-09-09**, corrigido em 09→10/09 (§14.3, §15.2) · reconferido 18/09 |
+| 3 | Ajustar **os consumidores**: `MERGE` pela chave nova, remover o `STARTS_WITH` do score **e atualizar o `campaign_id` no Notion** — ver §9.5 | ✅ **FEITO 2026-09-09**, `platform` entrou na chave do score em 10/09 (P-13, §17.1) · reconferido 18/09 |
+| 4 | **Backup** de `raw_campaign_data` | ✅ **FEITO** — `raw_campaign_data_backup_2026_09_09` (436 linhas) |
+| 5 | **Migrar a chave** de `phi_score_history` (`UPDATE` tirando o prefixo) — §5.1 | ✅ **FEITO** — 233 linhas; backups `phi_score_history_backup_2026_09` e `_2026_09_10` |
+| 6 | **Apagar e recarregar** de janeiro até a data do corte, com `ingestion_step = 'BACKFILL_2026-09'` | ✅ **FEITO** — 463 linhas carregadas; staging `raw_campaign_data_backfill_stg` |
+| 7 | Smoke nas 2 campanhas KIL + conferir que os dois writers **agora colidem** no `MERGE` | ✅ **FEITO 11/09** (§19) · **colisão provada em 18/09**: 0 linhas `GADS_INSERT` (§20.3) |
+| 8 | Retomar as Fases 1 e 2 do ADR-37 sob a identidade única | ⬜ **NÃO INICIADA** — é o que resta |
 
 ## 7. Verificação
 
@@ -1157,3 +1157,126 @@ vira a **P-22**.
 | P-20 | Decidir a rodada dupla do `sw metricas campanhas` (00h + 04h) |
 | P-21 | Comparar rascunho × versão no ar antes de publicar |
 | **P-22** | **CLI-13 (teste) continua sendo ingerido e vai virar falso alarme do vigia** |
+
+---
+
+# 20. Reconciliação de 2026-09-18 — conferir antes de executar
+
+> O chat-mãe pôs um banner vermelho no brief em 18/09: *"a etapa 2 pode já estar feita e ninguém
+> marcou no quadro — sua primeira tarefa deixa de ser executar e passa a ser conferir"*. Esta seção
+> é essa conferência, com uma semana de produção entre a execução e a leitura.
+>
+> **Veredito: as etapas 1 a 7 estavam feitas. Só a 8 não.** Nada foi executado nesta sessão além de
+> consultas de leitura.
+
+## 20.1 Por que o quadro parecia vazio
+
+O ADR **narrava** a execução nas §14 a §19. Mas as duas superfícies que se lê primeiro — **a tabela
+do topo deste ADR** e **o checklist do §2 do brief** — nunca foram marcadas. A tabela do topo ainda
+dizia *"Data efetiva do corte: ⬜ ainda não ocorreu"* nove dias depois do corte.
+
+**A R2 não é só "escreva o que aconteceu": é "marque onde se procura".** Um documento pode estar
+completo no corpo e mentir no cabeçalho — e o cabeçalho é o que se lê. Foi exatamente o que a D1 do
+brief tinha mandado fazer (*"escreva a data real na tabela do topo no dia em que acontecer"*) e o que
+não foi feito. Custou uma sessão inteira de reconferência.
+
+Corrigido nos dois lugares.
+
+## 20.2 Estado dos workflows — lido no ar, não no rascunho (R13)
+
+| Workflow | `versionId` = `activeVersionId`? | Último toque |
+|---|---|---|
+| `sw metricas campanhas` `W571K320aqIHsdtH` | ✅ `d95c75c9` | 10/09 22:45 |
+| `PHI - Subworkflow Campanhas` `b1pbn8qmzCNTufTp` | ✅ `ac55503a` | 10/09 22:46 |
+| `PHI - Pipeline_v2` `ITWG3Ge0asXtUM8U` | ✅ `2015834e` | 10/09 22:42 |
+| `PHI - Vigia de Frescor` `JMgc0HdLPOFPnFYb` | ✅ `ba3ce628` | 11/09 14:01 |
+
+**Nenhum rascunho divergente e nenhum tocado desde 11/09.** O que está no ar é o que esta ADR
+descreve.
+
+## 20.3 A prova por dado — a única que vale (R5: descrição é alegação)
+
+Verificações do §7, rodadas em 18/09 (execuções 40586 e 40588, workflow temporário arquivado):
+
+| # | Verificação | Esperado | Obtido |
+|---|---|---|---|
+| 1 | `platform` sem nulo | 0 nulos | `google_ads` 481 · `meta_ads` 9 · **0 nulos** ✅ |
+| 2 | prefixo `GADS-`/`META-` em `raw_campaign_data` | 0 | **0** ✅ |
+| 3 | chave `(client, platform, camp, date)` duplicada | vazio | **0** ✅ |
+| 4 | prefixo em `phi_score_history` | 0 | **0** ✅ |
+| 5 | `platform` nula no score | 0 | **0** ✅ |
+| 6 | chave duplicada no score | vazio | **0** ✅ |
+| 7 | dias sem linha do CLI-4 desde 01/01 | sem buracos | **1 dia: 2026-07-05** ⚠️ |
+
+**A colisão dos dois writers — o "teste real" da etapa 7 — está provada por um caminho que não
+existia em 11/09.** Desde o corte, `ingestion_step` mostra **463 `BACKFILL_2026-09` e 27
+`DAILY_ENTRY`** — e **zero `GADS_INSERT`**. O writer das 07h carimba `GADS_INSERT` **só no INSERT**
+(a Fase 0.1 do ADR-37 tirou o campo do `UPDATE SET`). Se ele ainda estivesse criando linha própria,
+haveria linhas `GADS_INSERT`. Não há nenhuma: **ele está atualizando a linha que o writer das 00h
+criou.** Os dois colidem no `MERGE`, que era exatamente o que se queria provar.
+
+Os 27 `DAILY_ENTRY` são 3 chaves × 9 dias (09/09 a 17/09), **um por dia, sem falha**.
+
+Outras leituras do mesmo dia:
+
+- **Score:** 2 linhas/dia, de 10/09 a 17/09, sem duplicata e sem buraco.
+- **`conversions` fracionária:** 12/09 gravou `5.984199`. A D3 continua de pé em produção.
+- **Backups (etapa 4):** `raw_campaign_data_backup_2026_09_09` (436 linhas),
+  `phi_score_history_backup_2026_09` (234) e `_2026_09_10` (236), mais a staging
+  `raw_campaign_data_backfill_stg` (463). Todos existem.
+- **Notion (etapa 3):** a página do Salão traz `campaign_id = 21116045403` e `client_id = CLI-4` —
+  nativo, sem prefixo. A do Barbearia não foi reaberta hoje, mas o score sai **para as duas**
+  campanhas todo dia, e sem o id casar não sairia.
+
+## 20.4 ✅ O buraco de 05/07 — o que é e o que não é
+
+É **um único dia**, dentro da janela do backfill, e **não** vem do pipeline: o relatório oficial não
+trouxe linha para aquela data. **Não sei dizer por quê** — pode ser dia sem veiculação, pode ser
+falha do export. Para responder seria preciso reabrir o relatório do Google Ads, o que não se faz por
+dedução. Fica registrado como fato, com a causa em aberto.
+
+## 20.5 🔴 O incidente de 17/09 — a P-14 foi validada por um caso real
+
+Em **17/09 a credencial OAuth do BigQuery caiu**: *"The credential 'Google BigQuery account' needs to
+be reconnected."* Derrubou **o pipeline inteiro**:
+
+| Hora (UTC) | BRT | O que caiu |
+|---|---|---|
+| 03:00 | 00h | `sw metricas campanhas` (gatilho próprio) |
+| 07:00 | 04h | `operador unico metricas` + `sw metricas campanhas` |
+| 10:00 | 07h | `PHI - Pipeline_v2` |
+| 11:00 | 08h | `PHI - Vigia de Frescor` |
+
+**`PHI - Alerta de Falha` disparou 5 vezes** naquele dia — uma por workflow — e **nenhuma vez** nos
+outros seis dias da semana. Às **16:42 BRT** alguém reconectou a credencial e **re-rodou à mão**
+(`sw metricas campanhas` em modo `integrated`, `Pipeline_v2` em modo `manual`). No dia seguinte o
+vigia das 08h **não achou lacuna nenhuma** — o dia perdido tinha sido recuperado.
+
+**Compare com o que este ADR mediu na §18:** antes do alerta existir, a credencial caía e o sistema
+ficava **45 dias** sem ninguém saber. Desta vez: caiu de madrugada, avisou, foi consertada no mesmo
+dia, zero dia perdido. **A P-14 não foi validada por teste — foi validada por incidente.**
+
+E vale o detalhe que quase passa: **o vigia morreu junto**, porque usa a mesma credencial do pipeline
+que vigia. Não ficou escondido porque o `errorWorkflow` dele avisou — **o sistema reportou a morte do
+próprio vigia.** Mas o desenho merece nota: *vigia que compartilha credencial com o vigiado cega no
+mesmo instante em que o vigiado quebra.* Aqui o segundo mecanismo cobriu; não convém contar com isso
+para sempre.
+
+## 20.6 Pendências — estado em 18/09
+
+| # | Pendência | Estado |
+|---|---|---|
+| P-15 | `id_meta_camp` precisa virar **texto** no Notion, valor **redigitado** da Meta | 🔴 aberta, crítica |
+| P-16 | `client_goal_history` é por cliente, a meta é por campanha | aberta |
+| P-17 | `revenue` NULL na série reconstruída | **medida**: 472 linhas NULL (01/01→17/09), 18 preenchidas (09/09→17/09) — só os dias pós-corte têm receita |
+| P-18 | Repositório público com dado de cliente | aberta |
+| P-20 | Rodada dupla do `sw metricas campanhas` (00h + 04h) | aberta — e agora com dado: as duas rodaram todo dia, sem duplicar linha |
+| P-21 | Comparar rascunho × versão no ar antes de publicar | **virou regra da casa (R13)** |
+| P-22 | CLI-13 de teste segue sendo ingerido | 🔴 **cresceu**: 9 linhas, 09/09 → 17/09, uma por dia |
+| **P-23** | **`PHI - Pipeline_v2` está sem `description`** — viola a R5, e é o consumidor central do score | 🔴 nova |
+| **P-24** | **`phi_ultima_execucao` da campanha Salão no Notion parou em 10/09**, embora a página seja escrita todo dia e o `Score Diário` esteja atualizado (68,7) | 🟡 nova, a confirmar |
+
+## 20.7 O que resta do ADR-38
+
+**Só a etapa 8:** retomar as Fases 1 e 2 do ADR-37 sob a identidade única. Tudo o mais está feito,
+em produção e conferido.

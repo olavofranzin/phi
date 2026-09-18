@@ -19,6 +19,18 @@
 > antes de afirmar o que qualquer workflow ativo faz. Em 16/09 uma repontagem ficou no rascunho por
 > dois dias, com o caminho de produção quebrado em silêncio.
 
+> ## ✅ CONFERÊNCIA FEITA — 2026-09-18
+> **A resposta é: estava tudo feito, menos a etapa 8.** O corte ocorreu em **2026-09-09** e as
+> etapas 1 a 7 foram executadas e reconferidas em produção em 18/09 — ver **ADR-38 §20**, que traz
+> a evidência de cada uma.
+>
+> **Por que o quadro parecia vazio:** o ADR **narrava** a execução (§14 a §19), mas as duas
+> superfícies que se lê primeiro — a tabela do topo do ADR e este checklist — **nunca foram
+> marcadas**. Quem lia de cima concluía que nada tinha acontecido. Corrigido nos dois lugares.
+> **A lição é da R2: narrativa não é marcação.** Um doc pode estar completo e mentir no cabeçalho.
+>
+> **Não execute as etapas 1 a 7 de novo.** A etapa 6 em particular é destrutiva e já rodou.
+
 > **Como usar:** cole este arquivo como 1ª mensagem **no sub-chat da consolidação dos writers**
 > (o que já rodou o Lote 1). É o mesmo território — `raw_campaign_data` e os dois writers — e ele já
 > tem o contexto. Se aquele sub-chat estiver fechado, abra um novo e cole também o
@@ -77,14 +89,14 @@ dele **já exige** recalcular sobre a série limpa. Então:
 
 | # | Etapa | Feito |
 |---|---|---|
-| 1 | **P-11** — descobrir **por que** o `client_id` sai vazio no writer das 04h | ⬜ |
-| 2 | Ajustar **os dois writers**: `campaign_id` nativo + `platform` + `client_id` sempre preenchido | ⬜ |
-| 3 | Ajustar **os consumidores**: `MERGE` pela chave nova + remover o `STARTS_WITH(campaign_id,'GADS-')` do score | ⬜ |
-| 4 | **Backup** de `raw_campaign_data` (GCS ou `raw_campaign_data_backup_2026-09`) | ⬜ |
-| 5 | `UPDATE` em `phi_score_history` tirando o prefixo `GADS-` (só a chave — **não** recalcular) | ⬜ |
-| 6 | Puxar o relatório (**janeiro → D-1 do dia do corte**), **apagar e recarregar** com `ingestion_step='BACKFILL_2026-09'` | ⬜ |
-| 7 | **Smoke** nas 2 campanhas KIL + conferir que os dois writers **agora colidem** no `MERGE` | ⬜ |
-| 8 | Retomar as **Fases 1 e 2 do ADR-37** sob a identidade única | ⬜ |
+| 1 | **P-11** — descobrir **por que** o `client_id` sai vazio no writer das 04h | ✅ 09/09 |
+| 2 | Ajustar **os dois writers**: `campaign_id` nativo + `platform` + `client_id` sempre preenchido | ✅ 09/09 |
+| 3 | Ajustar **os consumidores**: `MERGE` pela chave nova + remover o `STARTS_WITH(campaign_id,'GADS-')` do score | ✅ 09/09 |
+| 4 | **Backup** de `raw_campaign_data` (GCS ou `raw_campaign_data_backup_2026-09`) | ✅ 09/09 |
+| 5 | `UPDATE` em `phi_score_history` tirando o prefixo `GADS-` (só a chave — **não** recalcular) | ✅ 09/09 |
+| 6 | Puxar o relatório (**janeiro → D-1 do dia do corte**), **apagar e recarregar** com `ingestion_step='BACKFILL_2026-09'` | ✅ 09/09 — 463 linhas |
+| 7 | **Smoke** nas 2 campanhas KIL + conferir que os dois writers **agora colidem** no `MERGE` | ✅ 11/09, colisão provada 18/09 |
+| 8 | Retomar as **Fases 1 e 2 do ADR-37** sob a identidade única | ⬜ **é o que resta** |
 
 **Por que a ordem é essa, em uma frase cada:**
 - **2 antes de 6:** se recarregar primeiro, o pipeline das **04h/07h repolui no formato velho no dia
