@@ -918,3 +918,27 @@ O `PHI - Alerta de Falha` disparou **cinco vezes hoje** — e o que falha é o
 
 > **Um vigia de frescor de dados parado é justamente quem deveria avisar que os dados pararam.** A
 > frase é dele e está certa. Só o Olavo reconecta.
+
+### 18.7 Correção do §18.6 — o Vigia falhou UMA vez, não cinco
+
+Li as execuções do `JMgc0HdLPOFPnFYb`. Ele roda **uma vez por dia**, às 11:00 UTC:
+
+| Data | Estado |
+|---|---|
+| 17/09 (`40136`) | 🔴 **error** — a credencial do BigQuery |
+| 16, 15, 14, 13, 12, 11/09 | ✅ success, todos |
+
+**Uma falha, não cinco.** O relatório disse *"o `PHI - Alerta de Falha` disparou cinco vezes hoje"* e
+em seguida *"o que está falhando: o Vigia"* — **uma causa deduzida de uma amostra**. O Vigia responde
+por **um** dos cinco disparos.
+
+🔴 **Então há até quatro outros workflows falhando que ninguém identificou.** O alerta está tocando
+sobre coisas que nenhum de nós olhou. **Isso é item aberto**, e é do parque, não desta frente.
+
+> **A rede funciona — e a primeira coisa que ela mostrou é que tem mais gente machucada do que a
+> gente sabia.** É o efeito normal de ligar um alarme que estava mudo: o primeiro dia parece uma
+> piora, e é só a primeira vez que se enxerga.
+
+**Sobre a credencial:** o Olavo reconectou. **Ainda não está provado** — **não há nenhuma execução
+depois da que falhou**. A prova é a próxima rodada diária, **11:00 UTC / 08:00 BRT**. Reconectar e
+voltar a rodar não são a mesma coisa, e a diferença só aparece na hora do gatilho.
