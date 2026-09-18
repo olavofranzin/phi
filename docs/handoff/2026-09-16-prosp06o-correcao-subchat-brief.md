@@ -590,3 +590,60 @@ a coluna `data extração` — mas isso é mudança de desenho, não conserto, e
   desvio tem de contá-lo sem criar linha. É o mesmo gesto que um dia vai acontecer sem ninguém pedir.
 - **`notes` de nó não é gravável** pelas ferramentas disponíveis — por isso a nota do `onError` virou
   **sticky**. Aceito, e vale para as próximas: **sticky é o substituto legítimo do `notes`.**
+
+---
+
+## 19. A primeira rodada automática (18/09) — e a grade real
+
+**Execução `40377`, `mode: trigger`, `triggerNode: [P6] A cada 6h`, 03:20:41 UTC, 3,8 s, success.**
+
+### 19.1 🟢 A hipótese do fuso venceu — e a grade é outra
+
+**03:20 UTC = 00:20 BRT.** O `triggerAtMinute` e o `hoursInterval` do n8n contam no **fuso da
+instância**, não em UTC.
+
+| | Grade |
+|---|---|
+| ~~estimado~~ | ~~00:20 · 06:20 · 12:20 · 18:20 **UTC**~~ |
+| **real** | **00:20 · 06:20 · 12:20 · 18:20 BRT** = 03:20 · 09:20 · 15:20 · 21:20 UTC |
+
+> **O sub-chat marcou o horário como *"estimativa, não verificada"* — e o rótulo segurou.** A
+> estimativa estava errada e ninguém foi enganado. **É o valor de escrever o que não foi medido:
+> custou uma espera de 3 horas, não uma conclusão errada.**
+
+### 19.2 🟢 P6-5 provado em produção, no gatilho
+
+```
+lastNodeExecuted: [P6] Tem lead?
+_modificados: 0 · _lidos_no_odoo: 101 · _fora_nao_modificado: 100
+_fora_sem_linha_na_planilha: 1 · _sem_linha_ids: "116" · _regua_acerto: 60
+```
+
+**Verde, zero linha escrita, cursor intocado, parou exatamente no IF.** O caminho de fila vazia — que
+em 16/09 derrubava a execução — agora é o comportamento normal, **em horário automático e sem ninguém
+olhando**. É a terceira prova do P6-5, e a única que conta de verdade.
+
+**E o `_sem_linha_ids: "116"` confirma a §14.2:** o lead criado à mão **continua sendo contado**, um
+dia depois. O detector de órfãos **se mantém aceso sozinho** — a janela do P6-1 não era de uma rodada.
+
+### 19.3 🔴 O "perdido com motivo" não chegou ao CRM
+
+`_since: 2026-09-17T19:13:05.000Z` e `_fora_nao_modificado: 100`. **Nenhum dos 101 leads do CRM tem
+`write_date` posterior a 19:13:05 UTC de ontem** — quase 8 horas antes da rodada.
+
+O Olavo relatou ter marcado um lead como perdido **escolhendo o motivo**. **O CRM não registra essa
+alteração.** Duas leituras possíveis:
+
+1. o motivo foi escolhido mas **a alteração não salvou** (no Odoo, marcar perdido é um diálogo que
+   precisa de confirmação);
+2. foi feito **antes** das 19:13:05 — e aí já teria sido capturado na `40263`, que trouxe o lead 43
+   com `motivo_perda` **vazio**.
+
+**Nos dois casos, o P4 dos 8 critérios continua aberto** — e não por falha da máquina: a máquina
+reportou fielmente que nada mudou.
+
+> **A rodada vazia provou o P6-5 e, de quebra, virou instrumento de medição do CRM.** É o que uma boa
+> fila vazia faz: quando ela diz "0 modificados", isso é informação sobre o mundo, não ausência de
+> notícia.
+
+**Próxima janela: 06:20 BRT (09:20 UTC).** Qualquer lead marcado até lá entra nela.

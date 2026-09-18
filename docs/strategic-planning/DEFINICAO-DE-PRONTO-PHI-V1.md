@@ -152,7 +152,7 @@ Declarar isto é metade do valor do documento — é o que impede o projeto de c
 | **P1** | um lead entra e sai **analisado** pelo workflow de lead único | ⬜ |
 | **P2** | um **recorte completo** (2 setores) roda ponta a ponta **sem intervenção** | ⬜ |
 | **P3** | todo lead no CRM chega com **oferta, prioridade, abordagem e NBA** | ⬜ |
-| **P4** | o **desfecho volta à planilha** com motivo, automaticamente | 🟡 **máquina provada 17/09** (PROSP-06O, 7 critérios) — falta **ativar** e um perdido **com motivo** |
+| **P4** | o **desfecho volta à planilha** com motivo, automaticamente | 🟡 **no ar desde 18/09** e rodando no gatilho (grade 00:20/06:20/12:20/18:20 BRT) — falta só **um perdido com motivo** chegar ao CRM |
 | **P5** | a **cadência roda**, registra tentativas e **para na resposta** | ⬜ |
 | **P6** | enriquecimentos são **skills versionadas no git** | ⬜ |
 | **P7** | cada **dimensão do score** tem definição escrita e status de evidência | ⬜ |
