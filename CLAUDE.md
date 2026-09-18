@@ -358,10 +358,31 @@ usa **modelo forte**. Escolher o modelo é decisão de arquitetura, não detalhe
    tem cor, não tem alarme e não aparece em lista nenhuma — **é a mudança mais silenciosa que existe
    no n8n.**
 
-> ⚠️ **E `triggerCount` não conta gatilhos, conta gatilhos ATIVOS.** Workflow inativo com
-> `scheduleTrigger` dentro reporta `triggerCount: 0`. Foi assim que um gatilho agendado do P5O passou
-> despercebido numa auditoria. **Para saber que gatilhos um workflow tem, leia os nós — nunca o
-> número.**
+> ⚠️ **Ver também a R13:** o que a ferramenta devolve não é necessariamente o que está no ar.
+
+### R13 — Leia o que está NO AR, não o que está na tela
+**No n8n, a leitura mais natural devolve o rascunho — e o rascunho é uma proposta, não o sistema.**
+Isso já escondeu um caminho de produção quebrado por **dois dias**.
+
+| O que parece | O que é |
+|---|---|
+| `nodes` no retorno do workflow | **o RASCUNHO.** O que roda está em `activeVersion.nodes` |
+| `triggerCount: 0` | conta gatilhos **ATIVOS**, não declarados — workflow inativo com `scheduleTrigger` dentro reporta zero |
+| a chamada de update **não deu erro** | o n8n salva o rascunho **e depois** publica. **Publicação recusada deixa a alteração só no rascunho** |
+
+**As duas regras:**
+1. **Antes de afirmar o que um workflow ativo faz, compare `versionId` com `activeVersionId`.** Se
+   `sameAsDraft` for `false`, **você está lendo uma proposta.**
+2. **Depois de alterar workflow ativo, releia e confirme que publicou.** *"Não deu erro"* não é
+   *"está no ar"*.
+
+> **Motivo:** em 16/09 o `[P5] CRM-out` do PROSP-04 foi repontado para o Odoo — **no rascunho**. O
+> que rodava continuou chamando o P5 do HubSpot, já aposentado, **com
+> `onError: continueRegularOutput`**: a próxima prospecção teria alimentado nada e seguido verde.
+> Duas leituras do workflow não pegaram, porque as duas leram o rascunho — **e o campo `sameAsDraft:
+> false` estava na tela, sem ninguém olhar.**
+>
+> **Teste prático:** *"eu li o que roda, ou li o que alguém propôs?"*
 
 ### R4 — Uma pergunta que todo chat responde antes de fechar
 > *"Onde estamos, quanto falta, e o que eu atualizei para provar isso?"*

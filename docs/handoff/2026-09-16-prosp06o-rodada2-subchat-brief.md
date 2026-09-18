@@ -839,3 +839,82 @@ funcionou. **Mas o caminho do motivo nunca foi exercido** — e o critério P4 d
 
 **Marcar um lead como perdido escolhendo um motivo na tela** fecha o último furo. É o mesmo gesto que
 vira **hábito de operação** (§14.3): perda sem motivo não ensina nada.
+
+---
+
+## 18. O PROSP-06O está no ar (17/09) — e o que a ativação destapou
+
+**Confirmado por leitura própria do chat-mãe:** o `PROSP-04` tem
+`versionId: 6cf4f1c2…` **≠** `activeVersionId: 7d136d17…`, e está **ativo**. **O que roda não é o que
+o rascunho diz.** O achado dele é real.
+
+**E a rede de segurança está provada, não suposta:** o `PHI - Alerta de Falha` entregou no Telegram
+hoje às 11:00 UTC (`message_id: 629`). Não era uma foto de rede.
+
+### 18.1 🔴 O estado vivo mais perigoso do projeto agora
+
+| PROSP-04 | aponta para | `onError` |
+|---|---|---|
+| **Rascunho** | `0H1mdPuICHsyWGxt` — o P5O Odoo | `stopWorkflow` |
+| **Versão ATIVA** | `94lSWJfxfu653KdN` — o P5 do **HubSpot, aposentado e inativo** | `continueRegularOutput` |
+
+**A próxima prospecção que o Olavo rodar alimentaria nada no CRM — e seguiria verde.** É o bug das
+duas semanas, armado e com o gatilho na mão de quem aperta o botão do Telegram.
+
+🔴 **Decisão: não rodar prospecção até o P4 estar publicado com a fiação certa.** O P4 não tem gatilho
+de horário — ele só dispara pelo P1, no Telegram. **Então não há incêndio, há um interruptor que não
+pode ser apertado.**
+
+### 18.2 A dependência que inverte a ordem — e não quebra o desenho
+
+Publicar o P4 exige que o sub-workflow referenciado esteja **publicado**. O P5O ainda não está.
+**Então o P5O passa a ser o destravador do P4**, e não só o próximo da fila.
+
+**Isso não fura a ordem de risco que combinamos.** O P5O já ia ser ativado depois de duas rodadas do
+P6 — no máximo meio dia. **O custo de esperar é meio dia sem prospectar; o custo de não esperar é uma
+prospecção inteira jogada fora em silêncio.**
+
+⚠️ **Mas a mensagem de recusa cita o id do HubSpot, não o do Odoo** — e o rascunho aponta para o
+Odoo. **Isso não fecha.** Ou há uma segunda referência ao aposentado dentro do nó (um `cachedResultName`
+ou campo secundário do resource locator), ou a validação olha outra coisa. **Ler o nó inteiro do
+rascunho antes de tentar publicar de novo** — não tentar no escuro.
+
+### 18.3 ⚠️ O `errorWorkflow` do P4 provavelmente também ficou no rascunho
+
+O checklist marca *"`errorWorkflow` nas três pernas ✅"*. **Mas se toda publicação do P4 está bloqueada
+pela referência, a configuração do `errorWorkflow` dele foi salva na mesma chamada recusada** — e
+ficou no rascunho junto com o resto.
+
+**Então o P4 pode estar rodando hoje sem rede E com a fiação velha.** É o pior dos dois. **Verificar
+lendo `activeVersion`, não o retorno padrão** — é a R13 aplicada a ela mesma.
+
+### 18.4 A regra que saiu disto — R13 no `CLAUDE.md`
+
+Ele achou o próprio erro e derivou a regra certa: **`nodes` é o rascunho; o que roda está em
+`activeVersion.nodes`.** Virou a **R13**, com as três armadilhas juntas:
+
+1. `nodes` é o rascunho — compare `versionId` com `activeVersionId`;
+2. `triggerCount` conta gatilhos **ativos**, não declarados (veio da R12);
+3. **`update_workflow` salva o rascunho e depois publica** — **publicação recusada deixa a alteração
+   só no rascunho**, sem erro de gravação.
+
+> A frase que resume: ***"não deu erro" não é "está no ar"***. E o `sameAsDraft: false` **estava na
+> tela nas duas leituras** — o que faz disto um problema de método, não de ferramenta.
+
+### 18.5 O que ele fez certo e vale registrar
+
+- **Não rodou o P6 na mão** para não gastar a primeira rodada com `_modificados > 0` em horário
+  automático. Era a instrução do §17.4 e ele viu a consequência sozinho.
+- **Conferiu que o P6O publicou de verdade** (`versionId === activeVersionId`, `triggerCount: 1`) em
+  vez de confiar no retorno da chamada — a R13 aplicada minutos depois de descobri-la.
+- **Declarou o limite da varredura**: conferiu o `errorWorkflow` das três pernas desta frente, **não**
+  da instância inteira. Limite dito é limite que não engana.
+
+### 18.6 E um alarme de outra frente que estava tocando
+
+O `PHI - Alerta de Falha` disparou **cinco vezes hoje** — e o que falha é o
+`PHI - Vigia de Frescor dos Dados` (`JMgc0HdLPOFPnFYb`):
+*"The credential Google BigQuery account needs to be reconnected"* (`UhLRAanVarQeOpQy`).
+
+> **Um vigia de frescor de dados parado é justamente quem deveria avisar que os dados pararam.** A
+> frase é dele e está certa. Só o Olavo reconecta.
