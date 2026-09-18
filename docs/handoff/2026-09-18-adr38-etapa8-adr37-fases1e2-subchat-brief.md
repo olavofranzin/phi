@@ -255,3 +255,74 @@ começar sem o Olavo reconfirmar o `D1` com a tabela na mão** — não com o qu
 - **R5** — o `PHI - Pipeline_v2` sai desta etapa **com descrição** (P-23).
 - **Regra Crítica nº 11** — a ordem da Fase 3 é imutável; não encostar nela aqui.
 - **Não ativar/executar workflow sem OK de budget do Olavo.**
+
+---
+
+## §X — Análise do chat-mãe sobre o P-24 (2026-09-18)
+
+### X.1 A data aponta para o CORTE, não para a etapa 2
+
+O relatório atribui o P-24 a possível efeito colateral da **etapa 2** (writers ajustados em **10/09
+22:45**). **Os números dizem outra coisa.**
+
+Os dez últimos `phi_value` do Salão são `50,76 · 65,1 · 57,51 · 53,41 · 44,47 · 25,54 · 38,86 ·
+43,48 · 48,36 · 44,59` — janela de **08/09 a 17/09**. O Notion mostra **68,7**, que **não é nenhum
+deles**: é **anterior a 08/09**.
+
+**Se a quebra fosse da etapa 2, o último valor bom seria de ~10/09.** Não é. **Ela é do corte — 09/09**,
+quando o prefixo `GADS-` **desapareceu do dado**.
+
+> **Isso não enfraquece a hipótese: fortalece.** O ramo do Notion casa por `campaign_id` **com
+> prefixo**, e o prefixo sumiu no corte. **A causa é a mesma; a data é outra — e a data é o que diz
+> onde mais procurar.**
+
+### X.2 🔴 A consequência que muda o escopo da Fase 0
+
+**Se o ramo do Notion quebrou por casar com `campaign_id` prefixado, então TUDO que casa por
+`campaign_id` quebrou no mesmo instante — em 09/09.** E este só apareceu **por acaso**, nove dias
+depois.
+
+A etapa 3 do ADR-38 (*"ajustar os consumidores"*) está marcada ✅ — **e estava certa no que verificou:
+o SQL do score.** O que não foi verificado é **quem casa por `campaign_id` fora do SQL**. O próprio
+relatório diz isso com todas as letras:
+
+> *"Não conferi quem lê `campaign_id` para casar com o Notion."*
+
+🔴 **A Fase 0 não é "consertar o ramo do Notion". É:**
+
+1. **Varrer o parque** atrás de todo lugar que usa `campaign_id` como chave de casamento ou que
+   contenha a string `GADS-` / `META-` — workflows, nós de Notion, SQL, filtros.
+2. **Dizer, um por um, se quebrou em 09/09 ou não.**
+3. **Só então consertar** — começando pelo do Notion, que é o que o gestor vê.
+
+**Consertar um e não procurar os irmãos foi exatamente como o `id_hubspot` viveu duas semanas.** A
+varredura é finita e barata; a ignorância não é.
+
+### X.3 Por que isto passa na frente de tudo
+
+**Não é um carimbo desatualizado. É o PHI fazendo o oposto do que existe para fazer.**
+
+O princípio central do projeto é *"detecta desvios e orienta o gestor"*. Hoje ele mostra **GOOD** numa
+campanha em **44,59**, e **escondeu a queda para 25,54 em 13/09** — o desvio mais grave da janela.
+**Um painel que mente é pior que painel nenhum:** painel nenhum faz o gestor ir olhar; painel errado
+faz ele não olhar.
+
+### X.4 O buraco de vigilância, e onde ele mora no placar
+
+A observação do relatório é estrutural e está certa:
+
+> *"O vigia cobre até o BigQuery… Existe um trecho depois do BigQuery que ninguém vigia — e é
+> justamente o que o gestor enxerga."*
+
+O `PHI - Vigia de Frescor` vigia a **chegada do dado**. **Ninguém vigia a entrega** — a perna
+BigQuery → Notion. E o Notion é **a única superfície que o gestor vê**.
+
+**Isso não é pendência nova: é o C3 e o C4 do placar**, que estavam em *"❓ verificar"*. **Deixam de
+ser caixa não conferida e passam a ser risco conhecido, com uma prova.**
+
+### X.5 As duas decisões
+
+| | |
+|---|---|
+| **Fase 0 agora, separada do resto** | ✅ **recomendado.** É correção de defeito em produção, classe de risco diferente da consolidação. Não espera o OK do plano inteiro |
+| **Fases A–C** | seguem a ordem do plano, com a **parada deliberada antes da Fase C** — que é irreversível e exige o D1 reconfirmado **com a tabela na mão**, não com o que o inventário supôs em 08/09 |
