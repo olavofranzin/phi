@@ -120,3 +120,70 @@ exatamente o que se queria alterar. A mesma armadilha vale aqui.
 3. Confirmação de que os nativos foram **arquivados, não apagados**, e de que o lead perdido de 17/09
    **continua mostrando o motivo antigo**.
 4. Onde ficou escrita a definição de cada motivo.
+
+---
+
+## 7. Apêndice — resposta do Olavo sobre `Sem resposta` (18/09)
+
+> Registrado pelo sub-chat da primeira análise, que levantou a ambiguidade. **Não reescreve as
+> decisões acima; acrescenta a resposta que faltava.**
+
+A §3 condicionava `Sem resposta` a *"só se não for reciclar"*, e a §5 dizia que reciclar continua
+sendo o caminho de quem não respondeu em Cadência. Lidos juntos, não ficava claro quando um vendedor
+usaria `Sem resposta`. **A resposta do Olavo inverte a leitura.**
+
+**`Sem resposta` é o caminho normal ao fim da cadência**, não a exceção. Nas palavras dele:
+
+> *"Sem resposta deve ser usado quando o lead já passou por toda a cadência e em algum momento ele
+> deixou de responder, não deve ir direto para reciclar porque há uma linha tênue entre tentar um
+> contato sadio e ser inconveniente ao insistir e incomodar o lead, ao sermos taxados de
+> inconvenientes podemos criar uma barreira praticamente intransponível para termos acesso ao leads.
+> Ele poderá ser acionado novamente após um período, geralmente com uma campanha específica, por
+> isso, apesar de marcado como perdido ele em algum momento voltará para a esteira comercial."*
+
+**O que isso muda:**
+
+1. **`Sem resposta` é uma pausa, não um fim.** É perda **reversível por desenho** — o lead sai da
+   esteira para **não ser queimado**, e volta depois com uma campanha específica. O motivo não diz
+   "desistimos dele"; diz "parem de insistir agora".
+2. **A definição precisa carregar isso.** Sem essa frase, metade das pessoas vai marcar `Sem resposta`
+   achando que está encerrando o lead, e a outra metade vai evitar marcá-lo para "não perder o lead".
+   As duas leituras poluem a mesma coluna.
+3. **Vai ser o maior balde, de longe.** O gargalo declarado do projeto é *falar com eles*. Na análise,
+   `Sem resposta` responde por **alcance**; os outros motivos respondem por **oferta**. Somar os dois
+   num único "por que perdemos" afoga tudo que ensina sobre preço, valor e concorrência.
+
+### 🔴 7.1 O módulo contradiz esta regra — resolver antes de construir
+
+O `data/crm_stage_data.xml`, linha 68, escreve o oposto para o estágio Em Cadência:
+
+> *"Perdido: 8 ou mais tentativas multi-canal sem resposta -> **reciclar** (Status do Lead =
+> 'Reciclado')."*
+
+O próprio texto já mistura as duas coisas: o rótulo diz **Perdido** e a instrução manda **reciclar**.
+Pela **R6**, o que o Olavo diz agora vence — mas **o XML não pode ficar como está**, senão a próxima
+pessoa lê a regra velha e marca diferente.
+
+**A pergunta que falta, e que decide o desenho:** o `lead_status = Reciclado` continua existindo?
+Duas leituras possíveis, e elas levam a taxonomias diferentes:
+
+| Leitura | Consequência |
+|---|---|
+| **(a)** Reciclado e `Perdido + Sem resposta` são a mesma coisa com dois nomes | um dos dois sai. O `lead_status = Reciclado` deixa de ser usado |
+| **(b)** São momentos distintos: perde-se agora com `Sem resposta`, e **Reciclado** é o estado de quem **voltou** pela campanha | os dois ficam, e o XML muda para descrever a sequência, não a alternativa |
+
+A fala *"não deve ir direto para reciclar"* sugere **(b)** — reciclar seria trazer de volta cedo
+demais. Mas isso é leitura, não fato: **precisa do Olavo.**
+
+### 7.2 O que a volta exige — e o que já existe (R7)
+
+O lead volta *"após um período"*. Procurei o que já existe antes de propor campo novo:
+
+- ✅ **A âncora de tempo já existe.** O `date_closed` do Odoo marca quando o lead foi perdido, e o
+  `[P6] So os modificados` **já o escreve** na planilha como `data_fechamento`. Dá para listar
+  "perdidos há mais de X dias com motivo `Sem resposta`" **sem criar coluna nenhuma**.
+- ⚠️ **A volta é ato humano, não da esteira.** Perder arquiva o lead (`active = false`), e o P5O tem
+  o ramo `[P5] Lead perdido - nao ressuscitar` — decisão D2 do próprio Olavo. Enquanto estiver
+  arquivado, o robô **pula** o lead, de propósito. Quando um humano desarquivar, o P5O volta a
+  atualizá-lo normalmente. **Funciona — mas precisa estar escrito**, senão alguém vai esperar que a
+  automação traga o lead de volta sozinha, e ela nunca vai.
