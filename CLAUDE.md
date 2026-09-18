@@ -203,6 +203,18 @@ mexer em servidor, caçar bug.
 > **Doc desatualizada custa mais caro que doc inexistente: ela faz decidir errado.**
 > Regra curta: **se não está escrito, não aconteceu.**
 
+> 🔴 **5. Marque ONDE SE PROCURA, não só onde se narra.** Tabela do topo, checklist, placar. **O
+> corpo do documento não substitui o cabeçalho** — ninguém lê §14 a §19 para saber se uma etapa
+> aconteceu; lê a primeira tabela.
+>
+> **Motivo:** em 2026-09-18 descobrimos que o **ADR-38 estava executado desde 09/09** — as 7 etapas,
+> inclusive a destrutiva. O corpo do ADR narrava tudo. Mas o **cabeçalho** ainda dizia *"Data efetiva
+> do corte: ⬜ ainda não ocorreu"* e o **checklist do brief** estava todo em branco, **nove dias
+> depois**. Custou: uma frente parada como "bloqueada" sem estar, uma rotina agendada, e uma sessão
+> inteira de conferência.
+>
+> **Um documento pode estar completo no corpo e mentir no cabeçalho — e o cabeçalho é o que se lê.**
+
 ### R3 — Sub-chat é OBRIGADO a registrar no Notion (senão o digest diário morre)
 Existe um workflow n8n **ativo**: `PHI — Digest Diário de Progresso (Registro de Execuções)`
 (`rhobbBEeQaiWIuiF`, 08:30 BRT). Ele lê a DB Notion **"PHI — Registro de Execuções (Sub-chats)"**

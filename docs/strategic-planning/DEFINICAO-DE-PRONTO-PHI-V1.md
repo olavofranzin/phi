@@ -53,8 +53,8 @@ descobre lead → pontua → enriquece → cria no CRM → [HUMANO dá o play] �
 ### Frente C — Produto PHI: score e diagnóstico
 | # | Critério | Hoje |
 |---|---|---|
-| C1 | Score v2 (ADR-34) em produção — **sem contradição** entre score e métrica-mãe | 🟡 desenhado e validado; bloqueado por C2 |
-| C2 | Escrita de dados consolidada: **um dado, um writer** | 🔴 **bloqueado em 2026-09-09** — a tabela tem 2 identidades incompatíveis; decidir P-10 antes de consolidar |
+| C1 | Score v2 (ADR-34) em produção — **sem contradição** entre score e métrica-mãe | 🟡 desenhado e validado; **o caminho abriu em 18/09** com o C2 — e a série limpa que ele exige já está carregada (`BACKFILL_2026-09`) |
+| C2 | Escrita de dados consolidada: **um dado, um writer** | 🟡 **DESBLOQUEADO em 2026-09-18** — o ADR-38 unificou a identidade **e fechou o P-10**; os dois writers já colidem no `MERGE`. Falta executar as Fases 1 e 2 do ADR-37 |
 | C3 | Diagnóstico T28 entregando na DB `PHI - ANÁLISES` para **todas** as campanhas ativas | ❓ **verificar cobertura** |
 | C4 | Tarefa abre no Notion a partir do diagnóstico, com checklist | ❓ **verificar** |
 
