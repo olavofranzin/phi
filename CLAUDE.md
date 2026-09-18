@@ -338,8 +338,9 @@ usa **modelo forte**. Escolher o modelo é decisão de arquitetura, não detalhe
 | `lookupValue` vazio no Google Sheets | "busca 1 lead" | **devolveu a planilha inteira** → smoke de 1 virou escrita em 20 |
 | `INNER JOIN` com `client_config` no score | score rodando | **descartava 100%** das linhas de um writer |
 | `Loop Over Items` posto para conter a cota no P6 | "agora vai de pouco em pouco" | **o que custava ficou dentro do loop** — mesmas ~100 leituras, agora com espera no meio |
+| `Checar unicidade do score` posto para a duplicata gritar | "checagem instalada" | **zero linhas no caso saudável = zero itens = fim do ramo.** Matou o `Sync Scores to Notion` e **a Fase 3 inteira por 8 dias**, verde todo dia |
 
-**As quatro regras que saem daí:**
+**As cinco regras que saem daí:**
 1. 🔴 **A falta de critério nunca pode significar "todos".** Filtro sem valor, busca sem chave, lote
    sem limite → o fluxo **para**, não processa tudo. Use uma chave impossível (`__SEM_VALOR__`) em vez
    de deixar vazio.
@@ -350,6 +351,18 @@ usa **modelo forte**. Escolher o modelo é decisão de arquitetura, não detalhe
    antes de bater lote, pergunte o que está sendo repetido.
 4. **Antes de chamar algo de "smoke", conte quantos itens entraram na fila.** Afirmar escopo sem medir
    é a **R6** quebrada, só que mais rápido.
+5. 🔴 **O comportamento no caso VAZIO se escolhe de propósito, nos dois sentidos.** É o espelho da
+   regra 1: lá, *nenhum critério* não pode virar **"todos"**; aqui, *nenhum achado* não pode virar
+   **"pare"**. **No n8n, zero itens encerra o ramo** — então toda checagem cujo sucesso é *não achar
+   nada* precisa de `alwaysOutputData` ou de um item-sentinela. **Nunca deixe o vazio herdar o padrão
+   do nó:** o padrão é diferente em cada um.
+
+> 🔴 **E a lição mais cara da casa, de 2026-09-18:** *"o maior estrago não veio da mudança de
+> identidade — veio da **salvaguarda** que instalei para protegê-la."*
+>
+> **Salvaguarda é código novo em produção e exige o mesmo smoke que a mudança que ela protege.** O
+> teste que faltou não era *"a checagem pega duplicata?"* — era **"o que acontece no dia em que ela
+> não pega nada?"**, que é **todo dia**.
 
 > **Teste prático:** *"se este nó fizesse silenciosamente o oposto do que eu espero, eu perceberia?"*
 > Se a resposta for não, **falta um limite ou um carimbo** — não falta confiança.
@@ -395,6 +408,18 @@ Isso já escondeu um caminho de produção quebrado por **dois dias**.
 > false` estava na tela, sem ninguém olhar.**
 >
 > **Teste prático:** *"eu li o que roda, ou li o que alguém propôs?"*
+
+**3. Documentação de configuração se escreve DEPOIS de reler o artefato.** Em uma semana, **três**
+documentos afirmaram um fato que o artefato contradizia:
+
+| Documento | Afirmava | Era |
+|---|---|---|
+| descrição do `PROSP-05O` | *"religado ao P4 em 16/09"* | a religação estava **no rascunho** |
+| cabeçalho do **ADR-38** | *"corte ainda não ocorreu"* | tinha ocorrido **9 dias antes** |
+| **ADR-38 §17.2** | *"`alwaysOutputData` ligado"* | o campo estava **nulo** |
+
+> **Escreva o que você leu de volta, não o que você mandou fazer.** Documentar a intenção no lugar do
+> artefato é pior que não documentar: cria uma testemunha falsa que a próxima auditoria acredita.
 
 ### R4 — Uma pergunta que todo chat responde antes de fechar
 > *"Onde estamos, quanto falta, e o que eu atualizei para provar isso?"*

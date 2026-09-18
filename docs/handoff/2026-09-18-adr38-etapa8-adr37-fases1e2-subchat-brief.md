@@ -326,3 +326,81 @@ ser caixa não conferida e passam a ser risco conhecido, com uma prova.**
 |---|---|
 | **Fase 0 agora, separada do resto** | ✅ **recomendado.** É correção de defeito em produção, classe de risco diferente da consolidação. Não espera o OK do plano inteiro |
 | **Fases A–C** | seguem a ordem do plano, com a **parada deliberada antes da Fase C** — que é irreversível e exige o D1 reconfirmado **com a tabela na mão**, não com o que o inventário supôs em 08/09 |
+
+---
+
+## §Y — Decisões do chat-mãe sobre a Fase 0 (2026-09-18)
+
+**A minha hipótese caiu, e a refutação vale mais que ela.** Eu apontei o prefixo; era a **salvaguarda
+da P-19**. A varredura que eu pedi por causa de uma hipótese errada **achou o irmão certo** (P-25) —
+mas por outro caminho.
+
+### Y.1 O que vai para o `CLAUDE.md`
+
+**R11 ganha a quinta regra e um sexto caso.** A formulação dele é a melhor que esta casa produziu:
+
+> **O caso saudável de uma checagem é não achar nada — e no n8n "não achar nada" significa "pare
+> tudo".**
+
+É o **espelho da regra 1**: lá, *nenhum critério* não pode virar **"todos"**; aqui, *nenhum achado*
+não pode virar **"pare"**. **O vazio nunca herda o padrão do nó** — o padrão é diferente em cada um.
+
+E a lição da salvaguarda, que generaliza para além do n8n:
+
+> **Salvaguarda é código novo em produção e exige o mesmo smoke que a mudança que ela protege.** O
+> teste que faltou não era *"a checagem pega duplicata?"* — era **"o que acontece no dia em que ela
+> não pega nada?"**, que é **todo dia**.
+
+**R13 ganha a terceira regra:** *documentação de configuração se escreve depois de reler o artefato.*
+Em uma semana, **três** documentos afirmaram fato que o artefato contradizia — a descrição do P5O, o
+cabeçalho do ADR-38, e agora a §17.2. **Escreva o que leu de volta, não o que mandou fazer.**
+
+### Y.2 As quatro pendências — decisão
+
+| | Decisão | Por quê |
+|---|---|---|
+| **P-25** `Fechar Otimização` | ✅ **corrigir só as 3 tarefas abertas.** Não mexer nas fechadas | é o que restaura comportamento. Tarefa fechada com id antigo não faz mal e reescrever história custa mais que vale. **Registrar a escolha** para a próxima auditoria não estranhar |
+| **P-27** `Code Prep Tendência` | ✅ **corrigir agora** | ninguém consome, então o risco é **zero** e o custo é uma linha. **Chave errada sem consumidor é a que alguém reusa em seis meses** |
+| **P-26** rótulo de plataforma | 🟡 **aprovado, mas na Fase A/B — não agora** | hoje só afeta o **CLI-13**, que é teste. Empilhar mudança de view sobre um conserto ainda não provado é sequência ruim |
+| **P-28** `t28_campaign` com 3 identidades | 🔴 **não é pendência nova: é lacuna de escopo do ADR-38** | o ADR unificou a tabela **crua** e não a **derivada**. A série do T28 está partida em três, e o T28 é o cérebro de análise. **Vai para o corpo do ADR-38**, não para uma lista de pendências |
+
+### Y.3 A prova de amanhã — critérios escritos ANTES (R9)
+
+**Ele fez certo em não rodar o Pipeline_v2 à mão.** A Fase 3 cria e move tarefa no Notion e a **Regra
+Crítica 11** torna a ordem imutável. Rodar fora de ordem arriscava estrago maior que um dia a mais de
+espera. **Foi uma regra respeitada quando era fácil racionalizar.**
+
+**A rodada natural das 07h é a prova. O que tem de acontecer, escrito antes:**
+
+1. o `Checar unicidade do score` **emite item** mesmo sem duplicata, e o ramo **continua**;
+2. o `Sync Scores to Notion` **executa** — pela primeira vez desde 11/09;
+3. o **Score Diário do Salão no Notion** deixa de ser `68,7` e passa a bater com o `phi_value` do dia;
+4. os nós da **Fase 3** aparecem na execução, **na ordem imutável**: Fechamento → Escalada → Abertura.
+
+**Qualquer um dos quatro fora do lugar, o conserto reprovou.**
+
+### Y.4 Dois achados fora do ADR que não podem virar rodapé
+
+- **`sw metricas conjuntos` e `sw metricas anuncios` estão ativos e escrevem em tabelas com ZERO
+  linhas.** O `operador unico metricas` os chama todo dia às 04h. **Dois workflows ativos que não
+  produzem nada** — ou estão quebrados, ou não deveriam existir. **É achado próprio dele, e é
+  legítimo.** Não é deste ADR; **é do parque, e precisa de dono.**
+- **A `t28_campaign`** (P-28), acima.
+
+### Y.5 🔴 A conclusão estratégica da semana
+
+Em sete dias esta casa descobriu: a **Fase 3 morta há 8 dias**, o **`Fechar Otimização` morto desde
+09/09**, o **ADR-38 pronto e não marcado**, **4 falhas de alerta não identificadas**, e **2 workflows
+que não produzem nada**. Tudo **verde**.
+
+**O fio comum não é descuido — é arquitetura:**
+
+| O que existe | O que ele vê |
+|---|---|
+| `PHI - Vigia de Frescor` | se o dado **chegou** ao BigQuery |
+| `PHI - Alerta de Falha` | se uma execução **quebrou** |
+| **nada** | se o que **deveria ter acontecido, aconteceu** |
+
+**Execução verde que não faz nada é invisível para os dois vigias que temos.** É por isso que o C3 e
+o C4 saíram de *"❓ verificar"* para 🔴 no placar — e é a próxima necessidade de arquitetura do
+projeto, depois que a Fase 0 provar.
