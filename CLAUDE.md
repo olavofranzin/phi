@@ -149,7 +149,7 @@ Antes de finalizar QUALQUER tarefa:
 | **Quanto falta para acabar** | `docs/strategic-planning/DEFINICAO-DE-PRONTO-PHI-V1.md` |
 | **Achar qualquer documento** | `docs/strategic-planning/MAPA-DE-DOCUMENTACAO.md` |
 | **Prospecção** (leads, GBP, planilha, CRM) | `docs/strategic-planning/prospeccao/CLAUDE.md` |
-| **Score de mídia** (campanhas, BigQuery) | `docs/strategic-planning/saude-digital/` + ADR-37/ADR-38 |
+| **Score de mídia / parque PHI** (métricas, BigQuery, Notion, vigias) | `docs/strategic-planning/saude-digital/CLAUDE.md` → `CONTRATO-PHI.md` (M1–M12) + `panorama-workflows-phi.md` |
 | **CRM Odoo** | skills `phi-odoo-crm` e `odoo-19-dev` |
 | **Procedimentos da agência** (quem faz o quê, entrega, atendimento) | **Miro — `Board Agência`** · `https://miro.com/app/board/uXjVHecmR7c=/` |
 

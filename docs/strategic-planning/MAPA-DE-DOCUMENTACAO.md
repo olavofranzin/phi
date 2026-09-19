@@ -134,6 +134,15 @@ plano de lotes e padrões inegociáveis:
 | **Análise/correção em curso** (dissecação do JSON live + kit BQ) | git `docs/handoff/2026-07-01-saude-digital-phi-midia-score-analise-subchat-brief.md` |
 | Dados | BQ `phi_prod`: `raw_campaign_data`, `client_config`, `model_config`, `phi_score_history`/`_current`, `workflow_execution_log` |
 
+### 7.1b Governança do PARQUE PHI (2026-09-19) — quem grava, quem lê, quem só está ligado
+| Tema | Documento |
+|---|---|
+| **Contexto da frente** (ler primeiro ao mexer em qualquer coisa do PHI) | git `saude-digital/CLAUDE.md` |
+| **Contrato do parque** — um destino um dono · **invariantes M1–M12** · matriz de propriedade | git `saude-digital/CONTRATO-PHI.md` 🟡 rascunho v0.1 |
+| **Inventário dos 81 workflows** em 5 camadas + o placar do parque | git `saude-digital/panorama-workflows-phi.md` |
+| **Entrevista de alinhamento** (30 perguntas de as-built + 22 de decisão) | git `docs/handoff/2026-09-19-parque-phi-contrato-e-entrevista-subchat-brief.md` |
+| Os 2 ativos que não produzem nada desde 30/06 | git `docs/handoff/2026-09-18-achado-parque-workflows-sem-producao.md` |
+
 ### 7.2 Saúde Digital — arquitetura em 4 camadas
 | Tema | Documento |
 |---|---|
