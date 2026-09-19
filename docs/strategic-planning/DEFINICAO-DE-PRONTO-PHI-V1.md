@@ -38,8 +38,8 @@ descobre lead → pontua → enriquece → cria no CRM → [HUMANO dá o play] �
 ### Frente A — Prospecção: o lead entra sozinho
 | # | Critério | Hoje |
 |---|---|---|
-| A2 | Lead descoberto vira lead no **CRM canônico** sem toque humano | 🔴 **o P4 foi repontado para o Odoo em 16/09 e o caminho NUNCA rodou** — última execução do PROSP-04 é de 10/09 |
-| A3 | Loop de aprendizado escreve as 17 colunas a partir do CRM | 🟡 **resolvido 17/09** — o `PROSP-06O` substituiu o loop do HubSpot e passou nos 7 critérios; ✅ quando ativado |
+| A2 | Lead descoberto vira lead no **CRM canônico** sem toque humano | 🟡 **destravado em 19/09** — `PROSP-05O` ativo (gatilho :40) e `PROSP-04` publicado, os dois conferidos pela R13. ⚠️ **o caminho P4 → P5O ainda não foi exercitado**: vira ✅ na 1ª prospecção real |
+| A3 | Loop de aprendizado escreve as 17 colunas a partir do CRM | ✅ **fechado 19/09** — `PROSP-06O` no ar, e a rodada automática 40975 devolveu `motivo_perda`, `data_fechamento` e `acerto_previsao` à planilha sem toque humano |
 | A4 | Passivo **conhecido, documentado e não crescendo** (não precisa ser zero) | ⬜ 127 linhas sem `place_id`; ~48 sem chave de CRM |
 
 ### Frente B — CRM: o comercial opera de verdade
@@ -152,12 +152,12 @@ Declarar isto é metade do valor do documento — é o que impede o projeto de c
 | **P1** | um lead entra e sai **analisado** pelo workflow de lead único | ⬜ |
 | **P2** | um **recorte completo** (2 setores) roda ponta a ponta **sem intervenção** | ⬜ |
 | **P3** | todo lead no CRM chega com **oferta, prioridade, abordagem e NBA** | ⬜ |
-| **P4** | o **desfecho volta à planilha** com motivo, automaticamente | 🟡 **no ar desde 18/09** e rodando no gatilho (grade 00:20/06:20/12:20/18:20 BRT) — falta só **um perdido com motivo** chegar ao CRM |
+| **P4** | o **desfecho volta à planilha** com motivo, automaticamente | ✅ **FECHADO 19/09** — execução automática **40975** (21:20 UTC): `_modificados 1`, `motivo_perda` preenchido, `status_crm` Perdido, `acerto_previsao` com a régua. Grade real: **03:20/09:20/15:20/21:20 UTC** |
 | **P5** | a **cadência roda**, registra tentativas e **para na resposta** | ⬜ |
 | **P6** | enriquecimentos são **skills versionadas no git** | ⬜ |
 | **P7** | cada **dimensão do score** tem definição escrita e status de evidência | ⬜ |
 | **P9** | o **mini-diagnóstico é gerado sem trabalho manual** | ⬜ |
 
-**Placar: 0 de 8** (o P4 a um passo). Documento canônico: `prospeccao/PLANO-ENTREGA-FINAL-PROSPECCAO.md` (§15).
+**Placar: 1 de 8** — o **P4 fechou em 19/09**, o primeiro critério da frente a cair. Documento canônico: `prospeccao/PLANO-ENTREGA-FINAL-PROSPECCAO.md` (§15).
 **Fora desta frente:** o relatório mensal do cliente — é entregável do **serviço**, vive no escopo do
 projeto. **P8 saiu** e virou o checkpoint **CK1** (custo por lead): saber um custo é medição, não entrega.

@@ -100,7 +100,7 @@ Onde não conseguir responder, escreva **"não consegui, porque…"** — isso t
 | A20 | O Vigia de Frescor olha **quais tabelas**? E como se comporta no dia em que **não falta nada** (zero itens = fim do ramo?) |
 | A21 | O `errorWorkflow` está apontado em quais workflows? 🔴 **Quais dos ~26 ativos NÃO têm errorWorkflow?** |
 | A22 | Quais workflows do PHI têm `onError: continueRegularOutput` **sem destino visível** para o erro? |
-| A23 | Houve **até 4 disparos de alerta não identificados**. O que eram? |
+| A23 | 🔴 **Há até 4 workflows falhando que ninguém identificou.** Em 19/09 o sub-chat da Prospecção mediu: o `Vigia de Frescor` falhou **1×**, não 5 — o resto dos disparos veio de **outros** workflows, sem nome até hoje. **Descubra quais.** (A credencial do BigQuery está provada: o Vigia rodou verde em 18 e 19/09, 11:00 UTC) |
 
 ### 4.4. Consumo e higiene (camada 5)
 | # | Pergunta |
@@ -175,6 +175,11 @@ Não são teoria — **cada uma já custou caro nesta casa nas últimas duas sem
 1. **Você está lendo o rascunho.** `nodes` é proposta; o que roda é **`activeVersion.nodes`**.
    Compare `versionId` com `activeVersionId`. `triggerCount` conta gatilhos **ativos**, não
    declarados. **"Não deu erro" ≠ "está no ar"** (**R13**).
+   ⚠️ **Mas o inverso também é verdade, e foi medido em 19/09:** `settings` (com o `errorWorkflow`
+   dentro) e a **descrição** são metadados **de workflow**, não de versão — a `activeVersion` só
+   carrega `nodes`, `connections` e `nodeGroups`. **Eles valem mesmo sem publicar**, e trocar a
+   descrição não muda o `versionId`. Isso importa direto para a **A21**: um `errorWorkflow`
+   configurado já protege um workflow cujo rascunho nunca subiu (R13, item 4).
 2. **Verde não é produção.** `raw_ad_data` passou 3 meses vazia, verde todo dia. **Antes de chamar
    um workflow de saudável, conte os itens que chegaram ao nó de escrita** (R11 regra 4).
 3. **Query agregada sempre devolve linha.** `COUNT`/`SUM` sem `GROUP BY` faz *"não achei"* sair como

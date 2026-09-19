@@ -83,6 +83,12 @@ O PHI tem um caminho só, e todo workflow ocupa um lugar nele:
 | `PHI — Digest Diário de Progresso` | `rhobbBEeQaiWIuiF` | 🟢 ativo 08:30 | a DB Notion de sub-chats (**R3**) | progresso do projeto, não do dado |
 | `[APOSENTADO 2026-09-17] PHI - Alerta de Erro` | `Oj1RbA0laZTzJZPx` | ⚪ inativo | — | ✅ **aposentadoria exemplar** (prefixo + sticky) |
 
+> ⚠️ **Medido em 19/09, e corrige uma afirmação minha:** eu havia dito que *"o alerta disparou 5× e
+> o que está falhando é o Vigia"*. Falso — **o Vigia falhou uma vez**, e a credencial do BigQuery
+> está provada (verde em 18 e 19/09, 11:00 UTC). Os outros disparos vieram de **até 4 workflows que
+> ninguém identificou até hoje**. Deduzi uma causa a partir de uma amostra: é a **R6** quebrada.
+> **Achar esses quatro é item aberto do parque** (pergunta A23 do brief).
+
 > 🔴 **O buraco da camada, nomeado em 18/09:** o Vigia olha **chegada**, o Alerta olha **quebra** —
 > **nada olha se o que devia ter acontecido, aconteceu.** Foi por isso que a Fase 3 morreu 8 dias e
 > a `raw_ad_data` passou 3 meses vazia sem um único alarme.
