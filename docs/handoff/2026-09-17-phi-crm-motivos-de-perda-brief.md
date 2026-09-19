@@ -234,3 +234,39 @@ funis para responder *"quantos leads temos"*.
 O `lead_status` **não volta para a planilha**: o P6O não o mapeia e não há coluna para ele. Não
 atrapalha o monitoramento acima. Se um dia for preciso filtrar "reciclados" direto na planilha, é uma
 coluna nova mais uma linha no mapeamento — **decisão do Olavo, não deste brief.**
+
+---
+
+## 7. O caso real que validou este brief (2026-09-19)
+
+**No primeiro dia de uso, o defeito apareceu sozinho.** O Olavo marcou um lead como perdido,
+escolheu **"Muito caro"** na lista de fábrica, e escreveu na observação que o lead estava **fora do
+ICP**.
+
+**Os dois não são a mesma coisa — e apontam para consertos opostos:**
+
+| O que ele escolheu | O que ele escreveu | O que cada um manda fazer |
+|---|---|---|
+| **"Muito caro"** | — | mexer na **oferta**: preço, pacote, forma de pagamento |
+| — | **"fora do ICP"** | mexer na **entrada**: não era para termos falado com ele |
+
+🔴 **E a máquina só lê o motivo.** O `[P6] So os modificados` faz `txt(lead.lost_reason_id)`. **A
+observação não atravessa.** Então a base de aprendizado vai registrar **`"Too expensive"`** para uma
+perda que foi, na verdade, **erro de segmentação**.
+
+> **O motivo certo não existia na lista, então ele foi para a observação — onde a máquina não lê.**
+> Isso não é falha do Olavo: é **a lista de fábrica não ter o motivo que a agência precisa**, que é
+> exatamente o que este brief existe para consertar.
+
+**A consequência, se isso virar padrão:** a análise vai concluir *"nosso preço está errado"* quando a
+conclusão certa é *"nosso alvo está errado"*. **Baixar o preço e mudar quem se contata são ações
+opostas** — e uma base mal rotulada escolhe a errada com confiança.
+
+**Este caso é o `Sem fit` da §3** — *"fora da cidade, setor que não atendemos, negócio fechado ou
+inativo"*. A proposta foi validada por um caso real no primeiro dia.
+
+### 7.1 Mitigação barata, para agora
+
+**Anotar qual lead é este**, para que o rótulo possa ser corrigido quando a lista nova existir.
+Enquanto o piloto tem ~2 perdas, o Olavo ainda lembra qual é qual. **Em um mês, não lembra** — e aí o
+dado mal rotulado vira permanente, porque ninguém sabe quais linhas revisar.
