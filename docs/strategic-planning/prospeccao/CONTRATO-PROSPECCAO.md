@@ -2075,10 +2075,14 @@ execuções reais do P6O caem em:
 
 **03:20 · 09:20 · 15:20 · 21:20 UTC** — ou seja **00:20 · 06:20 · 12:20 · 18:20 BRT**.
 
-Eu tinha trocado UTC e BRT de lugar. O P5O, no minuto 40, cai nos mesmos horários: **03:40 · 09:40 ·
-15:40 · 21:40 UTC**. **Isto agora é fato lido em execução, não estimativa** — para o P6O, pelas 8
-execuções de 18 e 19/09; para o P5O, ainda é dedução do mesmo `hoursInterval`, e se prova na primeira
-execução dele.
+Eu tinha trocado UTC e BRT de lugar. **A causa já estava diagnosticada por outra sessão** — ver
+`docs/handoff/2026-09-16-prosp06o-correcao-subchat-brief.md` §19: o `triggerAtMinute` e o
+`hoursInterval` do n8n contam **no fuso da instância**, não em UTC, e é daí que sai o deslocamento de
+3 horas que eu li como se fosse a grade.
+
+O P5O, no minuto 40, cai nos mesmos horários: **03:40 · 09:40 · 15:40 · 21:40 UTC**. **Isto agora é
+fato lido em execução, não estimativa** — para o P6O, pelas 8 execuções de 18 e 19/09; para o P5O,
+ainda é dedução do mesmo `hoursInterval`, e se prova na primeira execução dele.
 
 #### 11.29.4 ✅ PROSP-05O ativado
 
