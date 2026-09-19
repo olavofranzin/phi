@@ -237,7 +237,41 @@ coluna nova mais uma linha no mapeamento — **decisão do Olavo, não deste bri
 
 ---
 
-## 7. O caso real que validou este brief (2026-09-19)
+## 7. ⚠️ CORRIGIDO — não era caso real, era dado de teste (2026-09-19)
+
+> 🔴 **A leitura abaixo está ERRADA e fica registrada como hipótese desmentida (R6).** O Olavo
+> corrigiu, e a correção dele é verificável:
+>
+> **1. Os motivos no CRM são os de fábrica — não são nossos.** Marcar o lead foi **para destravar um
+> teste**; o motivo escolhido foi **arbitrário**. Não houve resposta de lead nenhum.
+>
+> **2. E o dado desmente sozinho: `expected_revenue` do lead era `0`.** *"Como levar a sério um
+> 'muito caro' se a oportunidade nem valor tinha?"* — **eu tinha esse número na tela** (li o lead 116
+> na execução `40460`) e escrevi a análise assim mesmo.
+>
+> 🔴 **Nada aqui autoriza mexer na oferta.** **Até o Olavo avisar que começou "pra valer", TODA perda
+> registrada é teste** — inclusive as duas já gravadas.
+>
+> **O que sobrevive da §7:** só o **argumento de desenho** — a lista de fábrica não tem `Sem fit`, e
+> por isso o motivo verdadeiro foi parar na observação, onde a máquina não lê. **Isso continua sendo
+> a razão deste brief.** O que cai é a *consequência* que eu deduzi de uma amostra que não é amostra.
+
+### 7.0 A lição, e ela é minha
+
+**Dado de teste não vira evidência só porque foi gravado.** A linha existe, é idêntica a uma real, e
+**nada nela diz que foi teste** — é a R12 aplicada a **dado** em vez de configuração.
+
+**O conserto é o mais simples que resolve:** quando o Olavo disser que começou pra valer, **anotar a
+data no contrato**. Tudo antes dela é teste. **Sem coluna nova, sem campo, sem processo** — uma data
+e uma frase.
+
+> **Teste prático, para mim:** antes de tirar conclusão de um dado de produção, perguntar **"isto foi
+> alguém usando o sistema, ou alguém testando o sistema?"** — e, se não souber, **olhar os campos
+> vizinhos**: um `expected_revenue` zerado já contava a história inteira.
+
+---
+
+## 7-original (mantido como registro do erro) — "O caso real que validou este brief"
 
 **No primeiro dia de uso, o defeito apareceu sozinho.** O Olavo marcou um lead como perdido,
 escolheu **"Muito caro"** na lista de fábrica, e escreveu na observação que o lead estava **fora do
