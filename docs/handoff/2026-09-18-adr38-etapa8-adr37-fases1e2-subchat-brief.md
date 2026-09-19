@@ -404,3 +404,69 @@ que não produzem nada**. Tudo **verde**.
 **Execução verde que não faz nada é invisível para os dois vigias que temos.** É por isso que o C3 e
 o C4 saíram de *"❓ verificar"* para 🔴 no placar — e é a próxima necessidade de arquitetura do
 projeto, depois que a Fase 0 provar.
+
+---
+
+## §Z — Fase 0 aprovada (2026-09-19) — e o critério 4 estava mal escrito
+
+**Execução `40813`, 10:00 UTC, 48 s contra 28 s de ontem — mais nós rodaram.** Os quatro critérios,
+provados por **rodada natural** contra texto escrito **antes**. **Aprovado.**
+
+### Z.1 O critério 4 punia o comportamento certo — o erro é meu
+
+Escrevi: *"os nós da **Fase 3** aparecem na execução, na ordem imutável"*. Os de **Abertura** não
+apareceram — **e não deviam**: a campanha em alerta **já tinha tarefa aberta**, a mesma que a Escalada
+acabou de atualizar. **Abrir outra seria duplicar.**
+
+> **O critério, como escrito, só seria satisfeito por um defeito.** Ele mediu *"o nó apareceu"* como
+> procuração de *"o comportamento está certo"* — e **procuração quebra**.
+
+**A redação certa, para quem herdar isto:**
+
+> *"Entre os nós que **rodaram**, a ordem Fechamento → Escalada → Abertura foi respeitada; e **todo
+> ramo não tomado tem motivo verificável no fluxo**."*
+
+**Foi exatamente isso que ele entregou** — inclusive o Fechamento, cujo `IF` produziu saída `[0, 1]`:
+**avaliou e decidiu**, não foi pulado. **A diferença entre "não rodou" e "rodou e decidiu não fazer"
+é o que separa um ramo saudável de um ramo morto** — e ele mediu essa diferença.
+
+**E ele fez a coisa certa ao não esconder:** *"considero aprovado e deixo o fato escrito para você
+poder discordar com o dado na mão."* **Aprovação com o desconto declarado vale mais que aprovação
+lisa.**
+
+### Z.2 🔴 O custo, agora com número
+
+**Nove dias seguidos** de `WARNING`/`CRITICAL` no Salão, com o Notion mostrando **`GOOD` / 68,7** o
+tempo todo.
+
+> **O painel não estava velho — estava invertido, exatamente na janela em que o gestor decidiria.**
+
+**Esta frase é o argumento inteiro para o vigia de entrega** (§Y.5). Guardar.
+
+### Z.3 A P-25 era carga, não enfeite
+
+A tarefa escalada hoje (`3b5b65e5…`) é **uma das duas corrigidas ontem**. O `Get tasks para Escalada`
+filtra por `campaign_id equals` — **sem a P-25 o filtro teria voltado vazio e a escalada não teria
+acontecido, em silêncio.**
+
+A decisão de corrigir **só as abertas** se justificou sozinha em 24 h: **as abertas eram exatamente as
+que carregavam comportamento.**
+
+⚠️ **Mas fica uma pergunta que a decisão assumiu sem verificar:** o `Fechar Otimização` lê **só
+tarefas `Concluído`** — e as 3 `Concluído` têm id antigo, então **ele nunca as verá**. Assumi que
+*concluída = nada a fazer*. **Se esse workflow faz algo além de fechar** — escrever no **Log de
+Otimizações**, por exemplo — **essas 3 ficam permanentemente fora dele.** **Uma leitura do que ele
+faz com uma tarefa `Concluído` fecha a questão.** É barato e é a R6 aplicada à minha própria decisão.
+
+### Z.4 A P-29 é instância, não regra nova
+
+`Sync Scores to Notion` rodou **6 vezes para 2 páginas** — o loop de sync está **aninhado** no de
+clientes. Idempotente, mas **3× as chamadas à API do Notion, todo dia**.
+
+**É a mesma forma do `Loop Over Items` do P6:** *o que não varia por item ficou dentro do loop.*
+**Segunda instância na mesma semana, em frentes diferentes.**
+
+🔴 **E mesmo assim NÃO vira regra nova.** A **R11, regra 3** já diz: *"antes de bater lote, pergunte o
+que está sendo repetido"*. **Inflação de regra é como o `CLAUDE.md` deixa de ser lido** — e um arquivo
+de regras que ninguém lê protege menos que nenhuma regra. **Instância vai para o ADR; princípio fica
+no `CLAUDE.md`.**
