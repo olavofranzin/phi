@@ -1,0 +1,16 @@
+{
+  "cnpj_cliente": "12.345.678/0001-90",
+  "cliente_nome": "Cliente Sandbox PHI",
+  "data_inicio": "2026-05-26",
+  "modelo_negocio": "Lead Gen",
+  "servico": [
+    "Tráfego pago",
+    "Agente IA"
+  ],
+  "origem_comercial": "Olavo",
+  "responsavel_geral_email": "olavo@example.com",
+  "campos_extras_ignorados_no_v1": {
+    "briefing_completo": true,
+    "observacao": "A2.1 deve ignorar este bloco."
+  }
+}
