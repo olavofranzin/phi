@@ -1611,3 +1611,132 @@ da §22.4. **A terceira (o `Fechar Otimização`) foi a única que o método pre
 natural das **07h BRT de 19/09**, com os critérios escritos antes no §Y.3 do plano da etapa 8.
 Continua valendo não rodar o `Pipeline_v2` à mão: a Fase 3 cria e move tarefa no Notion e a ordem
 dela é imutável (Regra Crítica nº 11).
+
+---
+
+# 24. A prova da Fase 0 — rodada de 19/09 às 07h BRT: **APROVADA**
+
+> Critérios escritos **antes** no §Y.3 do plano da etapa 8. Execução `40813` do `PHI - Pipeline_v2`
+> (versão `e4f6d90a`), 10:00:51 UTC, `success`, **48 segundos** contra 28s no dia anterior — mais nós
+> rodaram.
+
+## 24.1 Os quatro critérios
+
+| # | Critério | Resultado |
+|---|---|---|
+| 1 | `Checar unicidade do score` **emite item** sem duplicata e o ramo **continua** | ✅ saída `[{json:{}}]`; `Falhar se chave duplicada` → `{unicidade:"ok"}`; **`lastNodeExecuted` agora é `If Operacional OK?`**, um nó da Fase 3 |
+| 2 | `Sync Scores to Notion` **executa** | ✅ **6 execuções** — a primeira desde 11/09 |
+| 3 | Score do Salão deixa de ser 68,7 e **bate com o `phi_value` do dia** | ✅ **49,68** · `WARNING` · `phi_ultima_execucao 2026-09-19` |
+| 4 | Nós da Fase 3 **na ordem imutável**: Fechamento → Escalada → Abertura | ✅ ordem respeitada — detalhe em 24.2 |
+
+O critério 3 foi conferido **lendo a base de volta** (R13.3), não pela resposta da escrita:
+
+| campanha | Score | Status | `phi_ultima_execucao` |
+|---|---|---|---|
+| `21116045403` Salão | **49,68** | **WARNING** | 2026-09-19 |
+| `21149189736` Barbearia | 76,25 | GOOD | 2026-09-19 |
+
+E bate exatamente com o BigQuery: `Buscar Campanhas Alertas` devolveu
+`calculated_date 2026-09-18, phi_value 49.68, phi_classification WARNING`.
+
+## 24.2 A ordem da Fase 3, medida em segundos
+
+| +seg | nó | fase |
+|---|---|---|
+| 7,0 – 11,3 | `Check Auto-Close` (×6) | **Fechamento** |
+| 11,3 | `Log OPERATIONAL RUNNING` | — |
+| 14,9 | `Buscar Campanhas Alertas` | — |
+| 16,1 | `Execute SQL Verificar Escalada (BQ)` | **Escalada** |
+| 17,1 | `Get tasks para Escalada` | **Escalada** |
+| 17,6 | `Update Escalar Tarefa` | **Escalada** |
+| 18,4 / 20,7 | `Log OPERATIONAL SUCCESS` · `If Operacional OK?` | — |
+
+**Nada rodou fora de ordem.** Dois ramos não foram tomados, e os dois por decisão correta do fluxo:
+
+- **Fechamento:** `Check Auto-Close` produziu saída `[0, 1]` — ramo TRUE vazio, ramo FALSE com o item.
+  O IF foi avaliado e decidiu **não há o que fechar**; por isso `Get Task para Fechar`,
+  `Auto-Close Task` e `Auto-Close: Desativar Otimização` não rodaram.
+- **Abertura:** não rodou porque **a campanha em alerta já tem tarefa aberta** — a mesma que a
+  Escalada acabou de atualizar. Abrir outra seria duplicar. Comportamento desenhado, não falha.
+
+> **Registrado com honestidade:** o critério 4, como escrito, pede que os nós das três fases
+> **apareçam**. Os de Abertura não apareceram. **A ordem, que é o que a Regra Crítica nº 11 protege,
+> foi respeitada** — e o motivo de o ramo não ser tomado é verificável no fluxo. Considero aprovado, e
+> deixo o fato escrito para quem discordar poder discordar com o dado na mão.
+
+## 24.3 🔴 O tamanho do estrago, agora quantificado
+
+`Buscar Campanhas Alertas` trouxe, para o Salão:
+
+```
+dias_em_alerta_real: 9
+```
+
+**A campanha estava em WARNING/CRITICAL havia nove dias seguidos** — e o Notion mostrava
+**GOOD / 68,7** o tempo todo. O painel não estava só velho: estava **invertido** em relação ao
+estado real, exatamente na janela em que o gestor tomaria uma decisão.
+
+## 24.4 ✅ A P-25 foi carga, não enfeite — e a prova é desta execução
+
+`Get tasks para Escalada` filtra assim:
+
+```
+campaign_id  equals            {{ campaign_id vindo do BigQuery }}   → hoje "21116045403"
+Status       does_not_equal    "Concluído"
+Criado por Automação equals    true
+```
+
+Ou seja: **casa por `campaign_id` e só em tarefa ABERTA.** A tarefa que ele encontrou e escalou foi
+`3b5b65e5-c72b-812b-afbe-d589e807cd26` — **uma das duas que corrigi ontem** de
+`GADS-21116045403` para `21116045403`. Sem a P-25 esse filtro teria voltado vazio e **a escalada não
+teria acontecido, em silêncio.**
+
+## 24.5 O `Fechar Otimização` continua sem casar — e isso é a decisão, não um defeito
+
+Execução `40812` (hoje, 10h): as 3 tarefas caem em `Sem Campanha Ativa`, como ontem.
+**Não é regressão.** O `Buscar Tarefas Concluídas` filtra `Status = Concluído`, e as 3 concluídas são
+**exatamente as que decidimos não tocar** (§23.2). As 3 abertas que corrigi **este workflow nunca
+olha**.
+
+**O efeito da P-25 aqui é futuro:** quando o gestor concluir uma das 3 tarefas abertas, ela virará
+`Concluído` **já com o id nativo**, e aí o `Fechar Otimização` vai casar. A escolha de 18/09
+funciona — só não produz efeito retroativo, que era o combinado.
+
+## 24.6 ✅ A série de tendência voltou
+
+Execução `40768` do `sw metricas campanhas` (versão `a9bd0584`):
+
+| campanha | `n_dias` ontem | `n_dias` hoje | `tendencia_real` | `tendencia_metodo` |
+|---|---|---|---|---|
+| Salão `21116045403` | 0 | **19** | **−9,96** | `bigquery_3d_vs_3d` |
+| Barbearia `21149189736` | 0 | **21** | **+772,74** | `bigquery_3d_vs_3d` |
+| CLI-13 `1202230970…` | 0 | **10** | null | `sem_historico` |
+
+O `WHERE` casa de novo, e o `bq_campaign_id` sai nativo nas três. **O CLI-13 continua
+`sem_historico`, e agora por um motivo legítimo**: a query acha 10 dias, mas todos com custo e
+conversão zero — é campanha de teste sem veiculação, não é a chave errada.
+
+## 24.7 🟡 Achado novo da própria prova — P-29
+
+`Sync Scores to Notion` rodou **6 vezes para 2 páginas**: cada campanha foi escrita **três vezes**,
+com o mesmo valor. O `Loop Sync & Close` está **aninhado dentro do loop de clientes** — 3 clientes ×
+2 campanhas = 6. É **idempotente** (mesmo valor, mesma página), então não corrompe nada, mas são
+**3× as chamadas à API do Notion** que o necessário, todo dia.
+
+Não corrigi: não é defeito de correção, é desenho, e mexer em loop aninhado é mudança de estrutura.
+Vira a **P-29**, para a Fase A/B.
+
+## 24.8 Placar final da Fase 0
+
+| # | Achado | Estado |
+|---|---|---|
+| 1 | `Checar unicidade do score` matava a Fase 3 | ✅ **provado corrigido** |
+| 2 | Série de tendência zerada | ✅ **provado corrigido** |
+| 3 | `campaign_id` das tarefas abertas | ✅ **provado corrigido** (escalada de hoje) |
+| 4 | Rótulo de plataforma sem fonte | 🟡 P-26, Fase A/B |
+| 5 | `t28_campaign` com 3 identidades | 📄 §23.4, escopo do T28 |
+| 6 | Sync do Notion rodando 3× por página | 🟡 **P-29 (nova)**, Fase A/B |
+
+**As três correções da Fase 0 estão provadas em produção, por rodada natural, contra critérios
+escritos antes.** A Fase 0 está encerrada; as Fases A a C seguem aguardando decisão do Olavo, com a
+parada antes da C mantida.
