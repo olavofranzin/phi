@@ -434,6 +434,33 @@ documentos afirmaram um fato que o artefato contradizia:
 > **Escreva o que você leu de volta, não o que você mandou fazer.** Documentar a intenção no lugar do
 > artefato é pior que não documentar: cria uma testemunha falsa que a próxima auditoria acredita.
 
+### R13 — Em workflow ativo, o que você lê é o RASCUNHO. O que roda é outra coisa
+**Publicar não é salvar.** No n8n, `update_workflow` grava o **rascunho**; só `publish_workflow` faz
+aquilo virar o que roda. Quem lê `workflow.nodes` está lendo a **proposta**. Quem quer saber o que
+está em produção lê **`workflow.activeVersion.nodes`**.
+
+**Como se confere — sempre por leitura, nunca por memória:**
+1. `versionId === activeVersionId`? Se não, **o rascunho não é o sistema**.
+2. `activeVersion.sameAsDraft` é `true`? Se for `false`, existe diferença — e ela é invisível na tela.
+3. Depois de publicar, **releia** e confirme os dois. `triggerCount` só conta gatilho **ativo** (R12),
+   então num workflow que acabou de subir ele vira `1` — e isso é confirmação, não coincidência.
+
+> **Motivo:** em 16/09 a repontagem do `[P5] CRM-out` do P4 — do P5 do HubSpot para o P5O do Odoo —
+> foi salva **no rascunho e nunca publicada**. Durante três dias a documentação dizia "religado", o
+> editor mostrava a fiação nova, e **o que rodava ainda chamava um workflow aposentado e inativo** —
+> com `onError: continueRegularOutput`, ou seja, **falharia em silêncio** (R11). Eu li o P4 duas vezes
+> e as duas li o rascunho, com o `sameAsDraft: false` na tela.
+>
+> **Corolário — duas coisas NÃO moram na versão:** `settings` (aí dentro, o `errorWorkflow`) e a
+> **descrição**. As duas valem na hora de salvar, sem publicar. Por isso trocar a descrição não muda o
+> `versionId`, e por isso um `errorWorkflow` configurado já protege um workflow cujo rascunho nunca
+> subiu.
+>
+> **Teste prático:** *"se o que eu acabei de mudar não estivesse valendo, eu perceberia?"* No n8n a
+> resposta é **não** — o editor mostra o rascunho e não avisa nada. É a irmã da R12: **estado
+> temporário invisível**, só que aqui a invisibilidade é do produto, não do esquecimento.
+
+
 ### R4 — Uma pergunta que todo chat responde antes de fechar
 > *"Onde estamos, quanto falta, e o que eu atualizei para provar isso?"*
 Se não souber responder, a etapa não acabou.

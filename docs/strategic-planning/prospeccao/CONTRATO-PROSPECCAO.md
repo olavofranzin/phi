@@ -2033,3 +2033,133 @@ BRT). O P5O, quando for ativado, cai nos `:40` dos mesmos horários.
 **O que olhar na cheia:** `_modificados >= 1`, **`motivo_perda` preenchido** na linha do lead perdido,
 `acerto_previsao` com a régua, e o cursor avançando. **O que olhar na vazia:** verde, `_modificados: 0`,
 zero escrita, cursor parado.
+
+### 11.29 A Prospecção destravada (19/09) — o P4 fechou, e as três pernas estão publicadas
+
+#### 11.29.1 🟢 O P4 fechou — os 8 critérios, na rodada automática
+
+Execução **`40975`**, `mode: trigger`, verde, **21:20 UTC de 19/09**. Diagnóstico lido no
+`[P6] So os modificados`:
+
+| campo | valor |
+|---|---|
+| `_modificados` | **1** |
+| `id_crm` | `59` |
+| `status_crm` | `Perdido` |
+| **`motivo_perda`** | **`Too expensive`** |
+| `data_fechamento` | `2026-09-19T21:07:25.000Z` |
+| `acerto_previsao` | `errou (>=60 -> perdeu)` |
+| `dias_no_funil` | `10` |
+| `_lidos_no_odoo` | `101` |
+| `_fora_sem_linha_na_planilha` | `1` · `_sem_linha_ids: "116"` |
+
+O `motivo_perda` **chegou preenchido** — o caminho que nunca tinha sido exercido. **Fechou.**
+
+E o `_fora_sem_linha` continua **1**, com o **mesmo id 116** do lead criado à mão em 17/09. Não é lead
+novo: **não há nada a avisar ao Olavo.** Se viesse `2`, seria outro lead sem linha na planilha.
+
+#### 11.29.2 ⚠️ Os dois motivos de perda registrados são TESTE — decisão do Olavo (19/09)
+
+**Nenhuma conclusão comercial sai deles.** Os motivos de perda no CRM são **os de fábrica do Odoo**, o
+motivo escolhido foi **arbitrário** (só para destravar a prova do caminho) e o `expected_revenue` era
+**0**. O `acerto_previsao: errou` da linha 59 é **prova de mecânica, não medida de score**.
+
+> **A régua do `acerto_previsao` só começa a valer quando o Olavo avisar que a prospecção começou
+> para valer — e a data disso entra aqui, nesta seção.** Até lá, qualquer leitura do aprendizado do
+> score sobre estas linhas é leitura de dado de teste.
+
+#### 11.29.3 🔴 Correção da §11.28.6 — os horários do gatilho que eu estimei estão errados
+
+Eu escrevi, marcado como estimativa: *"00:20, 06:20, 12:20 e 18:20 UTC"*. **Está errado.** As
+execuções reais do P6O caem em:
+
+**03:20 · 09:20 · 15:20 · 21:20 UTC** — ou seja **00:20 · 06:20 · 12:20 · 18:20 BRT**.
+
+Eu tinha trocado UTC e BRT de lugar. O P5O, no minuto 40, cai nos mesmos horários: **03:40 · 09:40 ·
+15:40 · 21:40 UTC**. **Isto agora é fato lido em execução, não estimativa** — para o P6O, pelas 8
+execuções de 18 e 19/09; para o P5O, ainda é dedução do mesmo `hoursInterval`, e se prova na primeira
+execução dele.
+
+#### 11.29.4 ✅ PROSP-05O ativado
+
+Antes de publicar, **lido e não lembrado** (R12):
+
+| o que | estado lido |
+|---|---|
+| `[P5] Reconciliacao 6h` | `hoursInterval: 6`, **`triggerAtMinute: 40`** |
+| `[P5] Entrada` | `disabled: false` — ligado |
+| `[P5] Config` | `lote_max: 20`, `corte_potencial: 60` |
+| `errorWorkflow` | `UZ7sIE5cWrrO8xea` |
+
+O `lote_max = 1` do teste do P6-6 foi passado **na chamada**, nunca gravado no nó — a R12 fecha limpa.
+Único nó desabilitado: `[SMOKE] Trigger manual`, que é porta de teste e fica fechada por desenho.
+
+**Descrição corrigida antes de publicar (R5).** A anterior afirmava duas coisas falsas: *"Religado ao
+P4 em 16/09"* (a repontagem vivia só no rascunho do P4) e *"Inativo"*. A nova:
+
+> *P5 do CONTRATO na versao Odoo. Busca por gbp_place_id (I4), cria ou atualiza o lead e devolve
+> id_crm. Escreve so id_crm, data_envio_crm e erro_envio_crm. Substituiu o PROSP-05 do HubSpot,
+> aposentado em 16/09. Ativo desde 19/09, reconciliacao no minuto 40.*
+
+**Conferido depois de publicar (R13):** `active: true` · `versionId === activeVersionId ===
+a4564f52-f60a-445a-9473-b7c99afccb2b` · `triggerCount: 1`.
+
+> **Achado de mecânica:** o `versionId` **não mudou** com a troca de descrição. Descrição é **metadado
+> de workflow, não conteúdo de versão** — muda fora do versionamento e vale na hora, sem publicar.
+
+#### 11.29.5 ✅ PROSP-04 publicado — o furo da §11.28 está fechado
+
+Li o nó `[P5] CRM-out` **inteiro** no rascunho antes de tentar de novo. O rascunho estava **limpo**:
+
+| | rascunho | versão ATIVA (antes) |
+|---|---|---|
+| `parameters.workflowId.value` | `0H1mdPuICHsyWGxt` (P5O Odoo) | `94lSWJfxfu653KdN` (HubSpot aposentado) |
+| `onError` | `stopWorkflow` | `continueRegularOutput` |
+| `retryOnFail` / `maxTries` | `true` / `3` | `true` / `3` |
+
+Varredura do JSON inteiro: o id do aposentado aparecia **duas vezes** — uma como **texto** dentro de
+`parameters.notes` (memória do repontamento, inofensiva) e **uma como referência de verdade**, em
+`activeVersion.nodes[17].parameters.workflowId.value`. **Só a versão ativa apontava para o morto.**
+
+**Por que a recusa de 17/09 citava o id do HubSpot:** ela não estava reclamando do rascunho. O
+rascunho apontava para o `0H1mdPuICHsyWGxt`, que **naquele momento ainda estava inativo** — a publicação
+do P4 dependia da publicação do P5O. Publicado o P5O, a publicação do P4 passou **de primeira**.
+
+**Conferido depois de publicar (R13):** `active: true` · `versionId === activeVersionId ===
+6cf4f1c2-70d3-4242-b6c0-452aed7a2589` · **`sameAsDraft: true`** · a referência ao aposentado some:
+`94lSWJfxfu653KdN` aparece **0 vezes** na versão ativa.
+
+**§18.3 respondido — o `errorWorkflow` não estava preso no rascunho.** `settings` é **de workflow, não
+de versão**: a `activeVersion` só carrega `nodes`, `connections` e `nodeGroups`. O `errorWorkflow` do
+P4 valia desde 17/09, sem depender desta publicação.
+
+#### 11.29.6 Limite honesto — uma nota velha que não consigo consertar
+
+O nó `[P5] CRM-out` tem **duas notas**. A de `parameters.notes` está correta e conta o repontamento.
+A **nota de nó** (`notes`, a que aparece nas configurações do nó no editor) continua dizendo:
+
+> *"I8: o P5 e o unico que escreve no **HubSpot**."*
+
+Está errada desde 16/09. **Não dá para corrigir pelo MCP:** `notes` de nó só aceita escrita **na
+criação**; nenhuma operação de `update_workflow` alcança o campo num nó que já existe. O sticky
+`Sticky Note repontamento`, que entrou junto com a correção, guarda a memória certa ao lado. **Fica
+registrada como dívida de uma linha, para quem abrir o editor.**
+
+#### 11.29.7 O estado do parque agora
+
+| perna | estado | gatilho |
+|---|---|---|
+| `PROSP-04 Enriquecimento` | **ativo e publicado**, chamando o P5O com `stopWorkflow` | sub-workflow (sem gatilho próprio) |
+| `PROSP-05O CRM-out Odoo` | **ativo** | `:40` — 03:40 · 09:40 · 15:40 · 21:40 UTC |
+| `PROSP-06O Sync Odoo -> Planilha` | **ativo** | `:20` — 03:20 · 09:20 · 15:20 · 21:20 UTC |
+
+Os três apontam para o mesmo `errorWorkflow` (`UZ7sIE5cWrrO8xea`), que já provou entregar no Telegram.
+
+**A Prospecção está destravada. O Olavo pode prospectar.**
+
+#### 11.29.8 O que vigiar na primeira rodada do P5O
+
+Ela ainda **nunca rodou em produção**. Na primeira execução: que a `[P5] Reconciliacao 6h` dispare no
+`:40`, que o `lote_max: 20` segure a vazão, e que a `[P5] Entrada` — a porta pela qual o P4 agora chama
+de verdade — seja exercida pela primeira vez desde que foi religada. **O caminho P4 → P5O deixou de ser
+teórico hoje: até esta publicação, nunca tinha existido em produção.**
