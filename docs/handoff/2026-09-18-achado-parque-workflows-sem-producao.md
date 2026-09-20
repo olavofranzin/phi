@@ -1,5 +1,21 @@
 # [ACHADO DO PARQUE] Dois workflows ativos que não produzem nada
 
+> 🔴 **CORRIGIDO EM 2026-09-20 PELO AS-BUILT — o título desta nota está errado, e é UM, não dois.**
+>
+> **`sw metricas conjuntos` (`t0DH5N5maws4egnG`) não tem um único nó de BigQuery.** Ele nunca
+> escreveu `raw_adset_data_rollup`: escreve no **Notion** (`Update database page Conjuntos`, 12
+> campos) e atualizou **3 páginas em 19/09**. Está produzindo — só não onde esta nota supôs.
+>
+> **O que continua de pé:** `sw metricas anuncios` de fato não produz, e a `raw_ad_data` segue
+> vazia desde 30/06. A causa raiz foi isolada no as-built.
+>
+> **A lição, que é a mesma da semana:** montei esta nota a partir do **nome do workflow e do nome da
+> tabela**, sem abrir os nós — e o nome mentiu. *"`sw metricas conjuntos` escreve a tabela de
+> conjuntos"* é a suposição mais natural do mundo, e estava errada. **A R13 não vale só para
+> rascunho × versão ativa: vale para nome × conteúdo.**
+>
+> **Fonte que vence:** `docs/handoff/2026-09-20-parque-phi-lista-A-as-built.md`.
+
 | | |
 |---|---|
 | **Data** | 2026-09-18 |

@@ -300,11 +300,36 @@ A pergunta não é mais "qual dos dois writers fica", e sim **qual identidade é
 > ações de conversão — e vira pendência própria.
 
 ### Fase 2 — ⏸️ SUSPENSA (ver §3.0.3) — Aposentar o `GADS_INSERT`
-Aplicar o §2.5 ao `PHI - Subworkflow Campanhas` (`b1pbn8qmzCNTufTp`), **preservando** o nó
-`Execute SQL client_config sincronizado` até a Fase 3 — ou migrando-o junto.
-Desabilitar o nó `Call Subworkflow Campanhas` no `Pipeline_v2`.
 
-### Fase 3 — `client_config` — **nesta ordem, e só nesta**
+> 🔴 **CORRIGIDA EM 2026-09-20 — a instrução original era autocontraditória.**
+>
+> Ela dizia: *"preservando o nó `Execute SQL client_config sincronizado`"* **e**, na linha seguinte,
+> *"desabilitar o nó `Call Subworkflow Campanhas` no Pipeline_v2"*. **As duas coisas não coexistem:**
+> o nó preservado vive **dentro** do subworkflow que o chamador dispara. Desabilitado o chamador, o
+> nó não roda nunca mais — **"preservar" um nó num workflow que ninguém chama é preservar código
+> morto.** A intenção estava escrita e não se realizaria; é a mesma doença do S1c deste ADR.
+>
+> **E o as-built de 20/09 mediu o que isso custaria:** esse `UPDATE` é, hoje, o **único writer de
+> `primary_metric_type` em `phi_prod.client_config`** (execução **40814**, verde, 2×/dia). É ele que
+> mantém o **CPA do KIL** correto em produção — não uma carga manual. Sem ele, o único valor que
+> sobra vem do workflow `client_config`, que grava **`ROAS` fixo** em `phi_dev`.
+>
+> **Ordem corrigida: a Fase 3 vem ANTES da Fase 2.** Só depois que `client_config` tiver dono único
+> declarado (**ADR-39**) é que o `GADS_INSERT` pode ser aposentado.
+
+Aplicar o §2.5 ao `PHI - Subworkflow Campanhas` (`b1pbn8qmzCNTufTp`) **somente depois da Fase 3**, e
+**migrando** o nó `Execute SQL client_config sincronizado` para o workflow que ficar como dono —
+nunca "preservando-o" onde está. Só então desabilitar o nó `Call Subworkflow Campanhas` no
+`Pipeline_v2`.
+
+### Fase 3 — `client_config` — **nesta ordem, e só nesta** · ⏸️ **bloqueada pelo ADR-39**
+
+> 🔴 **2026-09-20:** o passo **3.0** não existia e é o primeiro de todos — **decidir o dono**. O
+> as-built descobriu que **já há dois writers** na mesma coluna, em ambientes diferentes (A10), o que
+> este ADR não sabia em 08/09. Repontar o `MERGE` para `phi_prod` sem resolver isso **não sobrescreve
+> o KIL** (ele cai em `WHEN MATCHED`, que não toca essa coluna) — cria coisa pior: **dois donos na
+> mesma coluna**, que é o M1 quebrado de propósito. A decisão saiu do escopo deste ADR e virou o
+> **ADR-39**.
 
 | # | Ação | Se inverter |
 |---|---|---|
