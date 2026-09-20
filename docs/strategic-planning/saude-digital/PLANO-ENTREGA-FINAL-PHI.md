@@ -141,6 +141,87 @@ construção**.
 > Ele roda — mas não consegue **provar** que rodou. E o dono, na ausência de prova, interpreta
 > silêncio como saúde. **É a R11 elevada de nó para sistema.**
 
+## 3.3. Correções do Olavo (2026-09-20) — e a regra de precedência desta base
+
+### 3.3.1. 🔴 O alarme real é menor do que eu escrevi
+
+> **Olavo, verbatim:** *"o único alerta que recebo é quando há algum erro que impediu o wf operador
+> único de rodar. Se houver falha na coleta, não haver coleta, enfim, qualquer outra falha só sei se
+> abrir o Notion e ver alguma incoerência."*
+
+**Eu havia escrito "5 workflows dos 26 cobertos". Na prática vivida é pior:**
+
+| | |
+|---|---|
+| **Alarme que chega** | **um**: o `operador unico metricas` não conseguiu rodar |
+| **Falha na coleta** | 🔴 silenciosa |
+| **Coleta que não aconteceu** | 🔴 silenciosa |
+| **Qualquer outra falha** | 🔴 silenciosa |
+| **Detector real** | **o olho do Olavo, abrindo o Notion e reparando numa incoerência** |
+
+> **O único detector de qualidade do PHI hoje é uma pessoa achando estranho.** Isso não escala para
+> *"todos os clientes que contratarem tráfego pago"* — com 1 cliente dá para reparar; com 12, não.
+> **O F3 deixa de ser critério de qualidade e vira condição de escala.**
+
+### 3.3.2. 🔴 A estrutura das plataformas — o que o PHI está ignorando
+
+> **Olavo, verbatim:** *"é ele [o anúncio] que fica 'ruim' ou não, a campanha é reflexo de um ou mais
+> anúncios. Um anúncio ruim não significa necessariamente uma campanha ruim, ao passo que, uma
+> campanha ruim possui um ou mais anúncios ruins. Hoje não faz tanta diferença porque temos 1
+> campanha com 1 anúncio, então campanha ruim = anúncio ruim, estamos esquecendo como funcionam as
+> plataformas de anúncios, como elas estruturam e enxergam a campanha, o conjunto de anúncio(s) e
+> o(s) anúncio(s), estamos tomando os registros que temos como absolutos."*
+
+**A assimetria que ele aponta:**
+
+```
+anúncio ruim   ⇏   campanha ruim      (um anúncio fraco se dilui entre outros)
+campanha ruim  ⇒   algo abaixo dela está ruim   (sempre)
+```
+
+**Consequência para o desenho:** o PHI hoje pontua o **agregado** e chama isso de diagnóstico. Mas
+**o agregado não tem causa — quem tem causa é o nível de baixo.** *"A campanha do Salão está em
+WARNING"* não é um diagnóstico: é um sintoma com nome de campanha.
+
+**E a hierarquia tem três níveis, não dois — cada um decide coisas diferentes:**
+
+| Nível | O que se configura ali | O que dá errado ali |
+|---|---|---|
+| **Campanha** | objetivo, orçamento, estratégia de lance | orçamento estrangulado, objetivo errado, lance mal escolhido |
+| **Conjunto / grupo de anúncios** | **público, palavras-chave, posicionamento, otimização** | público errado, termo caro, posicionamento ruim |
+| **Anúncio** | criativo, copy, promessa, destino | criativo fraco, promessa incoerente com a página |
+
+> ⚠️ **Um refinamento à afirmação, não uma correção:** uma campanha pode ir mal **com anúncios bons**
+> — se o público estiver errado ou o orçamento estrangulado, o criativo está sendo mostrado para a
+> pessoa errada. **O culpado pode morar no conjunto.** Isso reforça exatamente o ponto do Olavo: o
+> nível do meio é onde metade das causas vive, e é o que o PHI mais ignora hoje.
+
+**O que isso revela sobre o parque:** o `sw metricas conjuntos` **existe, roda e escreve no Notion** —
+e foi classificado como *"ativo que não produz nada"* por duas varreduras seguidas, porque ninguém
+sabia para que serviria. **Ele estava certo o tempo todo; a régua é que faltava.**
+
+### 3.3.3. ⚖️ A regra de precedência desta nova base
+
+> **Olavo, verbatim:** *"até termos um documento escrito nesta nova base nada é imutável. O que já
+> temos como documentação serve para mostrar o raciocínio que nos trouxe até aqui, o porquê cada
+> coisa foi criada, para mostrar que o pensamento base, criador, ainda permanece e está se
+> formatando. A base permanece, o que queremos com o PHI permanece, o restante pode (e se preciso)
+> deve ser alterado ou descartado."*
+
+| O que permanece | O que é revisável |
+|---|---|
+| **o propósito do PHI** e a base do raciocínio | ADRs, contratos, matrizes, invariantes, nomes de tabela, desenho de workflow |
+| **o princípio:** detecta, classifica e orienta — nunca executa | a forma como isso é implementado |
+
+**Como isso se aplica na prática, para não virar licença para apagar história:**
+
+1. **A documentação anterior não é lei; é o registro de por que cada coisa nasceu.** Ela continua
+   sendo lida — mas como **explicação**, não como ordem.
+2. **Quando este documento divergir de um ADR anterior, este documento vence** — e a divergência é
+   **escrita no ADR antigo**, não apagada. (É a R2: o real vence o plano, e o histórico ganha banner.)
+3. **Descartar exige dizer o que substitui.** "Isto sai" sem "aquilo entra no lugar" é buraco, não
+   simplificação.
+
 ---
 
 ## 4. O ponto final — 🟡 **PROPOSTA (derivada das 7 respostas), aguarda §1/§2 e confirmação**
@@ -153,7 +234,7 @@ da Prospecção.
 | **F1** | **Todo cliente que contrata tráfego aparece no PHI sem ninguém precisar lembrar** | *"todos os que contratarem"* + *"eu cadastro no Notion"* | 🔴 o cadastro morre no `phi_dev` |
 | **F2** | **O número que está no Notion é o número certo** — sem duplicata, sem zero que significa "não achei" | *"o que dói é dado errado"* + virada item 1 | 🔴 o score chega **3×** |
 | **F3** | **Silêncio significa saúde** — se o que devia acontecer não aconteceu, chega alarme | *"perceberia pela falta"* × *"quase nunca chega alarme"* | 🔴 21 de 26 sem cobertura |
-| **F4** | **O PHI aponta o responsável pelo desvio, não só o desvio** | *"quero o anúncio culpado"* | 🔴 sem grão de anúncio |
+| **F4** | **O PHI enxerga a campanha como a plataforma a enxerga — campanha, conjunto e anúncio — e aponta em qual nível está a causa** | *"quero o anúncio culpado"* + §3.3.2 | 🔴 pontua só o agregado |
 | **F5** | **Rodou 30 dias sem intervenção manual** | virada item 2 | ⬜ nunca medido |
 | **F6** | **Alguém da equipe opera sem ter desenhado** | *"alguém da equipe"* + *"só você"* | ⬜ nunca testado |
 
@@ -170,6 +251,14 @@ O Olavo elegeu o **grão de anúncio (F4)** para os 15 dias. As respostas do pro
 - **F1–F3 primeiro:** ninguém vê nada novo por ~2 semanas, e depois tudo o que vier é confiável.
 
 **Isto precisa ser decidido explicitamente, não por ordem de chegada dos briefs.**
+
+> ### ✅ **DECIDIDO pelo Olavo em 2026-09-20:** *"Vamos prosseguir com o que sugeriu."*
+> **Ordem aprovada: F1 → F3 → F2 → F4.**
+>
+> O **F1** já tem brief pronto (ADR-39) e destrava a regra de entrada de cliente. O **F3** é o que
+> torna os 30 dias mensuráveis — e, pela §3.3.1, é condição de escala, não refinamento. O **F4** sai
+> dos 15 dias imediatos, **mas cresceu de escopo**: deixou de ser "coletar grão de anúncio" e virou
+> "enxergar os três níveis". O brief do grão precisa ser reescrito antes de ir para execução.
 
 ## 5. A engenharia reversa — a pergunta única
 

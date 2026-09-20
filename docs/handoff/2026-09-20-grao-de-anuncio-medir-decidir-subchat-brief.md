@@ -1,5 +1,30 @@
 # [BRIEF sub-chat] Grão de anúncio — medir, decidir, e só então construir
 
+> 🔴 **ESCOPO AMPLIADO EM 2026-09-20 PELO OLAVO — leia isto antes do resto.**
+>
+> Este brief foi escrito para *"coletar o grão de anúncio"*. O Olavo corrigiu o enquadramento:
+>
+> *"Um anúncio ruim não significa necessariamente uma campanha ruim, ao passo que uma campanha ruim
+> possui um ou mais anúncios ruins. Hoje não faz tanta diferença porque temos 1 campanha com 1
+> anúncio... estamos esquecendo como funcionam as plataformas de anúncios, como elas estruturam e
+> enxergam a campanha, o conjunto de anúncio(s) e o(s) anúncio(s)."*
+>
+> **Não são dois níveis — são três**, e cada um decide coisas diferentes: a **campanha** (objetivo,
+> orçamento, lance), o **conjunto/grupo** (público, palavras-chave, posicionamento) e o **anúncio**
+> (criativo, copy, destino). **O PHI pontua só o agregado — e agregado não tem causa.**
+>
+> **Consequência para você:** a pergunta da Etapa 2 deixou de ser *"de onde vem a lista de anúncios"*
+> e passou a incluir **"em qual nível o diagnóstico mora, e o que o PHI precisa guardar de cada um"*.
+> Ver o **§4-bis**.
+>
+> ⚠️ **E uma correção de fato:** este brief e duas varreduras anteriores trataram o
+> `sw metricas conjuntos` como *"ativo que não produz nada"*. **Ele produz** — escreve 12 campos no
+> Notion e atualizou 3 páginas em 19/09. Ele é o **único artefato do parque que já trabalha no nível
+> do meio**. Abra-o com essa lente, não como candidato a aposentadoria.
+>
+> **Prioridade:** o Olavo aprovou a ordem **F1 → F3 → F2 → F4**. Este brief é o **F4** — ele sai dos
+> 15 dias imediatos, mas as medições da Etapa 1 continuam valendo e são baratas.
+
 > **Como usar:** cole este arquivo como **primeira mensagem** de um sub-chat.
 > **Modelo:** Opus. **Repo:** `olavofranzin/phi` · **Branch:** `claude/consolidacao-2026-08`.
 > **Idioma com o Olavo:** português simples, sem jargão.
@@ -83,6 +108,20 @@ Uma pergunta, com as consequências escritas. **Não pergunte "o que você prefe
 
 **Some a isso o que a medição disser.** Se o G1 mostrar que as campanhas ativas têm poucos anúncios,
 a conversa é outra; se mostrar dezenas, o custo de API entra na conta.
+
+## 4-bis. O que a Etapa 2 passou a ter de perguntar
+
+Além de *"de onde vem a lista de anúncios"*, a conversa com o Olavo precisa fechar:
+
+| Pergunta | Por que importa |
+|---|---|
+| **Em qual nível o PHI aponta a causa?** conjunto, anúncio, ou os dois | define o que se persiste e o que se calcula na hora |
+| **O que se guarda de cada nível?** métrica bruta por dia, ou só o veredicto | muda custo de armazenamento e de API |
+| **O score continua só de campanha?** | a **D1b** disse que o grão **não** entra no `phi_value`. Mas se o diagnóstico passa a ser por nível, é preciso dizer **o que substitui o score** nos níveis de baixo — flag, ranking, nada? |
+| **O `sw metricas conjuntos` já resolve parte disso?** | ele escreve 12 campos de conjunto no Notion hoje. **Leia antes de propor construir** (R7) |
+
+> ⚠️ **Não invente a resposta do terceiro item.** *"Como pontuar um anúncio"* é desenho de produto,
+> não medição — se aparecer, **devolva ao chat-mãe**, não resolva no sub-chat (**R1**).
 
 ## 5. Um pedido separado, que não depende da decisão
 
