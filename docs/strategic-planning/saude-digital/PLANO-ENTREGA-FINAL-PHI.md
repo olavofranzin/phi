@@ -59,6 +59,48 @@ lia, e o defeito era invisível porque não havia contra o que comparar.
 > diz que o que dói é **dado errado**. As duas foram mantidas por ele quando reperguntado. Isso só se
 > resolve quando o §1 e o §2 existirem.
 
+## 3.1. Entrevista do propósito — rodada 1 (Olavo, 2026-09-20)
+
+| # | Pergunta | Resposta **verbatim** |
+|---|---|---|
+| **B5** | interna ou produto? | **"Interna hoje, produto depois"** |
+| **B4** | quantos clientes? | **"Todos os clientes que contratarem tráfego pago"** |
+| — | quem abre o Notion? | **"Alguém da equipe"** + **"Só você"** |
+| **B9** | 3 dias sem rodar, perceberia? | **"Sim, pela falta de pontuação e de alerta"** |
+
+### 🔴 O que a resposta do B4 muda — e é a mais pesada das quatro
+
+*"Todos os clientes que contratarem tráfego pago"* **não é um número: é uma regra de entrada.** O
+gatilho de um cliente entrar no PHI passa a ser **a contratação**, não um cadastro técnico.
+
+| Consequência | Estado hoje |
+|---|---|
+| **O cadastro automático deixa de ser melhoria e vira pré-requisito** | 🔴 hoje o `client_config` de produção é `UPDATE` **sem `INSERT`** — cliente novo **não entra** |
+| O **ADR-39** deixa de ser higiene e vira **caminho crítico do modelo de negócio** | ✅ aceito, brief pronto |
+| Existe uma **passagem de bastão Comercial → Operações → PHI** que ninguém desenhou | ⚠️ o **`Board Agência`** (Miro) **já prevê** essa passagem — foi o achado de 2026-09-15 na Prospecção |
+| O **`L1 - Abertura de Projeto Tecnico Setup`** cria projeto para *"cliente ATIVO sem setup"* — é **a ponte da contratação** | 🔴 **a D6 o tirou do escopo do contrato.** Decisão a revisitar: ele pode estar no caminho crítico |
+
+### O que a resposta do B9 muda
+
+Ele perceberia **pela falta de pontuação e de alerta**. Então o PHI **já está no caminho crítico do
+trabalho** — o que é uma boa notícia, com uma ressalva dura:
+
+> 🔴 **Os dois sinais em que ele confia são exatamente os dois que já sumiram em silêncio.** A
+> pontuação parou 8 dias (Fase 3 morta, verde todo dia) e o alerta só cobre 5 workflows. **Detectar
+> a ausência é hoje o único mecanismo que ele tem — e é o mecanismo que sabemos que falha.**
+>
+> Isso reclassifica o **D5** (vigia de consistência): não é melhoria de vigilância, é **o conserto do
+> único detector existente**.
+
+### O que a resposta do B5 exige
+
+*"Interna hoje, produto depois"* é uma resposta honesta e a mais comum — e é também a que mais
+apodrece sem data. **É a R12 em escala de projeto:** estado temporário sem prazo vira permanente.
+
+**Não precisa de data. Precisa de um critério de virada escrito** — *"o PHI vira produto quando
+\_\_\_"*. Sem ele, cada decisão de qualidade fica sem régua: *"isso é bom o bastante?"* depende de
+para quem.
+
 ## 4. O ponto final — ⬜ **a escrever depois da entrevista**
 
 > Formato do precedente: uma lista curta de critérios em linguagem de negócio, não de sistema.
