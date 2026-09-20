@@ -1,5 +1,20 @@
 # Panorama do Parque PHI — o que grava métrica, o que consome, e o que só está ligado
 
+
+> 🔴 **CORRIGIDO EM 2026-09-20 PELO AS-BUILT.** Este documento foi montado a partir do **nome, da
+> descrição e do estado** de cada workflow, sem abrir os nós — e **duas afirmações dele não
+> sobreviveram à leitura**:
+>
+> 1. **`sw metricas conjuntos` NÃO escreve `raw_adset_data_rollup`.** Ele **não tem um único nó de
+>    BigQuery**. Escreve no **Notion** (`Update database page Conjuntos`, 12 campos) e produziu 3
+>    atualizações em 19/09. Portanto o placar *"2 ativos que não produzem nada"* está errado: **é 1**.
+> 2. **Não há *"até 4 workflows que ninguém identificou"* falhando.** Os 5 disparos do alerta são **4
+>    workflows com nome**, todos em 17/09, todos com a mesma causa (credencial OAuth do BigQuery).
+>
+> **A fonte que vence é `docs/handoff/2026-09-20-parque-phi-lista-A-as-built.md`**, e a matriz do §4
+> do `CONTRATO-PHI.md`. Este panorama fica como o diagnóstico que originou a varredura — **não como
+> descrição do que roda**.
+
 > **Data:** 2026-09-19 · **Método:** varredura dos **81 workflows** do n8n, classificando cada um por
 > **o que ele escreve** e **quem lê o que ele escreveu**. Workflow que não escreve nada e não produz
 > decisão não tem razão de existir.
