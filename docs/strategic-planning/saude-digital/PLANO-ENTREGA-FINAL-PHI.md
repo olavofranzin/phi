@@ -101,7 +101,77 @@ apodrece sem data. **É a R12 em escala de projeto:** estado temporário sem pra
 \_\_\_"*. Sem ele, cada decisão de qualidade fica sem régua: *"isso é bom o bastante?"* depende de
 para quem.
 
-## 4. O ponto final — ⬜ **a escrever depois da entrevista**
+## 3.2. Entrevista do propósito — rodada 2 (Olavo, 2026-09-20)
+
+| Pergunta | Resposta **verbatim** |
+|---|---|
+| como um cliente novo entra no PHI? | **"Eu cadastro no Notion"** |
+| o PHI vira produto quando o quê? | **"Itens 1 e 2"** — quando confiar no número **e** rodar sozinho 30 dias |
+| o que acontece quando chega alarme? | 🔴 **"Quase nunca chega alarme"** |
+
+### 🔴 O diagnóstico que as três respostas fecham
+
+**O procedimento de entrada existe e é o certo:** o Olavo cadastra na DB Clientes do Notion, e há um
+workflow que sincroniza Notion → BigQuery. **Nada precisa ser inventado.** O que existe está
+**quebrado no meio**: esse workflow escreve em `phi_dev`, e o score lê `phi_prod`.
+
+> **O cadastro do Olavo morre no `phi_dev`.** O **CHA** é a prova viva: está cadastrado no Notion e
+> não existe para o PHI. O **ADR-39 é, literalmente, o conserto do procedimento de entrada de
+> cliente** — não uma limpeza de ambiente.
+
+**E a terceira resposta é a mais grave do projeto inteiro**, porque contradiz a anterior:
+
+| Ele disse (B9) | Ele disse (alarme) |
+|---|---|
+| *"perceberia pela falta de pontuação **e de alerta**"* | *"quase nunca chega alarme"* |
+
+**As duas juntas significam que o silêncio está sendo lido como saúde.** E sabemos que não é:
+
+| Falha real | Alarme que chegou |
+|---|---|
+| Fase 3 morta **8 dias**, verde todo dia | nenhum |
+| `raw_ad_data` vazia **3 meses** | nenhum |
+| Agregador roteando erro de cota **toda rodada**, terminando `success` | nenhum |
+| Credencial do BigQuery em 17/09 | ✅ chegou — **a única vez** |
+
+O `PHI - Alerta de Falha` cobre **5 workflows dos ~26**. Nos outros 21, **falhar é silencioso por
+construção**.
+
+> ## 🔴 O PHI não tem um problema de funcionalidade. Tem um problema de **evidência**.
+> Ele roda — mas não consegue **provar** que rodou. E o dono, na ausência de prova, interpreta
+> silêncio como saúde. **É a R11 elevada de nó para sistema.**
+
+---
+
+## 4. O ponto final — 🟡 **PROPOSTA (derivada das 7 respostas), aguarda §1/§2 e confirmação**
+
+**"PHI pronto" = estes 6 critérios.** Escritos em linguagem de negócio, não de sistema — como os 8
+da Prospecção.
+
+| # | Critério | De onde veio | Hoje |
+|---|---|---|---|
+| **F1** | **Todo cliente que contrata tráfego aparece no PHI sem ninguém precisar lembrar** | *"todos os que contratarem"* + *"eu cadastro no Notion"* | 🔴 o cadastro morre no `phi_dev` |
+| **F2** | **O número que está no Notion é o número certo** — sem duplicata, sem zero que significa "não achei" | *"o que dói é dado errado"* + virada item 1 | 🔴 o score chega **3×** |
+| **F3** | **Silêncio significa saúde** — se o que devia acontecer não aconteceu, chega alarme | *"perceberia pela falta"* × *"quase nunca chega alarme"* | 🔴 21 de 26 sem cobertura |
+| **F4** | **O PHI aponta o responsável pelo desvio, não só o desvio** | *"quero o anúncio culpado"* | 🔴 sem grão de anúncio |
+| **F5** | **Rodou 30 dias sem intervenção manual** | virada item 2 | ⬜ nunca medido |
+| **F6** | **Alguém da equipe opera sem ter desenhado** | *"alguém da equipe"* + *"só você"* | ⬜ nunca testado |
+
+> **F1 a F3 são os pré-requisitos da virada** que o Olavo definiu (*"confiar no número"* + *"rodar
+> sozinho 30 dias"*). **F4 é o que ele pediu para os 15 dias.** F5 e F6 são consequência: só medíveis
+> depois dos outros.
+
+### ⚖️ A tensão de calendário, registrada e não resolvida
+
+O Olavo elegeu o **grão de anúncio (F4)** para os 15 dias. As respostas do propósito apontam para
+**F1 → F3 → F2** primeiro. **As duas escolhas são dele.** A diferença:
+
+- **F4 primeiro:** entrega visível e nova, sobre uma base que ainda não prova que funciona.
+- **F1–F3 primeiro:** ninguém vê nada novo por ~2 semanas, e depois tudo o que vier é confiável.
+
+**Isto precisa ser decidido explicitamente, não por ordem de chegada dos briefs.**
+
+## 5. A engenharia reversa — a pergunta única
 
 > Formato do precedente: uma lista curta de critérios em linguagem de negócio, não de sistema.
 > *"Prospecção pronta"* virou **8 critérios**. *"PHI pronto"* provavelmente vira 5 a 8.
@@ -112,7 +182,7 @@ para quem.
 
 Escrito o §4, **cada um dos ~26 workflows ativos responde a uma pergunta só**:
 
-> ### *"Que pedaço do ponto final você serve?"*
+> ### *"Qual dos 6 critérios (F1–F6) você serve?"*
 
 | Resposta | Destino |
 |---|---|
