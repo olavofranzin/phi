@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | 🟡 **PROPOSTO** — 2026-09-20. Aguarda decisão do Olavo |
+| **Status** | ✅ **ACEITO** — **Olavo, 2026-09-20** (*"Aprovado"*), na **opção A** do §3 · execução pelo brief `docs/handoff/2026-09-20-adr39-client-config-subchat-brief.md` |
 | **Escopo** | Quem escreve `client_config`, em qual ambiente, e em que ordem a troca acontece |
 | **Origem** | **D3** do `CONTRATO-PHI.md`, reaberta pelo as-built de 20/09 (achado **A10**) |
 | **Decisor** | Olavo |
