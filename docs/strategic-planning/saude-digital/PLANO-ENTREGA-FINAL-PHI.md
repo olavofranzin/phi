@@ -260,6 +260,65 @@ O Olavo elegeu o **grão de anúncio (F4)** para os 15 dias. As respostas do pro
 > dos 15 dias imediatos, **mas cresceu de escopo**: deixou de ser "coletar grão de anúncio" e virou
 > "enxergar os três níveis". O brief do grão precisa ser reescrito antes de ir para execução.
 
+## 4.1. 🔴 A régua do F4 já existe — e nenhum sub-chat a leu
+
+O executor do parque escreveu: *"não li o `regras-otimizacao-metodo-subido.md`… se o PHI precisa
+apontar o culpado, ele precisa saber o que você considera 'ruim'. Posso fechar essa lacuna quando
+quiser."*
+
+**A lacuna não precisa ser fechada — ela já estava fechada, em `docs/strategic-planning/`, desde
+antes desta conversa.** O documento tem 9,8 KB e responde as duas perguntas do F4:
+
+| Seção | O que dá |
+|---|---|
+| **§2 — Métrica-mãe (Bússola) por objetivo** | a tabela `objetivo de campanha → métrica-mãe` |
+| **§6 — Cadeia de diagnóstico do funil ("ONDE o cano vaza")** | **10 elos, cada um com sintoma → alavanca**: CPM, Hook Rate, CTR, CPC, Connect Rate, "Curioso", jornada, CPA, ROAS, LTV |
+| **§5 — A Ordem Sagrada das Alterações** | o que mexer, e em que ordem |
+
+> **O §6 é literalmente o F4 escrito em linguagem de negócio.** *"CTR baixo → o algoritmo encarece o
+> leilão; novos hooks/headlines"* é apontar o culpado e a ação, no nível do criativo. **O PHI não
+> precisa de um modelo novo de diagnóstico: precisa executar o que a casa já escreveu.**
+>
+> E o documento chega a nomear o caso: *"o 'Curioso' (CPC baixo, muitos cliques, conversão zero) é
+> **exatamente o padrão da Salão/CLI-4**"*. **O diagnóstico do cliente de referência já está escrito
+> — e o PHI nunca o produziu.**
+
+**Isto é a R7 em estado puro:** três varreduras do parque, duas entrevistas e um contrato, e a régua
+estava numa pasta vizinha o tempo todo. **Quem lê o parque procura workflow; ninguém procurou o
+método.**
+
+## 4.2. 🔴 A Métrica-Mãe é da CAMPANHA — e a casa já tinha escrito isso
+
+> **Olavo:** *"A métrica é da campanha, não do cliente."*
+
+**Confirmado por documento, não por opinião.** O `regras-otimizacao-metodo-subido.md` §2 titula a
+tabela **"Métrica-mãe (Bússola) por objetivo"**, e a coluna da esquerda é **objetivo de campanha**.
+O objetivo é escolhido **na campanha** — é *"a ordem que se dá ao algoritmo"*.
+
+| Onde a métrica-mãe **deveria** morar | Onde ela **mora** |
+|---|---|
+| na campanha (deriva do objetivo dela) | em **`client_config.primary_metric_type`** — por **cliente** |
+
+**É a mesma doença de grão que o Olavo apontou nos anúncios**, um nível acima: *dado guardado num
+grão mais grosso do que o grão onde a decisão mora.*
+
+> ⚠️ **Hoje isso não dói porque há 1 cliente com 1 campanha.** Dói no dia em que um cliente tiver
+> uma campanha de **Vendas** (ROAS) e outra de **Leads** (CPA) — e o PHI julgar as duas pela mesma
+> régua. **Com *"todos os clientes que contratarem tráfego pago"*, esse dia é logo.**
+
+**Status:** o executor do ADR-39 propôs uma **opção D** em cima disso. **O chat-mãe ainda não a leu**
+— e não decide sobre o que não leu (**R6**). O que está decidido é só o fato acima.
+
+## 4.3. O doc mestre não é legível — e isso é defeito, não tamanho
+
+O `ESTADO-DO-PROJETO.md` tem **190.779 caracteres**. O `CLAUDE.md` da raiz manda lê-lo **primeiro**.
+O executor, honestamente: *"não li — são 190 mil caracteres e eu não abri."*
+
+**Ele está certo em não ter aberto.** Um documento que ninguém consegue ler não cumpre o papel de
+porta de entrada — e é a mesma família de defeito do cabeçalho do ADR-38: *o conteúdo existe, mas
+não chega a quem precisa*. **Enquanto ele não for fatiado, todo sub-chat começa cego e deduz o que
+poderia ter lido.**
+
 ## 5. A engenharia reversa — a pergunta única
 
 > Formato do precedente: uma lista curta de critérios em linguagem de negócio, não de sistema.

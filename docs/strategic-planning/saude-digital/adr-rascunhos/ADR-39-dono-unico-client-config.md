@@ -12,6 +12,20 @@
 
 ---
 
+> 🔴 **NOTA DE 2026-09-21 — o grão da coluna está errado, e há prova documental.**
+>
+> Este ADR decide **quem escreve** `primary_metric_type`. Não decide **onde ela deveria morar** — e
+> o `regras-otimizacao-metodo-subido.md` §2 mostra que o lugar está errado: a tabela é
+> **"Métrica-mãe por objetivo"**, e objetivo é atributo **da campanha**, não do cliente.
+> Hoje ela mora em `client_config`, por cliente.
+>
+> **Não bloqueia os 5 passos do §4** — eles continuam válidos e necessários: mesmo no lugar errado,
+> a coluna precisa de dono único e de `INSERT`. **Mas o passo 4.1 (*"ler a Métrica-Mãe do Notion"*)
+> passa a ser um conserto de curto prazo**, que funciona enquanto houver 1 campanha por cliente.
+>
+> O executor propôs uma **opção D** em cima disso. **O chat-mãe ainda não a leu** e não decide sobre
+> o que não leu (R6) — ver `PLANO-ENTREGA-FINAL-PHI.md` §4.2.
+
 ## 1. Por que isto saiu do ADR-37
 
 O ADR-37 tratava `client_config` como um caso de **ambiente errado**: um workflow escrevendo em
