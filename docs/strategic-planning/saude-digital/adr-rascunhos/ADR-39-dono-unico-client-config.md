@@ -2,7 +2,10 @@
 
 | | |
 |---|---|
-| **Status** | ✅ **ACEITO** — **Olavo, 2026-09-20** (*"Aprovado"*), na **opção A** do §3 · execução pelo brief `docs/handoff/2026-09-20-adr39-client-config-subchat-brief.md` |
+| **Status** | ⏸️ **ACEITO, EXECUÇÃO SUSPENSA NA VOLTA 1** — aceito por Olavo em 2026-09-20 na **opção A** do §3; a execução **parou antes do passo 4.1** em 2026-09-20 21h BRT |
+| **Data efetiva da execução** | ⬜ **não ocorreu.** Nada foi alterado em produção. O `client_config` segue em `versionId = activeVersionId = 99abdada` |
+| **Por que parou** | 🔴 **O passo 4.1 não tem fonte: a DB Clientes do Notion não possui campo `Métrica-Mãe`.** Ela é **por campanha**, na DB Campanhas — ver §8 |
+| **Destrava com** | **uma decisão do Olavo** entre as 3 saídas do §8.4 · relatório: `docs/handoff/2026-09-20-adr39-volta-1-relatorio-do-defeito.md` |
 | **Escopo** | Quem escreve `client_config`, em qual ambiente, e em que ordem a troca acontece |
 | **Origem** | **D3** do `CONTRATO-PHI.md`, reaberta pelo as-built de 20/09 (achado **A10**) |
 | **Decisor** | Olavo |
@@ -102,3 +105,77 @@ mas pelo motivo errado: ela protege **o cliente novo**, que entra por `WHEN NOT 
 cliente existente.
 
 **Registrado para que a próxima auditoria não levante o mesmo alarme.**
+
+---
+
+## 8. 🔴 Volta 1 — o que a execução encontrou (2026-09-20, 21h BRT)
+
+> **R6 aplicada:** *"Antes de uma ação irreversível ou em produção, verifique a premissa que a
+> justifica — mesmo que o plano já esteja aceito num ADR. Se o dado desmentir o plano: pare, não
+> execute, corrija o ADR e registre o porquê."* **A premissa do §4.1 não sobreviveu.**
+> Relatório completo: `docs/handoff/2026-09-20-adr39-volta-1-relatorio-do-defeito.md`.
+
+### 8.1. A premissa que caiu
+
+O §4.1 manda `primary_metric_type` **vir da Métrica-Mãe do Notion**. **A DB Clientes
+(`19fb65e5-c72b-8147-8aa3-c63aa273d205`), que é a única que o workflow `client_config` lê, não tem
+essa propriedade.** Suas 38 propriedades foram lidas hoje: não há nenhuma de tipo de métrica.
+
+A `Métrica-Mãe` existe na **DB Campanhas**, como `multi_select`, **uma por campanha**. É de lá que o
+`PHI - Subworkflow Campanhas` a lê.
+
+**O choque é de grão:** `client_config.primary_metric_type` é **um valor por cliente**; a
+`Métrica-Mãe` é **uma por campanha**. Um cliente com duas campanhas pode ter duas métricas
+diferentes, e não existe regra para o empate. O KIL não expõe isso só porque suas duas campanhas são
+`CPA`.
+
+### 8.2. O CHA não serve de prova para o CA3
+
+O §0 do brief diz que o cadastro não chega ao score *"e por isso o CHA não existe para o PHI"*. A
+primeira metade está certa. **A segunda não:** o `client_config` é o **primeiro de três portões**, e
+os outros dois estão fora deste ADR.
+
+| # | Portão | CHA | Deste ADR? |
+|---|---|---|---|
+| 1 | linha em `phi_prod.client_config` | 🔴 não | ✅ **sim** |
+| 2 | linha em `raw_campaign_data` (`WHERE j.tem_d1 = 1`) | 🔴 **não haverá** — a campanha do CHA é **Meta**, e o Subworkflow manda Meta para o noOp `Meta Ads — em breve` | ❌ é o **D11** (*depois do v1*) |
+| 3 | `primary_metric_type = 'CPA'` | 🔴 não — a Métrica-Mãe do CHA é **`CPL`** | ❌ é o ADR-34 |
+
+O score só sabe `CPA`: no nó `Calcular e Persistir PHI Score`, CTE `qualidade`,
+`WHEN primary_metric_type IS NULL OR primary_metric_type != 'CPA' THEN 'INSUFFICIENT_DATA'` (e
+`'METRIC_TYPE_UNSUPPORTED'`).
+
+### 8.3. O raio de alcance é 3×, não 1
+
+A DB Clientes tem **três** `ATIVO`, não um: **CLI-4** (KIL, Google, CPA), **CLI-7** (RODRIGO VIEIRA
+CLARA — **sem campanha e sem conta de anúncio**, serviço é *Criação de Site*) e **CLI-13** (CHA,
+Meta, CPL). Repontar o `MERGE` insere os três.
+
+### 8.4. As três saídas — pendente de decisão do Olavo
+
+| | Saída | Custo | Risco |
+|---|---|---|---|
+| **A** ⭐ | criar `Métrica-Mãe` na **DB Clientes** e o `Code limpar Notion` lê de lá | 1 propriedade + 3 preenchimentos | baixo; mantém a fonte da verdade no Notion, que é o argumento do §3 |
+| **B** | derivar do grão de campanha (ler também a DB Campanhas) | lógica nova | 🔴 exige **regra de empate** — regra nova sem ADR é R7 quebrada |
+| **C** | tirar `primary_metric_type` do escopo: `client_config` fica dono do resto e o `UPDATE` do Subworkflow vira **padrão S4 declarado** | zero | ⚠️ dois writers, colunas disjuntas — **exceção que o M1 já permite** |
+
+### 8.5. O que muda no §4 deste ADR quando a decisão vier
+
+- **Se A:** o §4.1 continua válido, com a fonte corrigida para a nova propriedade.
+- **Se C:** o §4.1 e o §4.4 **saem** da ordem; o ADR passa a ter 3 passos (repontar, provar o
+  `INSERT`, fechar o `phi_dev`), e o §4.4 vira *"declarar o padrão S4 no §4.1 do contrato"*.
+- **Se B:** entra um §4.0 novo — a regra de empate — e ele precisa ser aceito antes.
+
+### 8.6. Hipóteses deste ADR que o dado desmentiu
+
+| # | O ADR dizia | O artefato mostra |
+|---|---|---|
+| 1 | §4.1: ler *"a Métrica-Mãe do Notion"* | **não existe** no grão de cliente |
+| 2 | §5 CA3: o CHA é *"o caso real esperando"* | o CHA é barrado por **dois portões fora deste ADR** |
+| 3 | §4.2: *"cliente novo entra com ROAS fixo e o score dele nasce errado"* | **não nasce** — `ROAS != 'CPA'` vira `INSUFFICIENT_DATA` |
+| 4 | §2/§4.3: o caso é o CHA | são **três** clientes ativos, um deles sem mídia paga |
+
+> ✅ **O que este ADR acertou e segue de pé:** o diagnóstico do §1 (dois writers, mesma coluna,
+> ambientes diferentes), a refutação do §7 (repontar não sobrescreve o CPA do KIL), e a **ordem** do
+> §4 — que continua certa, e é justamente por respeitá-la que a execução parou no primeiro passo em
+> vez de quebrar o KIL no quarto.
