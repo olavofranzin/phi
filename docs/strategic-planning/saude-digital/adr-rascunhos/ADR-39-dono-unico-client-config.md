@@ -2,15 +2,16 @@
 
 | | |
 |---|---|
-| **Status** | ⏸️ **ACEITO, EXECUÇÃO SUSPENSA NA VOLTA 1** — aceito por Olavo em 2026-09-20 na **opção A** do §3; a execução **parou antes do passo 4.1** em 2026-09-20 21h BRT |
-| **Data efetiva da execução** | ⬜ **não ocorreu.** Nada foi alterado em produção. O `client_config` segue em `versionId = activeVersionId = 99abdada` |
+| **Status** | 🟡 **ACEITO · EXECUÇÃO RETOMADA E EM CURSO — FASE A CONCLUÍDA EM 2026-09-21** · fundido com o **ADR-40** (os dois mexem na mesma coluna) · brief: `2026-09-21-adr39-adr40-metrica-e-cadastro-subchat-brief.md`. **A Fase B (subtrativa) ainda NÃO começou** — ela depende da parada obrigatória de um dia |
+| **Data efetiva da execução** | 🟡 **Fase A: 2026-09-21, 19h–22h BRT (dentro da janela 09h–23h).** ALTERADO EM PRODUÇÃO: 2 `ADD COLUMN`, 1 backfill, 2 workflows publicados (`sw metricas campanhas` → `752e5300`, `PHI - Pipeline_v2` → `b880adee`) e 1 publicado antes (`PHI - Subworkflow Campanhas` → `4f42b244`). **Fase B: ⬜ não ocorreu** — o `client_config` segue em `versionId = activeVersionId = 99abdada` e `phi_dev` segue de pé |
 | **Por que parou** | 🔴 **O passo 4.1 não tem fonte: a DB Clientes do Notion não possui campo `Métrica-Mãe`.** Ela é **por campanha**, na DB Campanhas — ver §8 |
-| **Destrava com** | **uma escolha entre C e D** (§8.7) — as saídas A e B **morreram** com a decisão de grão do Olavo em 20/09 · relatório: `docs/handoff/2026-09-20-adr39-volta-1-relatorio-do-defeito.md` |
+| **Destravado em** | ✅ **20/09** — Olavo escolheu a **opção D** (§8.7), que virou o **ADR-40**. As saídas A e B morreram com a decisão de grão. Relatórios: `docs/handoff/2026-09-20-adr39-volta-1-relatorio-do-defeito.md` e `docs/handoff/2026-09-21-adr39-adr40-fase-A-relatorio.md` |
 | **CA2** | ✅ **linha de base provada em 20/09**: `phi_prod.client_config` tem `CLI-4` com `primary_metric_type = 'CPA'`, `updated_at 2026-09-20T07:01:10 BRT` (execução 41352) |
 | **Escopo** | Quem escreve `client_config`, em qual ambiente, e em que ordem a troca acontece |
 | **Origem** | **D3** do `CONTRATO-PHI.md`, reaberta pelo as-built de 20/09 (achado **A10**) |
 | **Decisor** | Olavo |
 | **Bloqueia** | **Fase 3 do ADR-37** — e, por consequência corrigida, a **Fase 2** |
+| **Passo 4.1** | 🔴 **REVOGADO** pelo brief de 21/09 §0 — não se corrige a derivação de um campo que sai na mesma sessão |
 | **Base factual** | `docs/handoff/2026-09-20-parque-phi-lista-A-as-built.md` §A9, §A10, §A15 |
 | **Destrava** | o **D2** (`phi_dev` some) e o cadastro de cliente novo no score |
 

@@ -3,6 +3,8 @@
 | | |
 |---|---|
 | **Status** | ✅ **ACEITO** — **Olavo, 2026-09-21** · as 4 verificações passaram (§5.1) · execução **fundida com o ADR-39** no brief `2026-09-21-adr39-adr40-metrica-e-cadastro-subchat-brief.md`. Proposta original: executor do ADR-39 ("opção D") |
+| **Data efetiva da execução** | 🟡 **Fase A: 2026-09-21, 19h–22h BRT.** Os 3 requisitos do §6 estão CUMPRIDOS em produção: **REQ-1** (`\|\| null` no `PHI - Subworkflow Campanhas`, versão `4f42b244`) · **REQ-2** (backfill feito: 487 linhas casaram, 12 seguem `NULL` — ver abaixo) · **REQ-3** (sticky com prazo **22/09/2026** no `PHI - Pipeline_v2`, versão `b880adee`). **Fase B: ⬜ não ocorreu** |
+| **Pendência conhecida** | ⚠️ **12 linhas do CHA (`CLI-13`) seguem com `primary_metric_type` NULL** em `raw_campaign_data` — o backfill sai do `client_config`, e o CHA ainda não está lá. **Fecha no passo B2**, que é justamente cadastrá-lo. O **CA5 só se prova depois do B2** |
 | **Escopo** | Onde mora `primary_metric_type`: por cliente ou por campanha |
 | **Decisor** | Olavo |
 | **Relação com o ADR-39** | **não o substitui.** O ADR-39 conserta *quem escreve e o `INSERT`*; este muda *o grão* |
