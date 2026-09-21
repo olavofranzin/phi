@@ -77,8 +77,8 @@ num workflow que o ADR-37 manda aposentar — troca um dono invisível por outro
 
 | # | Passo | Se fizer fora de ordem |
 |---|---|---|
-| **4.1** | Corrigir a derivação de `primary_metric_type` no nó `Code limpar Notion`: **ler a Métrica-Mãe do Notion**, não o mapa fixo | — |
-| **4.2** | Repontar o `MERGE` de `phi_dev` para `phi_prod` | 🔴 **antes de 4.1**, cliente novo entra com `ROAS` fixo e o score dele nasce errado |
+| ~~**4.1**~~ | 🔴 **REVOGADO em 2026-09-21.** Com o **ADR-40 aceito e fundido na mesma execução**, a coluna **sai** do `client_config` — corrigir a derivação de um campo que será removido na mesma sessão é trabalho jogado fora | **A decisão de 20/09 (*"manter mesmo sendo descartável"*) valia enquanto os dois ADRs rodariam separados, com semanas entre eles. Fundidos, o motivo dela deixou de existir** |
+| **4.2** | Repontar o `MERGE` de `phi_dev` para `phi_prod` | ⚠️ a precaução *"antes de 4.1"* **caiu junto com o 4.1** — com o ADR-40, o `MERGE` não escreve mais `primary_metric_type` nenhum |
 | **4.3** | Garantir que o `MERGE` **INSERE** e validar com um cliente-teste (o **CHA** é o caso real esperando) | 🔴 sem isso, o bug do cliente-fantasma continua |
 | **4.4** | **Só então** remover o `UPDATE` do `PHI - Subworkflow Campanhas` | 🔴 **antes de 4.3**, o KIL fica sem nenhum writer e o CPA vira o que estiver na linha |
 | **4.5** | Apagar `phi_dev.client_config` e fechar o **D2** | — |

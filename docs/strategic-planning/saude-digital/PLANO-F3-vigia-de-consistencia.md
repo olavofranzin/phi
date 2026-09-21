@@ -55,8 +55,11 @@ saudável ela devolvia zero linhas — e zero itens encerra o ramo no n8n.
 | **V4** | Toda tabela **que tem writer declarado** recebeu linha? | **`raw_ad_data` vazia 3 meses** | coleta que ninguém fez |
 | **V5** | Algum workflow terminou **verde tendo roteado erro**? | **Agregador na cota do GBP, toda rodada** | 3 de 6 destinos vazios |
 | **V6** | O `operador unico` e o `Pipeline_v2` rodaram **na janela esperada**? | (preventiva) | rodada que não aconteceu |
+| **V7** | Quantas campanhas ficaram **sem `primary_metric_type`** ontem? | (nova, 21/09 — **ADR-40 §6.1**) | campanha julgada por régua inventada |
 
-> **V1 a V5 não são hipóteses: são autópsias.** Cada uma teria detectado um defeito que de fato
+> **V7 entrou em 21/09**, vinda do ADR-40: o fallback `|| 'ROAS'` passa a gravar **vazio**, e vazio sem contagem é a terceira cara do vazio da R11. **O F3 ainda estava em plano, então coube sem retrabalho** — é a vantagem de o vigia nascer depois dos defeitos que ele vigia.
+
+**V1 a V5 não são hipóteses: são autópsias.** Cada uma teria detectado um defeito que de fato
 > aconteceu e custou dias ou meses. **V6 é a única preventiva** — e é a mais barata de todas.
 
 ### O que fica de fora, de propósito

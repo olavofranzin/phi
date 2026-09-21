@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | 🟢 **PRONTO PARA ACEITE** — 2026-09-21 · **as 4 verificações passaram** (§5.1) · aguarda OK do Olavo. Autor da proposta: executor do ADR-39 ("opção D") |
+| **Status** | ✅ **ACEITO** — **Olavo, 2026-09-21** · as 4 verificações passaram (§5.1) · execução **fundida com o ADR-39** no brief `2026-09-21-adr39-adr40-metrica-e-cadastro-subchat-brief.md`. Proposta original: executor do ADR-39 ("opção D") |
 | **Escopo** | Onde mora `primary_metric_type`: por cliente ou por campanha |
 | **Decisor** | Olavo |
 | **Relação com o ADR-39** | **não o substitui.** O ADR-39 conserta *quem escreve e o `INSERT`*; este muda *o grão* |
@@ -143,13 +143,38 @@ Nenhum deles estava na proposta. **Os três são condição de aceite, não deta
 
 | # | Requisito | Por quê |
 |---|---|---|
-| **REQ-1** | 🔴 **O `\|\| 'ROAS'` do `PHI - Subworkflow Campanhas` vira erro alto** | hoje o fallback só suja uma coluna de configuração. **Depois do ADR-40 ele passa a carimbar o tipo errado em toda linha de fato** — e, pela V3, a mentira chega à tarefa no Notion. **Tipo errado viajando com a campanha é pior que tipo no lugar errado** (achado do executor, e ele está certo) |
+| **REQ-1** | 🔴 **O `\|\| 'ROAS'` do `PHI - Subworkflow Campanhas` morre** — ver §6.1 para o que entra no lugar | hoje o fallback só suja uma coluna de configuração. **Depois do ADR-40 ele passa a carimbar o tipo errado em toda linha de fato** — e, pela V3, a mentira chega à tarefa no Notion. **Tipo errado viajando com a campanha é pior que tipo no lugar errado** (achado do executor, e ele está certo) |
 | **REQ-2** | 🔴 **Backfill obrigatório, a partir do `client_config` atual** | `ADD COLUMN` nasce `NULL`, e **a porta de qualidade do score reprova `NULL` como `INSUFFICIENT_DATA`**. Sem backfill, **recalcular qualquer dia passado derruba a série inteira** |
 | **REQ-3** | **O `COALESCE` de transição tem prazo escrito** | é a **R12**: estado temporário sem prazo vira permanente invisível. O `COALESCE` existe para cobrir a janela entre o `ADD COLUMN` e o backfill — **e some quando ela fecha** |
 
 > **O REQ-2 é o risco real deste ADR, e ele não está no código.** O executor: *"o risco não está no
 > código; `ADD COLUMN` nasce NULL."* **Concordo — e é exatamente o tipo de dano que só apareceria
 > semanas depois, na primeira tentativa de recalcular o passado.**
+
+### 6.1. O que entra no lugar do fallback — refinamento do REQ-1
+
+**O executor propôs erro alto. Recomendo vazio, e a diferença importa.**
+
+| Opção | O que acontece com campanha sem Métrica-Mãe | Efeito colateral |
+|---|---|---|
+| **Erro alto** | o nó falha | 🔴 **derruba a coleta do lote inteiro** por causa de uma campanha — e o alarme chega, mas o dado do dia se perde para todas |
+| ⭐ **Vazio (`NULL`)** | a campanha é coletada; o tipo fica vazio | a porta de qualidade a reprova como **`INSUFFICIENT_DATA`** — **que é a verdade**: não dá para julgar sem saber a régua |
+
+**Por que o vazio é a resposta desta casa:** é o **M4** literal — *campo não observado grava vazio,
+nunca um valor inventado* —, é o **I3** da Prospecção, e é a **R11 regra 1** (*a falta de critério
+nunca pode significar um padrão herdado*). **`'ROAS'` não é um valor: é um chute com cara de dado.**
+
+> ⚠️ **E o vazio sozinho não basta** — senão vira a terceira cara do vazio da R11 (*"pare"* silencioso).
+> **O REQ-1 só está cumprido com as duas metades:**
+> 1. o tipo grava **vazio**, nunca `'ROAS'`;
+> 2. **quantas campanhas ficaram sem tipo** entra na conferência diária do **vigia do F3** — vira a
+>    **V7**, e o F3 ainda está em plano, então cabe sem retrabalho.
+
+**Nota:** o `sw metricas campanhas` — o dono canônico — **já filtra `Métrica-Mãe is_not_empty`**, e
+portanto nunca produz vazio. Este requisito existe só pelo `PHI - Subworkflow Campanhas`, **que está
+marcado para aposentadoria na Fase 2 do ADR-37.** É trabalho de sobrevida curta — **e é exatamente
+por isso que precisa ser barato**: trocar `\|\| 'ROAS'` por `\|\| null` é uma linha, erro alto é um
+desenho.
 
 ## 7. ⚠️ Ressalva de leitura (R13)
 
