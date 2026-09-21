@@ -26,6 +26,25 @@ lia, e o defeito era invisível porque não havia contra o que comparar.
 
 ---
 
+## 0.1. A peça central — confirmada pela metade (Olavo, 2026-09-21)
+
+O executor do parque deduziu, e pediu confirmação antes de construir em cima:
+
+> *"O PHI não é uma ferramenta de apoio ao serviço. Ele é a **capacidade de entrega do produto
+> principal** (SVC-ADS). Sem ele, a agência atende tantos clientes de tráfego quantos o Olavo
+> conseguir olhar com o próprio olho."*
+
+**Veredicto do Olavo: ✅ "Certo, mas falta metade."**
+
+| | |
+|---|---|
+| ✅ **Confirmado** | o PHI existe para **a qualidade do serviço parar de depender da atenção do Olavo**. É resposta econômica, não técnica |
+| ⬜ **Falta** | a outra metade — **o Olavo ainda não a escreveu**. Até lá, **nada que dependa dela é decidido** |
+
+> ⚠️ **Registrado como meia-verdade de propósito.** Escrever a metade confirmada como se fosse o
+> todo seria o erro que a casa já cometeu com dado de teste: **transformar o que se tem em mão na
+> resposta inteira.** A metade que falta ordena tanto quanto a que veio.
+
 ## 1. O que existe hoje — ✍️ **a escrever pelo Olavo**
 
 > *Preservar a redação dele, como no plano da Prospecção.*
