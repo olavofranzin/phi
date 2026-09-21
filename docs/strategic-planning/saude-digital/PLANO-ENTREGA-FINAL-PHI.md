@@ -97,13 +97,30 @@ O score é um **retrato do dia**. *"Pegar no dia 2"* exige **tendência** — e 
 > fosse o todo seria o erro que a casa já cometeu com dado de teste: **transformar o que se tem em
 > mão na resposta inteira.** A metade que faltava mudou o ponto final — de **6 critérios para 8**.
 
-## 1. O que existe hoje — ✍️ **a escrever pelo Olavo**
+## 1. O que existe hoje — 🟡 **resposta parcial (21/09) · redação do Olavo ainda pendente**
 
-> *Preservar a redação dele, como no plano da Prospecção.*
-> O que a agência entrega hoje aos clientes na gestão de tráfego: o que o cliente recebe, com que
-> frequência, e o que dá trabalho fazer.
+> ⚠️ **O que segue veio de escolha de opções, não da redação dele.** No plano da Prospecção o §1 foi
+> *"escrito pelo Olavo, preservado"* — **tratar escolha de chip como redação seria o mesmo erro de
+> transformar o que se tem em mão na resposta inteira.** Fica aberto para ele redigir.
 
-⬜ *em branco*
+**O cliente recebe hoje as duas coisas:**
+
+| | |
+|---|---|
+| **Relatório periódico** | montado **à mão** pelo Olavo |
+| **Reunião ou conversa** | ele explica o que aconteceu e o que vai fazer |
+
+### 🔴 O que isso muda no F8
+
+**O F8 deixa de ser "criar valor novo" e passa a ser duas coisas mais baratas e mais úteis:**
+
+1. **Devolver horas** — o relatório já é feito, e é trabalho recorrente do Olavo. Automatizá-lo
+   serve à **R-A** (a qualidade parar de depender da atenção dele) tanto quanto à **R-C**.
+2. **Municiar a conversa** — a reunião é falada. O F8 não precisa gerar um documento bonito:
+   precisa entregar **o que foi detectado e corrigido no período**, em forma de pauta.
+
+> ⬜ **Lacuna:** **com que frequência** o relatório sai, e **o que ele tem dentro hoje**. Sem isso o
+> F8 não tem molde — e copiar o formato existente é mais barato que inventar um.
 
 ## 2. O que poderemos fazer — ✍️ **a escrever pelo Olavo**
 
@@ -326,7 +343,16 @@ O Olavo elegeu o **grão de anúncio (F4)** para os 15 dias. As respostas do pro
 **Isto precisa ser decidido explicitamente, não por ordem de chegada dos briefs.**
 
 > ### ✅ **DECIDIDO pelo Olavo em 2026-09-20:** *"Vamos prosseguir com o que sugeriu."*
-> **Ordem aprovada: F1 → F3 → F2 → F4.**
+> **Ordem aprovada: F1 → F3 → F2 → F4** · **F7 no fim** (confirmado 21/09).
+>
+> **Razão do Olavo para o F7 no fim, e ela é boa:** *medir se a orientação funcionou usando um número
+> em que não se confia não serve de nada.* O F7 depende do F2 (número certo) e do F3 (saber que
+> rodou) — **começar antes produziria uma série de aprendizado contaminada**, que é pior que série
+> nenhuma, porque parece ativo.
+>
+> **E nada roda em paralelo por decisão dele (21/09):** foco no ADR-39 até fechar. As três
+> autorizações pendentes (`TMP - Evolution Header Echo`, caminho Meta, sub-chat com BigQuery)
+> **seguem paradas de propósito** — não são esquecimento.
 >
 > O **F1** já tem brief pronto (ADR-39) e destrava a regra de entrada de cliente. O **F3** é o que
 > torna os 30 dias mensuráveis — e, pela §3.3.1, é condição de escala, não refinamento. O **F4** sai
