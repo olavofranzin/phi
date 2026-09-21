@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | 🟡 **PROPOSTO** — 2026-09-21. **Aguarda aprovação do Olavo** (R7: nada se constrói sem plano aprovado) |
+| **Status** | ✅ **APROVADO** — **Olavo, 2026-09-21** (*"Plano F3 ok"*). Vira brief quando o ADR-39 fechar |
 | **Critério que atende** | **F3** do `PLANO-ENTREGA-FINAL-PHI.md` · fecha o **D5** do `CONTRATO-PHI.md` · destrava **C3/C4** da Definição de Pronto |
 | **Razão que serve** | **R-A** — a qualidade do serviço parar de depender da atenção do Olavo |
 | **Posição na fila** | **2º**, depois do ADR-39 (F1) |
