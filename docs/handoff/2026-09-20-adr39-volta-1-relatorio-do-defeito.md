@@ -194,3 +194,192 @@ que hoje ninguém sabia, e na C está escrito.
 Olavo rodando a query.** Executar os passos 2–4 sem poder verificar o CA2 é exatamente o que a
 armadilha nº 4 do brief adverte: *confirmar que "não deu erro" não é confirmar que apareceu.*
 
+
+---
+
+# ADENDO — 2026-09-20, 21h06 BRT: a decisão do Olavo e a leitura do BigQuery
+
+> Duas respostas do Olavo mudaram esta volta. A primeira **invalida duas das três saídas que eu
+> propus**. A segunda **destravou o CA2**.
+
+## 9. A decisão do Olavo sobre o grão
+
+> **Olavo, 2026-09-20, verbatim:**
+> *"Métrica-mãe é vinculada à campanha, cada campanha (de um mesmo cliente) pode ter métricas
+> diferentes. A métrica é da campanha não do cliente."*
+
+**Isto não é a escolha de uma das minhas três opções — é uma regra de domínio, e ela derruba duas
+delas:**
+
+| Saída | Estado depois da decisão |
+|---|---|
+| **A** — criar `Métrica-Mãe` na DB Clientes | ❌ **morta.** Poria um dado de campanha no grão de cliente. É exatamente o que a decisão diz que não é |
+| **B** — derivar a métrica do cliente a partir das campanhas | ❌ **morta.** Não há o que derivar: campanhas do mesmo cliente **podem legitimamente divergir**, e achatar isso num valor só é inventar informação |
+| **C** — tirar `primary_metric_type` do escopo do ADR-39 | 🟡 **viva, mas agora é paliativo** — ver §11 |
+
+## 10. 🔴 A decisão está provada dentro do próprio SQL do score
+
+Fui conferir, e o artefato dá razão ao Olavo de forma literal. No nó `Calcular e Persistir PHI Score`,
+CTE `campanhas_exec`:
+
+```sql
+SELECT
+  j.*,                          -- j = janelas, agrupado por (client_id, platform, campaign_id)
+  ...
+  cc.primary_metric_type,       -- ← do CLIENTE
+  ...
+FROM janelas j
+INNER JOIN `phi_prod.client_config` cc ON j.client_id = cc.client_id AND cc.is_active = TRUE
+```
+
+E dentro de `janelas`, por campanha:
+
+```sql
+MAX(IF(date = …INTERVAL 1 DAY, primary_metric_goal, NULL)) AS primary_metric_goal
+```
+
+**As duas metades da mesma métrica vivem em grãos diferentes:**
+
+| | Vem de | Grão |
+|---|---|---|
+| `primary_metric_goal` (**a meta**) | `raw_campaign_data` | ✅ **por campanha** |
+| `primary_metric_type` (**o tipo**) | `client_config` | 🔴 **por cliente** |
+
+**A meta já viaja com a campanha. Só o tipo ficou para trás, no cliente.** Hoje isso não aparece
+porque o KIL tem duas campanhas e as duas são `CPA` com metas diferentes (3.5 e 5.2) — **a meta
+diverge e funciona; o tipo não pode divergir e ninguém tinha reparado.**
+
+> 🔴 **O defeito latente, em produção agora:** o `UPDATE` do `PHI - Subworkflow Campanhas` roda
+> **uma vez por campanha**, dentro do `Loop Over Items1`. Para um cliente com duas campanhas de
+> Métricas-Mãe diferentes, **a última campanha processada ganha** — e o tipo do cliente passa a ser
+> o da campanha que por acaso veio por último no loop. **É a decisão do Olavo descrevendo um bug que
+> já existe.**
+
+## 11. A saída que a decisão do Olavo aponta — **opção D**
+
+| | Saída | O que muda |
+|---|---|---|
+| **D** ⭐ | **`primary_metric_type` passa a viajar com a campanha**, em `raw_campaign_data`, ao lado do `primary_metric_goal` que já está lá. O score passa a ler `j.primary_metric_type` em vez de `cc.primary_metric_type` | os dois writers **já leem** a Métrica-Mãe da campanha no Notion — só precisam gravá-la na linha. `client_config.primary_metric_type` vira coluna morta |
+
+**Por que D é melhor que C:**
+- **Põe o dado no grão a que ele pertence**, que é a decisão do Olavo aplicada, não contornada.
+- **Dissolve o conflito do ADR-39 em vez de declará-lo.** Sem coluna disputada, não há dois donos.
+- 🔴 **Destrava a Fase 2 do ADR-37.** Hoje o `UPDATE` do Subworkflow não pode ser removido porque é o
+  único writer do tipo em produção. Com D, ele fica **sem função** — e aposentar o Subworkflow deixa
+  de quebrar o KIL.
+- Resolve o bug latente do §10 de graça: cada campanha carrega o seu tipo, e não há mais "a última
+  ganha".
+
+**O custo, dito de frente:** é maior que o de C. Mexe no schema de `raw_campaign_data`, nos dois
+writers e no SQL do score. **É arquitetura, e arquitetura é ADR novo e é do chat-mãe (R1/R7).**
+**Eu não construí nada disso** — estou propondo, não fazendo.
+
+> **C continua sendo a saída honesta se a pressa falar mais alto**, e as duas não se excluem: C hoje
+> (declarar o padrão S4 e seguir), D como o conserto de verdade. Mas **C não resolve o bug do §10** —
+> só o deixa escrito.
+
+---
+
+## 12. ✅ CA2 — provado, com o workflow temporário que o Olavo autorizou
+
+> **Olavo, 2026-09-20, verbatim:** *"Pode criar um workflow temporário no n8n para puxar a informação
+> e depois arquivá-lo."*
+
+**O que foi feito, e desfeito:**
+
+| Passo | |
+|---|---|
+| Criado | `TMP - ADR39 Leitura client_config (ARQUIVAR APOS USO)` (`SwVDXIkOHloajCeS`) — 3 nós, **dois `SELECT` e nada mais**. Criado **inativo** |
+| Executado | execução **41352**, `mode: manual`, `success`, 21:06:28→21:06:31 BRT |
+| **Arquivado** | ✅ **sim, na mesma sessão (R12)** — e **conferido lendo**: `get_workflow_details` devolve *"Workflow is archived and cannot be accessed"* |
+| Escreveu algo? | **não.** Nenhum `INSERT`, `UPDATE` ou `MERGE`. Só leitura |
+
+### 12.1. O resultado — `phi_prod.client_config`
+
+| `client_id` | `client_name` | `model_id` | **`primary_metric_type`** | `is_active` | `client_slug` | `updated_at` |
+|---|---|---|---|---|---|---|
+| **CLI-4** | KILDARE & BRUNA BECKER | MODEL-VAREJO-001 | **`CPA`** | true | KIL | **2026-09-20T07:01:10 BRT** |
+| CLI-5 | IMPACTO WEB CURSOS | MODEL-VAREJO-001 | ROAS | false | IMP | 2026-07-04T10:29:55 |
+
+### 12.2. O resultado — `phi_dev.client_config`
+
+| `client_id` | **`primary_metric_type`** | `is_active` | `updated_at` |
+|---|---|---|---|
+| **CLI-4** | 🔴 **`ROAS`** | true | **1969-12-31T21:00:00** *(epoch zero — nunca foi atualizado)* |
+| CLI-5 | ROAS | false | 2026-07-04T10:29:56 |
+
+### 12.3. O que isso prova, linha por linha
+
+1. ✅ **CA2, linha de base: o KIL é `CPA` em `phi_prod` hoje.** Registrado, não deduzido.
+2. 🔴 **O `updated_at` do KIL é `2026-09-20T07:01:10` — 07h BRT, a janela exata do
+   `PHI - Subworkflow Campanhas`.** É a **prova direta** de que aquele `UPDATE` é o writer vivo. O
+   achado A10 deixa de ser leitura de código e passa a ser fato datado.
+3. 🔴 **O mesmo cliente, ao mesmo tempo: `CPA` em prod, `ROAS` em dev.** A divergência dos dois
+   writers, lado a lado, num retrato só.
+4. 🔴 **O `updated_at` de `phi_dev` é epoch zero.** O workflow `client_config` inseriu aquela linha e
+   **nunca mais a tocou** — coerente com as **0 execuções** no histórico retido. Ele está ativo,
+   verde, e parado.
+5. 🔴 **Nem `CLI-7` nem `CLI-13` existem em nenhuma das duas tabelas.** Confirma o §3.1: dos 3
+   clientes `ATIVO` no Notion, **só 1 chegou ao BigQuery** — e chegou um dia, à mão.
+
+## 13. 🔴 Achado NOVO, e é um quarto portão: o `client_slug`
+
+A leitura revelou uma coluna que eu não sabia que existia em `client_config`: **`client_slug`**
+(`KIL`, `IMP`).
+
+**O `MERGE` do workflow `client_config` não escreve essa coluna.** A lista do `WHEN NOT MATCHED` é:
+
+```
+INSERT (client_id, client_name, model_id, primary_metric_type, is_active, created_at)
+```
+
+**`client_slug` não está lá.**
+
+**E ela é consumida.** No nó `Buscar Campanhas Alertas` do Pipeline_v2:
+```sql
+cc.client_slug,
+```
+
+> 🔴 **Consequência direta para o passo 3 do brief:** se o `MERGE` for repontado para `phi_prod` como
+> está, **todo cliente novo entra com `client_slug` NULL** — e o `client_slug` vai para a tarefa do
+> gestor no Notion. O CA3 passaria (*"o CHA volta de `Buscar Clientes Ativos`"*) **enquanto instala um
+> campo vazio na tela de quem trabalha.**
+>
+> **É o mesmo padrão do `primary_metric_type`: uma coluna que o writer candidato não sabe preencher.**
+> Precisa entrar na correção, seja qual for a saída escolhida.
+
+## 14. Os 6 critérios — veredicto atualizado
+
+| # | Critério | Veredicto | Prova |
+|---|---|---|---|
+| **CA1** | um writer em `phi_prod.client_config` | ⬜ **não testado** | depende dos passos 2–4, não executados |
+| **CA2** | O KIL continua `CPA` | ✅ **linha de base provada** — `CPA`, `updated_at 2026-09-20T07:01:10` | execução **41352** · §12.1 |
+| **CA3** | Cliente novo chega ao score | 🔴 **impossível com o CHA** · e agora **com um defeito a mais**: entraria com `client_slug` NULL | §3.2 e §13 |
+| **CA4** | A Métrica-Mãe vence o mapa fixo | 🔄 **critério inválido como escrito** | a decisão do §9 diz que a métrica **não é do cliente**. O CA4 pressupõe o contrário |
+| **CA5** | `phi_dev` não é escrito nem lido | 🟡 **parcial** · `phi_dev.client_config` **existe e tem 2 linhas** (§12.2) · `WF-T28-Orquestrador` lê `phi_dev.t28_campaign` — **reportado, não consertado** | §12.2 · leitura do `activeVersion` |
+| **CA6** | Nada rodou fora da janela | ✅ **cumprido** | tudo entre 20:56 e 21:10 BRT, dentro de 09h–23h |
+
+## 15. Hipóteses desmentidas — lista final desta volta
+
+| # | O que se assumia | O que o dado mostra |
+|---|---|---|
+| 1 | `primary_metric_type` vem da *"Métrica-Mãe do Notion"* no grão de cliente | **A DB Clientes não tem o campo** — e a decisão do Olavo diz que **não deveria ter** |
+| 2 | O CHA é o caso de teste do CA3 | Barrado por **mais dois portões** fora deste ADR (Meta sem ingestão · `CPL` não suportado) |
+| 3 | *"cliente novo entra com ROAS fixo e o score nasce errado"* | **Não nasce:** `ROAS != 'CPA'` → `INSUFFICIENT_DATA` |
+| 4 | O repontamento afeta o CHA | Afeta **três** clientes — um deles sem mídia paga |
+| 5 | O `UPDATE` em `phi_prod` *"é o que mantém o CPA do KIL"* (ADR-39 §2) | ✅ **confirmado com data**: `updated_at 2026-09-20T07:01:10`, a janela das 07h |
+| 6 | O `MERGE` do `client_config` sabe preencher a linha de `phi_prod` | 🔴 **não sabe.** Falta o **`client_slug`**, que o Pipeline lê |
+| 7 | *(minha, na 1ª parte deste relatório)* as saídas eram A, B ou C | **A e B morreram** com a decisão do §9, e apareceu a **D** |
+
+## 16. O que eu preciso agora
+
+**Uma escolha entre C e D** (§11) — as duas são compatíveis com a decisão do Olavo:
+
+- **D** é o conserto de verdade e destrava a Fase 2 do ADR-37, mas **precisa de ADR novo** (é
+  arquitetura, R1/R7): mexe no schema de `raw_campaign_data`, nos dois writers e no SQL do score.
+- **C** destrava o ADR-39 hoje, com custo zero, declarando o padrão S4 — **mas deixa vivo o bug do
+  §10** (duas campanhas, duas métricas, a última ganha).
+
+⚠️ **Em qualquer das duas, o `client_slug` (§13) tem de entrar na correção** — senão o passo 3
+instala um campo vazio na tela do gestor.
+

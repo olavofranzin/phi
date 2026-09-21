@@ -5,7 +5,8 @@
 | **Status** | ⏸️ **ACEITO, EXECUÇÃO SUSPENSA NA VOLTA 1** — aceito por Olavo em 2026-09-20 na **opção A** do §3; a execução **parou antes do passo 4.1** em 2026-09-20 21h BRT |
 | **Data efetiva da execução** | ⬜ **não ocorreu.** Nada foi alterado em produção. O `client_config` segue em `versionId = activeVersionId = 99abdada` |
 | **Por que parou** | 🔴 **O passo 4.1 não tem fonte: a DB Clientes do Notion não possui campo `Métrica-Mãe`.** Ela é **por campanha**, na DB Campanhas — ver §8 |
-| **Destrava com** | **uma decisão do Olavo** entre as 3 saídas do §8.4 · relatório: `docs/handoff/2026-09-20-adr39-volta-1-relatorio-do-defeito.md` |
+| **Destrava com** | **uma escolha entre C e D** (§8.7) — as saídas A e B **morreram** com a decisão de grão do Olavo em 20/09 · relatório: `docs/handoff/2026-09-20-adr39-volta-1-relatorio-do-defeito.md` |
+| **CA2** | ✅ **linha de base provada em 20/09**: `phi_prod.client_config` tem `CLI-4` com `primary_metric_type = 'CPA'`, `updated_at 2026-09-20T07:01:10 BRT` (execução 41352) |
 | **Escopo** | Quem escreve `client_config`, em qual ambiente, e em que ordem a troca acontece |
 | **Origem** | **D3** do `CONTRATO-PHI.md`, reaberta pelo as-built de 20/09 (achado **A10**) |
 | **Decisor** | Olavo |
@@ -179,3 +180,78 @@ Meta, CPL). Repontar o `MERGE` insere os três.
 > ambientes diferentes), a refutação do §7 (repontar não sobrescreve o CPA do KIL), e a **ordem** do
 > §4 — que continua certa, e é justamente por respeitá-la que a execução parou no primeiro passo em
 > vez de quebrar o KIL no quarto.
+
+---
+
+## 9. Adendo da volta 1 — a decisão de grão do Olavo (2026-09-20, 21h)
+
+> **Olavo, verbatim:** *"Métrica-mãe é vinculada à campanha, cada campanha (de um mesmo cliente) pode
+> ter métricas diferentes. **A métrica é da campanha não do cliente.**"*
+
+### 9.1. O que a decisão derruba
+
+| Saída do §8.4 | Estado |
+|---|---|
+| **A** — `Métrica-Mãe` na DB Clientes | ❌ **morta** — poria dado de campanha no grão de cliente |
+| **B** — derivar do grão de campanha | ❌ **morta** — campanhas podem divergir; achatar é inventar |
+| **C** — tirar do escopo, declarar padrão S4 | 🟡 viva, mas **paliativa** |
+| **D** ⭐ **(nova)** | `primary_metric_type` **viaja com a campanha**, em `raw_campaign_data` |
+
+### 9.2. A decisão está provada no SQL do score
+
+No nó `Calcular e Persistir PHI Score`, CTE `campanhas_exec`, as duas metades da mesma métrica vêm de
+grãos diferentes:
+
+| | Origem | Grão |
+|---|---|---|
+| `primary_metric_goal` (**meta**) | `janelas` ← `raw_campaign_data` | ✅ **por campanha** |
+| `primary_metric_type` (**tipo**) | `cc` ← `client_config` | 🔴 **por cliente** |
+
+**A meta já viaja com a campanha. Só o tipo ficou para trás.**
+
+> 🔴 **Bug latente confirmado, em produção agora:** o `UPDATE` do `PHI - Subworkflow Campanhas` roda
+> **uma vez por campanha**, dentro do `Loop Over Items1`. Cliente com duas campanhas de métricas
+> diferentes → **a última processada ganha**. Invisível hoje só porque as duas do KIL são `CPA`.
+
+### 9.3. Opção D — e por que ela é melhor que C
+
+`primary_metric_type` passa a ser coluna de `raw_campaign_data`, ao lado do `primary_metric_goal` que
+já está lá; o score lê `j.primary_metric_type`. Os dois writers **já leem** a Métrica-Mãe da campanha
+no Notion — só precisam gravá-la.
+
+- põe o dado no grão a que ele pertence (a decisão aplicada, não contornada);
+- **dissolve** o conflito deste ADR em vez de declará-lo: sem coluna disputada, não há dois donos;
+- 🔴 **destrava a Fase 2 do ADR-37** — o `UPDATE` do Subworkflow fica sem função, e aposentá-lo deixa
+  de quebrar o KIL;
+- corrige o bug do §9.2 de graça.
+
+**Custo:** mexe no schema de `raw_campaign_data`, nos dois writers e no SQL do score. **É arquitetura
+— exige ADR próprio e é do chat-mãe (R1/R7). Nada disso foi construído.**
+
+### 9.4. 🔴 Quarto portão descoberto na leitura: `client_slug`
+
+`phi_prod.client_config` tem a coluna **`client_slug`** (`KIL`, `IMP`). **O `MERGE` do workflow
+`client_config` não a escreve** — seu `WHEN NOT MATCHED` lista apenas
+`(client_id, client_name, model_id, primary_metric_type, is_active, created_at)`.
+
+**E ela é consumida:** `cc.client_slug` no nó `Buscar Campanhas Alertas` do Pipeline_v2.
+
+> **Consequência para o §4.3:** repontar como está faz **todo cliente novo entrar com `client_slug`
+> NULL**, e esse campo chega à tarefa do gestor no Notion. **Entra na correção seja qual for a saída.**
+
+### 9.5. O retrato do BigQuery (execução 41352, workflow temporário já arquivado)
+
+| Tabela | `client_id` | `primary_metric_type` | `updated_at` |
+|---|---|---|---|
+| **`phi_prod`** | CLI-4 | **`CPA`** | **2026-09-20T07:01:10 BRT** ← a janela das 07h |
+| `phi_dev` | CLI-4 | 🔴 **`ROAS`** | **1969-12-31T21:00:00** *(epoch zero)* |
+
+O mesmo cliente, ao mesmo tempo, com dois valores. E o `phi_dev` **nunca foi atualizado** — coerente
+com as 0 execuções retidas do workflow `client_config`. **Nem `CLI-7` nem `CLI-13` existem em nenhuma
+das duas.**
+
+### 9.6. O CA4 ficou inválido como escrito
+
+O CA4 diz *"a Métrica-Mãe do Notion **vence** o mapa fixo — trocar a métrica de **um cliente** e ver a
+coluna mudar"*. **Ele pressupõe que a métrica é do cliente**, o que a decisão do §9 nega. O critério
+precisa ser reescrito junto com a saída escolhida.
