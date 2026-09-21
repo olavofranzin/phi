@@ -54,7 +54,7 @@ descobre lead → pontua → enriquece → cria no CRM → [HUMANO dá o play] �
 | # | Critério | Hoje |
 |---|---|---|
 | C1 | Score v2 (ADR-34) em produção — **sem contradição** entre score e métrica-mãe | 🟡 desenhado e validado; **o caminho abriu em 18/09** com o C2 — e a série limpa que ele exige já está carregada (`BACKFILL_2026-09`) |
-| C2 | Escrita de dados consolidada: **um dado, um writer** | 🟡 **DESBLOQUEADO em 2026-09-18** — o ADR-38 unificou a identidade **e fechou o P-10**; os dois writers já colidem no `MERGE`. Falta executar as Fases 1 e 2 do ADR-37 |
+| C2 | Escrita de dados consolidada: **um dado, um writer** | 🟡 **DESBLOQUEADO em 2026-09-18** — o ADR-38 unificou a identidade **e fechou o P-10**; os dois writers já colidem no `MERGE`. Falta executar as Fases 1 e 2 do ADR-37. ⚠️ **Atualizado pela auditoria de 21/09:** `client_config` (um dos destinos do "um dado, um writer") ganhou o **ADR-39** (aceito 20/09) por ter **dois** writers em ambientes diferentes — mais grave do que se sabia em 18/09. O próprio ADR-39 tem nota de 21/09 reabrindo a questão (grão da coluna). **NÃO VERIFICADO** se isso muda o placar de C2 — fica registrado para não repetir a surpresa de 08/09 |
 | C3 | Diagnóstico T28 entregando na DB `PHI - ANÁLISES` para **todas** as campanhas ativas | 🔴 **risco conhecido (18/09)** — a perna BigQuery → Notion **não é vigiada por ninguém**, e o P-24 provou que ela pode parar em silêncio |
 | C4 | Tarefa abre no Notion a partir do diagnóstico, com checklist | 🔴 **mesmo risco do C3** — nada vigia a entrega, e o Notion é a única superfície que o gestor vê |
 

@@ -16,6 +16,20 @@
 
 ---
 
+> 🔴 **NOTA DE 2026-09-21 — o grão da coluna está errado, e há prova documental.**
+>
+> Este ADR decide **quem escreve** `primary_metric_type`. Não decide **onde ela deveria morar** — e
+> o `regras-otimizacao-metodo-subido.md` §2 mostra que o lugar está errado: a tabela é
+> **"Métrica-mãe por objetivo"**, e objetivo é atributo **da campanha**, não do cliente.
+> Hoje ela mora em `client_config`, por cliente.
+>
+> **Não bloqueia os 5 passos do §4** — eles continuam válidos e necessários: mesmo no lugar errado,
+> a coluna precisa de dono único e de `INSERT`. **Mas o passo 4.1 (*"ler a Métrica-Mãe do Notion"*)
+> passa a ser um conserto de curto prazo**, que funciona enquanto houver 1 campanha por cliente.
+>
+> O executor propôs uma **opção D** em cima disso. **O chat-mãe ainda não a leu** e não decide sobre
+> o que não leu (R6) — ver `PLANO-ENTREGA-FINAL-PHI.md` §4.2.
+
 ## 1. Por que isto saiu do ADR-37
 
 O ADR-37 tratava `client_config` como um caso de **ambiente errado**: um workflow escrevendo em
@@ -67,8 +81,8 @@ num workflow que o ADR-37 manda aposentar — troca um dono invisível por outro
 
 | # | Passo | Se fizer fora de ordem |
 |---|---|---|
-| **4.1** | Corrigir a derivação de `primary_metric_type` no nó `Code limpar Notion`: **ler a Métrica-Mãe do Notion**, não o mapa fixo | — |
-| **4.2** | Repontar o `MERGE` de `phi_dev` para `phi_prod` | 🔴 **antes de 4.1**, cliente novo entra com `ROAS` fixo e o score dele nasce errado |
+| ~~**4.1**~~ | 🔴 **REVOGADO em 2026-09-21.** Com o **ADR-40 aceito e fundido na mesma execução**, a coluna **sai** do `client_config` — corrigir a derivação de um campo que será removido na mesma sessão é trabalho jogado fora | **A decisão de 20/09 (*"manter mesmo sendo descartável"*) valia enquanto os dois ADRs rodariam separados, com semanas entre eles. Fundidos, o motivo dela deixou de existir** |
+| **4.2** | Repontar o `MERGE` de `phi_dev` para `phi_prod` | ⚠️ a precaução *"antes de 4.1"* **caiu junto com o 4.1** — com o ADR-40, o `MERGE` não escreve mais `primary_metric_type` nenhum |
 | **4.3** | Garantir que o `MERGE` **INSERE** e validar com um cliente-teste (o **CHA** é o caso real esperando) | 🔴 sem isso, o bug do cliente-fantasma continua |
 | **4.4** | **Só então** remover o `UPDATE` do `PHI - Subworkflow Campanhas` | 🔴 **antes de 4.3**, o KIL fica sem nenhum writer e o CPA vira o que estiver na linha |
 | **4.5** | Apagar `phi_dev.client_config` e fechar o **D2** | — |

@@ -26,13 +26,101 @@ lia, e o defeito era invisível porque não havia contra o que comparar.
 
 ---
 
-## 1. O que existe hoje — ✍️ **a escrever pelo Olavo**
+## 0.1. A peça central — confirmada pela metade (Olavo, 2026-09-21)
 
-> *Preservar a redação dele, como no plano da Prospecção.*
-> O que a agência entrega hoje aos clientes na gestão de tráfego: o que o cliente recebe, com que
-> frequência, e o que dá trabalho fazer.
+O executor do parque deduziu, e pediu confirmação antes de construir em cima:
 
-⬜ *em branco*
+> *"O PHI não é uma ferramenta de apoio ao serviço. Ele é a **capacidade de entrega do produto
+> principal** (SVC-ADS). Sem ele, a agência atende tantos clientes de tráfego quantos o Olavo
+> conseguir olhar com o próprio olho."*
+
+**Veredicto do Olavo: ✅ "Certo, mas falta metade."**
+
+| | |
+|---|---|
+| ✅ **Confirmado** | o PHI existe para **a qualidade do serviço parar de depender da atenção do Olavo**. É resposta econômica, não técnica |
+| ✅ **A outra metade** (Olavo, 2026-09-21) | **três razões, não uma** — ver abaixo |
+
+### As 4 razões de o PHI existir
+
+| # | Razão | Fonte |
+|---|---|---|
+| **R-A** | **A qualidade do serviço para de depender da atenção do Olavo** | dedução do executor, confirmada |
+| **R-B** | **Acumular aprendizado** — o ativo é a **série**, não o score de hoje | Olavo, 21/09 |
+| **R-C** | **Provar valor ao cliente** — mostrar o que foi detectado e corrigido | Olavo, 21/09 |
+| **R-D** | **Agir antes do estrago** — pegar o desvio no dia 2, não no dia 20 | Olavo, 21/09 |
+
+> ⚠️ **O Olavo NÃO escolheu** *"levar o critério para fora de mim"* (fazer outra pessoa chegar à
+> mesma conclusão). **Isso não a torna falsa — torna-a não-motivo.** Consequência: o **F6** continua
+> válido como **fato de uso** (*"alguém da equipe"* abre o Notion), mas **desce de prioridade**: não
+> é razão de existir.
+
+### 🔴 O que as três razões novas revelam
+
+**Três das quatro razões não têm NADA no sistema que as sirva.**
+
+| Razão | O que o PHI precisaria ter | Existe hoje? |
+|---|---|---|
+| **R-A** | vigilância que substitua o olho | 🔴 **não** — o detector é o olho (§3.3.1). É o **F3** |
+| **R-B** | **saber se a orientação funcionou** — medir depois da ação | 🔴 **nada.** Ver abaixo |
+| **R-C** | um **entregável externo** ao cliente | 🔴 **nada.** Nenhum workflow produz algo que o cliente veja |
+| **R-D** | **tendência**, não só estado | 🔴 **nada** — o score é um retrato do dia |
+
+#### R-B: o PHI não fecha o laço — e a Prospecção fecha
+
+Este é o achado mais desconfortável da comparação entre as duas frentes:
+
+| | Prospecção | Saúde Digital |
+|---|---|---|
+| detecta / prevê | `potencial_comercial` | `phi_value` |
+| age | humano aborda | humano otimiza |
+| **mede se acertou** | ✅ **`acerto_previsao`** — o P6 traz o desfecho do CRM de volta | 🔴 **não existe** |
+
+**A Prospecção aprende com o que aconteceu. O PHI, não.** Ele detecta, abre tarefa, o gestor
+resolve, o `Fechar Otimização` desmarca a caixinha — **e ninguém mede se o número melhorou.** O ciclo
+termina em *"foi feito"*, nunca em *"funcionou"*.
+
+> **Sem isso, a R-B é impossível por construção:** não se acumula aprendizado registrando só o que
+> foi detectado. Aprendizado é **detecção + ação + resultado**, e faltam as duas últimas.
+>
+> ⚠️ **E a `Log de Otimizações`** (DB Notion, `19fb65e5c72b81068e76f1e684197316`) **existe** e está no
+> `CLAUDE.md` desde sempre. **Ninguém verificou se algo escreve nela.** Pode ser o elo que falta —
+> ou mais uma tabela sem writer.
+
+#### R-D: antecipar exige derivada, e a casa já escreveu quando agir
+
+O score é um **retrato do dia**. *"Pegar no dia 2"* exige **tendência** — e o
+`regras-otimizacao-metodo-subido.md` **§4 — Janelas de Otimização (QUANDO agir)** já trata disso.
+**De novo: a régua existe e o sistema não a executa.**
+
+> ⚠️ **Registrado como meia-verdade até 21/09, de propósito.** Escrever a metade confirmada como se
+> fosse o todo seria o erro que a casa já cometeu com dado de teste: **transformar o que se tem em
+> mão na resposta inteira.** A metade que faltava mudou o ponto final — de **6 critérios para 8**.
+
+## 1. O que existe hoje — 🟡 **resposta parcial (21/09) · redação do Olavo ainda pendente**
+
+> ⚠️ **O que segue veio de escolha de opções, não da redação dele.** No plano da Prospecção o §1 foi
+> *"escrito pelo Olavo, preservado"* — **tratar escolha de chip como redação seria o mesmo erro de
+> transformar o que se tem em mão na resposta inteira.** Fica aberto para ele redigir.
+
+**O cliente recebe hoje as duas coisas:**
+
+| | |
+|---|---|
+| **Relatório periódico** | montado **à mão** pelo Olavo |
+| **Reunião ou conversa** | ele explica o que aconteceu e o que vai fazer |
+
+### 🔴 O que isso muda no F8
+
+**O F8 deixa de ser "criar valor novo" e passa a ser duas coisas mais baratas e mais úteis:**
+
+1. **Devolver horas** — o relatório já é feito, e é trabalho recorrente do Olavo. Automatizá-lo
+   serve à **R-A** (a qualidade parar de depender da atenção dele) tanto quanto à **R-C**.
+2. **Municiar a conversa** — a reunião é falada. O F8 não precisa gerar um documento bonito:
+   precisa entregar **o que foi detectado e corrigido no período**, em forma de pauta.
+
+> ⬜ **Lacuna:** **com que frequência** o relatório sai, e **o que ele tem dentro hoje**. Sem isso o
+> F8 não tem molde — e copiar o formato existente é mais barato que inventar um.
 
 ## 2. O que poderemos fazer — ✍️ **a escrever pelo Olavo**
 
@@ -234,9 +322,11 @@ da Prospecção.
 | **F1** | **Todo cliente que contrata tráfego aparece no PHI sem ninguém precisar lembrar** | *"todos os que contratarem"* + *"eu cadastro no Notion"* | 🔴 o cadastro morre no `phi_dev` |
 | **F2** | **O número que está no Notion é o número certo** — sem duplicata, sem zero que significa "não achei" | *"o que dói é dado errado"* + virada item 1 | 🔴 o score chega **3×** |
 | **F3** | **Silêncio significa saúde** — se o que devia acontecer não aconteceu, chega alarme | *"perceberia pela falta"* × *"quase nunca chega alarme"* | 🔴 21 de 26 sem cobertura |
-| **F4** | **O PHI enxerga a campanha como a plataforma a enxerga — campanha, conjunto e anúncio — e aponta em qual nível está a causa** | *"quero o anúncio culpado"* + §3.3.2 | 🔴 pontua só o agregado |
-| **F5** | **Rodou 30 dias sem intervenção manual** | virada item 2 | ⬜ nunca medido |
-| **F6** | **Alguém da equipe opera sem ter desenhado** | *"alguém da equipe"* + *"só você"* | ⬜ nunca testado |
+| **F4** | **O PHI enxerga a campanha como a plataforma a enxerga — campanha, conjunto e anúncio — e aponta em qual nível está a causa, a tempo de agir** | *"quero o anúncio culpado"* + §3.3.2 + **R-D** | 🔴 pontua só o agregado, e só o dia de hoje |
+| **F5** | **Rodou 30 dias sem intervenção manual** | virada item 2 · **R-A** | ⬜ nunca medido |
+| **F7** | 🔴 **O PHI sabe se a orientação funcionou** — mede o número depois da ação e guarda o resultado | **R-B** (acumular aprendizado) | 🔴 **não existe** — é o `acerto_previsao` que a Saúde Digital nunca teve |
+| **F8** | 🔴 **O cliente recebe alguma coisa** — o que foi detectado e corrigido no período | **R-C** (provar valor) | 🔴 **não existe** |
+| **F6** | **Alguém da equipe opera sem ter desenhado** | *"alguém da equipe"* — **fato de uso, não razão de existir** | ⬜ **prioridade rebaixada em 21/09** |
 
 > **F1 a F3 são os pré-requisitos da virada** que o Olavo definiu (*"confiar no número"* + *"rodar
 > sozinho 30 dias"*). **F4 é o que ele pediu para os 15 dias.** F5 e F6 são consequência: só medíveis
@@ -253,12 +343,80 @@ O Olavo elegeu o **grão de anúncio (F4)** para os 15 dias. As respostas do pro
 **Isto precisa ser decidido explicitamente, não por ordem de chegada dos briefs.**
 
 > ### ✅ **DECIDIDO pelo Olavo em 2026-09-20:** *"Vamos prosseguir com o que sugeriu."*
-> **Ordem aprovada: F1 → F3 → F2 → F4.**
+> **Ordem aprovada: F1 → F3 → F2 → F4** · **F7 no fim** (confirmado 21/09).
+>
+> **Razão do Olavo para o F7 no fim, e ela é boa:** *medir se a orientação funcionou usando um número
+> em que não se confia não serve de nada.* O F7 depende do F2 (número certo) e do F3 (saber que
+> rodou) — **começar antes produziria uma série de aprendizado contaminada**, que é pior que série
+> nenhuma, porque parece ativo.
+>
+> **E nada roda em paralelo por decisão dele (21/09):** foco no ADR-39 até fechar. As três
+> autorizações pendentes (`TMP - Evolution Header Echo`, caminho Meta, sub-chat com BigQuery)
+> **seguem paradas de propósito** — não são esquecimento.
 >
 > O **F1** já tem brief pronto (ADR-39) e destrava a regra de entrada de cliente. O **F3** é o que
 > torna os 30 dias mensuráveis — e, pela §3.3.1, é condição de escala, não refinamento. O **F4** sai
 > dos 15 dias imediatos, **mas cresceu de escopo**: deixou de ser "coletar grão de anúncio" e virou
 > "enxergar os três níveis". O brief do grão precisa ser reescrito antes de ir para execução.
+
+## 4.1. 🔴 A régua do F4 já existe — e nenhum sub-chat a leu
+
+O executor do parque escreveu: *"não li o `regras-otimizacao-metodo-subido.md`… se o PHI precisa
+apontar o culpado, ele precisa saber o que você considera 'ruim'. Posso fechar essa lacuna quando
+quiser."*
+
+**A lacuna não precisa ser fechada — ela já estava fechada, em `docs/strategic-planning/`, desde
+antes desta conversa.** O documento tem 9,8 KB e responde as duas perguntas do F4:
+
+| Seção | O que dá |
+|---|---|
+| **§2 — Métrica-mãe (Bússola) por objetivo** | a tabela `objetivo de campanha → métrica-mãe` |
+| **§6 — Cadeia de diagnóstico do funil ("ONDE o cano vaza")** | **10 elos, cada um com sintoma → alavanca**: CPM, Hook Rate, CTR, CPC, Connect Rate, "Curioso", jornada, CPA, ROAS, LTV |
+| **§5 — A Ordem Sagrada das Alterações** | o que mexer, e em que ordem |
+
+> **O §6 é literalmente o F4 escrito em linguagem de negócio.** *"CTR baixo → o algoritmo encarece o
+> leilão; novos hooks/headlines"* é apontar o culpado e a ação, no nível do criativo. **O PHI não
+> precisa de um modelo novo de diagnóstico: precisa executar o que a casa já escreveu.**
+>
+> E o documento chega a nomear o caso: *"o 'Curioso' (CPC baixo, muitos cliques, conversão zero) é
+> **exatamente o padrão da Salão/CLI-4**"*. **O diagnóstico do cliente de referência já está escrito
+> — e o PHI nunca o produziu.**
+
+**Isto é a R7 em estado puro:** três varreduras do parque, duas entrevistas e um contrato, e a régua
+estava numa pasta vizinha o tempo todo. **Quem lê o parque procura workflow; ninguém procurou o
+método.**
+
+## 4.2. 🔴 A Métrica-Mãe é da CAMPANHA — e a casa já tinha escrito isso
+
+> **Olavo:** *"A métrica é da campanha, não do cliente."*
+
+**Confirmado por documento, não por opinião.** O `regras-otimizacao-metodo-subido.md` §2 titula a
+tabela **"Métrica-mãe (Bússola) por objetivo"**, e a coluna da esquerda é **objetivo de campanha**.
+O objetivo é escolhido **na campanha** — é *"a ordem que se dá ao algoritmo"*.
+
+| Onde a métrica-mãe **deveria** morar | Onde ela **mora** |
+|---|---|
+| na campanha (deriva do objetivo dela) | em **`client_config.primary_metric_type`** — por **cliente** |
+
+**É a mesma doença de grão que o Olavo apontou nos anúncios**, um nível acima: *dado guardado num
+grão mais grosso do que o grão onde a decisão mora.*
+
+> ⚠️ **Hoje isso não dói porque há 1 cliente com 1 campanha.** Dói no dia em que um cliente tiver
+> uma campanha de **Vendas** (ROAS) e outra de **Leads** (CPA) — e o PHI julgar as duas pela mesma
+> régua. **Com *"todos os clientes que contratarem tráfego pago"*, esse dia é logo.**
+
+**Status:** o executor do ADR-39 propôs uma **opção D** em cima disso. **O chat-mãe ainda não a leu**
+— e não decide sobre o que não leu (**R6**). O que está decidido é só o fato acima.
+
+## 4.3. O doc mestre não é legível — e isso é defeito, não tamanho
+
+O `ESTADO-DO-PROJETO.md` tem **190.779 caracteres**. O `CLAUDE.md` da raiz manda lê-lo **primeiro**.
+O executor, honestamente: *"não li — são 190 mil caracteres e eu não abri."*
+
+**Ele está certo em não ter aberto.** Um documento que ninguém consegue ler não cumpre o papel de
+porta de entrada — e é a mesma família de defeito do cabeçalho do ADR-38: *o conteúdo existe, mas
+não chega a quem precisa*. **Enquanto ele não for fatiado, todo sub-chat começa cego e deduz o que
+poderia ter lido.**
 
 ## 5. A engenharia reversa — a pergunta única
 

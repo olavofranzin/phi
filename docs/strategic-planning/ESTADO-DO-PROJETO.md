@@ -33,25 +33,39 @@
 > Regra **R2** do `CLAUDE.md`: etapa concluída sem painel atualizado = **etapa não concluída**.
 > Vocabulário proposital: não usamos "%" inventado — usamos estado + o que falta + o que trava.
 
+> 🔍 **Nota da auditoria semanal de 2026-09-21:** este painel estava sem atualização desde
+> 09-09 apesar de ~90 commits no período (ADR-36 aceito **e executado**, ADR-37/38 avançando,
+> ADR-39 aceito em 20/09, `saude-digital/CONTRATO-PHI.md` virou lei em 20/09, novo
+> `saude-digital/PLANO-ENTREGA-FINAL-PHI.md` em construção — inclusive com commit de hoje,
+> 21/09). Corrigidos abaixo apenas os itens com evidência direta (live check no n8n via MCP e
+> leitura dos ADRs); para o detalhe mais recente da frente Saúde Digital, ver os dois documentos
+> citados — ainda em obra, não totalmente lidos nesta auditoria.
+
 | Frente | Estado | O que falta | O que trava |
 |---|---|---|---|
-| **Prospecção** (lead → CRM) | 🟢 **construída** — parque `PROSP-01..08` ativo (**ADR-35**) | renomear 06/07/08 · arquivar 5 mortos · rodar `BF`/`LO` · auditoria nó a nó | 🔴 decidir o alvo do CRM |
-| **CRM Odoo** | 🟢 **F1 + F2 CONCLUÍDOS** — deploy por Git no ar; módulo `phi_crm` aprovado nos 8 testes de aceite (2026-09-08) | **F3** n8n↔Odoo (a API escrevendo os campos GBP/IA) · F5 migração de dados do HubSpot | — |
-| **PHI·Mídia Score v2** | 🟡 **ADR-34 desenhado** e validado em dado real (jan–ago) | implementar | consolidação dos writers |
-| **Consolidação de writers** | 🔴 **BLOQUEADO — credencial do BigQuery caiu** (2026-09-09 17:35 UTC). ADR-38 etapas 2-3 prontas em rascunho | **Olavo reconectar a credencial `Google BigQuery account` no n8n** — senão o pipeline de amanhã falha | 🔴 urgente |
-| **T28 / Otimização** | 🟡 Diagnóstico vive; **Maestro E1 em rascunho** | ativar E1 (ADR-28) | budget de token |
-| **Governança / documentação** | 🟢 regras **R1–R5** no `CLAUDE.md` · Rotina de auditoria ativa (1ª: 14/09) | fazer os sub-chats cumprirem **R3** (Notion) | — |
+| **Prospecção** (lead → CRM) | 🟢 **construída e migrada para o Odoo** — `PROSP-05O`/`PROSP-06O` ativos no n8n (desde 14/09 e 16-19/09; confirmado ao vivo em 21/09); os workflows do HubSpot (`PROSP-05`, `Sync HubSpot → Planilha`) foram aposentados (**ADR-36 executado**) | renomear `Comercial - Guarda-Schema + Backup` para `PROSP-07` · **arquivar os 5 workflows mortos do ADR-35 §3.5 — confirmado em 21/09 que os 5 ainda existem no n8n, nenhum arquivado**, e um deles (`Intake - db's apify`) foi **editado hoje** (21/09, 02:44 UTC) sem registro aqui · rodar `BF`/`LO` · auditoria nó a nó | — |
+| **CRM Odoo** | 🟢 **F1 + F2 CONCLUÍDOS** (2026-09-08) — **NÃO VERIFICADO nesta auditoria** se F3 (campos GBP/IA via API) e F5 (migração HubSpot) avançaram; a Prospecção já grava `id_crm` mas os demais campos GBP/IA não foram conferidos | **F3** n8n↔Odoo (a API escrevendo os campos GBP/IA) · F5 migração de dados do HubSpot | — |
+| **PHI·Mídia Score v2** | 🟡 **ADR-34 desenhado** e validado em dado real (jan–ago) — **NÃO VERIFICADO** se avançou desde 09-09 | implementar | consolidação dos writers |
+| **Consolidação de writers** | 🟡 a credencial do BigQuery que caiu em 09-09 **foi reconectada no mesmo dia** (ADR-38 §12) — o painel carregava um bloqueio já resolvido há 12 dias. **ADR-39** (dono único de `client_config`) **aceito em 20/09**; nota de **21/09 dentro do próprio ADR-39** reabre a discussão (grão da coluna pode estar errado) e aguarda decisão do chat-mãe sobre uma "opção D" ainda não lida | executar ADR-39 · Fases 1-2 do ADR-37 · decisão do chat-mãe sobre a opção D (ver nota de 21/09 no ADR-39) | decisão pendente, não mais a credencial |
+| **T28 / Otimização** | 🟡 Diagnóstico vive; **Maestro E1 em rascunho** — **NÃO VERIFICADO** se avançou desde 09-09 | ativar E1 (ADR-28) | budget de token |
+| **Governança / documentação** | 🟢 regras **R1–R13** no `CLAUDE.md` (evoluiu de R1-R5 — **NÃO VERIFICADO** o conteúdo de R6-R13 nesta auditoria) · Rotina de auditoria ativa | fazer os sub-chats cumprirem **R3** (Notion) · manter este painel atualizado a cada entrega (**R2** — que este próprio bloco descumpriu por 12 dias) | — |
 
 🟢 pronto ou em acabamento · 🟡 em obra · 🔴 parado
 
 ### O bloqueio nº 1 do projeto hoje
-**Formalizar o Odoo como CRM e reapontar a Prospecção para ele.** Na prática a decisão já foi
-tomada pelos fatos: o Odoo está no ar e o módulo `phi_crm` já tem os campos GBP/IA. Mas a
-Prospecção (`PROSP-05` escreve no CRM, `PROSP-06` lê dele) **continua apontando para o HubSpot**.
-É o mesmo trabalho do **F3** (integração n8n↔Odoo) visto do outro lado.
+~~Formalizar o Odoo como CRM e reapontar a Prospecção para ele~~ — **RESOLVIDO.** O ADR-36 foi
+aceito em 2026-09-08 e **já foi executado**: `PROSP-05O` (Odoo) está ativo desde 14/09 e
+`PROSP-06O` (Odoo) desde 16/09, confirmado ao vivo no n8n nesta auditoria (21/09). Os workflows do
+HubSpot equivalentes foram aposentados.
 
-→ **ADR-36:** declarar o Odoo como CRM canônico, reapontar `PROSP-05/06` e definir o corte do
-HubSpot. **Uma decisão, duas frentes destravadas.**
+O bloqueio nº 1 hoje, pela leitura mais recente encontrada em git (`CONTRATO-PHI.md`,
+`PLANO-ENTREGA-FINAL-PHI.md`), parece ser **de decisão, não de execução**: o `ADR-39` tem uma nota
+de hoje (21/09) dizendo que o chat-mãe ainda não decidiu sobre uma "opção D" proposta pelo
+executor, e o `PLANO-ENTREGA-FINAL-PHI.md` está com as seções 1-2 propositalmente em branco,
+esperando o Olavo preenchê-las. **NÃO VERIFICADO a fundo** — esta auditoria não leu o
+`CONTRATO-PHI.md` nem o `PLANO-ENTREGA-FINAL-PHI.md` por completo (documentos extensos, em obra
+no momento desta auditoria); a leitura completa fica como pendência para a próxima rodada ou para
+o Olavo confirmar diretamente.
 
 ### 🔴🔴 2026-09-09 17:35 UTC — a credencial do BigQuery caiu (URGENTE, além do ADR-38)
 
