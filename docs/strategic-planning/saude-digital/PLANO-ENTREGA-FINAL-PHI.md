@@ -39,11 +39,63 @@ O executor do parque deduziu, e pediu confirmação antes de construir em cima:
 | | |
 |---|---|
 | ✅ **Confirmado** | o PHI existe para **a qualidade do serviço parar de depender da atenção do Olavo**. É resposta econômica, não técnica |
-| ⬜ **Falta** | a outra metade — **o Olavo ainda não a escreveu**. Até lá, **nada que dependa dela é decidido** |
+| ✅ **A outra metade** (Olavo, 2026-09-21) | **três razões, não uma** — ver abaixo |
 
-> ⚠️ **Registrado como meia-verdade de propósito.** Escrever a metade confirmada como se fosse o
-> todo seria o erro que a casa já cometeu com dado de teste: **transformar o que se tem em mão na
-> resposta inteira.** A metade que falta ordena tanto quanto a que veio.
+### As 4 razões de o PHI existir
+
+| # | Razão | Fonte |
+|---|---|---|
+| **R-A** | **A qualidade do serviço para de depender da atenção do Olavo** | dedução do executor, confirmada |
+| **R-B** | **Acumular aprendizado** — o ativo é a **série**, não o score de hoje | Olavo, 21/09 |
+| **R-C** | **Provar valor ao cliente** — mostrar o que foi detectado e corrigido | Olavo, 21/09 |
+| **R-D** | **Agir antes do estrago** — pegar o desvio no dia 2, não no dia 20 | Olavo, 21/09 |
+
+> ⚠️ **O Olavo NÃO escolheu** *"levar o critério para fora de mim"* (fazer outra pessoa chegar à
+> mesma conclusão). **Isso não a torna falsa — torna-a não-motivo.** Consequência: o **F6** continua
+> válido como **fato de uso** (*"alguém da equipe"* abre o Notion), mas **desce de prioridade**: não
+> é razão de existir.
+
+### 🔴 O que as três razões novas revelam
+
+**Três das quatro razões não têm NADA no sistema que as sirva.**
+
+| Razão | O que o PHI precisaria ter | Existe hoje? |
+|---|---|---|
+| **R-A** | vigilância que substitua o olho | 🔴 **não** — o detector é o olho (§3.3.1). É o **F3** |
+| **R-B** | **saber se a orientação funcionou** — medir depois da ação | 🔴 **nada.** Ver abaixo |
+| **R-C** | um **entregável externo** ao cliente | 🔴 **nada.** Nenhum workflow produz algo que o cliente veja |
+| **R-D** | **tendência**, não só estado | 🔴 **nada** — o score é um retrato do dia |
+
+#### R-B: o PHI não fecha o laço — e a Prospecção fecha
+
+Este é o achado mais desconfortável da comparação entre as duas frentes:
+
+| | Prospecção | Saúde Digital |
+|---|---|---|
+| detecta / prevê | `potencial_comercial` | `phi_value` |
+| age | humano aborda | humano otimiza |
+| **mede se acertou** | ✅ **`acerto_previsao`** — o P6 traz o desfecho do CRM de volta | 🔴 **não existe** |
+
+**A Prospecção aprende com o que aconteceu. O PHI, não.** Ele detecta, abre tarefa, o gestor
+resolve, o `Fechar Otimização` desmarca a caixinha — **e ninguém mede se o número melhorou.** O ciclo
+termina em *"foi feito"*, nunca em *"funcionou"*.
+
+> **Sem isso, a R-B é impossível por construção:** não se acumula aprendizado registrando só o que
+> foi detectado. Aprendizado é **detecção + ação + resultado**, e faltam as duas últimas.
+>
+> ⚠️ **E a `Log de Otimizações`** (DB Notion, `19fb65e5c72b81068e76f1e684197316`) **existe** e está no
+> `CLAUDE.md` desde sempre. **Ninguém verificou se algo escreve nela.** Pode ser o elo que falta —
+> ou mais uma tabela sem writer.
+
+#### R-D: antecipar exige derivada, e a casa já escreveu quando agir
+
+O score é um **retrato do dia**. *"Pegar no dia 2"* exige **tendência** — e o
+`regras-otimizacao-metodo-subido.md` **§4 — Janelas de Otimização (QUANDO agir)** já trata disso.
+**De novo: a régua existe e o sistema não a executa.**
+
+> ⚠️ **Registrado como meia-verdade até 21/09, de propósito.** Escrever a metade confirmada como se
+> fosse o todo seria o erro que a casa já cometeu com dado de teste: **transformar o que se tem em
+> mão na resposta inteira.** A metade que faltava mudou o ponto final — de **6 critérios para 8**.
 
 ## 1. O que existe hoje — ✍️ **a escrever pelo Olavo**
 
@@ -253,9 +305,11 @@ da Prospecção.
 | **F1** | **Todo cliente que contrata tráfego aparece no PHI sem ninguém precisar lembrar** | *"todos os que contratarem"* + *"eu cadastro no Notion"* | 🔴 o cadastro morre no `phi_dev` |
 | **F2** | **O número que está no Notion é o número certo** — sem duplicata, sem zero que significa "não achei" | *"o que dói é dado errado"* + virada item 1 | 🔴 o score chega **3×** |
 | **F3** | **Silêncio significa saúde** — se o que devia acontecer não aconteceu, chega alarme | *"perceberia pela falta"* × *"quase nunca chega alarme"* | 🔴 21 de 26 sem cobertura |
-| **F4** | **O PHI enxerga a campanha como a plataforma a enxerga — campanha, conjunto e anúncio — e aponta em qual nível está a causa** | *"quero o anúncio culpado"* + §3.3.2 | 🔴 pontua só o agregado |
-| **F5** | **Rodou 30 dias sem intervenção manual** | virada item 2 | ⬜ nunca medido |
-| **F6** | **Alguém da equipe opera sem ter desenhado** | *"alguém da equipe"* + *"só você"* | ⬜ nunca testado |
+| **F4** | **O PHI enxerga a campanha como a plataforma a enxerga — campanha, conjunto e anúncio — e aponta em qual nível está a causa, a tempo de agir** | *"quero o anúncio culpado"* + §3.3.2 + **R-D** | 🔴 pontua só o agregado, e só o dia de hoje |
+| **F5** | **Rodou 30 dias sem intervenção manual** | virada item 2 · **R-A** | ⬜ nunca medido |
+| **F7** | 🔴 **O PHI sabe se a orientação funcionou** — mede o número depois da ação e guarda o resultado | **R-B** (acumular aprendizado) | 🔴 **não existe** — é o `acerto_previsao` que a Saúde Digital nunca teve |
+| **F8** | 🔴 **O cliente recebe alguma coisa** — o que foi detectado e corrigido no período | **R-C** (provar valor) | 🔴 **não existe** |
+| **F6** | **Alguém da equipe opera sem ter desenhado** | *"alguém da equipe"* — **fato de uso, não razão de existir** | ⬜ **prioridade rebaixada em 21/09** |
 
 > **F1 a F3 são os pré-requisitos da virada** que o Olavo definiu (*"confiar no número"* + *"rodar
 > sozinho 30 dias"*). **F4 é o que ele pediu para os 15 dias.** F5 e F6 são consequência: só medíveis
