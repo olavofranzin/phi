@@ -33,17 +33,22 @@
 
 ## 2. Métrica-mãe (Bússola) por objetivo — [Manual §2, Plano §2]
 
-> 🔴 **DIVERGÊNCIA ABERTA EM 2026-09-22 — a linha "Cadastro / Leads" precisa ser corrigida pelo Olavo.**
+> ✅ **CONFIRMADO PELO OLAVO EM 2026-09-22 — a tabela abaixo está certa, e a linha "Cadastro / Leads"
+> fica como está.**
 >
-> A tabela abaixo equipara **"CPA (Custo por Lead/Aquisição)"**. Perguntado diretamente em 22/09, o
-> Olavo respondeu que **CPL e CPA são diferentes**: CPL é custo por **lead bruto**; CPA é custo por
-> **aquisição de fato** (lead qualificado, venda).
+> Houve um vai-e-volta no mesmo dia, e a nuance vale ficar registrada:
 >
-> **Isto importa porque este documento é a régua do critério F4** (`PLANO-ENTREGA-FINAL-PHI.md` §4.1):
-> se o PHI executar a tabela como está escrita, **julga lead bruto e aquisição pela mesma régua**.
+> *"CPA e CPL podem ser confundidos porque, caso tenha uma campanha cujo objetivo é a geração de
+> Leads, o Custo Por Aquisição = Custo Por Lead; mas se por ventura eu tiver uma campanha de
+> mensagens no WhatsApp, por exemplo, posso separar o custo do lead do custo da venda."*
 >
-> **Não foi corrigido aqui de propósito** — a definição é do dono do método, e inventá-la num
-> documento normativo é pior que deixá-lo impreciso com a divergência anotada. Ver `ADR-40` §11.1.
+> | Situação | CPA e CPL |
+> |---|---|
+> | objetivo é **gerar contato** — **o caso de hoje** | **são o mesmo número.** A tabela está correta |
+> | há **venda medida além do lead** (ex.: mensagens → venda) | **são dois números**, e aí são duas métricas |
+>
+> **Hoje vale a primeira linha.** A segunda é gatilho futuro: **quando existir medição de venda
+> separada da de lead, esta tabela ganha uma linha — e aí é ADR.** Ver `ADR-40` §11.3.
 
 O objetivo escolhido é a **ordem que se dá ao algoritmo**; a Bússola é o norte.
 

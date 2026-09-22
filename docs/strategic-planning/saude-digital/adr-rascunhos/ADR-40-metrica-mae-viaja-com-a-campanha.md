@@ -286,7 +286,7 @@ semanas.**
 
 | Pergunta | Resposta |
 |---|---|
-| CPL e CPA são a mesma coisa? | 🔴 **"São diferentes"** |
+| CPL e CPA são a mesma coisa? | "São diferentes" → 🔄 **REVISTO no mesmo dia: *"vamos manter o que está escrito nas regras de otimização e desconsiderar o que eu disse"*** — ver §11.3 |
 | Vai haver outras réguas? | **"Não sei ainda"** |
 | Autoriza B1, B3, B5? | ✅ **"Sim, destrava o que dá"** |
 
@@ -336,3 +336,48 @@ O Olavo escolheu a opção que diz:
 > **Ensinar o motor a calcular CPL, ROAS, CPC e CPM é obra.** Fazer o motor **dizer que não sabe** é
 > o mínimo que impede o pior caso: **campanha sendo monitorada de mentira.** Ordem certa: primeiro o
 > aviso, depois as réguas.
+
+
+### 11.3. 🔄 A resposta foi revista pelo Olavo — o §11.1 está SUPERADO
+
+> *"CPA e CPL podem ser confundidos porque, caso tenha uma campanha cujo objetivo é a geração de
+> Leads, o Custo Por Aquisição = Custo Por Lead; mas se por ventura eu tiver uma campanha de
+> mensagens no WhatsApp, por exemplo, posso separar o custo do lead do custo da venda. **Neste caso
+> vamos manter o que está escrito nas regras de otimização e desconsiderar o que eu disse.**"*
+
+| Situação | CPA e CPL |
+|---|---|
+| objetivo é **gerar contato** — **o caso de hoje** | **são o mesmo número.** O método está certo |
+| há **venda medida além do lead** | **são dois números** — e aí a tabela do método ganha uma linha, por ADR |
+
+**Três consequências, nesta ordem:**
+
+1. **A divergência que anotei no método foi retirada** — a pedido dele, e porque o método está certo
+   para o caso de hoje.
+2. 🟢 **A hipótese barata do §10.5 volta a valer: é vocabulário, não motor.**
+3. **O §11.1 fica como registro do vai-e-volta, não como decisão.** Não apagado — **o caminho até a
+   resposta é a parte que a próxima auditoria vai precisar** (R6, corolário).
+
+> ⚠️ **O que eu fiz de errado aqui:** transformei a escolha de uma opção — cuja descrição eu mesmo
+> havia redigido — em **definição do Olavo**, e escrevi isso num documento normativo dele. A
+> descrição era minha; ele só marcou a caixa. **Chip escolhido não é redação, e eu já havia escrito
+> exatamente isso no §1 do `PLANO-ENTREGA-FINAL-PHI` dois dias antes.** A regra valia para o §1 e
+> vale para qualquer resposta de múltipla escolha.
+
+### 11.4. O conserto, agora que se sabe que é vocabulário
+
+**Um fato, um nome.** A lista do `multi_select` **Métrica-Mãe** oferece duas grafias para o mesmo
+número — é isso que precisa acabar, **não o motor.**
+
+| | Opção | Avaliação |
+|---|---|---|
+| ⭐ | **`CPA` é o nome; campanha de lead usa `CPA` no Notion** | alinhado ao método (*"CPA (Custo por Lead/Aquisição)"*), **zero código**, motor funciona como está |
+| | o **writer traduz** `CPL` → `CPA` ao gravar | 🔴 **grava diferente do que está no Notion** — quebra a fidelidade (I10/M10) e esconde a origem |
+| | o **motor aceita os dois** | funciona, mas **mantém dois nomes vivos** — e o próximo nome novo pede outra emenda |
+
+> **Recomendo a primeira: é a única que resolve a causa.** Enquanto a lista oferecer dois nomes,
+> alguém vai escolher o outro.
+>
+> ⚠️ **Gatilho registrado:** *quando houver medição de venda separada da de lead, voltam a existir
+> duas métricas de verdade* — e aí é ADR, não vocabulário. **A campanha do CHA era `IG_MENS`
+> (Instagram Mensagens): exatamente o tipo que o Olavo citou.**

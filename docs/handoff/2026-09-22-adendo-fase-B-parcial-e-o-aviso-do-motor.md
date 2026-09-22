@@ -1,5 +1,30 @@
 # [ADENDO] Fase B parcial autorizada + a verificação do "não sei julgar"
 
+> 🔄 **CORRIGIDO EM 2026-09-22, POUCAS HORAS DEPOIS DE PUBLICADO — leia esta correção primeiro.**
+>
+> Este adendo dizia que *"CPL e CPA são diferentes — a hipótese de vocabulário caiu. É motor mesmo."*
+> **O Olavo reviu no mesmo dia e a frase está errada:**
+>
+> *"CPA e CPL podem ser confundidos porque, caso tenha uma campanha cujo objetivo é a geração de
+> Leads, o Custo Por Aquisição = Custo Por Lead… **Neste caso vamos manter o que está escrito nas
+> regras de otimização e desconsiderar o que eu disse.**"*
+>
+> | O que vale agora | |
+> |---|---|
+> | **CPL e CPA são o mesmo número** quando o objetivo é gerar contato — **o caso de hoje** | 🟢 **é vocabulário, não motor** |
+> | Só viram duas métricas **se houver venda medida além do lead** | gatilho futuro, por ADR |
+>
+> **O que muda para você:** o **§3 deste adendo** (a parte que diz "é motor mesmo") está superado —
+> **as verificações M1–M3 continuam valendo**, porque a pergunta *"o motor avisa quando não sabe
+> julgar?"* é boa de qualquer jeito. **Mas não dimensione obra de motor multi-métrica.**
+>
+> 🔴 **E o §4 mudou:** *"não corrija o `regras-otimizacao-metodo-subido`"* continua valendo — **mas a
+> divergência que eu havia anotado lá já foi retirada por mim.** O método está certo. Se você o
+> abrir e vir o banner verde de confirmação, é esse o estado correto.
+>
+> **O conserto recomendado** está no `ADR-40` §11.4: **um fato, um nome** — `CPA` no Notion, zero
+> código. Aguarda decisão do Olavo; **não execute.**
+
 > Cole no **mesmo sub-chat** do ADR-39+40. Continuação, não brief novo.
 > ✅ **Olavo autorizou em 22/09: "Sim, destrava o que dá."**
 
