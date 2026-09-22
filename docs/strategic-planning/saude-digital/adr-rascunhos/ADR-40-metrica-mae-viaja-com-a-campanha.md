@@ -280,3 +280,59 @@ semanas.**
 > ⚠️ **Só depois dessas três é que se sabe se existe um problema de motor.** Pode haver — se o parque
 > for ter campanha de **Tráfego** (CPC) ou **Reconhecimento** (CPM), aí o motor precisa mesmo
 > aprender. **Mas isso é pergunta de negócio, não achado técnico.**
+
+
+## 11. Decisões do Olavo (2026-09-22) — e a hipótese barata caiu
+
+| Pergunta | Resposta |
+|---|---|
+| CPL e CPA são a mesma coisa? | 🔴 **"São diferentes"** |
+| Vai haver outras réguas? | **"Não sei ainda"** |
+| Autoriza B1, B3, B5? | ✅ **"Sim, destrava o que dá"** |
+
+### 11.1. 🔴 A hipótese do vocabulário caiu — e revelou um defeito na régua do F4
+
+**Minha hipótese do §10.5 estava errada**, e o modo como errou importa mais que o erro.
+
+Eu a baseei no `regras-otimizacao-metodo-subido.md` §2, que equipara:
+> *"Cadastro / Leads → **CPA (Custo por Lead/Aquisição)**"*
+
+**O Olavo distingue.** Ao escolher *"São diferentes"*, aceitou esta definição:
+
+> **CPL** = custo por **lead bruto**. **CPA** = custo por **aquisição de fato** (lead qualificado,
+> venda).
+
+> 🔴 **Então o documento que é a régua do F4 está impreciso num ponto que muda o diagnóstico.** O
+> §4.1 do `PLANO-ENTREGA-FINAL-PHI.md` chama aquele método de *"o F4 escrito em linguagem de
+> negócio"* — e ele mistura duas métricas que o dono do método separa. **Se o PHI executar o método
+> como está escrito, vai julgar lead bruto e aquisição pela mesma régua.**
+>
+> **Correção pendente, e ela é do Olavo** (é o método dele): o §2 do método precisa separar as duas
+> linhas. **Não corrigi por conta própria** — inventar a definição alheia num documento normativo é
+> pior que deixá-lo impreciso com a divergência anotada.
+
+**E a distinção não é acadêmica:** *lead bruto × lead qualificado* é exatamente o assunto do **§8 do
+método** (*"Medição e qualidade de lead"*), do **ADR-29** (Guardião / integridade de medição) e do
+padrão **"Curioso"** já identificado na Salão/CLI-4. **A casa já sabia que essa diferença existe —
+só não a tinha posto na tabela de Métrica-Mãe.**
+
+### 11.2. ⭐ O que fazer com *"não sei ainda"* — e é barato
+
+O Olavo escolheu a opção que diz:
+> *"o motor deveria pelo menos dizer claramente **'não sei julgar isto'** em vez de devolver score
+> nulo silencioso."*
+
+**Isso não é o ADR de motor multi-métrica.** É bem menor, e resolve o risco imediato:
+
+| | |
+|---|---|
+| **Hoje** | tipo não suportado → `phi_value` **`NULL`**, silencioso |
+| **Alvo** | tipo não suportado → **estado explícito**, visível na bancada do Olavo |
+
+**Primeira pergunta a verificar, antes de construir qualquer coisa (R7):** o SQL já menciona
+`'METRIC_TYPE_UNSUPPORTED'`. **Ele é gravado? Chega ao Notion? O Olavo o veria?**
+**Se já existe e não chega, o trabalho é de entrega, não de motor** — e é de uma linha.
+
+> **Ensinar o motor a calcular CPL, ROAS, CPC e CPM é obra.** Fazer o motor **dizer que não sabe** é
+> o mínimo que impede o pior caso: **campanha sendo monitorada de mentira.** Ordem certa: primeiro o
+> aviso, depois as réguas.

@@ -33,6 +33,18 @@
 
 ## 2. Métrica-mãe (Bússola) por objetivo — [Manual §2, Plano §2]
 
+> 🔴 **DIVERGÊNCIA ABERTA EM 2026-09-22 — a linha "Cadastro / Leads" precisa ser corrigida pelo Olavo.**
+>
+> A tabela abaixo equipara **"CPA (Custo por Lead/Aquisição)"**. Perguntado diretamente em 22/09, o
+> Olavo respondeu que **CPL e CPA são diferentes**: CPL é custo por **lead bruto**; CPA é custo por
+> **aquisição de fato** (lead qualificado, venda).
+>
+> **Isto importa porque este documento é a régua do critério F4** (`PLANO-ENTREGA-FINAL-PHI.md` §4.1):
+> se o PHI executar a tabela como está escrita, **julga lead bruto e aquisição pela mesma régua**.
+>
+> **Não foi corrigido aqui de propósito** — a definição é do dono do método, e inventá-la num
+> documento normativo é pior que deixá-lo impreciso com a divergência anotada. Ver `ADR-40` §11.1.
+
 O objetivo escolhido é a **ordem que se dá ao algoritmo**; a Bússola é o norte.
 
 | Objetivo de campanha | Métrica-mãe (Bússola) |
