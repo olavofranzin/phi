@@ -209,3 +209,74 @@ de onde a métrica mora.
 > ler a Métrica-Mãe em vez do `ROAS` fixo) vira **trabalho descartável** se este ADR for aceito.
 > **Manter mesmo assim.** É barato, e entre um ADR e outro haverá semanas — cliente novo entrando
 > com `ROAS` fixo nesse intervalo é pior que o retrabalho.
+
+
+---
+
+## 10. O que a Fase A revelou (2026-09-22) — e a hipótese mais barata
+
+### 10.1. ✅ Provado com dado: o writer canônico grava o tipo, vindo da campanha
+
+Execução **41967** (22/09, 14h36 BRT), `sw metricas campanhas` rodado à mão, `success`, loop completo.
+Saída do `Code Montar SQL`: `'CPA' AS primary_metric_type` para as duas campanhas do KIL, com as metas
+5,20 e 3,50. **`phi_score_history` guarda a régua pela primeira vez** — 260 linhas, 0 nulos.
+
+### 10.2. 🔴 O `ingestion_step` mente, e o desempate do score depende dele
+
+O `WHEN MATCHED THEN UPDATE SET` do MERGE atualiza `cost`, `conversions`, `primary_metric_type`,
+`ingested_at` — **e não atualiza `ingestion_step`**. Reescrita a linha, **o carimbo fica com o
+primeiro writer e os números com o último**.
+
+E o desempate do SQL do score é literalmente
+`ORDER BY CASE WHEN ingestion_step = 'DAILY_ENTRY' THEN 0 ELSE 1 END`.
+
+> **É o S1b do ADR-37 uma camada mais fundo.** Lá, o problema era que o rótulo de um writer apagava o
+> do outro. Aqui é pior: **o rótulo não acompanha quem escreveu**, e um `ORDER BY` decide o vencedor
+> com base nele. **Some quando a Fase 2 do ADR-37 aposentar o segundo writer** — e é mais um motivo
+> para ela acontecer. Registrado, não consertado (fora do escopo).
+
+### 10.3. 🔴🔴 O motor de score só calcula CPA
+
+```sql
+WHEN primary_metric_type IS NULL OR primary_metric_type != 'CPA'
+  THEN 'INSUFFICIENT_DATA'    -- e 'METRIC_TYPE_UNSUPPORTED'
+```
+
+A Métrica-Mãe do CHA é **CPL**. Ele apareceria em `Buscar Clientes Ativos`, **o CA3 "passaria"**, e o
+`phi_value` sairia `NULL`. **R11 literal: o critério verde escondendo que nada foi calculado.**
+
+> **Não foi causado pelo ADR-40 — foi tornado visível por ele** (observação do executor, e está
+> certa). Com a métrica morando no cliente por mapa fixo, ninguém via. **O parque tem duas réguas e
+> o motor entende uma.**
+
+### 10.4. ⚠️ E isto reabilita retroativamente a escolha da opção D
+
+O mapa fixo do workflow `client_config` gravava **`'ROAS'`**. O motor rejeita tudo que não seja
+**`'CPA'`**.
+
+> **Se a opção A tivesse sido executada** — repontar o `MERGE` para `phi_prod` e deixar a coluna onde
+> estava — **todo cliente novo teria nascido com `'ROAS'`**, e o motor o teria reprovado como
+> `METRIC_TYPE_UNSUPPORTED`. **Score `NULL`, silenciosamente, para cada cliente que entrasse.**
+>
+> O KIL estava protegido (cai em `WHEN MATCHED`), então **o defeito só apareceria no segundo
+> cliente** — exatamente quando a regra *"todos os que contratarem tráfego pago"* começasse a valer.
+> **A opção D não foi só mais elegante: evitou um defeito que ninguém tinha visto.**
+
+### 10.5. ⭐ A hipótese mais barata, a verificar antes de abrir ADR nenhum
+
+**`CPL` e `CPA` podem ser o mesmo conceito com dois nomes.** O próprio método da casa equipara:
+
+> `regras-otimizacao-metodo-subido.md` §2: **"Cadastro / Leads → CPA (Custo por Lead/Aquisição)"**
+
+Se for isso, **não é um ADR de motor multi-métrica: é vocabulário.** A lista do `multi_select` da DB
+Campanhas tem duas grafias para a mesma coisa, e a correção é normalizar o vocabulário — **horas, não
+semanas.**
+
+**Verificar antes de dimensionar qualquer obra** (é a **R7**):
+1. Quais valores a lista do `multi_select` **Métrica-Mãe** oferece hoje?
+2. `CPL` e `CPA` significam a mesma coisa **para o Olavo**?
+3. Se sim: qual nome fica, e quem normaliza o que já está gravado?
+
+> ⚠️ **Só depois dessas três é que se sabe se existe um problema de motor.** Pode haver — se o parque
+> for ter campanha de **Tráfego** (CPC) ou **Reconhecimento** (CPM), aí o motor precisa mesmo
+> aprender. **Mas isso é pergunta de negócio, não achado técnico.**
