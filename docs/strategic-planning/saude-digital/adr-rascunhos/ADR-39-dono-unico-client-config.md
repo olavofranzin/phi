@@ -12,6 +12,8 @@
 | **Decisor** | Olavo |
 | **Bloqueia** | **Fase 3 do ADR-37** — e, por consequência corrigida, a **Fase 2** |
 | **Passo 4.1** | 🔴 **REVOGADO** pelo brief de 21/09 §0 — não se corrige a derivação de um campo que sai na mesma sessão |
+| 🔴 **Passo B2 — SEM BASE desde 22/09** | O B2 é *"cadastrar o CHA e vê-lo chegar ao score"*, que o brief chama de **"o ponto do ADR-39 inteiro"** (o **CA3**, o **F1**). **A única campanha do CHA foi encerrada em 2026-09-22** (`[CHA] IG_MENS__PROD.TESTE__`, status `Concluído`), e o filtro do coletor exige `Status = "Em execução"`. **E a Métrica-Mãe dela é `CPL`, que o motor do score não sabe calcular** — o CHA "chegaria" e sairia com `phi_value` NULL. **O CA3 não pode ser provado com o CHA.** Ver `docs/handoff/2026-09-22-conferencia-parada-e-o-B2-sem-base.md` §3 |
+| **Fase B** | ⬜ **NÃO COMEÇOU.** Nenhuma remoção aconteceu: `phi_dev` de pé, `client_config` em `99abdada`, `UPDATE` do Subworkflow no lugar, `COALESCE` ainda no score (**prazo do sticky venceu hoje, 22/09 — e venceu por decisão, não por esquecimento**) |
 | **Base factual** | `docs/handoff/2026-09-20-parque-phi-lista-A-as-built.md` §A9, §A10, §A15 |
 | **Destrava** | o **D2** (`phi_dev` some) e o cadastro de cliente novo no score |
 

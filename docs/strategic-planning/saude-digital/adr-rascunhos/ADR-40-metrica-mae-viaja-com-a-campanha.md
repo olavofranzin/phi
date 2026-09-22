@@ -4,7 +4,9 @@
 |---|---|
 | **Status** | ✅ **ACEITO** — **Olavo, 2026-09-21** · as 4 verificações passaram (§5.1) · execução **fundida com o ADR-39** no brief `2026-09-21-adr39-adr40-metrica-e-cadastro-subchat-brief.md`. Proposta original: executor do ADR-39 ("opção D") |
 | **Data efetiva da execução** | 🟡 **Fase A: 2026-09-21, 19h–22h BRT.** Os 3 requisitos do §6 estão CUMPRIDOS em produção: **REQ-1** (`\|\| null` no `PHI - Subworkflow Campanhas`, versão `4f42b244`) · **REQ-2** (backfill feito: 487 linhas casaram, 12 seguem `NULL` — ver abaixo) · **REQ-3** (sticky com prazo **22/09/2026** no `PHI - Pipeline_v2`, versão `b880adee`). **Fase B: ⬜ não ocorreu** |
-| **Pendência conhecida** | ⚠️ **12 linhas do CHA (`CLI-13`) seguem com `primary_metric_type` NULL** em `raw_campaign_data` — o backfill sai do `client_config`, e o CHA ainda não está lá. **Fecha no passo B2**, que é justamente cadastrá-lo. O **CA5 só se prova depois do B2** |
+| **Conferência da PARADA (22/09)** | ✅ **as 3 passaram**, com dado. E a rodada manual do `sw metricas campanhas` (exec **41967**) **provou o A3b**: o `Code Montar SQL` gerou `'CPA' AS primary_metric_type` para as duas campanhas do KIL, vindo da Métrica-Mãe. Relatório: `docs/handoff/2026-09-22-conferencia-parada-e-o-B2-sem-base.md` |
+| 🔴 **O motor só calcula CPA** | descoberto em 22/09: a porta de qualidade do score reprova qualquer `primary_metric_type != 'CPA'` como `INSUFFICIENT_DATA` / `METRIC_TYPE_UNSUPPORTED`. **Este ADR não causou isso — tornou visível.** Um cliente com CPL entra no score e sai com `phi_value` NULL. **Precisa de ADR próprio** |
+| **Pendência conhecida** | ⚠️ **12 linhas do CHA (`CLI-13`) seguem com `primary_metric_type` NULL** em `raw_campaign_data` — o backfill sai do `client_config`, e o CHA ainda não está lá. O **CA5 não se prova** enquanto isso. ⚠️ **E o passo B2, que fecharia isso, perdeu a base** — ver o cabeçalho do ADR-39 |
 | **Escopo** | Onde mora `primary_metric_type`: por cliente ou por campanha |
 | **Decisor** | Olavo |
 | **Relação com o ADR-39** | **não o substitui.** O ADR-39 conserta *quem escreve e o `INSERT`*; este muda *o grão* |
