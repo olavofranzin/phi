@@ -80,7 +80,7 @@ export default function Overview() {
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">PHI™ Overview</h1>
+          <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">phi™ overview</h1>
           <p className="text-sm text-muted-foreground">
             Saúde geral das campanhas de tráfego pago em tempo real.
           </p>
