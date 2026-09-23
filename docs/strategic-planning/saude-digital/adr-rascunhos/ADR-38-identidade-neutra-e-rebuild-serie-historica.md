@@ -1841,11 +1841,105 @@ que salvou 17/09.
 **Não toquei em nada.** É mudança estrutural em workflow de produção e a casa pede plano aprovado
 antes (**R7**). O item 2 é o mais barato e o que tem melhor relação risco/retorno.
 
-## 25.9 Observação lateral, não verificada
+## 25.9 ✅ Observação lateral — RESOLVIDA pelo Olavo em 23/09
+
+> **Olavo:** *"CLI-13 não tem campanha ativa, encerrada na data de ontem."*
+
+**Não é lacuna nova, e não é a P-22 se resolvendo sozinha.** É consequência direta do encerramento da
+campanha `[CHA] IG_MENS__PROD.TESTE__` em **22/09** — a mesma que derrubou a base do passo B2 do
+ADR-39+40. **Um fato, duas frentes o encontraram no mesmo dia por caminhos diferentes.** Fechada.
+
+### Texto original (preservado)
 
 O `raw_campaign_data` de 22/09 tem **só as 2 campanhas do CLI-4** — o **CLI-13** (teste Meta), que
 vinha sendo ingerido todo dia até 17/09, não aparece. Pode ser a **P-22** tendo se resolvido sozinha,
 pode ser lacuna nova. **Não investiguei** — está fora do que foi pedido. Fica anotado.
+
+## 25.11 ✅ Decisão do chat-mãe sobre a P-30 (2026-09-23)
+
+**A análise está aceita e o diagnóstico é o certo.** Divirjo em dois pontos, e acrescento um.
+
+### Ordem aprovada
+
+| # | O quê | Estado |
+|---|---|---|
+| **1º** | 🆕 **`retryOnFail` + espera entre tentativas nos nós `Log *`** | ✅ **aprovado — e é o primeiro** |
+| **2º** | **Proteger o handler**: o `Log OPERATIONAL FAILED` não pode depender da tabela contendida | ✅ aprovado **com correção** — ver 25.11.2 |
+| **3º** | **1 item em vez de 6** | 🟡 aprovado **depois de uma verificação** — ver 25.11.3 |
+| — | **Reescrever as 4 linhas como `SUCCESS`** | 🔴 **recusado como escrito** — ver 25.11.4 |
+
+### 25.11.1. 🆕 O retry vem antes de tudo, e o executor não o considerou
+
+> `Could not serialize access … due to concurrent update` **é erro transitório por definição.** É o
+> caso clássico em que **tentar de novo resolve** — e o n8n tem `retryOnFail` + `waitBetweenTries`
+> como **settings de nó**, sem tocar na arquitetura.
+
+**Por que primeiro:** é a mudança **menor**, reversível, e que não depende de entender a semântica
+das 6 linhas. **Se o retry sozinho fizer o vermelho sumir, os itens seguintes deixam de ser
+urgentes** e viram higiene.
+
+⚠️ **Mas retry não é cura** — ele empurra a contenção, não a remove. **O item 3 continua sendo a
+cura**; o retry é a rede que permite fazer a cura com calma.
+
+### 25.11.2. O item 2 está certo no princípio e errado na receita
+
+> *"Manipulador de falha não pode depender do recurso que falhou"* — **correto, e é o melhor achado
+> do relatório.**
+
+🔴 **Mas `onError: continueRegularOutput` sozinho é a R11 regra 2 quebrada:** *erro que só existe no
+log de execução não existe.* O handler ficaria **mudo** — falharia em silêncio, que é o modo de
+falha desta casa.
+
+**Correção: `continueRegularOutput` só com destino visível.** O erro do handler tem de ir para o
+**Telegram** — não pode morrer no log de execução. Um handler de falha que falha calado é pior que
+não ter handler, porque cria a impressão de cobertura.
+
+### 25.11.3. Antes do item 3, uma leitura (R6)
+
+**O relatório assume que as 6 linhas são "poluição". Isso não foi verificado.**
+
+> **Pergunta a responder antes de reduzir:** as 6 linhas **dizem a mesma coisa**, ou **cada uma é de
+> uma campanha / sub-fase**? Se cada uma carrega um fato diferente, **reduzir a 1 não é limpeza: é
+> perda de dado.**
+
+⚠️ **E não use `executeOnce`.** Duas razões: (a) ele **pega o primeiro item e descarta os outros** —
+foi exatamente o defeito do `1º Enriquecimento`, em que só o 1º lead recebia `id_hubspot`; (b) é
+**setting**, não parâmetro de criação, e já foi **silenciosamente descartado** nesta casa.
+**Agregação explícita antes do nó** é mais segura e auditável.
+
+### 25.11.4. 🔴 Recuso reescrever as 4 linhas como `SUCCESS`
+
+**As linhas não estão erradas sobre si mesmas: a gravação do log falhou mesmo.** O que é falso é a
+**inferência** que um leitor faria — *"a fase falhou"*.
+
+> **Reescrever para `SUCCESS` apaga o incidente.** Quem auditar em dezembro veria um dia perfeito, e
+> **o dia 23/09 é justamente aquele em que a Abertura rodou pela primeira vez e o log quebrou.**
+> Apagar isso é destruir a única evidência de um defeito estrutural.
+
+**O que fazer no lugar:** corrigir o **status** para que o leitor não decida errado **e deixar o
+rastro** — no mesmo registro (campo de observação, se houver) ou como linha de correção datada. E
+**documentar a correção aqui**, com data e motivo.
+
+**É a R2 aplicada a dado: o real vence o plano, e o histórico ganha banner — não borracha.**
+
+### 25.11.5. 🆕 Consequência que ninguém pediu: o vigia do F3 não pode ler esta tabela
+
+O **V1** do `PLANO-F3-vigia-de-consistencia.md` pergunta *"o `Pipeline_v2` chegou até o último nó
+ontem?"*. **Se essa conferência for feita lendo o `workflow_execution_log`, ela herda o defeito** —
+e hoje responderia **FAILED num dia que entregou tudo**, que é o oposto do que o vigia existe para
+fazer.
+
+> **O V1 lê a execução do n8n, não a tabela.** Registrado no plano do F3.
+
+### 25.11.6. Por que a urgência é maior do que o técnico sugere
+
+O `PHI - Alerta de Falha` disparou **1 segundo depois**, sobre uma execução que **entregou tudo**.
+
+Cruzando com a entrevista de 21/09, em que o Olavo disse **"quase nunca chega alarme"**: **o primeiro
+alarme em dias foi um falso positivo.** Alarme raro que, quando chega, está errado, **treina o dono a
+ignorá-lo** — e foi esse mesmo alarme que salvou o 17/09.
+
+**Isto não é dívida técnica: é erosão do único canal de aviso que existe.**
 
 ## 25.10 Pendência nova
 

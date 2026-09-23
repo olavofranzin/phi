@@ -49,7 +49,7 @@ saudável ela devolvia zero linhas — e zero itens encerra o ramo no n8n.
 
 | # | Pergunta | Defeito que passou invisível | Custo |
 |---|---|---|---|
-| **V1** | O `Pipeline_v2` chegou até o **último nó** ontem? | **Fase 3 morta 8 dias**, verde todo dia | 8 dias sem tarefa aberta |
+| **V1** | O `Pipeline_v2` chegou até o **último nó** ontem? 🔴 **lendo a execução do n8n, NUNCA o `workflow_execution_log`** | **Fase 3 morta 8 dias**, verde todo dia | 8 dias sem tarefa aberta |
 | **V2** | Cada campanha ativa tem **exatamente 1 score** de ontem? | **score 3× no Notion** | número errado na sua bancada |
 | **V3** | Todo cliente **ativo no Notion** aparece no score? | **CHA morrendo no `phi_dev`** | cliente pago e não monitorado |
 | **V4** | Toda tabela **que tem writer declarado** recebeu linha? | **`raw_ad_data` vazia 3 meses** | coleta que ninguém fez |
@@ -67,6 +67,11 @@ saudável ela devolvia zero linhas — e zero itens encerra o ramo no n8n.
 - **Não vigia qualidade de julgamento** (*"o score está certo?"*) — isso é o Score v2 / ADR-34.
 - **Não vigia a Prospecção** — outra frente, outro contrato.
 - **Não conserta nada.** Vigia avisa; consertar é outro trabalho, com outro brief.
+
+> 🔴 **Por que o V1 não pode ler o `workflow_execution_log`** (achado de 23/09, ADR-38 §25.11.5):
+> aquela tabela sofre contenção consigo mesma e **grava `FAILED` em dia que deu certo**. Em 23/09 ela
+> diria que a fase Operacional falhou — num dia em que a Abertura rodou pela primeira vez e entregou
+> tarefa, checklist e log. **Um vigia que lê um instrumento quebrado repete o defeito com autoridade.**
 
 ## 5. Onde a expectativa mora
 
