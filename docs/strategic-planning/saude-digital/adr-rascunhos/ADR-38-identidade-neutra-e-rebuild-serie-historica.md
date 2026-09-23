@@ -1740,3 +1740,115 @@ Vira a **P-29**, para a Fase A/B.
 **As três correções da Fase 0 estão provadas em produção, por rodada natural, contra critérios
 escritos antes.** A Fase 0 está encerrada; as Fases A a C seguem aguardando decisão do Olavo, com a
 parada antes da C mantida.
+
+---
+
+# 25. Incidente de 23/09 — execução 42194: o trabalho deu certo, o registro dele não
+
+> Análise a pedido do Olavo. Execução `42194` do `PHI - Pipeline_v2`, 10:00:51 UTC, **`status: error`**,
+> 120 segundos (contra ~55s nos três dias anteriores).
+
+## 25.1 O que falhou, em uma linha
+
+```
+Could not serialize access to table phi_prod.workflow_execution_log due to concurrent update
+```
+
+BigQuery recusou uma gravação no `workflow_execution_log`. **Nada mais.**
+
+## 25.2 O que NÃO falhou — e isto é o mais importante
+
+**O pipeline inteiro rodou, inclusive a Fase 3 completa.** Conferido na execução e confirmado no
+BigQuery:
+
+| | |
+|---|---|
+| Score de 22/09 | ✅ Salão **48,79 WARNING**, Barbearia **49,67 WARNING**, ambos `calculation_status = SUCCESS` |
+| `raw_campaign_data` de 22/09 | ✅ 2 linhas, `conversions = 6.997684` (fracionária) |
+| Chaves duplicadas | ✅ **zero** em `raw_campaign_data` e em `phi_score_history` |
+| Notion | ✅ `Sync Scores to Notion` rodou 4× |
+| **Fase 3 — Abertura** | ✅ **rodou pela primeira vez**: tarefa criada, Log de Otimizações criado, `Otimização Ativa?` marcada e **21 itens de checklist** |
+
+**A execução está vermelha, mas o PHI fez o trabalho do dia inteiro.** O que quebrou foi o último
+passo: escrever no log que tinha dado certo.
+
+## 25.3 A cadeia exata
+
+1. `Log OPERATIONAL SUCCESS` rodou por **28,3 s** e devolveu — sem exceção, por ter
+   `onError: continueRegularOutput` — o payload `{error: "Could not serialize access..."}`.
+2. `If Operacional OK?` **funcionou como projetado**: viu o campo `error` e mandou para o ramo FALSE.
+3. `Log OPERATIONAL FAILED` escreveu **4 linhas** e então bateu **no mesmo erro** — este sem
+   `continueRegularOutput`. Erro duro, execução vermelha.
+
+> 🔴 **O manipulador de falha escreve na mesma tabela cuja contenção causou a falha.** Ele não tinha
+> como funcionar naquele momento — foi buscar socorro exatamente onde estava o incêndio.
+
+## 25.4 A causa estrutural: o log grava 6 linhas por fase, não 1
+
+O `workflow_execution_log` mostra o padrão em **todos** os dias:
+
+| dia | linhas `OPERATIONAL` | status |
+|---|---|---|
+| 19/09 | **6** (10:01:30,58 → 10:01:32,50) | SUCCESS |
+| 20/09 | **6** | SUCCESS |
+| 21/09 | **6** | SUCCESS |
+| 22/09 | **6** | SUCCESS |
+| **23/09** | **4** | **FAILED** |
+
+**Seis gravações, ~350 ms uma da outra, contra a mesma tabela.** É a **R11 regra 3** — *o nó do n8n
+roda uma vez por item de entrada* — aplicada a um nó de log: ele recebe 6 itens e dispara 6 DML
+separados. Funcionou de 19 a 22/09 **por sorte de espaçamento**.
+
+**O que mudou em 23/09:** a Abertura rodou pela primeira vez e **dobrou a duração** da execução
+(120s contra 55s). O espaçamento mudou, as gravações se sobrepuseram, e o BigQuery recusou.
+
+## 25.5 🔴 A consequência que passa despercebida: o log mente sobre hoje
+
+As 4 linhas que entraram dizem **`phase = OPERATIONAL, status = FAILED`** para 23/09. **A fase
+operacional não falhou — ela fez tudo.** Quem auditar o `workflow_execution_log` vai concluir o
+contrário do que aconteceu.
+
+Isso importa porque **esta é a tabela que a §18 usou** para provar que *"dos 45 dias perdidos, zero
+vieram de execução FALHADA"*. Uma tabela usada como testemunha histórica acabou de registrar um
+falso negativo — e a §18 continua correta, mas o instrumento dela ficou menos confiável.
+
+## 25.6 Duas hipóteses levantadas e refutadas (R6)
+
+| Hipótese | Verificação | Veredito |
+|---|---|---|
+| Outro workflow escrevia na tabela ao mesmo tempo | Listei **todas** as execuções entre 10:00:00 e 10:03:30: são 5, e nenhuma escrevia às 10:02 | ❌ **refutada** |
+| O nó `Chamar Loop Alerta Fase 1` disparou o workflow `[APOSENTADO]` | O `JqPwFD9udCq2hRPw` teve **zero execuções** | ❌ **refutada** |
+
+A contenção é **interna ao próprio nó**: ele colide com as próprias gravações, e depois o
+`Log OPERATIONAL FAILED` colide com as do `SUCCESS`.
+
+## 25.7 O alerta funcionou
+
+`PHI - Alerta de Falha` disparou às **10:02:52**, 1 segundo depois da falha. A P-14 segue de pé.
+
+⚠️ **Mas com um custo novo:** este é um alerta sobre uma execução **que entregou tudo**. Alerta que
+grita em dia bom é o caminho mais curto para o gestor parar de olhar o alerta — e foi justamente ele
+que salvou 17/09.
+
+## 25.8 Proposta de correção — **não executada, aguarda OK**
+
+| # | O quê | Por quê |
+|---|---|---|
+| 1 | Fazer os nós `Log *` receberem **1 item**, não 6 (`executeOnce: true` ou agregação antes) | mata a causa: 6 DML viram 1. Corrige também a poluição de 6 linhas/dia |
+| 2 | Tirar o `Log OPERATIONAL FAILED` da mesma tabela, ou dar a ele `onError: continueRegularOutput` | manipulador de falha não pode depender do recurso que falhou |
+| 3 | Limpar as 4 linhas `FAILED` de 23/09 e reescrever como `SUCCESS` | o log está mentindo sobre um dia que deu certo |
+
+**Não toquei em nada.** É mudança estrutural em workflow de produção e a casa pede plano aprovado
+antes (**R7**). O item 2 é o mais barato e o que tem melhor relação risco/retorno.
+
+## 25.9 Observação lateral, não verificada
+
+O `raw_campaign_data` de 22/09 tem **só as 2 campanhas do CLI-4** — o **CLI-13** (teste Meta), que
+vinha sendo ingerido todo dia até 17/09, não aparece. Pode ser a **P-22** tendo se resolvido sozinha,
+pode ser lacuna nova. **Não investiguei** — está fora do que foi pedido. Fica anotado.
+
+## 25.10 Pendência nova
+
+| # | Pendência |
+|---|---|
+| **P-30** | `workflow_execution_log` grava 6 linhas por fase e colide consigo mesmo; o handler de falha escreve na tabela contendida; as 4 linhas de 23/09 dizem FAILED sobre uma fase que deu certo |
