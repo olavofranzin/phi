@@ -9,6 +9,7 @@ import CampaignsList from "./pages/CampaignsList";
 import CampaignDetail from "./pages/CampaignDetail";
 import ClientsList from "./pages/ClientsList";
 import ClientDetail from "./pages/ClientDetail";
+import SitesList from "./pages/SitesList";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient({
