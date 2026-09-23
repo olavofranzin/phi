@@ -16,7 +16,7 @@ export function AppLayout({ children }: AppLayoutProps) {
           <header className="sticky top-0 z-30 flex h-12 items-center border-b border-border bg-background/80 px-3 backdrop-blur">
             <SidebarTrigger className="text-muted-foreground hover:text-foreground" />
             <div className="ml-3 flex items-center gap-2 text-xs text-muted-foreground">
-              <span className="hidden sm:inline">Modo demo · dados mockados</span>
+              <span className="hidden sm:inline">da campanha ao cliente</span>
             </div>
           </header>
 
