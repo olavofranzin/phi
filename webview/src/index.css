@@ -7,7 +7,7 @@
 @layer base {
   :root {
     /* Light mode kept for fallback; app default is dark via <html class="dark"> */
-    --background: 0 0% 100%;
+--background: 0 0% 100%;
     --foreground: 222 47% 11%;
 
     --card: 0 0% 100%;
@@ -16,8 +16,8 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    --primary: 217 91% 60%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 18 89% 56%;            /* #F26A2E — Laranja Performance */
+    --primary-foreground: 0 0% 100%;
 
     --secondary: 210 40% 96%;
     --secondary-foreground: 222 47% 11%;
@@ -33,72 +33,73 @@
 
     --border: 214 32% 91%;
     --input: 214 32% 91%;
-    --ring: 217 91% 60%;
+    --ring: 18 89% 56%;
 
     --radius: 0.5rem;
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5% 26%;
-    --sidebar-primary: 240 6% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-primary: 18 89% 56%;
+    --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 240 5% 96%;
     --sidebar-accent-foreground: 240 6% 10%;
     --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217 91% 60%;
+    --sidebar-ring: 18 89% 56%;
 
-    /* PHI status palette */
-    --status-excellent: 160 84% 39%;   /* #10B981 */
-    --status-good: 158 64% 52%;        /* #34D399 */
-    --status-warning: 38 92% 50%;      /* #F59E0B */
-    --status-critical: 0 84% 60%;      /* #EF4444 */
-    --status-learning: 217 91% 60%;    /* #3B82F6 */
+    /* PHI status palette — fnz digital */
+    --status-excellent: 152 82% 39%;   /* #12B76A */
+    --status-good: 152 70% 47%;
+    --status-warning: 35 96% 50%;      /* #F79009 */
+    --status-critical: 4 86% 60%;      /* #F04438 */
+    --status-learning: 214 95% 58%;    /* #2E90FA */
   }
 
   .dark {
-    /* Spec: bg #0F172A · surface #1E293B · border #334155 · text #F1F5F9 / #94A3B8 */
-    --background: 222 47% 11%;
-    --foreground: 210 40% 96%;
+    /* fnz digital dark palette:
+       bg #121820 · surface #0B1F33 · text #F7F8FA · borders #1E293B · brand #F26A2E */
+    --background: 216 28% 10%;        /* #121820 */
+    --foreground: 220 20% 97%;        /* #F7F8FA */
 
-    --card: 217 33% 17%;
-    --card-foreground: 210 40% 96%;
+    --card: 210 65% 12%;              /* #0B1F33 */
+    --card-foreground: 220 20% 97%;
 
-    --popover: 217 33% 17%;
-    --popover-foreground: 210 40% 96%;
+    --popover: 210 65% 12%;
+    --popover-foreground: 220 20% 97%;
 
-    --primary: 217 91% 60%;
-    --primary-foreground: 222 47% 11%;
+    --primary: 18 89% 56%;            /* #F26A2E */
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 215 25% 27%;
-    --secondary-foreground: 210 40% 96%;
+    --secondary: 217 33% 17%;         /* #1E293B */
+    --secondary-foreground: 220 20% 97%;
 
-    --muted: 215 25% 22%;
-    --muted-foreground: 215 20% 65%;
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 68%;
 
-    --accent: 215 25% 27%;
-    --accent-foreground: 210 40% 96%;
+    --accent: 217 33% 20%;
+    --accent-foreground: 220 20% 97%;
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 4 86% 60%;         /* #F04438 */
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 215 25% 27%;
-    --input: 215 25% 27%;
-    --ring: 217 91% 60%;
+    --border: 217 33% 17%;            /* #1E293B */
+    --input: 217 33% 17%;
+    --ring: 18 89% 56%;
 
-    --sidebar-background: 222 47% 9%;
-    --sidebar-foreground: 215 20% 75%;
-    --sidebar-primary: 217 91% 60%;
-    --sidebar-primary-foreground: 222 47% 11%;
-    --sidebar-accent: 217 33% 17%;
-    --sidebar-accent-foreground: 210 40% 96%;
-    --sidebar-border: 215 25% 22%;
-    --sidebar-ring: 217 91% 60%;
+    --sidebar-background: 216 30% 8%;
+    --sidebar-foreground: 215 20% 78%;
+    --sidebar-primary: 18 89% 56%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 65% 14%;
+    --sidebar-accent-foreground: 220 20% 97%;
+    --sidebar-border: 217 33% 17%;
+    --sidebar-ring: 18 89% 56%;
 
-    /* Slightly brighter status colors for dark backgrounds */
-    --status-excellent: 160 84% 39%;
-    --status-good: 158 64% 52%;
-    --status-warning: 38 92% 55%;
-    --status-critical: 0 84% 62%;
-    --status-learning: 217 91% 60%;
+    /* Status colors — fnz digital semantics */
+    --status-excellent: 152 82% 39%;  /* #12B76A */
+    --status-good: 152 70% 47%;
+    --status-warning: 35 96% 50%;     /* #F79009 */
+    --status-critical: 4 86% 62%;     /* #F04438 */
+    --status-learning: 214 95% 58%;   /* #2E90FA */
   }
 }
 
