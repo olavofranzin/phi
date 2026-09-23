@@ -1,4 +1,4 @@
-import { LayoutDashboard, Activity, Users } from "lucide-react";
+import { LayoutDashboard, Rocket, Globe, FolderOpen } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 
 import {
@@ -16,8 +16,9 @@ import {
 
 const items = [
   { title: "Overview", url: "/", icon: LayoutDashboard, end: true },
-  { title: "Campanhas", url: "/campanhas", icon: Activity, end: false },
-  { title: "Clientes", url: "/clientes", icon: Users, end: false },
+  { title: "Campanhas", url: "/campanhas", icon: Rocket, end: false },
+  { title: "Sites & LPs", url: "/sites", icon: Globe, end: false },
+  { title: "Clientes & Dossiê", url: "/clientes", icon: FolderOpen, end: false },
 ];
 
 export function AppSidebar() {
