@@ -7,7 +7,9 @@
 | **Fecha** | **P-10** do ADR-37 |
 | **Impacto** | `raw_campaign_data`, os 2 writers, o SQL do score, `phi_score_history` · critérios **C1** e **C2** |
 | **Data efetiva do corte** | ✅ **2026-09-09** — etapas 1 a 7 executadas; reconferido em produção em **2026-09-18** (ver §20). Resta só a etapa 8 (Fases 1 e 2 do ADR-37) |
-| **Etapa 8 — Fase A** | ✅ **CONCLUÍDA em 2026-09-24** (ver §26). Tabela de dono por coluna pronta: **`revenue` é a única perda real da Fase C**. 🔴 **PARADO na parada obrigatória** — a Fase C não começa sem o Olavo reconfirmar o **D1** com a tabela na mão |
+| **Etapa 8 — Fase A** | ✅ **CONCLUÍDA em 2026-09-24** (ver §26). Tabela de dono por coluna: **`revenue` era a única perda real da Fase C** |
+| **Etapa 8 — Fase B.1** | ✅ **EXECUTADA em 2026-09-24** (ver §28). `revenue` agora é gravada pelo writer 1 — **o bloqueio de dado da Fase C caiu**. Versão no ar `fa2bb6ef`. Prova em produção nas rodadas de 00h/04h de 25/09, critérios em §28.2 |
+| **Etapa 8 — 1.4 / Fases C1 e C2** | 🔴 **BLOQUEADAS.** 1.4 espera a **P-20** (§27.4) · **C1 e C2 esperam o F3**, por decisão do Olavo (§27.6) · **D1-d** (conserto do laço do writer 1) é pré-requisito da C1 e está **proposto, não executado** (§28.4) |
 
 ---
 
@@ -130,7 +132,7 @@ Um relatório de campanha traz métricas. **Não traz** o resto da linha:
 | 5 | **Migrar a chave** de `phi_score_history` (`UPDATE` tirando o prefixo) — §5.1 | ✅ **FEITO** — 233 linhas; backups `phi_score_history_backup_2026_09` e `_2026_09_10` |
 | 6 | **Apagar e recarregar** de janeiro até a data do corte, com `ingestion_step = 'BACKFILL_2026-09'` | ✅ **FEITO** — 463 linhas carregadas; staging `raw_campaign_data_backfill_stg` |
 | 7 | Smoke nas 2 campanhas KIL + conferir que os dois writers **agora colidem** no `MERGE` | ✅ **FEITO 11/09** (§19) · **colisão provada em 18/09**: 0 linhas `GADS_INSERT` (§20.3) |
-| 8 | Retomar as Fases 1 e 2 do ADR-37 sob a identidade única | 🟡 **EM CURSO** — **Fase A ✅ concluída 24/09** (§26) · Fase B ⬜ · Fase C ⬜ **bloqueada na reconfirmação do D1** |
+| 8 | Retomar as Fases 1 e 2 do ADR-37 sob a identidade única | 🟡 **EM CURSO** — **Fase A ✅ 24/09** (§26) · **B.1 ✅ 24/09** (§28) · 1.4 ⬜ espera a P-20 · **C1/C2 🔴 esperam o F3** (§27.6) |
 
 ## 7. Verificação
 
@@ -2279,3 +2281,90 @@ esperada?"*). **Leitor futuro identificado: não é órfã, é pré-datada.**
 > ele está certo — **mas ele tem um irmão que faltava: *coluna sem leitor pode ser dívida de
 > consumidor, não excesso de produtor.*** A pergunta certa não é *"quem lê isto?"* e sim **"o que
 > deveria ler isto, e por que não existe?"**
+---
+
+# 28. ✅ Etapa 8 — **Fase B.1 executada** (2026-09-24) + proposta do D1-d
+
+> **As-built completo:** `docs/handoff/2026-09-24-adr38-etapa8-faseB1-asbuilt-e-proposta-D1d.md`
+> ✅ **B.1 publicada** · ⬜ **1.4 bloqueada pela P-20** · 📋 **D1-d proposto, não executado**
+> 🔴 **C1 e C2 seguem bloqueadas pelo F3** (§27.6).
+
+## 28.1. O bloqueio da Fase C caiu
+
+**`revenue` deixou de ser coluna exclusiva do `PHI - Subworkflow Campanhas`.** Era a única perda real
+identificada pela Fase A (§26.1) — e o `sw metricas campanhas` passa a gravá-la.
+
+| | |
+|---|---|
+| Nó alterado | `Code Montar SQL` do `sw metricas campanhas` (`W571K320aqIHsdtH`) |
+| Versão **no ar** | `fa2bb6ef-d682-4137-87d8-31893b6a9cb5` — **`versionId == activeVersionId` relido depois de publicar** (R13) |
+| Natureza | **aditiva** — nenhuma coluna existente mudou de comportamento |
+
+**Três decisões de semântica**, cada uma contra uma armadilha conhecida da casa:
+
+| Decisão | Contra o quê |
+|---|---|
+| vem da **mesma GAQL** do writer 2 (mesmos campos, mesmo `WHERE`, mesmo `DURING YESTERDAY`) | contra a Fase C virar **mudança de dado disfarçada de limpeza** |
+| sem resultado ⇒ **`NULL`, nunca `0`**, via um `hasFirstResult()` novo | **M4 / R11 regra 5.** O `firstResultMetrics()` existente devolve `{}` tanto para *"não voltou"* quanto para *"voltou sem a métrica"* — e o Google **omite métrica de valor zero**, então só depois de saber que houve linha é que ausência significa zero |
+| `UPDATE` usa **`COALESCE(source.revenue, target.revenue)`** | **ausência não pode APAGAR conhecimento** já gravado para a mesma campanha e o mesmo dia |
+
+**Verificação antes de publicar:** o SQL foi **renderizado fora do n8n** e conferido nos três cenários
+(Google com resultado → `1234.56`; Google sem resultado → `NULL`; Meta → `NULL`), mais o alinhamento
+entre a lista de colunas e a de valores do `INSERT`. **Não foi leitura de código.**
+
+## 28.2. 🔴 A prova em produção ainda não aconteceu — critérios escritos ANTES
+
+**O workflow não foi executado à mão**: gasta cota (budget) e tem efeito colateral no Notion
+(`Create a database page Create Observation`). **A rodada natural das 00h/04h BRT prova de graça.**
+
+| # | Critério de aceite |
+|---|---|
+| **B1-a** | rodada das 00h terminou verde |
+| **B1-b** | `revenue IS NOT NULL` nas linhas do Google **antes das 07h** (`ingested_at < 07:00 BRT`) |
+| **B1-c** | 🔴 **o valor do writer 1 bate com o do writer 2 às 07h.** Divergência aqui **invalida a premissa da Fase C** |
+| **B1-d** | nenhuma coluna existente mudou |
+
+## 28.3. ⬜ Por que a 1.4 não foi executada
+
+A **P-20/D4** está **⬜ do Olavo** pelo próprio §27.4, e as três opções do §5 B.2 do plano
+**constroem coisas diferentes**. Construir antes de escolher é construir para jogar fora (**R7**) — e,
+ao contrário da B.1, mexer na janela de coleta **não é aditivo**.
+
+**Recomendação, não decisão: a opção (a).** Com um writer só depois da Fase C a janela passa a ser
+única, e a rodada das 00h é a de menor valor como leitura do dia — logo a mais barata de transformar.
+
+## 28.4. 📋 D1-d — a proposta, em uma tela
+
+**O defeito, lido no artefato:** o corpo do laço é **uma corrente única**, **nenhum nó tem `onError`**,
+e **só o nó de SQL reconecta ao `Loop Over Items`**. Erro em qualquer ponto encerra a execução e o
+laço **nunca avança** — foi o 22/09.
+
+⚠️ **E `retryOnFail` já está ligado nos nós HTTP e não salvou: credencial expirada não é erro
+transitório.** Retry cura contenção, não cura autorização.
+
+**Proposta — uma fronteira de erro, não oito:**
+
+| # | Mudança |
+|---|---|
+| 1 | `onError: continueErrorOutput` nos nós **HTTP** (onde a falha externa entra) |
+| 2 | 🆕 um nó **`Campanha pulada`** que recebe **todas** as saídas de erro |
+| 3 | esse nó **reconecta ao `Loop Over Items`** — é o que faz o laço avançar (Regra Crítica nº 5) |
+| 4 | 🔴 e manda **Telegram** com cliente, campanha, nó e motivo — **R11 regra 2**: `continueErrorOutput` **só com destino visível**, senão troco falha ruidosa por falha silenciosa |
+
+**O que a proposta recusa de propósito:** reordenar a fila para o Google vir antes (**esconderia o
+bug** — mesmo argumento do §27.2) · extrair o corpo para subworkflow (é uma obra) · engolir o erro.
+
+**Como se prova:** o teste não é *"o laço continua?"* — é ***"o que acontece no dia em que uma
+credencial cai?"***. Forçar a falha de **uma** campanha e conferir que as outras entraram, que o
+Telegram chegou, e que o **Vigia de Frescor das 08h** acusa a pulada como `SEM INGESTAO`. **É a lição
+da salvaguarda de 18/09: a rede é código novo em produção e exige o mesmo smoke que aquilo que ela protege.**
+
+⚠️ **O que o D1-d NÃO resolve:** credencial vencida continua sendo descoberta tarde. A coleta dos
+outros sobrevive, mas **ninguém avisa que o token do Meta expirou**. Adjacente, **não proposto** —
+seria ampliar o escopo por conta própria.
+
+## 28.5. Pendência nova
+
+| # | Pendência |
+|---|---|
+| **P-34** | 🟡 **o `sw metricas campanhas` mistura versões da API do Google Ads:** os nós `(D1)` e `(D3)` chamam **v22**, enquanto `(D7)` e os `v23 Bloco 1/2/3` chamam **v23** — e o `CLAUDE.md` (Regras Críticas 12/13) e o writer 2 usam v23. **Importa para a Fase C:** o `revenue` novo vem do nó **v22** e o do writer 2 vem de **v23**. Campos idênticos, então espero o mesmo número — **mas é premissa, não medição**, e é o que o **B1-c** confere. Não consertado: trocar versão de API em produção não é aditivo |

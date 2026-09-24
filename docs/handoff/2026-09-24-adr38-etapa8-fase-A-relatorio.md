@@ -3,7 +3,21 @@
 > **Data:** 2026-09-24 · **Sub-chat:** Saúde Digital / ADR-38 etapa 8
 > **Entrada:** `docs/handoff/2026-09-24-go-etapa8-fase-A-com-o-que-mudou.md`
 > 🔴 **PARADA OBRIGATÓRIA ATINGIDA.** A Fase B e a Fase C **não** foram iniciadas.
-> **A Fase C não começa sem o Olavo reconfirmar o D1 com esta tabela na mão.**
+
+---
+
+## ⚠️ ESTE RELATÓRIO É UM RETRATO DE 24/09 DE MANHÃ — duas coisas nele já foram superadas
+
+| O que este doc diz | O que vale hoje |
+|---|---|
+| *"a Fase C não começa sem o Olavo reconfirmar o D1"* (§0, §10) | 🔁 **A Fase C se dividiu em C1 e C2, e o Olavo bloqueou as duas até o F3 existir** — ADR-38 **§27.3 e §27.6** |
+| **P-31**: *"sair, não migrar"* · **P-32**: *"perguntar se devem existir"* (§10) | 🔁 **Veredicto revisto:** das 12 órfãs **9 ficam como dívida de preenchimento** e 3 saem; as 4 janelas **ficam** — ADR-38 **§27.8 e §27.9** |
+| **D1-c** (*"aceitar perder a rede que salvou 21/09"*, §10) | 🔁 **Reenquadrado:** a rede não é o writer 2, é **consertar o laço do writer 1** — virou **D1-d**, pré-requisito da C1. Proposta em **§28.4** |
+
+> **O que NÃO mudou:** a tabela do §2, o placar do §2.1 e a conclusão de que **`revenue` era a única
+> perda real** — e ela **já foi resolvida pela Fase B.1** (ADR-38 §28).
+
+---
 
 ---
 
