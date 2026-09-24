@@ -2469,3 +2469,39 @@ pôs banner de histórico no relatório da Fase A**, que ainda dizia *"P-31: sai
 > **Foi a coisa certa, e é a R2 item 5 sendo praticada por quem não a escreveu:** o relatório
 > continua verdadeiro sobre o que foi medido, e falso sobre o que foi concluído. **Banner, não
 > borracha.**
+
+
+---
+
+## 30. 🔴 ETAPA 8 PARADA — decisão do Olavo, 2026-09-25
+
+> *"Vamos parar esta etapa, é preciso reformular tudo o que entendemos sobre o PHI e a Saúde
+> Digital."*
+
+| Fase | Estado |
+|---|---|
+| **B.1** (`revenue` no writer 1) | ✅ **executada e publicada** em 25/09 — fica no ar, é aditiva e não depende de nada |
+| **B1-c** (a prova: o valor do writer 1 bate com o do writer 2) | ⬜ **não conferida** — a rodada natural produz o dado de graça, **a conferência é que fica pendente** |
+| **1.4** | ⬜ não executada (P-20 aberta) |
+| **D1-d** (fronteira de erro no laço) | ⬜ **proposto, não executado** — 🔴 **e continua sendo um defeito vivo** |
+| **C1 / C2** | 🔴 **paradas** |
+
+### O que NÃO se perde com a parada
+
+- **A Fase A** respondeu a pergunta que ela existia para responder: **`revenue` era a única perda**,
+  e agora nem isso. **Aquele trabalho está fechado.**
+- **A B.1 está no ar** e não depende da etapa continuar.
+- **O mapa de dono por coluna** (§26.2) é insumo permanente — e foi ele que produziu o §27.8, que
+  mostrou que **9 das 12 colunas órfãs são o vocabulário do diagnóstico que o PHI não faz**.
+
+### 🔴 O que fica em aberto e não deve ser esquecido
+
+| # | Pendência | Por que importa mesmo com a etapa parada |
+|---|---|---|
+| **D1-d** | uma credencial ruim derruba a coleta de **todos** os clientes | **bug vivo**, já custou o dia 22/09, e **piora linearmente** com a regra *"todos os clientes que contratarem tráfego"* |
+| **P-34** | nós em **v22** e **v23** no mesmo workflow, sem registro | o `CLAUDE.md` declara v23. **Quando a v22 for descontinuada, o `revenue` para** |
+| **B1-c** | a prova da B.1 | o dado nasce sozinho; **só falta alguém olhar** |
+
+> **Nenhum dos três depende da reformulação.** Se a etapa 8 ficar parada por semanas, **os três
+> continuam sendo verdade** — e o D1-d continua custando um dia de coleta cada vez que uma credencial
+> cair.
