@@ -2163,3 +2163,43 @@ diária** — e isso precisa estar escrito no brief, não subentendido.
 > **P-32 e P-31 juntas dizem uma coisa desconfortável:** das 32 colunas, **17 não têm leitor**.
 > **Mais da metade da tabela é escrita para ninguém.** A Fase C é a hora de perguntar isso — mas
 > **não de responder**, senão vira outra obra dentro desta.
+
+
+### 27.6. ✅ Decisão do Olavo (2026-09-24): a C1 espera o vigia
+
+> **"Não — só quando o vigia existir."**
+
+**A Fase C inteira fica bloqueada pelo F3.** E a razão é a que ele mesmo deu na entrevista de 21/09:
+*"qualquer outra falha só sei se abrir o Notion e ver alguma incoerência."*
+
+> **Desligar um writer e depender de conferência manual diária seria pedir a ele exatamente o que ele
+> já disse que não faz.** A decisão está certa, e é mais consistente que a minha proposta — eu havia
+> aceitado a conferência manual como rede, e ela não é rede: é a mesma esperança que deixou a Fase 3
+> morta por 8 dias.
+
+| Fase | Estado |
+|---|---|
+| **B** (`revenue` no writer 1 + 1.4) | 🟢 **liberada** — é **aditiva**, não remove nada e não depende de vigia |
+| **D1-d** (consertar o loop do writer 1) | 🟡 **pré-requisito da C1**, proposta separada |
+| **C1** (desabilitar + observar) | 🔴 **bloqueada pelo F3** |
+| **C2** (aposentadoria formal) | 🔴 bloqueada pela C1 |
+
+### 27.7. 🔴 A consequência de fila que isto cria — e ela é grande
+
+O **F3** deixou de ser o segundo item de uma lista. **Ele agora bloqueia duas frentes:**
+
+| Bloqueia | Por quê |
+|---|---|
+| a **Fase C** desta etapa 8 | decisão do Olavo acima |
+| o **F5** do ponto final (*"rodou 30 dias sem intervenção"*) | sem o vigia, não há como saber se os 30 dias foram limpos |
+
+**E o F1, que estava à frente dele na fila, não pode mais segurá-lo:**
+
+> O **F1 depende de um evento externo** — um cliente novo contratar tráfego. **Isso não tem data**, e
+> o CHA, que era o caso de prova, teve a campanha encerrada em 22/09.
+>
+> 🔴 **Manter o F3 esperando o F1 é deixar duas frentes paradas à espera de um telefonema.**
+
+**Recomendação:** **o F3 começa agora**, em paralelo ao que sobrou do ADR-39+40. O plano está
+aprovado desde 21/09 e tem 7 conferências escritas. **É o único item da fila que não depende de
+ninguém de fora.**

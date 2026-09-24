@@ -5,7 +5,20 @@
 | **Status** | ✅ **APROVADO** — **Olavo, 2026-09-21** (*"Plano F3 ok"*). Vira brief quando o ADR-39 fechar |
 | **Critério que atende** | **F3** do `PLANO-ENTREGA-FINAL-PHI.md` · fecha o **D5** do `CONTRATO-PHI.md` · destrava **C3/C4** da Definição de Pronto |
 | **Razão que serve** | **R-A** — a qualidade do serviço parar de depender da atenção do Olavo |
-| **Posição na fila** | **2º**, depois do ADR-39 (F1) |
+| **Posição na fila** | 🔴 **PRIMEIRO** (revisado em 2026-09-24) — ver abaixo |
+
+> 🔴 **Este plano subiu de posição em 24/09, e não por prioridade: por bloqueio.**
+>
+> | O que ele bloqueia | Desde |
+> |---|---|
+> | a **Fase C** da etapa 8 do ADR-38 (aposentar o 2º writer de `raw_campaign_data`) | decisão do Olavo, 24/09: *"só quando o vigia existir"* |
+> | o **F5** do ponto final (*"rodou 30 dias sem intervenção manual"*) | sem vigia não há como saber se os 30 dias foram limpos |
+>
+> **E o F1, que estava à frente dele, deixou de poder segurá-lo:** o F1 espera **um cliente novo
+> contratar tráfego** — evento externo, sem data —, e o CHA, que era o caso de prova, teve a campanha
+> encerrada em 22/09. **Duas frentes paradas à espera de um telefonema.**
+>
+> **O F3 é o único item da fila que não depende de ninguém de fora.**
 
 ---
 
