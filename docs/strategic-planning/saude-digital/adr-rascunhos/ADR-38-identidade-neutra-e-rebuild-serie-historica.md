@@ -2368,3 +2368,104 @@ seria ampliar o escopo por conta própria.
 | # | Pendência |
 |---|---|
 | **P-34** | 🟡 **o `sw metricas campanhas` mistura versões da API do Google Ads:** os nós `(D1)` e `(D3)` chamam **v22**, enquanto `(D7)` e os `v23 Bloco 1/2/3` chamam **v23** — e o `CLAUDE.md` (Regras Críticas 12/13) e o writer 2 usam v23. **Importa para a Fase C:** o `revenue` novo vem do nó **v22** e o do writer 2 vem de **v23**. Campos idênticos, então espero o mesmo número — **mas é premissa, não medição**, e é o que o **B1-c** confere. Não consertado: trocar versão de API em produção não é aditivo |
+
+
+---
+
+## 29. Decisão do chat-mãe sobre a Fase B.1 (2026-09-25)
+
+### 29.1. A escolha que sustenta a Fase C inteira
+
+> *"Vem da mesma GAQL do writer 2 — mesmos campos, mesmo `WHERE`, mesmo `DURING YESTERDAY`. **De
+> propósito: assim aposentá-lo na Fase C não muda o número.**"*
+
+**Essa frase é o motivo de a Fase C poder existir.** Se as fontes divergissem, aposentar o writer 2
+seria **mudança de dado disfarçada de limpeza** — e a série histórica passaria a ter um degrau que
+ninguém saberia explicar em dezembro.
+
+**E as três decisões de semântica estão certas, cada uma contra uma armadilha que já nos mordeu:**
+
+| Decisão | Armadilha que evita |
+|---|---|
+| **sem resultado ⇒ `NULL`, nunca `0`** — com um `hasFirstResult()` para separar *"não voltou"* de *"voltou sem a métrica"* | **M4 / I3 / guardrail 8-9.** O Google **omite métrica de valor zero** — sem essa separação, *"não coletei"* viraria *"faturou R$ 0"* |
+| **`COALESCE` no `UPDATE`** | ausência apagando um `revenue` já gravado — é o *"vazio vira todos"* da R11, na forma de sobrescrita |
+| **Meta fica `NULL`** | inventar número para plataforma que o writer 2 nunca cobriu |
+
+> **E a verificação foi feita renderizando o SQL fora do n8n**, nos três cenários, conferindo o
+> alinhamento entre colunas e valores. **Não foi leitura de código** — é a diferença entre a B.1 e o
+> P-27.
+
+### 29.2. ✅ Sim, confira depois da rodada — e o B1-c é o critério que importa
+
+**A prova não aconteceu**, e ele está certo em dizer isso em vez de declarar a fase pronta. **A
+rodada natural das 00h/04h prova de graça**, sem gastar cota nem criar página no Notion.
+
+**O B1-c — *"o valor do writer 1 bate com o do writer 2 às 07h"* — é o único critério que fecha a
+B.1.** Os outros três são forma; esse é o fato.
+
+### 29.3. 🔴 P-34 é mais grave do que "premissa não medida"
+
+> Os nós **(D1)** e **(D3)** chamam **v22**; **(D7)** e os **`v23 Bloco *`** chamam **v23**. **O
+> `revenue` novo vem de um nó v22; o do writer 2, de v23.**
+
+**Duas coisas, e a segunda ninguém levantou:**
+
+1. **O B1-c vira o teste da premissa.** Se os números baterem, v22 e v23 concordam **naquele campo**
+   — e a dúvida morre com dado. É o melhor desfecho possível, e sai de graça amanhã.
+2. 🔴 **O `CLAUDE.md` da raiz declara "Google Ads API v23".** Há nós rodando em **v22** dentro do
+   writer canônico, e **isso não está escrito em lugar nenhum.** O Google **descontinua versões
+   antigas com prazo**, e quando a v22 morrer, **o `revenue` para — junto com o que mais estiver
+   nesses nós.**
+
+   **Isso não é dívida de precisão: é uma data de validade que ninguém anotou.** Registrar em
+   `CLAUDE.md` e no contrato, com a lista dos nós por versão.
+
+### 29.4. ✅ O D1-d está certo no desenho — e a recusa dele é melhor que a proposta
+
+**"Uma fronteira de erro, não oito"** é o desenho certo: `continueErrorOutput` nos nós HTTP → um nó
+`Campanha pulada` que recolhe todas as saídas de erro, **reconecta ao laço** e manda Telegram.
+
+**E as duas recusas dele valem mais que a proposta:**
+
+| Recusou | Por quê, e concordo |
+|---|---|
+| **reordenar a fila** para o Google vir antes | **esconderia o bug** — e é o mesmo argumento com que recusei manter o writer 2 como rede. **Ele aplicou a regra contra a própria conveniência** |
+| **extrair o corpo para subworkflow** | é obra, e a R7 manda preferir a solução mais simples que resolve |
+
+> ⚠️ **E ele corrigiu uma coisa minha, com precisão:** *"`retryOnFail` já está ligado nos nós HTTP e
+> não salvou — **credencial expirada não é erro transitório. Retry cura contenção, não cura
+> autorização.**"*
+>
+> **Isso não invalida a decisão da P-30** (retry nos nós `Log *`, onde a causa **é** contenção) —
+> **valida.** O que a frase faz é dar o **limite** da ferramenta, que eu não tinha escrito. **Retry é
+> resposta a disputa, não a permissão.**
+
+### 29.5. 🔴 O D1-d deixou de ser pré-requisito — virou conserto próprio
+
+No §27.4 eu o registrei como **pré-requisito da C1**. **Estava subdimensionado.**
+
+> A C1 está bloqueada pelo F3, então "pré-requisito da C1" o empurraria para depois do vigia. **Mas o
+> defeito que ele conserta é um bug vivo que já custou um dia de coleta** (22/09), e **piora
+> linearmente** com a regra *"todos os clientes que contratarem tráfego pago"*: **hoje uma credencial
+> ruim custa o dia de 1 cliente; com 12, custa o dia de 12.**
+
+**Recomendação: executar o D1-d agora, como conserto, não como pré-requisito.** Não depende do F3,
+não depende da Fase C, e o desenho já está escrito.
+
+### 29.6. A 1.4 pode esperar, e não trava nada
+
+**Concordo com não ter executado.** A P-20 está aberta, as três opções constroem coisas diferentes, e
+**mexer na janela de coleta não é aditivo** — é a R7 aplicada corretamente.
+
+**E não há pressa:** a 1.4 é pré-requisito da Fase C, que está bloqueada pelo F3. **A recomendação
+dele pela opção (a) fica registrada e volta quando a P-20 for decidida.**
+
+### 29.7. Sobre o banner que ele pôs no relatório da Fase A
+
+Houve conflito de push — ele escrevia o §28 enquanto eu escrevia o §27.8/27.9. **Ficou com os dois e
+pôs banner de histórico no relatório da Fase A**, que ainda dizia *"P-31: sair, não migrar"* e
+*"D1-c: aceitar perder a rede"*.
+
+> **Foi a coisa certa, e é a R2 item 5 sendo praticada por quem não a escreveu:** o relatório
+> continua verdadeiro sobre o que foi medido, e falso sobre o que foi concluído. **Banner, não
+> borracha.**
