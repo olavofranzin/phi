@@ -115,6 +115,13 @@ Numerados **M** (de Mídia) para não colidir com os **I1–I11** da Prospecçã
 > e estão marcadas **`[21/09]`** abaixo. **Nada foi removido**: o `phi_dev` segue de pé e o writer
 > de `client_config` segue onde estava — isso é a **Fase B**, que ainda não começou.
 > Relatório: `docs/handoff/2026-09-21-adr39-adr40-fase-A-relatorio.md`.
+>
+> 🟢 **GRÃO DE COLUNA — 2026-09-24 (Fase A da etapa 8 do ADR-38).** Esta tabela é por **destino**.
+> A tabela **por COLUNA** de `raw_campaign_data` — as 32 colunas, quem escreve no `INSERT`, **quem
+> atualiza no `WHEN MATCHED`** e quem lê — está em
+> `docs/handoff/2026-09-24-adr38-etapa8-fase-A-relatorio.md` §2 e no **ADR-38 §26**.
+> **O que ela fechou:** `revenue` é a **única** coluna que se perde ao aposentar o writer 2;
+> **13 colunas** são escritas pelos dois; **17 não têm leitor** (M11); **12 não têm writer nenhum**.
 
 | Destino | Dono real (nó que escreve) | Momento | Consumidor declarado | Estado |
 |---|---|---|---|---|

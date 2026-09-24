@@ -7,6 +7,7 @@
 | **Fecha** | **P-10** do ADR-37 |
 | **Impacto** | `raw_campaign_data`, os 2 writers, o SQL do score, `phi_score_history` · critérios **C1** e **C2** |
 | **Data efetiva do corte** | ✅ **2026-09-09** — etapas 1 a 7 executadas; reconferido em produção em **2026-09-18** (ver §20). Resta só a etapa 8 (Fases 1 e 2 do ADR-37) |
+| **Etapa 8 — Fase A** | ✅ **CONCLUÍDA em 2026-09-24** (ver §26). Tabela de dono por coluna pronta: **`revenue` é a única perda real da Fase C**. 🔴 **PARADO na parada obrigatória** — a Fase C não começa sem o Olavo reconfirmar o **D1** com a tabela na mão |
 
 ---
 
@@ -129,7 +130,7 @@ Um relatório de campanha traz métricas. **Não traz** o resto da linha:
 | 5 | **Migrar a chave** de `phi_score_history` (`UPDATE` tirando o prefixo) — §5.1 | ✅ **FEITO** — 233 linhas; backups `phi_score_history_backup_2026_09` e `_2026_09_10` |
 | 6 | **Apagar e recarregar** de janeiro até a data do corte, com `ingestion_step = 'BACKFILL_2026-09'` | ✅ **FEITO** — 463 linhas carregadas; staging `raw_campaign_data_backfill_stg` |
 | 7 | Smoke nas 2 campanhas KIL + conferir que os dois writers **agora colidem** no `MERGE` | ✅ **FEITO 11/09** (§19) · **colisão provada em 18/09**: 0 linhas `GADS_INSERT` (§20.3) |
-| 8 | Retomar as Fases 1 e 2 do ADR-37 sob a identidade única | ⬜ **NÃO INICIADA** — é o que resta |
+| 8 | Retomar as Fases 1 e 2 do ADR-37 sob a identidade única | 🟡 **EM CURSO** — **Fase A ✅ concluída 24/09** (§26) · Fase B ⬜ · Fase C ⬜ **bloqueada na reconfirmação do D1** |
 
 ## 7. Verificação
 
@@ -1946,3 +1947,123 @@ ignorá-lo** — e foi esse mesmo alarme que salvou o 17/09.
 | # | Pendência |
 |---|---|
 | **P-30** | `workflow_execution_log` grava 6 linhas por fase e colide consigo mesmo; o handler de falha escreve na tabela contendida; as 4 linhas de 23/09 dizem FAILED sobre uma fase que deu certo |
+
+---
+
+# 26. ✅ Etapa 8 — **Fase A concluída** (2026-09-24): a tabela de dono por coluna
+
+> **Relatório completo, com método e evidência célula a célula:**
+> `docs/handoff/2026-09-24-adr38-etapa8-fase-A-relatorio.md`
+> 🔴 **PARADO na parada obrigatória.** Fases B e C **não iniciadas**. Nada em produção foi alterado.
+
+## 26.1. A resposta que a Fase A existia para dar
+
+> **`revenue` é a ÚNICA coluna que se perde ao aposentar o `PHI - Subworkflow Campanhas`.**
+
+Das 15 colunas que o writer 2 escreve, **14 o writer 1 também escreve**. Só `revenue` é exclusiva
+dele — e tem leitor: o **Agregador**, que a lê como `conv_value` e a leva para o T28.
+
+**Isto confirma a B.1 do plano — mas agora no grão de coluna, não por inferência.** A Fase B.1
+(`revenue` no writer das 00h/04h) **é o bloqueio da Fase C**, e é o único.
+
+## 26.2. O placar das 32 colunas
+
+| | quantas |
+|---|---|
+| colunas em `raw_campaign_data` | **32** |
+| escritas por algum writer | 20 |
+| 🔴 **escritas pelos DOIS** | **13** — inclusive `cost`, `conversions` e `primary_metric_type`, que alimentam o score |
+| exclusivas do writer 1 | 5 — `cost_3d`, `conversions_3d`, `cost_7d`, `conversions_7d`, `data_source` |
+| 🔴 **exclusivas do writer 2** | **1 — `revenue`** |
+| 🔴 **sem writer nenhum** | **12** (posições 20 a 31) — **0 de 505 linhas preenchidas** |
+| 🔴 **sem leitor nenhum (viola M11)** | **17** |
+
+## 26.3. 🆕 Três achados que o plano não previa
+
+### (a) O writer 2 é o ÚLTIMO a escrever os números de todo dia
+
+`ingested_at` é **07:0x BRT** em toda linha do CLI-4, enquanto `execution_id` é `EXEC-DE-…0300xx`
+(00h BRT). A linha nasce com o writer 1 à meia-noite e **termina com o writer 2 às 07h**.
+
+> **Consequência para o D1:** aposentar o writer 2 **troca a fonte** de `cost` e `conversions` da
+> leitura das 07h para a das 04h. O Google Ads amadurece atribuição ao longo do dia — **estimativa,
+> não medição**: o histórico não guarda o valor intermediário. É o que o **D4** existe para
+> compensar, o que **amarra a P-20 à Fase C**, e não só à Fase B.
+
+### (b) Em 22/09 o writer 2 foi a ÚNICA ingestão do dia
+
+As duas rodadas do writer 1 falharam (execuções `41749` e `41806`). As linhas de 21/09 existem
+porque o writer 2 rodou às 07h e as **inseriu** — são exatamente as 2 linhas `GADS_INSERT` da tabela.
+
+> **Ele não é só redundância: é rede que já pegou uma queda.** Aposentá-lo sem o D4 remove a rede.
+
+### (c) As 4 colunas de janela não têm leitor — o motor recalcula
+
+`cost_3d`, `conversions_3d`, `cost_7d`, `conversions_7d` são gravadas todo dia, em 505 de 505 linhas.
+**Ninguém as lê.** O nó `Calcular e Persistir PHI Score` monta as janelas ele mesmo a partir dos
+diários (`SUM(cost)`, `SUM(IF(date >= …))`). **Candidatas a sair, não a migrar** (M11).
+
+## 26.4. 🔴 O `ingestion_step` mente nos DOIS sentidos — e o efeito hoje é inerte
+
+O go (§2.3) descrevia um sentido. **O dado tem os dois**, cada um com linhas em produção:
+
+| Sentido | Impressão digital | Linhas |
+|---|---|---|
+| carimbo `DAILY_ENTRY`, tocada pelo writer 2 | `revenue` preenchido (só o w2 escreve) | **28** |
+| carimbo `GADS_INSERT`, tocada pelo writer 1 | `cost_3d` preenchido (só o w1 escreve) | **2** |
+
+⚠️ **Mas o desempate do score nunca dispara.** Os dois writers usam a **mesma chave** no MERGE, então
+`ROW_NUMBER() OVER (PARTITION BY client_id, platform, campaign_id, date …)` dá **`rn = 1` sempre** e o
+`ORDER BY` não escolhe nada. **Confirma o que o `CONTRATO-PHI.md` §4.1 já dizia** — e explica o porquê.
+
+🔴 **Onde NÃO é inerte:** o **Agregador** lê `ingestion_step` e o **grava em `t28_campaign`** como
+`source_ingestion_step`. Ali o carimbo mentiroso **vira dado persistido** e viaja para o T28. E o
+`PARTITION BY` do Agregador é `(client_id, campaign_id, date)` — **sem `platform`**, violando o M2
+por omissão, do mesmo jeito que a chave do `t28_campaign`.
+
+**Não consertado, conforme instruído** — some com a Fase C.
+
+### 26.4.1. 🆕 O `execution_id` tem o mesmo defeito, e ninguém tinha reparado
+
+`execution_id` **também não é atualizado no `WHEN MATCHED`** — fica com quem criou a linha. É lido
+pelo motor do score (`source_execution_id`) e pelo Agregador (`daily_entry_execution_id`).
+
+> **Mesma doença do `ingestion_step`, mesma cura pela Fase C.** Registrado aqui para não se perder.
+
+## 26.5. Hipótese refutada (R6)
+
+Levantei que **a porta das 04h estivesse fechada**: o nó `Schedule Trigger`
+(`executeWorkflowTrigger`) do writer 1 está **`disabled: true`**, e é por ele que o
+`operador unico metricas` chama o workflow. Seria a **R12** outra vez.
+
+🔴 **REFUTADA pelo dado.** As execuções mostram **duas rodadas todo dia**: `mode: trigger` às 03:00
+UTC (00h BRT) e `mode: integrated` às **07:00 UTC (04h BRT)**. A chamada como subworkflow funciona
+apesar do nó desabilitado. **O nó é vestígio, não bloqueio.**
+
+> Registrado para a próxima sessão não levantar o mesmo alarme (corolário da R6).
+
+## 26.6. Estado do outro sub-chat — **reportado, não coordenado** (§2.2 do go)
+
+| O quê | Estado lido em 24/09 |
+|---|---|
+| nó `Execute SQL client_config sincronizado` (passo **B3** do ADR-39+40) | 🟡 **AINDA NO WORKFLOW**, ativo e conectado. `activeVersion` `4f42b244`, de **21/09 19:44** — **não mudou.** O B3 não foi executado |
+| `COALESCE(j.primary_metric_type, cc.primary_metric_type)` no nó do score | 🔴 **prazo vencido.** O próprio comentário diz *"PRAZO DO COALESCE: 22/09/2026. Se esta data passou, remova."* — passou em **22/09** |
+
+**Não é escopo deste sub-chat.** Reportado ao chat-mãe, como o go mandou.
+
+## 26.7. Novas pendências
+
+| # | Pendência |
+|---|---|
+| **P-31** | **12 colunas de `raw_campaign_data` sem writer e sem leitor**, 0 de 505 linhas preenchidas: `primary_metric_target`, `active_view_impressions`, `average_cpm`, `average_cpc`, `phone_calls`, `bidding_strategy_type`, `target_cpa_micros`, `target_roas`, `ad_network_search`, `ad_network_display`, `ad_network_partners`, `top_search_terms`. Violam o M11. **Sair, não migrar** |
+| **P-32** | **4 colunas de janela sem leitor** (`cost_3d`, `conversions_3d`, `cost_7d`, `conversions_7d`): escritas em 505 de 505 linhas, lidas por ninguém — o motor recalcula. Violam o M11 |
+| **P-33** | O `PARTITION BY` do `[T28] BQ Read raw_campaign_data` no Agregador **não inclui `platform`** — viola o M2 por omissão, igual à chave do `t28_campaign` |
+
+## 26.8. 🔴 O que falta para a Fase C começar
+
+| # | Decisão do Olavo |
+|---|---|
+| **D1** | aposentar o writer 2 — **só depois do `revenue` no writer 1** (Fase B.1). Única perda de dado, confirmada no grão de coluna |
+| **D1-b** 🆕 | aceitar que `cost`/`conversions` passem da leitura das 07h para a das 04h — **amarra a P-20/D4 à Fase C** |
+| **D1-c** 🆕 | aceitar perder a rede que salvou o dia 21/09 |
+| **P-20 / D4** | a rodada das 00h vira o re-puxe D-1..D-3? (opção (a) do §5 B.2 do plano) |
