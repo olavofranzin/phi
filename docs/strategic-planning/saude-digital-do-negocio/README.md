@@ -46,3 +46,9 @@ O índice do material tem **8 pilares somando 100**. O PHI hoje mede **uma fatia
 | Arquivo | O que é |
 |---|---|
 | `fundamentos-presenca-digital.md` | o material trazido pelo Olavo — **insumo, não decisão** |
+| **`MAPA-material-x-casa.md`** | 🔴 **a primeira entrega (2026-09-25)** — o material × o que a casa tem, pilar por pilar e dimensão por dimensão, com nome de workflow, tabela e coluna. **Confirma 3 linhas da tabela acima e derruba 4** (ver §6 do mapa). Traz 6 perguntas para o Olavo |
+
+> ⚠️ **A tabela "o que já dá para ver" acima é a leitura PRELIMINAR do chat-mãe, de antes do estudo.**
+> **Quatro linhas dela não se sustentaram** — Experiência, Aquisição, Conversão/atendimento e Dados/governança.
+> **O `MAPA-material-x-casa.md` §6 é o que vale.** Esta tabela fica como registro do que se supunha (R6:
+> hipótese desmentida também se registra).
