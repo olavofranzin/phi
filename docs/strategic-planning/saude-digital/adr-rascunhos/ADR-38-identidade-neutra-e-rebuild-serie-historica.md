@@ -2203,3 +2203,79 @@ O **F3** deixou de ser o segundo item de uma lista. **Ele agora bloqueia duas fr
 **Recomendação:** **o F3 começa agora**, em paralelo ao que sobrou do ADR-39+40. O plano está
 aprovado desde 21/09 e tem 7 conferências escritas. **É o único item da fila que não depende de
 ninguém de fora.**
+
+
+### 27.8. 🔴 As 17 colunas sem leitor, relidas contra o método — e a P-31 muda de veredicto
+
+O relatório da Fase A concluiu, para as 12 órfãs: **"sair, não migrar"**. **Discordo, e o motivo não
+é técnico: é que elas foram lidas como banco de dados, não como diagnóstico.**
+
+**Cruzando a lista com o `regras-otimizacao-metodo-subido.md` §6 — a cadeia do funil, que é a régua
+do F4:**
+
+#### Grupo 1 — são o vocabulário do diagnóstico que o PHI não faz (6)
+
+| Coluna | O que é no método | Elo |
+|---|---|---|
+| `average_cpm` | **CPM — competitividade do leilão.** *"alto → criativo fraco ou público restrito"* | 🔴 **1º elo da cadeia** |
+| `average_cpc` | **CPC — pedágio até o destino.** *"caro → elevar CTR"* | 🔴 **4º elo** |
+| `phone_calls` | ligação **é o lead** para barbearia, salão, negócio local | conversão de negócio |
+| `top_search_terms` | termo de busca — vive no **grupo de anúncios**, o nível do meio | §3.3.2 |
+| `ad_network_search` · `ad_network_display` | **onde** o anúncio apareceu — pesquisa × display | causa de CPM/CTR ruim |
+
+> 🔴 **`average_cpm` e `average_cpc` são os dois primeiros elos da cadeia de diagnóstico.** O PHI hoje
+> não os tem — **e é por isso que ele só sabe dizer *"a campanha está em WARNING"* sem dizer onde o
+> cano vaza.** São exatamente o **F4**.
+>
+> **Alguém, um dia, desenhou esta tabela sabendo o que o PHI precisaria. E nunca preencheu.**
+> **Apagá-las seria apagar o desenho junto com a dívida.**
+
+#### Grupo 2 — configuração da campanha, o nível de cima (3)
+
+`bidding_strategy_type` · `target_cpa_micros` · `target_roas`
+
+São **o que se configura na campanha** (§3.3.2: *objetivo, orçamento, estratégia de lance*). Servem
+para responder *"a meta que o PHI cobra é a mesma que está configurada na plataforma?"* — **uma
+divergência silenciosa que hoje ninguém consegue ver.**
+
+#### Grupo 3 — candidatas legítimas a sair (3)
+
+| | |
+|---|---|
+| `primary_metric_target` | 🔴 **cheira a duplicata de `primary_metric_goal`** — dois nomes, um fato. Verificar e remover |
+| `active_view_impressions` | métrica de visibilidade de display; **fora do que o método usa** |
+| `ad_network_partners` | idem — rede de parceiros não aparece na cadeia |
+
+#### Grupo 4 — as 4 janelas: não são redundância, são **tendência** (4)
+
+`cost_3d` · `conversions_3d` · `cost_7d` · `conversions_7d`
+
+O relatório diz, com razão, que **o motor recalcula tudo a partir dos diários**. Mas:
+
+> **A razão R-D do ponto final é *"agir antes do estrago — pegar o desvio no dia 2, não no dia 20"*,
+> e isso exige tendência, não retrato.** Janela de 3 e 7 dias **é** tendência.
+>
+> **Elas não têm leitor porque o PHI ainda não faz a coisa para a qual foram criadas.** Mesmo caso
+> do Grupo 1: **a dívida não é a coluna, é o consumidor que nunca nasceu.**
+
+#### Grupo 5 — `ingested_at` (1)
+
+Sem leitor automático **hoje**. Mas é **o relógio que denuncia quem escreveu por último** — foi ele
+que provou o achado do §26.3. **E o vigia do F3 vai precisar dele** (V1 e V6, *"rodou na janela
+esperada?"*). **Leitor futuro identificado: não é órfã, é pré-datada.**
+
+### 27.9. O veredicto revisado da P-31 e da P-32
+
+| | Antes (Fase A) | Agora |
+|---|---|---|
+| **P-31** (12 órfãs) | *"sair, não migrar"* | 🔁 **9 ficam** (Grupos 1 e 2) — **como dívida de preenchimento, não de remoção.** **3 saem** (Grupo 3), e uma delas só depois de confirmar a duplicata |
+| **P-32** (4 janelas) | *"perguntar se devem existir"* | 🔁 **ficam** — são o material do **R-D**, e o leitor nasce com o F4 |
+
+> ⚠️ **Nada disso muda a Fase C.** Coluna vazia não pesa, não colide e não atrasa a aposentadoria do
+> writer 2. **É dívida de produto, não de arquitetura** — e vai para o `PLANO-ENTREGA-FINAL-PHI` como
+> insumo do **F4**, não para este ADR.
+>
+> 🔴 **E a lição, que é minha:** eu mesmo escrevi o **M11** (*"dado escrito sem leitor é custo"*) e
+> ele está certo — **mas ele tem um irmão que faltava: *coluna sem leitor pode ser dívida de
+> consumidor, não excesso de produtor.*** A pergunta certa não é *"quem lê isto?"* e sim **"o que
+> deveria ler isto, e por que não existe?"**
