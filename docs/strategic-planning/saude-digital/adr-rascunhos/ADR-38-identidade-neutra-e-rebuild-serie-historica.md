@@ -2067,3 +2067,99 @@ apesar do nó desabilitado. **O nó é vestígio, não bloqueio.**
 | **D1-b** 🆕 | aceitar que `cost`/`conversions` passem da leitura das 07h para a das 04h — **amarra a P-20/D4 à Fase C** |
 | **D1-c** 🆕 | aceitar perder a rede que salvou o dia 21/09 |
 | **P-20 / D4** | a rodada das 00h vira o re-puxe D-1..D-3? (opção (a) do §5 B.2 do plano) |
+
+
+---
+
+## 27. Decisão do chat-mãe sobre a Fase A (2026-09-24)
+
+**A Fase A fez o que existia para fazer:** respondeu no grão de coluna, com `COUNTIF` em 505 linhas,
+uma pergunta que vinha sendo respondida por inferência desde 08/09. **`revenue` é a única coluna que
+se perde.**
+
+E o método merece registro: **a impressão digital.** Coluna exclusiva de cada writer funciona como
+assinatura — `revenue` preenchido prova que o writer 2 tocou a linha, `cost_3d` prova o writer 1,
+**independentemente do que o carimbo diga.** É a resposta certa para um sistema em que o rótulo
+mente: **não pergunte ao rótulo, pergunte ao rastro.**
+
+### 27.1. 🔴 Correção de uma afirmação minha, de ontem
+
+No go da Fase A (§2.3 do `2026-09-24-go-etapa8-...`) eu escrevi que o `ingestion_step` que mente era
+**"o argumento mais forte que a Fase C ganhou"**, porque *"o campo que decide o vencedor não sabe
+quem escreveu"*.
+
+**Está errado, e a Fase A mostrou por quê:**
+
+> **O desempate é inerte.** Os dois writers usam **a mesma chave** no MERGE, então há **uma linha
+> só** — `rn = 1` sempre, e o `ORDER BY` nunca escolhe nada. **Não há vencedor a decidir.**
+
+**Eu li a cláusula e deduzi a consequência sem olhar a cardinalidade.** É a mesma família do
+`~116 vs 101` e do `_fora_nao_modificado: 100`: **tirar conclusão de um mecanismo sem medir se ele
+chega a rodar.**
+
+**Onde o carimbo mentiroso realmente custa** — e isto o executor achou, não eu:
+- o **Agregador persiste o carimbo em `t28_campaign`** — a mentira sai de `raw_campaign_data` e vira
+  dado do T28;
+- o **`execution_id` tem exatamente o mesmo defeito**, e ninguém tinha reparado.
+
+### 27.2. 🔴 O D1-c está mal enquadrado — e a resposta muda a Fase C
+
+O executor registra que aposentar o writer 2 significa **"aceitar perder a rede que salvou 21/09"**:
+em 22/09 as duas rodadas do writer 1 falharam e **o writer 2 foi a única ingestão do dia.**
+
+**Isso é fato. Mas a conclusão não é "manter o writer 2".**
+
+> **Por que o writer 1 falhou:** o token do Meta expirou, o **loop morreu no primeiro item**, e o
+> Google — que vinha depois — **nem foi coletado**. Uma credencial de **um** cliente derrubou a
+> coleta de **todos**. O próprio executor chamou isso de *"achado lateral que merece frente própria"*.
+>
+> 🔴 **Então a rede não é o writer 2 — a rede é consertar o loop do writer 1.** Manter um workflow
+> inteiro como backup de um bug de iteração é caro, esconde o bug, e é exatamente o tipo de
+> redundância acidental que o **M1** existe para proibir.
+
+**Consequência:** o **conserto do loop do writer 1 vira pré-requisito da Fase C**, ao lado do
+`revenue`. Sem ele, aposentar o writer 2 troca "dois writers frágeis" por "um writer frágil".
+
+### 27.3. 🆕 A Fase C se divide em duas — e a primeira é reversível
+
+O medo que trava o D1 desde 08/09 é o da **irreversibilidade**. Ele tem cura barata:
+
+| | Fase | O que é | Reversível? |
+|---|---|---|---|
+| **C1** | **Desabilitar o nó chamador** no `Pipeline_v2` e **observar N dias** | o writer 2 fica **vivo e de prontidão**, só não é chamado | ✅ **sim — religar é um clique** |
+| **C2** | **Aposentadoria formal** pela R5 (5 passos: consolidar → desabilitar chamador → desativar → renomear `[APOSENTADO]` → sticky) | o ritual | ❌ é o ponto sem volta |
+
+**O que a C1 compra, e é muito:**
+
+1. **Responde o D1-b com medição, não com estimativa.** O executor foi honesto ao marcar como
+   estimativa que os números das 04h difiram dos das 07h — *"o histórico não guarda o valor
+   intermediário"*. **Durante a C1 ele guarda:** os números do dia passam a ser só os das 04h, e
+   comparam-se com os dias anteriores.
+2. **Neutraliza o D1-c durante a observação** — a rede continua ali, desligada mas intacta.
+3. **Transforma uma decisão de fé numa decisão com dado**, que é a **R6** aplicada antes do fato.
+
+⚠️ **E a C1 exige o F3 ou um substituto:** desligar um writer sem ter quem avise que o outro não
+produziu é trocar rede por sorte. **Enquanto o vigia não existir, a conferência da C1 é manual e
+diária** — e isso precisa estar escrito no brief, não subentendido.
+
+### 27.4. Decisões, reordenadas
+
+| # | Decisão | Estado |
+|---|---|---|
+| **D1** | aposentar o writer 2 | 🔁 **reformulada**: decidir a **C1** (reversível) agora, e a **C2** depois da observação |
+| **D1-b** | aceitar os números das 04h | ✅ **deixa de ser decisão** — vira **medição durante a C1** |
+| **D1-c** | aceitar perder a rede | 🔁 **reenquadrada**: a rede vira o **conserto do loop do writer 1**, que entra como pré-requisito |
+| **P-20/D4** | a rodada das 00h vira re-puxe D-1..D-3? | ⬜ **do Olavo, e agora com mais peso** — com um writer só, a janela de coleta é a única |
+| 🆕 **D1-d** | **consertar o loop do writer 1** (uma credencial ruim não pode derrubar os outros clientes) | ⬜ **pré-requisito da C1** |
+
+### 27.5. Sobre as pendências novas
+
+| | Veredicto |
+|---|---|
+| **P-31** (12 colunas órfãs, 0 de 505 preenchidas) | **não migrar, e não apagar agora.** Coluna vazia não custa; **apagar durante a Fase C junta duas mudanças.** Vira limpeza própria, depois |
+| **P-32** (4 janelas escritas em 505/505 e lidas por ninguém) | 🔴 **é o M11 no caso mais puro que já vimos** — o motor recalcula tudo a partir dos diários. **Antes de migrá-las para o writer 1, pergunte se devem existir** |
+| **P-33** (`PARTITION BY` do Agregador sem `platform`) | ⚠️ **é o ADR-38 sendo desrespeitado rio abaixo** — a chave é `(client_id, platform, campaign_id, date)`. Hoje só não dói porque o parque é uma plataforma só. **Registrar como dívida do ADR-38, não do ADR-37** |
+
+> **P-32 e P-31 juntas dizem uma coisa desconfortável:** das 32 colunas, **17 não têm leitor**.
+> **Mais da metade da tabela é escrita para ninguém.** A Fase C é a hora de perguntar isso — mas
+> **não de responder**, senão vira outra obra dentro desta.
