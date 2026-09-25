@@ -47,6 +47,7 @@ pegam nesta casa.**
 | 7 | `prospeccao/CONTRATO-PROSPECCAO.md` §3 | **as 63 colunas da planilha de leads** — veja quantas são presença digital |
 | 8 | `saude-digital/CONTRATO-PHI.md` | o que existe e é lei hoje (**não altere**) |
 | 9 | `CLAUDE.md` da raiz | R1–R13 |
+| 10 | `handoff/2026-09-25-substrato-estatistico-do-phi-brief.md` | **os números de referência que a casa tem** — e o que o chat-mãe acha que falta (§4 é opinião, ataque-a) |
 
 > ⚠️ **O `ESTADO-DO-PROJETO.md` tem 190 mil caracteres e ninguém consegue lê-lo.** Já está registrado
 > como defeito. **Não tente.** Se precisar de algo dele, procure por trecho.
@@ -63,6 +64,7 @@ Uma tabela por **pilar** (os 8) e por **dimensão** (as 10), respondendo para ca
 | **onde** | workflow, tabela, coluna, skill, documento — **com nome** |
 | **quem consome** | ou "ninguém" |
 | **é v1, é depois, ou é nunca?** | sua leitura, para o Olavo confirmar |
+| **existe régua?** | há número de referência para medir isso, e de onde? **"não existe" é resposta boa** — ver o brief do substrato |
 
 🔴 **Pare aí e devolva.** Não desenhe índice novo, não proponha score novo, não escreva spec.
 **O mapa é que diz se a reformulação é grande ou pequena** — e ninguém sabe isso ainda, nem o
