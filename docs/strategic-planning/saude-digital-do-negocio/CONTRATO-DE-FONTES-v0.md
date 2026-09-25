@@ -301,7 +301,11 @@ O **D5 do ADR-41** define fórmula para indicador **positivo** e **negativo**. *
 >
 > **É lacuna da decisão, não detalhe de implementação.** Aguarda autorização do Olavo para eu escrever o adendo ao ADR-41.
 
-### 5.2. Consolidação pendente
+### 5.2. ✅ Consolidação feita — ADR-42 (rascunho)
+
+As seis decisões **e** a fórmula de alvo foram consolidadas em `adr-rascunhos/ADR-42-normalizacao-de-alvo-e-consolidacao-das-decisoes-de-25-09.md` — adendo ao ADR-41, **aguardando aprovação**.
+
+### 5.3. Nota histórica
 
 As seis decisões acima **refinam o ADR-41** e hoje moram só aqui e no `REGUAS-D6-D9-v0.md`. **Elas precisam virar um adendo único ao ADR-41**, junto com a fórmula de `⊙` — senão repetimos o defeito que a R2 nomeia: decisão que existe no corpo de um documento e não no lugar onde se procura.
 
