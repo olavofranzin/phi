@@ -219,6 +219,19 @@ Vale para `SD-EXP-09` (mobile) e `SD-EXP-10` (formulário chega). Binários: **n
 
 ## 5. O que fica pendente de você
 
+> 🟢 **ATUALIZADO 2026-09-25: os itens 1, 5, 6 e 8 foram DECIDIDOS pelo Olavo no mesmo dia.**
+>
+> | Item | Decisão |
+> |---|---|
+> | **1** `T`=1% / `U`=10% | ✅ aprovado · ⚠️ **em reserva** — a frustração virou ferramenta, nenhum indicador usa hoje |
+> | **5** Experiência como **alerta**, não nota | ✅ **aprovado** (S5) |
+> | **6** Rejeição: coletar e **não pontuar** | ✅ **aprovado** |
+> | **8** Taxa de preenchimento em todo indicador de D9 | ✅ **aprovado** |
+> | **7** Terceira fórmula para `⊙` | ⛔ **não respondida** — ver `CONTRATO-DE-FONTES-v0.md` §5.1 |
+>
+> Os itens **2, 3, 4 e 9** (Clarity zerada · grão por URL · error clicks/quick backs · atribuição do GA4) foram **resolvidos de outra forma**: 🔴 **a Clarity saiu do índice e voltou a ser ferramenta** (decisão do Olavo). Ver `CONTRATO-DE-FONTES-v0.md` §1.1.
+
+
 | # | Pendência |
 |---|---|
 | **1** | Confirmar a tradução `T = 1%` e `U = 10%` das faixas de frustração (§3.2) — **é minha leitura, não sua fala** |

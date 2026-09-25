@@ -270,19 +270,40 @@ Sem esse selo o documento viraria lista de desejos. **Com ele, a ausência é de
 
 ---
 
-## 5. O que fica pendente de decisão
+## 5. Decisões do Olavo — 2026-09-25
 
-| # | Pendência | De quem |
+**Seis das sete pendências foram decididas no mesmo dia.** Ficam registradas aqui e valem para a construção.
+
+| # | Decisão | Estado |
 |---|---|---|
-| **1** | 🔴 **Terceira fórmula de normalização para indicador `⊙` (alvo).** O D5 do ADR-41 só define positivo e negativo; **~11 dos 92 são alvo**. É lacuna da decisão | **eu escrevo o adendo**, Olavo aprova |
-| **2** | 🔴 O pilar Experiência entra como **alerta**, não como nota ponderada (S5) | Olavo |
-| **3** | `SD-EXP-06` rejeição: coletar e exibir, **não pontuar** (é `1 − engajamento`) | Olavo |
-| **4** | Taxa de preenchimento obrigatória em todo indicador de D9 | Olavo |
-| **5** | Tradução `T = 1%` / `U = 10%` das faixas de frustração — ⚠️ **hoje sem uso**, já que a frustração virou ferramenta | Olavo |
-| **6** | Os 5 `não coletamos` (`SD-DES-07/08/09`, `SD-REP-08`) — confirmar que é decisão, não lacuna | Olavo |
-| **7** | Estrutura nominal dos pilares (ADR-41 §4 item 6) — **este documento continua organizado por DIMENSÃO** | Olavo |
+| **2** | 🟢 **O pilar Experiência entra como ALERTA, não como nota ponderada** (S5) | ✅ **decidido** |
+| **3** | 🟢 `SD-EXP-06` rejeição: **coletar e exibir, não pontuar** — é `1 − engagementRate` | ✅ **decidido** |
+| **4** | 🟢 **Taxa de preenchimento obrigatória em todo indicador de D9.** Abaixo do mínimo ⇒ *"não medido"* (S1), nunca nota baixa | ✅ **decidido** |
+| **5** | 🟢 Faixas de frustração traduzidas como **`T` = 1% · `U` = 10%** | ✅ **decidido** · ⚠️ **em reserva**: a frustração virou 🔧 ferramenta, então hoje **não há indicador que use estes limites**. Ficam escritos para quando houver |
+| **6** | 🟢 Os cinco **`não coletamos`** (`SD-DES-07`, `-08`, `-09`, `SD-REP-08`) são **decisão, não lacuna** | ✅ **decidido** |
+| **7** | 🟢 Este documento **continua organizado por DIMENSÃO**. A estrutura nominal dos pilares segue aberta (ADR-41 §4 item 6) e **não bloqueia nada** | ✅ **decidido** |
+| **1** | 🔴 **Terceira fórmula de normalização para indicador `⊙` (alvo)** | ⛔ **NÃO RESPONDIDA.** Ver abaixo |
 
----
+### 5.1. 🔴 A única que segue aberta — e ela bloqueia
+
+O **D5 do ADR-41** define fórmula para indicador **positivo** e **negativo**. **Não define para `⊙` (alvo).**
+
+**São 11 dos 92**, e entre eles o `SD-EXP-07` (taxa de engajamento) — 🔴 **o único indicador de D6 com dado real hoje**, e que a régua do Olavo tornou alvo ao dizer que *"acima de 90% é suspeito"*.
+
+| Os 11 indicadores de alvo | |
+|---|---|
+| `SD-EXP-04` profundidade de scroll · `SD-EXP-07` engajamento · `SD-EXP-08` Core Web Vitals | D6 |
+| `SD-AQU-01` investimento · `-07` métrica-mãe · `-09` conjuntos · `-10` criativo · `-13` composição de termos · `-14` Meta | D7 |
+| `SD-CVR-14` LTV:CAC | D8 |
+| `SD-REP-06` distribuição de notas · `SD-REL-10` motivos de perda | D4 / D9 |
+
+> 🔴 **Sem a terceira fórmula, nenhum dos 11 pode ser normalizado** — e o pilar Experiência não fecha nem como alerta, porque alerta também precisa saber o que é "fora da faixa".
+>
+> **É lacuna da decisão, não detalhe de implementação.** Aguarda autorização do Olavo para eu escrever o adendo ao ADR-41.
+
+### 5.2. Consolidação pendente
+
+As seis decisões acima **refinam o ADR-41** e hoje moram só aqui e no `REGUAS-D6-D9-v0.md`. **Elas precisam virar um adendo único ao ADR-41**, junto com a fórmula de `⊙` — senão repetimos o defeito que a R2 nomeia: decisão que existe no corpo de um documento e não no lugar onde se procura.
 
 ## 6. Como verificar este documento
 
