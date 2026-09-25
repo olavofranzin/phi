@@ -11,6 +11,8 @@
 
 > ⚠️ **Nota de localização.** O escopo anterior desta frente dizia *"escreve só na pasta `saude-digital-do-negocio/`"*. Este arquivo está em `docs/handoff/` porque é **brief de sub-chat**, e a **R1** fixa esse caminho. É mudança deliberada de destino, não descuido.
 
+> 🟢 **FASE 0 EXECUTADA EM 25/09 — leia o relatório antes deste brief:** `2026-09-25-fase0-indice-saude-digital-relatorio.md`. **O escopo caiu de 24 para 18 indicadores**, o pilar Experiência encolheu de 7 para 4, e a recomendação de régua do §5 **caiu por falta de dado**. Onde este brief e o relatório divergirem, **vale o relatório** — ele tem contagem, o brief tinha as-built.
+
 > 🔴 **Este brief não é autorização para construir.** Ele é o plano que a **R7** exige *antes* da construção, e traz a **entrevista de alinhamento** junto (R9 — *"entrevista atrasada não é entrevista, é autópsia"*). **O sub-chat responde a entrevista e espera o OK do Olavo antes do primeiro nó.**
 
 ---
@@ -73,7 +75,7 @@
 - **Aquisição:** `SD-AQU-01` investimento ⊙ · `-02` impressões ↑ · `-03` cliques ↑ · `-04` CTR ↑ · `-05` CPC ↓ · `-06` CPM ↓ · `-07` métrica-mãe ⊙ · `-08` **PHI·Mídia** ↑ · `-09` conjuntos ⊙ · `-12` aquisição orgânica ↑ · `-13` composição de termos ⊙
 - **Conversão:** `SD-CVR-01` conversões da plataforma ↑ · `-02` CPA/CPL ↓ · `-03` ROAS ↑ · `-05` **conversões de site** ↑ · `-12` margem de contribuição ↑ · `-13` ticket/LTV ↑
 
-**Total: 24.**
+**Total: 24 — 🔴 e a Fase 0 derrubou 6 deles em 25/09. Ficam 18.** Caíram: `SD-EXP-04`, `SD-EXP-05`, `SD-EXP-06` (colunas vazias), `SD-AQU-09` (`t28_adset` VAZIA), `SD-CVR-12` e `SD-CVR-13` (a DB Clientes não alimenta). Ver o relatório §4.
 
 > 🔴 **Duas inconsistências que eu mesmo deixei no dicionário e que a Fase 0 tem de reconciliar — não mascare:**
 >
@@ -248,6 +250,8 @@ Quem revisa **não é quem executou**. **Limite de 3 voltas** — na terceira, o
 | **9** | Recálculo do mesmo período **não duplica linha** | rodar 2× e conferir a contagem (idempotência) |
 | **10** | O artefato tem **descrição fiel** (R5) e, se houver nó desabilitado, **nota dizendo quando religar** (R12) | leitura do artefato, não da intenção |
 | **11** | 🔴 **Teste do caso vazio, de propósito** | *"o que acontece no dia em que nenhuma linha casa?"* O fluxo **para**; não processa tudo, não grava zero. **A salvaguarda é código novo e exige o mesmo smoke que o que ela protege** |
+| **15** | 🔴 **Toda consulta filtra `client_id IS NOT NULL`** | `t28_campaign` tem **318 linhas sem cliente**, mais que as 304 do CLI-4. Sem o filtro, elas entram na conta ou desaparecem em silêncio do `GROUP BY` |
+| **16** | O índice distingue **"indefinido"** de **"ruim"** | `cpa` tem 134 não-nulos de 304 — é o guardrail 8 funcionando. `NULL` em CPA **não é CPA alto** |
 | **12** | Registro no Notion no início **e** no fim (R3) | linha na DB `PHI — Registro de Execuções` |
 | **13** | 🔴 **Um agente lê o payload e produz diagnóstico** — sem ativar workflow e sem gastar token do n8n | rodar a skill `phi-diagnostico` com o payload real colado no chat. **Prova que a saída serve ao consumidor declarado** (§8.1) |
 | **14** | Todo `NULL` vem com **`motivo_nao_medido`** legível | query mostrando `pilar_valor IS NULL AND motivo_nao_medido IS NOT NULL` — **nenhuma linha com `NULL` sem motivo** |

@@ -179,11 +179,11 @@ Para organizar os indicadores **sem escolher pilar**, uso as **10 dimensões** d
 |---|---|---|---|---|---|---|
 | `SD-EXP-01` | Rage clicks | ↓ | Clarity | 🟢 `t28_clarity_daily.clarity_rage_clicks` — **escreveu 14/09** | 🔴 ninguém | 🅐 |
 | `SD-EXP-02` | Dead clicks | ↓ | Clarity | 🟢 `t28_clarity_daily.clarity_dead_clicks` | 🔴 ninguém | 🅐 |
-| `SD-EXP-03` | Scroll excessivo | ↓ | Clarity | 🟢 `t28_clarity_daily.clarity_excessive_scroll` | 🔴 ninguém | 🅑 |
-| `SD-EXP-04` | Profundidade média de scroll | ⊙ | Clarity | 🟢 `t28_clarity_daily.clarity_avg_scroll_depth` | 🔴 ninguém | 🅑 |
-| `SD-EXP-05` | Duração média da sessão | ↑ | Clarity / GA4 | 🟢 `clarity_avg_session_sec` · `t28_ga4_landing.avg_session_duration_sec` | 🔴 ninguém | 🅐 |
-| `SD-EXP-06` | Taxa de rejeição por landing | ↓ | GA4 | 🟢 `t28_ga4_landing.bounce_rate` | 🔴 ninguém | 🅐 |
-| `SD-EXP-07` | Taxa de engajamento | ↑ | GA4 | 🟢 `t28_ga4_landing.engagement_rate` | 🔴 ninguém | 🅐 |
+| `SD-EXP-03` | Scroll excessivo | ↓ | Clarity | 🟢 `t28_clarity_daily.clarity_excessive_scroll` — **13 não-nulos, confirmado 25/09** | 🔴 ninguém | 🅑 |
+| `SD-EXP-04` | Profundidade média de scroll | ⊙ | Clarity | 🟡 **CORRIGIDO 25/09:** `clarity_avg_scroll_depth` tem **0 não-nulos** em 13 linhas. Coluna existe, dado não | — | 🅑 |
+| `SD-EXP-05` | Duração média da sessão | ↑ | Clarity / GA4 | 🟡 **CORRIGIDO 25/09:** `clarity_avg_session_sec` **0** e `avg_session_duration_sec` **0** — **as duas fontes vazias** | — | 🅐 |
+| `SD-EXP-06` | Taxa de rejeição por landing | ↓ | GA4 | 🟡 **CORRIGIDO 25/09:** `bounce_rate` tem **0 não-nulos** em 24 linhas | — | 🅐 |
+| `SD-EXP-07` | Taxa de engajamento | ↑ | GA4 | 🟢 `t28_ga4_landing.engagement_rate` — **24 não-nulos, confirmado 25/09.** É o ÚNICO 🟢 do GA4 nesta dimensão | 🔴 ninguém | 🅐 |
 | `SD-EXP-08` | **Core Web Vitals** (LCP ≤2,5s · INP <200ms · CLS <0,1) | ⊙ | PageSpeed | 🟡 **existe para LEAD** (`PROSP-04` mede HTML+PageSpeed → `enriquecimento_site`). 🔴 **não existe para cliente** | `PROSP-03`/IA | 🅐 |
 | `SD-EXP-09` | Site abre e funciona no celular — **teste real** | ☑ | humano/navegador | 🔴 **não existe.** A casa nunca fez teste real | — | 🅑 |
 | `SD-EXP-10` | Formulário enviado chega ao destino — **teste real** | ☑ | humano | 🔴 **não existe** | — | 🅑 |
@@ -203,11 +203,11 @@ Para organizar os indicadores **sem escolher pilar**, uso as **10 dimensões** d
 | `SD-AQU-06` | CPM | ↓ | derivada | 🟢 `t28_campaign.cpm` | T28 | 🅐 |
 | `SD-AQU-07` | **Métrica-Mãe da campanha** (CPA/ROAS/CPL…) | ⊙ | objetivo | 🟢 `raw_campaign_data.primary_metric_type` + `phi_score_history.primary_metric_type` (ADR-40) | Pipeline_v2 | 🅐 |
 | `SD-AQU-08` | **PHI·Mídia** (score 0–100 da campanha) | ↑ | motor | 🟢 `phi_score_history.phi_value` | Notion, T28 | 🅐 |
-| `SD-AQU-09` | Métricas por **conjunto** | ⊙ | GAQL | 🟢 `t28_adset` · Notion *Conjuntos de Anúncios* | T28, Notion | 🅐 |
+| `SD-AQU-09` | Métricas por **conjunto** | ⊙ | GAQL | 🔴 **CORRIGIDO 25/09: `t28_adset` está VAZIA** (consulta agrupada devolveu zero linhas). Coerente com o `sw metricas conjuntos`, que **não tem nó BigQuery** — escreve só no Notion | Notion | 🅐 |
 | `SD-AQU-10` | Métricas por **anúncio** / criativo | ⊙ | GAQL | 🟡 `t28_adset.criativos_json` (por design) · 🔴 `raw_ad_data` **0 linhas** — morre no `IF Gate PMAX` | T28 | 🅐 |
-| `SD-AQU-11` | Participação de impressões (impression share) | ↑ | GAQL | 🟡 **coletado e descartado** — a spec T28 §4 diz *"parar de descartar"*; não há coluna | — | 🅑 |
-| `SD-AQU-12` | Aquisição **orgânica** (sessões, conversões) | ↑ | GA4 | 🟢 `t28_ga4_landing` com `source='organico'` | 🔴 ninguém | 🅐 |
-| `SD-AQU-13` | Termos de busca — composição (marca × problema) | ⊙ | GAQL + Gemini | 🟢 **calculado em runtime, não persistido** — por decisão do **ADR-29 D5** (termos são sensíveis) | Agregador | 🅐 |
+| `SD-AQU-11` | Participação de impressões (impression share) | ↑ | GAQL | 🟡 **CORRIGIDO 25/09: a coluna EXISTE** — `t28_campaign.impression_share` e `budget_lost_is`. Mas tem **0 não-nulos**. Eu errei nos dois sentidos: disse que não havia coluna, e ela existe; e ela não tem dado | — | 🅑 |
+| `SD-AQU-12` | Aquisição **orgânica** (sessões, conversões) | ↑ | GA4 | 🟢 `t28_ga4_landing` com `source='organico'` — **12 linhas, todas com `sessions`, `conversions` e `engagement_rate`. Confirmado 25/09** | 🔴 ninguém | 🅐 |
+| `SD-AQU-13` | Termos de busca — composição (marca × problema) | ⊙ | GAQL + Gemini | 🟢 **CORRIGIDO 25/09: É PERSISTIDO**, como proporção — `pct_brand_terms`, `pct_problem_solving_terms`, `pct_competitor_terms`, `pct_other_terms`, **304 de 304**. O `ADR-29 D5` é respeitado: `raw_campaign_data.top_search_terms` existe e tem **0 não-nulos**. ⚠️ Mas `source_status.search_terms = "error"` em **todas** as linhas — valor cheio com fonte em erro é candidato a sucesso silencioso (**R11**); **não confirmei** se são reais ou default | Agregador | 🅐 |
 | `SD-AQU-14` | Meta Ads (alcance, frequência, leads) | ⊙ | Meta API | 🔴 `t28_meta_campaign` **vazia** — o nó `Fetch Meta Ads` está **DISABLED** | — | 🅑 |
 
 > **Onde iria:** A → Paga **35** + Orgânico 15 · B → Paga 10 · C → Aquisição 15 · D → Aquisição.
@@ -219,8 +219,8 @@ Para organizar os indicadores **sem escolher pilar**, uso as **10 dimensões** d
 |---|---|---|---|---|---|---|
 | `SD-CVR-01` | Conversões da plataforma | ↑ | Ads | 🟢 `raw_campaign_data.conversions` | Pipeline_v2 | 🅐 |
 | `SD-CVR-02` | CPA / CPL | ↓ | derivada | 🟢 `t28_campaign.cpa` · `t28_meta_campaign.cpl` | T28 | 🅐 |
-| `SD-CVR-03` | ROAS | ↑ | derivada | 🟢 `t28_campaign.roas` (⚠️ depende de `revenue`) | T28 | 🅐 |
-| `SD-CVR-04` | Receita | ↑ | Ads | 🟡 `raw_campaign_data.revenue` — **a única coluna que se perde** ao aposentar o 2º writer (ADR-38 etapa 8) | T28 | 🅐 |
+| `SD-CVR-03` | ROAS | ↑ | derivada | 🟢 `t28_campaign.roas` — **245 de 304. CORRIGIDO 25/09: NÃO depende de `revenue`**, e sim de `conv_value` (318/318) | T28 | 🅐 |
+| `SD-CVR-04` | Receita | ↑ | Ads | 🟡 `raw_campaign_data.revenue` — **32 de 495** (25/09). 🟢 **Mas `t28_campaign.conv_value` está 318/318.** **CORRIGIDO: o ROAS não fica indefinido** se a etapa 8 do ADR-38 aposentar o 2º writer — a preocupação era infundada | T28 | 🅐 |
 | `SD-CVR-05` | **Conversões de SITE** (key events) | ↑ | GA4 | 🟢 `t28_ga4_landing.conversions` + `key_events` | 🔴 ninguém | 🅐 |
 | `SD-CVR-06` | Cliques no site pelo GBP | ↑ | GBP | 🟡 `t28_gbp_daily.gbp_website_clicks` — vazia | ninguém | 🅐 |
 | `SD-CVR-07` | Ligações pelo GBP | ↑ | GBP | 🟡 `t28_gbp_daily.gbp_phone_calls` — vazia | ninguém | 🅐 |
@@ -228,8 +228,8 @@ Para organizar os indicadores **sem escolher pilar**, uso as **10 dimensões** d
 | `SD-CVR-09` | Cliques no WhatsApp | ↑ | GA4 / GBP | 🔴 **não existe** isolado | — | 🅐 |
 | `SD-CVR-10` | Conversas iniciadas | ↑ | WhatsApp/IG | 🔴 **não existe** | — | 🅑 |
 | `SD-CVR-11` | **Formulário chega ao CRM** — teste real ponta a ponta | ☑ | humano | 🔴 **não existe** | — | 🅑 |
-| `SD-CVR-12` | Margem de contribuição | ↑ | Notion Clientes | 🟢 `t28_campaign.margem_contribuicao_pct` (vem da DB Clientes) | T28 | 🅐 |
-| `SD-CVR-13` | Ticket / LTV | ↑ | Notion Clientes | 🟢 DB Clientes `Ticket/LTV` | Agregador | 🅑 |
+| `SD-CVR-12` | Margem de contribuição | ↑ | Notion Clientes | 🟡 **CORRIGIDO 25/09:** `margem_contribuicao_pct` tem **0 não-nulos** em 304. A coluna existe; a DB Clientes **não está alimentando** | — | 🅐 |
+| `SD-CVR-13` | Ticket / LTV | ↑ | Notion Clientes | 🟡 **CORRIGIDO 25/09:** `t28_campaign.ticket_ltv` tem **0 não-nulos** em 304 | — | 🅑 |
 | `SD-CVR-14` | CAC e LTV:CAC | ⊙ | derivada | 🔴 **`null` por design** — falta `custos_aquisicao_extra` (spec T28 §9) | — | 🅑 |
 
 > ⚠️ **`SD-CVR-04` (receita) merece atenção:** o as-built de 24/09 identificou que é **a única coluna que se perde** ao aposentar o segundo writer de `raw_campaign_data`. Sem ela, `SD-CVR-03` (ROAS) fica indefinido. **Um indicador 🅐 depende de uma decisão de aposentadoria já planejada.**
@@ -282,6 +282,10 @@ Para organizar os indicadores **sem escolher pilar**, uso as **10 dimensões** d
 
 ### Placar do dicionário
 
+> 🔴 **ATUALIZADO EM 2026-09-25 PELA FASE 0.** Os números abaixo **não são mais o as-built documentado: são contagem no BigQuery** (`TMP - A6 BigQuery Audit`, execuções 43038/43040/43042). **Seis indicadores caíram de 🟢 para 🟡/🔴 e dois estavam errados de outro jeito.** Relatório completo, com os oito erros e três achados novos: `docs/handoff/2026-09-25-fase0-indice-saude-digital-relatorio.md`.
+>
+> **Achados que não são deste dicionário e importam mais que ele:** existe um **segundo cliente (`CLI-13`)** · `t28_campaign` tem **318 linhas com `client_id` NULO**, mais que as 304 do CLI-4 · 🔴 **Clarity e GA4 pararam de receber em 06/09** e o `Vigia de Frescor` não olha para essas tabelas.
+
 | Dimensão | Indicadores | 🟢 com dado | 🟡 coluna sem dado | 🔴 inexistente | 🅐 núcleo |
 |---|--:|--:|--:|--:|--:|
 | D1 Infraestrutura | 8 | 1 | 4 | 3 | 6 |
@@ -289,12 +293,12 @@ Para organizar os indicadores **sem escolher pilar**, uso as **10 dimensões** d
 | D3 Consistência | 5 | 0 | 2 | 3 | 4 |
 | D4 Reputação | 8 | 0 | 4 | 4 | 4 |
 | D5 Conteúdo | 7 | 0 | 2 | 5 | 0 |
-| D6 Experiência | 10 | 7 | 1 | 2 | 6 |
-| D7 Aquisição | 14 | 11 | 2 | 1 | 10 |
-| D8 Conversão | 14 | 7 | 4 | 3 | 10 |
+| D6 Experiência | 10 | 🔴 **4** (era 7) | 4 | 2 | 6 |
+| D7 Aquisição | 14 | **10** (era 11) | 3 | 1 | 10 |
+| D8 Conversão | 14 | **4** (era 6; o placar dizia 7 e estava errado) | 6 | 4 | 10 |
 | 🔴 D9 Relacionamento | 10 | 0 | 0 | **10** | 4 |
 | D10 Governança | 7 | 0 | 2 | 5 | 4 |
-| **Total** | **92** | **27** | **25** | **40** | **52** |
+| **Total** | **92** | 🔴 **20** (era 26 por linha, e o placar dizia 27) | **31** | **41** | **52** |
 
 🔴 **A leitura que o placar dá, e que nenhum documento anterior tinha:**
 
