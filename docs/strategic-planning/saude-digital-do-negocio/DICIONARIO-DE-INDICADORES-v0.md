@@ -7,7 +7,7 @@
 | **Precedência** | 🔴 **Esta frente se sobrepõe ao que estava em andamento.** As regras e normas anteriores **deixam de ser fixas** e passam a ser lidas à luz do material novo (Olavo, 25/09). Ver §0.2 |
 | **O que ele NÃO decide** | ⛔ **os pesos e a estrutura de pilares** — decisão adiada pelo Olavo em 25/09 ("mapa v2 primeiro"). Ver §2 |
 | **Próximo** | os workflows da área **serão construídos ou reformados** — depois deste dicionário e do ADR, nunca antes (R7) |
-| **ADR** | 🟡 **`adr-rascunhos/ADR-41-…md`** (2026-09-25, RASCUNHO) propõe a camada 3 que este dicionário deixou em aberto: **pesos iguais provisórios**, **cobertura declarada** e **peso só para pilar com fonte**. **Se aprovado, o §2 deste documento deixa de estar em aberto** |
+| **ADR** | 🟢 **`adr-rascunhos/ADR-41-…md`** — **ACEITO em 2026-09-25** e publicado no Notion. Fixou a camada 3 que este dicionário havia deixado em aberto: **pesos iguais provisórios** (D2), **cobertura declarada** (D3) e **peso só para pilar com fonte** (D7). 🔴 **O §2 deste documento deixou de ser uma escolha aberta:** as quatro candidatas continuam registradas, mas **a regra de ponderação agora é a do ADR-41** |
 | **Base lida** | `fundamentos-presenca-digital.md` · `Análise Estatística.md` · `Metodologia Estatística…md` · **`docs/handoff/2026-09-25-substrato-estatistico-do-phi-brief.md`** (o substrato — ver §3.11 e §3.12) · ADR-21/22/29 · `CONTRATO-PHI.md` · spec T28 · ADR-23 · os 4 JSON de workflow |
 
 ---
@@ -17,7 +17,9 @@
 **Porque pilar e indicador são camadas diferentes, e só a de cima está indefinida.**
 
 ```
- CAMADA 3 — PILARES e PESOS ........ ⛔ EM ABERTO (4 candidatos, §2)
+ CAMADA 3 — PILARES e PESOS ........ 🟢 RESOLVIDA pelo ADR-41 (pesos iguais
+                                      provisórios + cobertura declarada).
+                                      A estrutura NOMINAL segue aberta (§2)
  CAMADA 2 — DIMENSÕES .............. o que se verifica
  CAMADA 1 — INDICADORES ............ este documento
  CAMADA 0 — FONTE .................. tabela, coluna, API, observação
@@ -55,7 +57,9 @@ O Olavo disse que as normas atuais não podem ser tratadas como fixas. Para isso
 
 ---
 
-## 2. ⛔ As quatro estruturas de pilares — em aberto
+## 2. As quatro estruturas de pilares — 🟢 a PONDERAÇÃO foi resolvida; o AGRUPAMENTO segue aberto
+
+> 🟢 **Atualizado em 2026-09-25 — o ADR-41 foi aceito.** A pergunta *"qual destas tabelas de peso vale?"* **não está mais aberta: nenhuma delas.** Vale a regra do **D2** (pesos **iguais** provisórios) com **D3** (cobertura declarada) e **D7** (peso só para pilar com fonte). **O que continua aberto é só o agrupamento nominal** — 6, 7 ou 8 pilares — e o **D2 torna essa escolha menos urgente, porque com pesos iguais a diferença entre as candidatas é de arrumação, não de nota.** As quatro seguem registradas abaixo porque são a história de como se chegou lá.
 
 **Quatro tabelas de peso incompatíveis existem hoje na casa.** Nenhuma é descartada aqui.
 

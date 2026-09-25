@@ -46,8 +46,8 @@ O índice do material tem **8 pilares somando 100**. O PHI hoje mede **uma fatia
 | Arquivo | O que é |
 |---|---|
 | `fundamentos-presenca-digital.md` | o material trazido pelo Olavo — **insumo, não decisão** |
-| 🟢 **`DICIONARIO-DE-INDICADORES-v0.md`** | 🔴 **O DOCUMENTO CANÔNICO desta frente** (decisão do Olavo, 25/09). A Versão 0 que a `Metodologia Estatística` exige: finalidade, **92 indicadores** com fonte e estado na casa, duplicidades eliminadas e regras de evidência. **Não decide pilares nem pesos** — isso é camada acima, e está em aberto |
-| 🟡 **`adr-rascunhos/ADR-41-…md`** | **RASCUNHO, não é decisão** (ADR-012). Propõe: pesos **iguais provisórios** · **cobertura declarada** (pilar não medido nunca é zero) · **peso só para pilar com fonte** — a regra que impede repetir o ADR-21 · e a **superseção parcial do ADR-21**, com banner, não apagamento. Invariantes **S1–S6**. **Aguarda o Olavo** |
+| 🟢 **`DICIONARIO-DE-INDICADORES-v0.md`** | 🔴 **O DOCUMENTO CANÔNICO desta frente** (decisão do Olavo, 25/09). A Versão 0 que a `Metodologia Estatística` exige: finalidade, **92 indicadores** com fonte e estado na casa, duplicidades eliminadas e regras de evidência. **Não decide pilares nem pesos** — isso é camada acima, e foi decidido pelo ADR-41 |
+| 🟢 **`adr-rascunhos/ADR-41-…md`** | 🔴 **ACEITO em 2026-09-25** e publicado no Notion ([página](https://app.notion.com/p/3e6b65e5c72b8150857cea4596fb6ffe)). Fixa: pesos **iguais provisórios** (D2) · **cobertura declarada** — pilar não medido nunca é zero (D3) · **peso só para pilar com fonte** (D7), a regra que impede repetir o ADR-21 · **superseção parcial do ADR-21**, com banner, não apagamento (já executada). Invariantes **S1–S6**. Seis itens continuam declaradamente em aberto no §4 |
 | `MAPA-material-x-casa.md` | 🟡 **insumo, com CORREÇÃO no cabeçalho.** Entrega de 25/09 — o material × o que a casa tem, pilar por pilar e dimensão por dimensão, com nome de workflow, tabela e coluna. **Confirma 3 linhas da tabela acima e derruba 4** (ver §6 do mapa). Traz 6 perguntas para o Olavo |
 
 > ⚠️ **A tabela "o que já dá para ver" acima é a leitura PRELIMINAR do chat-mãe, de antes do estudo.**
@@ -65,8 +65,10 @@ Social 10 · Reputação 10 · Dados 10 — e nunca saiu do papel. O **ADR-22** 
 ciclo de aprendizado. **O material novo não é a descoberta: é a segunda tentativa dela.**
 
 Com isso, existem **quatro estruturas de peso incompatíveis** na casa (ADR-21 · duas dentro da
-`Análise Estatística` · pesos iguais na `Metodologia`). **A escolha está em aberto** — ver §2 do
-dicionário.
+`Análise Estatística` · pesos iguais na `Metodologia`). 🟢 **Resolvido em 25/09 pelo ADR-41: não
+vale nenhuma das quatro** — vale pesos **iguais provisórios** com **cobertura declarada**, e peso só
+para pilar que tenha fonte. **O que segue aberto é o agrupamento nominal dos pilares**, e com pesos
+iguais essa escolha deixou de ser urgente. Ver §2 do dicionário.
 
 > 🔴 **Decisão do Olavo em 25/09:** esta frente **se sobrepõe** ao que estava em andamento. As regras
 > e normas anteriores **deixam de ser fixas** e passam a ser lidas à luz do material novo. O que sair

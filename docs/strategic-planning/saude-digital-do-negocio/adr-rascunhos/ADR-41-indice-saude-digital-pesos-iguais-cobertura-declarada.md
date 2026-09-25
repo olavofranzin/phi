@@ -1,8 +1,8 @@
-# [RASCUNHO] ADR-41 — Índice de Saúde Digital do Negócio: pesos iguais provisórios, cobertura declarada, e superseção parcial do ADR-21
+# ADR-41 — Índice de Saúde Digital do Negócio: pesos iguais provisórios, cobertura declarada, e superseção parcial do ADR-21
 
 | | |
 |---|---|
-| **Status** | 🟡 **RASCUNHO** (git, per ADR-012). **Não publicado no Notion. Não é decisão.** Vira `Aceito` no DB `PHI™ — Decisões` quando o Olavo aprovar |
+| **Status** | 🟢 **ACEITO** — aprovado pelo Olavo em **2026-09-25**. Publicado no DB `PHI™ — Decisões (ADR)`: [página no Notion](https://app.notion.com/p/3e6b65e5c72b8150857cea4596fb6ffe) |
 | **Data** | 2026-09-25 |
 | **Autor** | sub-chat da reformulação da Saúde Digital (branch `claude/exciting-bardeen-ozheq6`) |
 | **Decisor** | **Olavo** |
@@ -10,7 +10,9 @@
 | **Supersede** | 🔴 **parcialmente o ADR-21** — só a **tabela de pesos**. Ver §6 |
 | **Base factual** | `DICIONARIO-DE-INDICADORES-v0.md` (92 indicadores, canônico) · `Metodologia Estatística…md` · `Análise Estatística.md` · `fundamentos-presenca-digital.md` · substrato (`2026-09-25-substrato-estatistico-do-phi-brief.md`) |
 
-> ⚠️ **Numeração.** Usei **41** porque é livre nos dois sistemas. **Eles não são o mesmo sistema, e isso é um defeito a corrigir:** o campo `Número ADR` do Notion vai até **32** e **não bate com os títulos** — a página titulada *"ADR-21"* tem `Número ADR = 25`; a *"ADR-22"* tem **26**. O git tem rascunhos até **40**, e os ADR-37 a ADR-40 **nunca foram publicados no Notion**. **Quem publicar este precisa escolher o número do Notion na hora, não presumir 41.**
+> ⚠️ **Numeração — corrigido na publicação.** O título diz **41** porque 41 estava livre na sequência de rascunhos em git. **Não há número para escolher no Notion:** o campo `Número ADR` daquela DB é **`auto_increment_id` — de sistema, somente leitura**. O Notion atribui sozinho, e é por isso que **título e número não batem naquela DB desde antes deste ADR** (a página titulada *"ADR-21"* tem `Número ADR = ADR-25`; a *"ADR-22"*, 26). Os rascunhos ADR-37 a ADR-40 existem só em git.
+>
+> 🔴 **Isto é um defeito de governança de numeração, não uma escolha deste ADR** — e não é consertável escolhendo melhor no momento de publicar, porque o campo não aceita escrita. Consertar exige um campo de número editável, ou parar de pôr número no título. **Fica registrado; não é escopo daqui.**
 
 ---
 
@@ -204,7 +206,14 @@ Numerados **S** (Saúde Digital) para não colidir com **M1–M12** (Mídia) nem
 2. **Não alterar o corpo** do ADR-21. Ele é o registro do raciocínio.
 3. Registrar no `Reavaliar Quando` do ADR-21 que a reavaliação **ocorreu** em 25/09.
 
-> ⚠️ **Enquanto este ADR for RASCUNHO, o ADR-21 segue valendo integralmente.** Um rascunho não supersede um `Aceito`.
+> ✅ **Executado em 2026-09-25, na aprovação.** Confere-se lendo a página do ADR-21 (`37db65e5-c72b-814b-b3c1-eb6b8ceab705`), não este parágrafo:
+>
+> | Passo | Estado | Onde se confere |
+> |---|---|---|
+> | 1. Banner de HISTÓRICO no topo do ADR-21, apontando para cá e dizendo o que caiu e por quê | ✅ feito | primeiro bloco da página do ADR-21 |
+> | 2. Corpo do ADR-21 **não alterado** | ✅ preservado | o conteúdo abaixo do banner é o de 2026-06-11 |
+> | 3. `Reavaliar Quando` do ADR-21 registra que a reavaliação **ocorreu** em 25/09 | ✅ feito | propriedade `Reavaliar Quando`, que agora começa com *"✅ OCORREU EM 2026-09-25"* — o gatilho original ficou preservado no mesmo campo |
+> | 4. `Status` do ADR-21 permanece **Aceito** | ✅ de propósito | a superseção é **parcial**: só a tabela de pesos caiu |
 
 ---
 
