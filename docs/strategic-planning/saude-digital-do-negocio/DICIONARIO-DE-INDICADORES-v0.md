@@ -7,6 +7,7 @@
 | **Precedência** | 🔴 **Esta frente se sobrepõe ao que estava em andamento.** As regras e normas anteriores **deixam de ser fixas** e passam a ser lidas à luz do material novo (Olavo, 25/09). Ver §0.2 |
 | **O que ele NÃO decide** | ⛔ **os pesos e a estrutura de pilares** — decisão adiada pelo Olavo em 25/09 ("mapa v2 primeiro"). Ver §2 |
 | **Próximo** | os workflows da área **serão construídos ou reformados** — depois deste dicionário e do ADR, nunca antes (R7) |
+| **Base lida** | `fundamentos-presenca-digital.md` · `Análise Estatística.md` · `Metodologia Estatística…md` · **`docs/handoff/2026-09-25-substrato-estatistico-do-phi-brief.md`** (o substrato — ver §3.11 e §3.12) · ADR-21/22/29 · `CONTRATO-PHI.md` · spec T28 · ADR-23 · os 4 JSON de workflow |
 
 ---
 
@@ -299,6 +300,129 @@ Para organizar os indicadores **sem escolher pilar**, uso as **10 dimensões** d
 
 ---
 
+## 3.11 🔎 Existe régua? — a coluna que o brief do substrato pediu
+
+> Fonte: `docs/handoff/2026-09-25-substrato-estatistico-do-phi-brief.md` §5 — *"o mapa ganha uma coluna
+> a mais: existe número de referência, e de onde?"*. O brief previu que **"não existe" seria a resposta
+> mais frequente.** ✅ **Ele estava certo — e por uma margem maior do que supôs.**
+
+**A hierarquia de consulta** (está dentro do `benchmarks-canonicos.yaml`, e inverte o que a maioria assume):
+
+> **percentis da própria conta** (`raw_campaign_data` / `phi_score_history`) **>** o YAML **>** estratégia do Banco **>** conceito
+
+**A primeira régua é a história do próprio cliente. O benchmark de mercado é a segunda.**
+
+| Dim | Existe régua? | De onde | Ressalva |
+|---|---|---|---|
+| **D1** Infraestrutura | 🟡 **parcial** | **Core Web Vitals do Google**: LCP ≤2,5s · INP <200ms · CLS <0,1 (citado na `Análise Estatística`) | vale para `SD-EXP-08`; o resto do D1 é ☑ e dispensa |
+| **D2** Descoberta | 🔴 **nenhuma** | — | impressões e views de GBP **não têm faixa em documento nenhum da casa**. Search Console idem |
+| **D3** Consistência | ✅ **dispensa** | — | os 5 indicadores são **☑ binários**: nome igual ou diferente. Certo/errado não precisa de benchmark |
+| **D4** Reputação | 🔴 **nenhuma** | — | **nenhum dos três documentos do substrato menciona GBP.** Nem nota, nem volume, nem % respondida |
+| **D5** Conteúdo | 🔴 **nenhuma** | — | — |
+| **D6** Experiência | 🟡 **parcial** | Core Web Vitals (acima) | 🔴 **rage/dead clicks: nada.** Bounce e engajamento **existem no YAML** mas marcados **e-commerce + força D**, e a **ARB-ESCOPO-01 os tira do nosso escopo** |
+| **D7** Aquisição | 🟢 **SIM — a única bem servida** | os **16 `[BM-*]`** do YAML: CPC, CTR, CPM, CPL, CPA, ROAS, LTV:CAC | ⚠️ ver o defeito do `CTR_BENCHMARK` abaixo |
+| **D8** Conversão | 🟡 **parcial** | CPA e ROAS no YAML | 🔴 **a `ARB-ROAS-01` manda usar a MARGEM do cliente antes da regra absoluta.** E a **`ARB-CVR-01`** separa CVR de site de CVR de plataforma — e a faixa de site é e-commerce/força D, **fora de escopo** |
+| 🔴 **D9** Relacionamento | 🔴 **ZERO — e é o pilar de peso 20** | — | ver abaixo |
+| **D10** Governança | ✅ **dispensa** (quase) | — | 6 dos 7 são ☑. O `SD-GOV-07` mede **variação do próprio cliente**, que é a 1ª régua da hierarquia |
+
+### O placar da régua
+
+| | |
+|---|---|
+| 🟢 **Com régua** | **1** dimensão de 10 — **D7, aquisição paga** |
+| 🟡 Parcial | 2 — e as duas dependem dos Core Web Vitals, que vêm do Google, não da casa |
+| ✅ Dispensa (binárias) | 2 |
+| 🔴 **Sem régua** | **5** |
+
+🔴 **E a assimetria é pior do que o número sugere:** as dimensões **☑ binárias dispensam régua** justamente porque são fáceis. **As dimensões contínuas — as que de fato precisam de um "comparado a quê" — são exatamente as que não têm.**
+
+### 🔴 O buraco do D9, confirmado com uma busca que o brief não pôde fazer
+
+O brief admitiu: *"não procurei no Notion nem no `Board Agência`"*. **Procurei no Notion.**
+
+| O que achei | O que é |
+|---|---|
+| `classe_sla` no **SOP Execução de Demandas v1.0** | 🔴 **é a fila interna de demandas DA AGÊNCIA** — ticket próprio, não tempo de resposta ao lead do cliente |
+
+**É a mesma armadilha do CRM Odoo, um nível acima:** a casa tem SLA **do próprio trabalho** e nenhum **do atendimento do cliente**. **§4.3 do brief fica confirmado.**
+
+> 🔴 **E o incômodo que o brief nomeou continua de pé:** o substrato da casa **afirma** que *"velocidade de resposta define o ROI"* para negócio local — e **não traz um único número.** A alavanca que os nossos próprios documentos elegem como central é a que não tem régua.
+
+---
+
+## 3.12 🔴 O que os testes de refutação do brief devolveram
+
+O brief do substrato fez três deduções e, em cada uma, escreveu **o que a derrubaria**. Rodei os três testes que os artefatos em mão permitiam. **Dois confirmam, um é refutado em parte — e a refutação achou coisa pior.**
+
+### §4.1 — *"o gate estatístico não segura nada"* → ✅ **CONFIRMADO, e há uma porta a mais**
+
+O brief disse: *"o que me derruba: rodar o SQL e contar linhas… nunca contei, estou deduzindo da regra."* **Não rodei o SQL — li o código do nó.** `Normalizador T28`, função `calcVolumeSuficiente`:
+
+```js
+function calcVolumeSuficiente(dataInicioCampanha, businessDate, conversoesNaJanela, diasDaJanela) {
+  if (!dataInicioCampanha || !businessDate) return true;          // ← porta 1
+  const idadeCampanhaDias = Math.floor((new Date(businessDate) - new Date(dataInicioCampanha)) / 86400000);
+  if (idadeCampanhaDias <= 14) return conversoesNaJanela >= 50 && diasDaJanela >= 7;
+  return true;                                                    // ← porta 2
+}
+```
+
+**Há DOIS caminhos que devolvem `true`, e o brief só previu um.**
+
+| Porta | O que faz | Gravidade |
+|---|---|---|
+| **1** | 🔴 **se a data de início da campanha estiver vazia, o gate ABRE** | **é a R11 regra 1 em estado puro** — *"a falta de critério nunca pode significar 'todos'"*. E `data_inicio_campanha` vem do **Notion**, preenchido à mão: campo em branco na DB Campanhas ⇒ gate aberto, em silêncio |
+| **2** | campanha madura passa sempre | é a que o brief deduziu, e está certa |
+
+> **[DEDUZO]** a porta 1 é mais perigosa que a 2, porque a 2 pelo menos é uma **decisão escrita** (ADR-29 D1) e a 1 é **um efeito colateral de implementação** que nenhum documento menciona. ⚠️ **E eu também não medi** — não rodei query. A diferença é que agora a causa está localizada no código, não inferida da regra.
+
+### §4.2 — *"o substrato não tem leitor no ar"* → 🟡 **REFUTADO EM PARTE, e o que achei é pior**
+
+O teste era: *"achar no n8n qualquer nó vivo que carregue esses números no prompt."*
+
+| Onde procurei | Resultado |
+|---|---|
+| `PHI — Agregador`, `sw metricas campanhas`, `sw metricas conjuntos` | **zero** menção a `[BM-*]`, benchmark, substrato ou `forca_evidencia` |
+| skill `phi-diagnostico` (byte-idêntica ao nó vivo) | **zero** menções — e **3** de `N/D`. ✅ a leitura do brief está exata |
+| 🔴 **`sw metricas anuncios`, nó `Code Diagnóstico Criativo`** | 🔴 **TEM benchmarks — e nenhum deles vem do YAML** |
+
+```js
+const HOOK_BENCHMARK = 25;   // %
+const HOLD_BENCHMARK = 15;   // %
+const CTR_BENCHMARK  = 1.0;  // %
+const CTR_CRITICO    = 0.5;  // %
+const FREQ_ATENCAO = 2.5;  const FREQ_SATURADO = 3.5;
+const PESO_RANKINGS = 0.50; const PESO_HOOK = 0.25; const PESO_HOLD = 0.25;
+// comentário do próprio código:
+// "Benchmarks de normalizacao (nao definidos no brief - ajustaveis)."
+```
+
+🔴 **Três achados, e o terceiro é o que mais importa:**
+
+1. **Existe um segundo conjunto de benchmarks na casa**, hardcoded, paralelo ao YAML — e **o próprio código admite que foram inventados** (*"não definidos no brief — ajustáveis"*). É exatamente o problema que o YAML foi criado para resolver: **duas réguas que discordam.**
+2. **Existe um TERCEIRO score que nenhum documento que eu li nomeia:** `criativo_score_operacional` (0–100), com pesos próprios (0,50 rankings + 0,25 hook + 0,25 hold). A casa tem **`phi_value`, `potencial_comercial` e este.**
+3. 🔴 **`CTR_BENCHMARK = 1.0%` contradiz o canônico e viola a `ARB-ESCOPO-01`.** O substrato diz **CTR: 0,5–2% · Search: 5–10%**. Um CTR de 1,5% numa campanha de **Search** é ruim — e este código o classificaria como **acima do benchmark**. `1.0%` é número de **feed/Meta** aplicado numa operação que a arbitragem define como **Google Ads lead-gen local**.
+
+> ✅ **O lado bom, e é real:** a normalização `clamp100((hook / HOOK_BENCHMARK) * 100)` é **distância à meta com limite fixo** — exatamente o **G5** que a `Metodologia` recomenda. **O método está certo; os alvos é que são inventados.** Trocar os números é barato; se fosse o método, seria caro.
+>
+> ⚠️ **E o nó tem gate:** o `criativo_fadiga_status` só calcula `if (suficiente && frequencia > 0)`, e cai em `'Sem dados'` — o comportamento no caso vazio **foi escolhido de propósito** aqui. É o oposto da porta 1 do §4.1.
+
+### §4.3 — *"o substrato inteiro é de mídia paga"* → ✅ **CONFIRMADO**
+
+Ver §3.11. A única coisa no Notion que parece régua de atendimento é o `classe_sla` da fila interna da agência — **objeto diferente.** E o placar da régua fecha o argumento: **1 dimensão de 10 tem régua, e é a paga.**
+
+### 🟢 Um achado que credita o parque, e precisa ficar escrito
+
+O `Normalizador T28` tem uma função `assertNoRawSearchTerms()` que **lança exceção** se um termo de busca bruto tentar entrar numa tabela `t28_*`:
+
+```js
+if (/search.*terms|termos|terms/i.test(path)) throw new Error('D5: search terms brutos não podem persistir em t28_*');
+```
+
+**A decisão do ADR-29 D5 não ficou só no papel: virou guarda que quebra o fluxo se for violada.** É o contrário do sucesso silencioso da R11 — e, no meio de tantos defeitos, é o padrão que o resto deveria imitar.
+
+---
+
 ## 4. Duplicidades eliminadas
 
 A `Metodologia` §v0 pede eliminar duplicidades antes de ponderar — **indicador contado duas vezes infla o pilar sem acrescentar informação.**
@@ -336,7 +460,7 @@ A `Metodologia` §v0 pede eliminar duplicidades antes de ponderar — **indicado
 | # | Regra | De onde vem |
 |---|---|---|
 | **G1** | 🔴 **Zero nunca é ausência.** `conversions=0 ⇒ CPA/ROAS indefinidos`; `source_status error/missing ⇒ N/D`, nunca `0` | **M4** · guardrails 8/9 · I3 |
-| **G2** | **Volume insuficiente responde "VOLUME INSUFICIENTE", não pontua.** Campanha nova (≤14d): `conv ≥ 50 AND dias ≥ 7`; madura: sempre suficiente | **ADR-29 D1** ⚠️ **a `spec-contrato-agregador-t28.md` §3 ainda diz `≥30 conv AND ≥14 dias` — está desatualizada frente ao ADR** |
+| **G2** | **Volume insuficiente responde "VOLUME INSUFICIENTE", não pontua.** Campanha nova (≤14d): `conv ≥ 50 AND dias ≥ 7`; madura: sempre suficiente | **ADR-29 D1** ⚠️ **três problemas, ver §3.12:** (a) a `spec-contrato-agregador-t28.md` §3 ainda diz `≥30 conv AND ≥14 dias`, desatualizada frente ao ADR; (b) o YAML diz `~30 conv ou 2–4 semanas`, um terceiro número; (c) 🔴 **no código, data de início vazia ABRE o gate** |
 | **G3** | **Média geométrica entre pilares**, aritmética dentro deles — para um pilar excelente não esconder um crítico | `Metodologia` §Modelo recomendado |
 | **G4** | **Falha crítica não é compensável.** Sem controle do domínio, da conta ou do rastreamento → **alerta independente**, não desconto na média. *"72 — atenção crítica em governança"* | `Metodologia` §Modelo recomendado |
 | **G5** | **Normalizar por distância à meta com limites fixos**, nunca por percentil da base — *"uma empresa não muda de nota apenas porque novos concorrentes entraram na base"* | `Metodologia` §Escolha recomendada |
@@ -361,6 +485,10 @@ Você disse que os workflows da área **serão construídos ou reformados**. Reg
 | Os **4 workflows estão sem descrição** | **R5**. Reformar sem escrever a descrição repete o defeito que a auditoria de 08/09 pagou |
 | O `Criar Log Otimizacoes` tem `onError` sem destino visível | **R11 regra 2**. O `SD-GOV-07` nasce sobre um nó que falha em silêncio |
 | ⚠️ Os 4 JSON **não trazem `activeVersion`** | **R13**: são export do rascunho. **Antes de reformar qualquer um, ler o que está no ar** — não estes arquivos |
+| 🔴 `CTR_BENCHMARK = 1.0%` no `Code Diagnóstico Criativo` | **contradiz o canônico** (Search é 5–10%) e **viola a `ARB-ESCOPO-01`**. Número de feed aplicado em operação de Search. **Trocar o número é barato; o método já está certo** (§3.12) |
+| 🔴 **Um terceiro score não documentado:** `criativo_score_operacional` | pesos próprios, inventados no código. Precisa entrar no dicionário ou ser aposentado — hoje é score sem ADR |
+| 🔴 **Porta 1 do `calcVolumeSuficiente`** — data vazia abre o gate | **R11 regra 1.** ⚠️ **é produção e tem ADR próprio (ADR-29 D1): não mexer sem decisão do Olavo** |
+| 🟢 `assertNoRawSearchTerms()` lança exceção | **o padrão a imitar.** Decisão de ADR que virou guarda que quebra o fluxo, em vez de comentário |
 
 ---
 
@@ -375,6 +503,10 @@ Você disse que os workflows da área **serão construídos ou reformados**. Reg
 | **3** | Se **D9 (Relacionamento)** é do PHI ou do `Board Agência` | Olavo |
 | **4** | Qual fonte é canônica para duração de sessão (dup. #5) | técnica |
 | **5** | Qual dos dois `dim_conversao`/`SD-CVR` é renomeado (dup. #6) | técnica |
+| **6** | O `volume_suficiente` é apertado **agora** ou espera a reformulação? ⚠️ **é produção** | Olavo |
+| **7** | O substrato vira leitor do nó vivo, ou fica guardado até o time de agentes existir? | Olavo |
+| **8** | A revisão trimestral do YAML (venceu em setembro) entra na fila? | Olavo — depende da 7 |
+| **9** | 🔴 O `criativo_score_operacional` e os benchmarks hardcoded do `sw metricas anuncios`: entram no dicionário, são realinhados ao YAML, ou o score é aposentado? | Olavo |
 
 ### 🔴 Duas coisas que a decisão de 25/09 provocou e alguém precisa segurar
 
@@ -398,7 +530,11 @@ Você disse que os workflows da área **serão construídos ou reformados**. Reg
 | `raw_ad_data` morre no gate | ✅ **lido no artefato** — `IF Gate PMAX` condiciona a `_bq_sql` `notEmpty` |
 | `Fetch Meta Ads` DISABLED | ✅ **lido no artefato** — `PHI — Agregador…json` |
 | Search terms sem persistência | ✅ **ADR-29 D5** + nó `[T28] Search Terms Features` sem BQ Merge correspondente |
+| `calcVolumeSuficiente` com duas portas | ✅ **lido no código** — `Normalizador T28`, dentro de `PHI — Agregador…json` |
+| benchmarks hardcoded + 3º score | ✅ **lido no código** — `Code Diagnóstico Criativo`, dentro de `sw metricas anuncios.json` |
+| skill `phi-diagnostico` sem benchmark | ✅ **contado** — `grep -c` em `.claude/skills/phi-diagnostico/SKILL.md`: **0** de benchmark, **3** de `N/D` |
+| régua de tempo de resposta não existe | ✅ **busca no Notion** — só o `classe_sla` da fila interna da agência, objeto diferente |
 | 🔴 **O que NÃO conferi** | **nenhuma query no BigQuery** e **nenhuma leitura de `activeVersion` no n8n**. Os JSON são rascunho (**R13**). A composição real das 6 `dim_*` do lead segue **não verificada** no motor vivo |
 
-**Confiança: 0,84.** Puxam para baixo: (1) o tier 🅐/🅑 é **minha leitura**, não decisão sua; (2) os 92 indicadores cobrem o material lido, e o Olavo disse que **novos documentos poderão ser trazidos** — a lista é aberta por construção; (3) para D9 eu não tenho nenhuma fonte de dado, então os 10 indicadores são **derivados do material**, não de algo observável hoje.
+**Confiança: 0,86** (subiu de 0,84 com a leitura do substrato: três afirmações que eram dedução passaram a ser código lido). Puxam para baixo: (1) o tier 🅐/🅑 é **minha leitura**, não decisão sua; (2) os 92 indicadores cobrem o material lido, e o Olavo disse que **novos documentos poderão ser trazidos** — a lista é aberta por construção; (3) para D9 eu não tenho nenhuma fonte de dado, então os 10 indicadores são **derivados do material**, não de algo observável hoje.
 
