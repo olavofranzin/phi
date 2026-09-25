@@ -46,9 +46,28 @@ O índice do material tem **8 pilares somando 100**. O PHI hoje mede **uma fatia
 | Arquivo | O que é |
 |---|---|
 | `fundamentos-presenca-digital.md` | o material trazido pelo Olavo — **insumo, não decisão** |
-| **`MAPA-material-x-casa.md`** | 🔴 **a primeira entrega (2026-09-25)** — o material × o que a casa tem, pilar por pilar e dimensão por dimensão, com nome de workflow, tabela e coluna. **Confirma 3 linhas da tabela acima e derruba 4** (ver §6 do mapa). Traz 6 perguntas para o Olavo |
+| 🟢 **`DICIONARIO-DE-INDICADORES-v0.md`** | 🔴 **O DOCUMENTO CANÔNICO desta frente** (decisão do Olavo, 25/09). A Versão 0 que a `Metodologia Estatística` exige: finalidade, **92 indicadores** com fonte e estado na casa, duplicidades eliminadas e regras de evidência. **Não decide pilares nem pesos** — isso é camada acima, e está em aberto |
+| `MAPA-material-x-casa.md` | 🟡 **insumo, com CORREÇÃO no cabeçalho.** Entrega de 25/09 — o material × o que a casa tem, pilar por pilar e dimensão por dimensão, com nome de workflow, tabela e coluna. **Confirma 3 linhas da tabela acima e derruba 4** (ver §6 do mapa). Traz 6 perguntas para o Olavo |
 
 > ⚠️ **A tabela "o que já dá para ver" acima é a leitura PRELIMINAR do chat-mãe, de antes do estudo.**
 > **Quatro linhas dela não se sustentaram** — Experiência, Aquisição, Conversão/atendimento e Dados/governança.
 > **O `MAPA-material-x-casa.md` §6 é o que vale.** Esta tabela fica como registro do que se supunha (R6:
 > hipótese desmentida também se registra).
+
+---
+
+## 🔴 O que a leitura dos ADRs mudou (2026-09-25)
+
+**A casa já tinha um índice de pilares, e ele foi esquecido.** O **ADR-21** (Aceito 11/06/2026)
+promoveu o PHI a **Índice de Saúde Digital** com 6 pilares — Paga 35 · Funil 20 · Orgânico 15 ·
+Social 10 · Reputação 10 · Dados 10 — e nunca saiu do papel. O **ADR-22** (mesma data) já decidiu o
+ciclo de aprendizado. **O material novo não é a descoberta: é a segunda tentativa dela.**
+
+Com isso, existem **quatro estruturas de peso incompatíveis** na casa (ADR-21 · duas dentro da
+`Análise Estatística` · pesos iguais na `Metodologia`). **A escolha está em aberto** — ver §2 do
+dicionário.
+
+> 🔴 **Decisão do Olavo em 25/09:** esta frente **se sobrepõe** ao que estava em andamento. As regras
+> e normas anteriores **deixam de ser fixas** e passam a ser lidas à luz do material novo. O que sair
+> daqui é canônico. **Os workflows da área serão construídos ou reformados** — depois do dicionário e
+> do ADR, nunca antes (R7).

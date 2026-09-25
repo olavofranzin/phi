@@ -1,5 +1,29 @@
 # MAPA — o que o material cobre × o que a casa já tem
 
+> # 🔴 CORREÇÃO — 2026-09-25, depois de ler o ADR-21, o ADR-22 e o ADR-29
+>
+> **A premissa do §0 e da §3 deste documento caiu.** Eu escrevi que *"o material novo descobriu que o
+> mapa era maior que a parte desenhada"*. **Não descobriu.**
+>
+> | O que este mapa afirma | O que é |
+> |---|---|
+> | o material novo traz 8 pilares contra um PHI que mede uma fatia de um | 🔴 **o ADR-21 já promoveu o PHI a Índice de Saúde Digital com 6 pilares** (Paga 35 · Funil 20 · Orgânico 15 · Social 10 · Reputação 10 · Dados 10), **Aceito por Olavo em 11/06/2026** — e nunca construído. O material novo é a **segunda** tentativa da mesma descoberta, não a primeira |
+> | o F7 (*"o PHI sabe se a orientação funcionou"*) não existe | 🟡 **o ADR-22 o decidiu em 11/06/2026.** A metade de **escrita existe** (`PHI - Pipeline_v2`, nó `Criar Log Otimizacoes`). Falta a metade de **verificação** |
+> | `t28_search_terms` foi desenhado e não está no DDL — *"não verifiquei"* | ✅ **resolvido: o ADR-29 D5 o removeu de propósito** (termos de busca são sensíveis). Não foi esquecimento, foi decisão |
+> | a P6 (colisão do nome "Saúde Digital") | ✅ **já estava decidida pelo ADR-21**: "Saúde Digital" para o todo, **PHI·Mídia** para a parte paga |
+>
+> **O que deste mapa continua valendo:** o inventário (§1, §2), o achado das tabelas que coletam sem
+> leitor (§4), a queda da **H1** e da **H2** (§3) — a H1 ganhou fundamento estatístico no `G5` do
+> dicionário — e as correções ao README (§6).
+>
+> **O que o substitui:** **`DICIONARIO-DE-INDICADORES-v0.md`** é o documento **canônico** desta frente
+> (decisão do Olavo, 25/09). Este mapa passa a ser **insumo**, com esta correção no cabeçalho.
+>
+> ⚠️ **E o eixo "v1 / depois / nunca" usado em todo este documento perdeu a base:** ele media contra
+> **30/11**, e o Olavo destravou essa data em 25/09. O dicionário o substitui pelo **tier 🅐 núcleo /
+> 🅑 extensão**, que pergunta *"o índice fecha sem ele?"* em vez de *"cabe até 30/11?"*.
+
+
 | | |
 |---|---|
 | **Data** | 2026-09-25 |
