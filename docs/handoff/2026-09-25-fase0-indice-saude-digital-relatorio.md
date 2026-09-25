@@ -1,5 +1,16 @@
 # Fase 0 do Índice de Saúde Digital v0.1 — relatório de verificação
 
+> 🔴 **CORREÇÃO 2026-09-25, no mesmo dia — este relatório superestimou o dado da Clarity.**
+>
+> Eu contei **não-nulos** e reportei "tem dado". A execução `43060` olhou os **valores**: `t28_clarity_daily` está com **`clarity_sessions`, `clarity_rage_clicks` e `clarity_dead_clicks` iguais a ZERO nas 15 linhas, nos dois clientes.** A coluna foi escrita; nada foi medido.
+>
+> **Portanto `SD-EXP-01`, `-02` e `-03` também caem**, e o pilar Experiência fica com **1 indicador com dado** (`SD-EXP-07`, do GA4 — esse sim tem valor real, confirmado na execução `43061`). **O escopo v0.1 cai de 18 para 15.**
+>
+> 🔴 **A lição, e ela é do tipo que a casa já pagou:** `COUNT(x IS NOT NULL)` prova que a coluna foi escrita, **não que algo foi medido**. É o **M4** (*"zero nunca é ausência"*) aplicado à leitura e **esquecido na verificação**. Toda Fase 0 futura olha **valor, distribuição e mín/máx** — não só nulidade.
+>
+> Detalhe completo, mais as réguas do Olavo para D6 e D9: `docs/strategic-planning/saude-digital-do-negocio/REGUAS-D6-D9-v0.md`.
+
+
 | | |
 |---|---|
 | **Data** | 2026-09-25 |
