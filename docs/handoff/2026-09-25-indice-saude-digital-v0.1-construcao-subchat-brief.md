@@ -203,9 +203,31 @@ Sem fonte escrita para L/T/U  ⇒  o indicador NÃO entra na média aritmética 
 | **3** | **Reformar o Agregador** (ativo, 66 nós) ou **workflow novo só de leitura**? | **workflow novo de leitura** na v0.1; consolidar no Agregador depois de provado. Menos risco em produção |
 | **4** | Duas tabelas (`sd_index_history` + `sd_pilar_history`) ou uma com `ARRAY<STRUCT>`? | **duas** — a série por pilar precisa ser auditável sozinha (S2) |
 | **5** | **Nome das tabelas:** `sd_*` ou `phi_*`? | 🔴 **`sd_*`.** A política *going-forward* do ADR-21 diz que os `phi_*` existentes **se referem ao PHI·Mídia**. Nomear o índice de `phi_*` ressuscitaria exatamente a ambiguidade que o ADR-21 fechou |
-| **6** | **Quem consome a saída?** Notion (qual DB?), Telegram, nada ainda? | 🔴 **isto não é detalhe:** sem consumidor declarado, o índice nasce sendo o 18º indicador sem leitor — o defeito que ele existe para corrigir. **Precisa de resposta antes de construir** |
+| **6** | ~~**Quem consome a saída?**~~ | ✅ **RESPONDIDO pelo Olavo em 25/09: agentes de IA.** Ver §8.1 — a resposta muda o desenho e abre três itens novos |
 | **7** | `phi_dev` e depois `phi_prod`, ou direto em `prod`? | **`dev` primeiro.** ⚠️ Atenção: o workflow `client_config` **escreve em `phi_dev` enquanto o Pipeline_v2 lê `phi_prod`** — essa pegadinha já existe na casa |
 | **8** | Orçamento: **quantas execuções** de smoke o Olavo autoriza? | declarar antes. Nada roda sem OK de budget |
+
+### 8.1 ✅ Consumidor definido: **agentes de IA** (Olavo, 25/09)
+
+**O que isso resolve, e é bastante:**
+
+| Consequência | Efeito |
+|---|---|
+| **A saída é payload, não relatório** | 🟢 **não há dashboard, template de e-mail nem página para construir na v0.1.** As duas tabelas do §6 já são a entrega |
+| O **D9** (evidência) deixa de ser prosa | vira **campo estruturado**: `evidencia`, `fonte`, `periodo`, `forca_evidencia` — já está no schema |
+| O leitor natural é a camada **T28** | `WF-T28-Analise-Campaign` (`fhYmJH0o9BW1IO4i`) · Maestro + especialistas · DB `PHI - ANÁLISES` (`38fb65e5-c72b-80db-a425-e5939fc35c7a`) |
+
+**E o que ela obriga a acrescentar — porque agente erra diferente de humano:**
+
+1. 🔴 **`NULL` tem de ser instruído, não só gravado.** O **BLOCO COMUM regra 9** já diz *`source_status error/missing ⇒ N/D`, não 0*. Um agente que receba `pilar_valor: null` **sem instrução** vai tratar como zero ou alucinar um valor. Então o payload carrega, junto de cada `NULL`, um **`motivo_nao_medido`** legível (*"sem credencial de Instagram"*, *"cota do GBP"*), e o **prompt do agente diz explicitamente que não medido nunca é zero** (S1).
+2. 🔴 **O índice precisa da mesma autoridade que o `phi_value` tem no ADR-003.** Lá está escrito: *não recalcular `phi_value`/flags/severidade — são fato*. **Sem a regra equivalente, o agente vai recalcular ou discutir o índice**, e a casa passa a ter duas notas para a mesma coisa. **[DEDUZO] isto é invariante, e invariante vem por ADR** — candidato a **S8**, escrito por mim, não pelo sub-chat.
+3. ⚠️ **Camada de modelo** (R10): ler índice e diagnosticar é **camada forte**; montar o payload é **camada rápida**. Declarar antes, e **medir antes de trocar para economizar**.
+
+> 🔴 **O senão, e é honesto dizer:** verifiquei no n8n e **a cadeia T28 de análise não está no ar.** `WF-T28-Orquestrador-Analises` (`8Q5ofmAZju0hTN08`) e `WF-T28-Analise-Campaign` (`fhYmJH0o9BW1IO4i`) estão **`active: false`** — só o `WF-T28-Error-Handler` está ativo. O ADR-28 registra o Maestro como rascunho não ativado.
+>
+> **Ou seja: o consumidor está definido no desenho e não existe em execução.** Se a v0.1 gravar as tabelas e a cadeia T28 continuar desligada, **o índice nasce sendo o 18º indicador sem leitor** — exatamente o defeito que ele existe para corrigir, só um nível acima.
+>
+> **Saída barata e que não depende de ativar o T28:** a skill **`phi-diagnostico`** já existe, é byte-idêntica ao nó vivo e **roda no chat sem gastar token do n8n**. **Recomendo que o aceite da v0.1 inclua um agente lendo o payload pela skill** — prova que o dado é consumível por agente, sem ativar nada em produção nem gastar budget. **Ativar a cadeia T28 é decisão separada, sua, e não bloqueia esta rodada.**
 
 ---
 
@@ -227,6 +249,8 @@ Quem revisa **não é quem executou**. **Limite de 3 voltas** — na terceira, o
 | **10** | O artefato tem **descrição fiel** (R5) e, se houver nó desabilitado, **nota dizendo quando religar** (R12) | leitura do artefato, não da intenção |
 | **11** | 🔴 **Teste do caso vazio, de propósito** | *"o que acontece no dia em que nenhuma linha casa?"* O fluxo **para**; não processa tudo, não grava zero. **A salvaguarda é código novo e exige o mesmo smoke que o que ela protege** |
 | **12** | Registro no Notion no início **e** no fim (R3) | linha na DB `PHI — Registro de Execuções` |
+| **13** | 🔴 **Um agente lê o payload e produz diagnóstico** — sem ativar workflow e sem gastar token do n8n | rodar a skill `phi-diagnostico` com o payload real colado no chat. **Prova que a saída serve ao consumidor declarado** (§8.1) |
+| **14** | Todo `NULL` vem com **`motivo_nao_medido`** legível | query mostrando `pilar_valor IS NULL AND motivo_nao_medido IS NOT NULL` — **nenhuma linha com `NULL` sem motivo** |
 
 ---
 
