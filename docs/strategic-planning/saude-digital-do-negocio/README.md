@@ -47,6 +47,7 @@ O índice do material tem **8 pilares somando 100**. O PHI hoje mede **uma fatia
 |---|---|
 | `fundamentos-presenca-digital.md` | o material trazido pelo Olavo — **insumo, não decisão** |
 | 🟢 **`DICIONARIO-DE-INDICADORES-v0.md`** | 🔴 **O DOCUMENTO CANÔNICO desta frente** (decisão do Olavo, 25/09). A Versão 0 que a `Metodologia Estatística` exige: finalidade, **92 indicadores** com fonte e estado na casa, duplicidades eliminadas e regras de evidência. **Não decide pilares nem pesos** — isso é camada acima, e está em aberto |
+| 🟡 **`adr-rascunhos/ADR-41-…md`** | **RASCUNHO, não é decisão** (ADR-012). Propõe: pesos **iguais provisórios** · **cobertura declarada** (pilar não medido nunca é zero) · **peso só para pilar com fonte** — a regra que impede repetir o ADR-21 · e a **superseção parcial do ADR-21**, com banner, não apagamento. Invariantes **S1–S6**. **Aguarda o Olavo** |
 | `MAPA-material-x-casa.md` | 🟡 **insumo, com CORREÇÃO no cabeçalho.** Entrega de 25/09 — o material × o que a casa tem, pilar por pilar e dimensão por dimensão, com nome de workflow, tabela e coluna. **Confirma 3 linhas da tabela acima e derruba 4** (ver §6 do mapa). Traz 6 perguntas para o Olavo |
 
 > ⚠️ **A tabela "o que já dá para ver" acima é a leitura PRELIMINAR do chat-mãe, de antes do estudo.**

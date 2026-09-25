@@ -7,6 +7,7 @@
 | **Precedência** | 🔴 **Esta frente se sobrepõe ao que estava em andamento.** As regras e normas anteriores **deixam de ser fixas** e passam a ser lidas à luz do material novo (Olavo, 25/09). Ver §0.2 |
 | **O que ele NÃO decide** | ⛔ **os pesos e a estrutura de pilares** — decisão adiada pelo Olavo em 25/09 ("mapa v2 primeiro"). Ver §2 |
 | **Próximo** | os workflows da área **serão construídos ou reformados** — depois deste dicionário e do ADR, nunca antes (R7) |
+| **ADR** | 🟡 **`adr-rascunhos/ADR-41-…md`** (2026-09-25, RASCUNHO) propõe a camada 3 que este dicionário deixou em aberto: **pesos iguais provisórios**, **cobertura declarada** e **peso só para pilar com fonte**. **Se aprovado, o §2 deste documento deixa de estar em aberto** |
 | **Base lida** | `fundamentos-presenca-digital.md` · `Análise Estatística.md` · `Metodologia Estatística…md` · **`docs/handoff/2026-09-25-substrato-estatistico-do-phi-brief.md`** (o substrato — ver §3.11 e §3.12) · ADR-21/22/29 · `CONTRATO-PHI.md` · spec T28 · ADR-23 · os 4 JSON de workflow |
 
 ---
