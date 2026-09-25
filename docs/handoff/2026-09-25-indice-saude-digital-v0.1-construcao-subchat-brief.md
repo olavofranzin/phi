@@ -11,6 +11,12 @@
 
 > ⚠️ **Nota de localização.** O escopo anterior desta frente dizia *"escreve só na pasta `saude-digital-do-negocio/`"*. Este arquivo está em `docs/handoff/` porque é **brief de sub-chat**, e a **R1** fixa esse caminho. É mudança deliberada de destino, não descuido.
 
+> 🟠 **HISTÓRICO — SUPERSEADO EM 25/09, no mesmo dia.** Este brief partia de **"zero coleta nova"**, e o Olavo mudou essa premissa: a ordem passa a ser **primeiro a fonte de cada indicador, depois o workflow**. O documento que manda agora é `docs/strategic-planning/saude-digital-do-negocio/CONTRATO-DE-FONTES-v0.md`.
+>
+> **O que permanece válido aqui:** o registro da R7 (§2 — os 82 workflows, nada calcula índice de negócio), as regras de ouro (§0), os critérios de aceite (§9) e a Fase 0 (§4), que foi executada e produziu relatório. **O que caiu:** o escopo do §3 e a premissa de não coletar nada.
+>
+> **Não foi apagado** porque é o registro de como se chegou ao contrato (R2).
+
 > 🟢 **FASE 0 EXECUTADA EM 25/09 — leia o relatório antes deste brief:** `2026-09-25-fase0-indice-saude-digital-relatorio.md`. **O escopo caiu de 24 para 18 indicadores**, o pilar Experiência encolheu de 7 para 4, e a recomendação de régua do §5 **caiu por falta de dado**. Onde este brief e o relatório divergirem, **vale o relatório** — ele tem contagem, o brief tinha as-built.
 
 > 🔴 **Este brief não é autorização para construir.** Ele é o plano que a **R7** exige *antes* da construção, e traz a **entrevista de alinhamento** junto (R9 — *"entrevista atrasada não é entrevista, é autópsia"*). **O sub-chat responde a entrevista e espera o OK do Olavo antes do primeiro nó.**
