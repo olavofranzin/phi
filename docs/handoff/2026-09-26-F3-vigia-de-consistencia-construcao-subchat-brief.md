@@ -199,9 +199,11 @@ está morta há 19 dias** — por isso o **CA4** é sobre ela, e por isso ele pe
 
 **Três cuidados, e o primeiro é antes de construir qualquer coisa em cima dela:**
 
-1. 🔴 **Prove que a chave funciona** com uma leitura simples antes de desenhar o V1. Chave criada não
-   é chave funcionando — **a API pública do n8n pode estar desabilitada nesta instância**, e isso só
-   a tentativa diz. Se não funcionar: **escreva no relatório e siga sem o V1**, não contorne.
+1. 🟢 **A conexão já foi testada pelo Olavo em 26/09** — *"Connection tested successfully"*, com
+   `Base URL = https://n8n-n8n-editor.1unqx7.easypanel.host/`. **A API pública responde.** Resta
+   provar o que o V1 realmente precisa: **que a leitura de execução devolve o que ele vai ler** —
+   autenticar e obter o dado certo são coisas diferentes. Se não devolver: **escreva no relatório e
+   siga sem o V1**, não contorne.
 2. ⚠️ **Eu NÃO sei se essa chave é somente-leitura.** A listagem me mostra as permissões sobre o
    *registro* da credencial, não o escopo da chave dentro do n8n. **Não afirme que é restrita** — e
    use só leitura de execução, que é o que o V1 precisa.
