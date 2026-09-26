@@ -163,6 +163,47 @@ para agir** — e não pelo que o cliente recebe.
 
 ---
 
+## O5 — O Clarity sai do índice e volta a ser ferramenta
+
+> **Olavo, 25 e 26/09:** *"O pensamento inicial em se usar o Clarity é que ele substituísse o Hotjar e
+> pudéssemos extrair principalmente os dados de mapa de calor e gravação — **são instrumentos de
+> análise para pessoa. Nunca foram para ser coluna em BigQuery.**"*
+
+✅ **Decidido em 25/09, no sub-chat. O motivo foi dado em 26/09 — e o motivo vale mais que a decisão.**
+
+**O dado confirma:** `t28_clarity_daily` está com `clarity_sessions`, `clarity_rage_clicks` e
+`clarity_dead_clicks` **iguais a ZERO nas 15 linhas, nos dois clientes** (execução `43060`). A coluna
+foi escrita; **nada foi medido.** E a tabela parou de receber em **06/09** sem ninguém ver.
+
+**O GA4 assume como fonte** — e traz de brinde o grão que faltava: URL, dispositivo e origem.
+
+### 🔴 A regra que sai daqui, e ela é geral
+
+> **Nem toda ferramenta boa é fonte de dado.**
+>
+> | | Serve para | Vira |
+> |---|---|---|
+> | **Ferramenta** | uma **pessoa olhar** — mapa de calor, gravação de sessão | tela, não coluna |
+> | **Fonte** | um **sistema calcular** e alguém comparar | coluna, com leitor declarado |
+>
+> **Teste, antes de pôr qualquer ferramenta no índice:** *isto vira número que alguém compara, ou
+> vira tela que alguém olha?* **Se for tela, continua ferramenta.**
+
+**Confundir as duas produziu uma tabela com 15 linhas de zeros, coletada semanalmente durante meses.**
+A regra entra no `CONTRATO-DE-FONTES-v0.md` como critério de entrada.
+
+### Consequências imediatas
+
+| O quê | Efeito |
+|---|---|
+| **O pilar Experiência** | fica com **GA4** (engajamento) **+ PageSpeed** (Core Web Vitals). Segue como **alerta**, per A3 |
+| 🔴 **O `t28_ga4_landing` vira fonte única** | e está **morto há 19 dias**. A urgência sobe, não desce |
+| **O F3** | `t28_clarity_daily` **sai da expectativa do V4**; o CA4 passa a exigir só o GA4 |
+| ⬜ **O ramo do Clarity no Agregador** | **decisão pendente:** aposentar pelo procedimento da R5, ou manter e declarar um consumidor. **Enquanto ninguém decidir, ele coleta toda semana para ninguém** |
+| **As faixas de frustração** (A8 do ADR-42) | continuam **em reserva, sem consumidor** — coerente com esta decisão |
+
+---
+
 ## 4. O que ainda falta decidir
 
 | # | Pergunta | De quem |
@@ -172,6 +213,7 @@ para agir** — e não pelo que o cliente recebe.
 | 3 | A frequência e o conteúdo do relatório ao cliente — pendente desde 21/09 (`PLANO-ENTREGA-FINAL-PHI.md` §1). 🟢 **Deixou de bloquear o índice pela O4** | Olavo |
 | 5 | 🔴 **O gatilho da O4** — quando a nota vai ao cliente. Proposta no §O4; sem gatilho vira permanente por esquecimento | Olavo |
 | 6 | **Quem é o leitor vivo do índice na v0.1**, e o que ele faz diferente por causa da nota | Olavo |
+| 7 | 🔴 **O destino do ramo do Clarity no Agregador** — aposentar (R5) ou manter com consumidor declarado. Hoje ele coleta toda semana para ninguém | Olavo |
 | 4 | O **dono por pilar** (`agência`/`cliente`) no dicionário — proposto no parecer, ainda não respondido; **a O2 depende dele para contar a história comercial** | Olavo |
 
 ---

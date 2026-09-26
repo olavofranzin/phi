@@ -55,10 +55,10 @@ O plano escreveu o V4 como *"toda tabela que tem writer declarado recebeu linha?
 | `raw_campaign_data` | **diário** | ✅ em dia (24/09) |
 | `phi_score_history` | **diário** | ✅ em dia (24/09) |
 | `t28_campaign` | **semanal** (Agregador, segundas 09h) | ⚠️ 20/09 |
-| `t28_ga4_landing` | **semanal** | 🔴 **06/09 — 19 dias de atraso** |
-| `t28_clarity_daily` | **semanal** | 🔴 **06/09 — 19 dias de atraso** |
+| `t28_ga4_landing` | **semanal** | 🔴 **06/09 — 19 dias de atraso.** É a fonte que sobrou |
 | `t28_adset` · `t28_meta_campaign` · `t28_gbp_daily` | **semanal** | vazias — ver 2.3 |
 | `raw_ad_data` | **diário** | vazia desde 30/06 |
+| ⛔ `t28_clarity_daily` | **NÃO VIGIAR** | o Clarity saiu do índice em 25/09 — ver 2.4 |
 
 **Fonte destes números:** `docs/handoff/2026-09-25-fase0-indice-saude-digital-relatorio.md` §2.3. **Confira antes de usar** (R6) — são de 25/09.
 
@@ -77,6 +77,23 @@ São dois estados diferentes e o alerta precisa distinguir:
 
 > **Isto é o M4 outra vez:** *"zero nunca é ausência"*. Uma tabela em zero desde o nascimento e uma que morreu ontem **contam a mesma história para um `COUNT`, e histórias opostas para você.**
 
+### 2.4 ⛔ `t28_clarity_daily` sai da lista — **decisão do Olavo, 25 e 26/09**
+
+> *"O Clarity sai do índice e volta a ser ferramenta. O pensamento inicial era que ele substituísse o
+> Hotjar e pudéssemos extrair mapa de calor e gravação — **instrumentos de análise para pessoa.
+> Nunca foram para ser coluna em BigQuery.**"*
+
+**Não vigie essa tabela.** Vigiar dado que ninguém consome é o defeito que este vigia existe para
+combater (**M11**), só que instalado por engano dentro do próprio vigia.
+
+🔴 **E isto NÃO diminui a urgência do CA4 — aumenta.** Com o Clarity fora, **o `t28_ga4_landing` é a
+única fonte do único indicador de Experiência com valor real** (`SD-EXP-07`, taxa de engajamento,
+0,64–0,81, execução `43061`). **A fonte que sobrou é a que está morta há 19 dias.**
+
+⚠️ **O que você NÃO faz com essa informação:** não aposente o ramo do Clarity no Agregador, não apague
+a tabela, não mexa em nada. **O destino dele é decisão pendente do chat-mãe** — só não entra na
+expectativa do vigia.
+
 ---
 
 ## 3. 🔴 Critérios de aceite — escritos ANTES, como manda a R9
@@ -88,7 +105,7 @@ São dois estados diferentes e o alerta precisa distinguir:
 | **CA1** | No dia saudável o vigia emite a **linha de prova de vida** | uma execução com tudo certo, e a mensagem no Telegram |
 | **CA2** | Cada uma das 7 conferências **pega o seu defeito** | injetar em ambiente controlado **ou** provar pelo dado histórico do dia em que aconteceu |
 | **CA3** | 🟢 **V2 acusa o score 3×** — defeito **vivo**, teste de graça | tem de acusar na primeira execução real |
-| **CA4** | 🟢 **V4 acusa `t28_clarity_daily` e `t28_ga4_landing`** — segundo defeito vivo | idem. **Se não acusar, o vigia não serve** |
+| **CA4** | 🟢 **V4 acusa `t28_ga4_landing`** — segundo defeito vivo, e é a **única** fonte de Experiência que sobrou | idem. **Se não acusar, o vigia não serve.** ⛔ `t28_clarity_daily` **não** entra na expectativa (§2.4) |
 | **CA5** | O vigia **não morre calado**: zero achados ≠ zero itens | ler o nó final e confirmar que ele **sempre** recebe entrada |
 | **CA6** | 7 conferências = **1 mensagem** por dia | contar as mensagens de uma execução |
 | **CA7** | As consultas **filtram `client_id IS NOT NULL`** | as 318 linhas de teste **não** aparecem em nenhuma contagem |
@@ -137,7 +154,8 @@ problema é o plano, não a execução.
 
 **Não construa, não conserte, não investigue:**
 
-- ❌ **Por que Clarity e GA4 pararam em 06/09.** O vigia **avisa**; a causa é outro brief
+- ❌ **Por que o GA4 parou em 06/09.** O vigia **avisa**; a causa é outro brief — **e é o próximo**
+- ❌ **Aposentar o ramo do Clarity** no Agregador. Decisão pendente; você só o tira da expectativa
 - ❌ O **score 3×**. O vigia acusa; consertar é outro trabalho
 - ❌ As **318 linhas sem cliente**. Filtre; não apague, não investigue
 - ❌ O **ADR-39/40**, a **etapa 8 do ADR-38**, o **Agregador**, o **índice de Saúde Digital**
