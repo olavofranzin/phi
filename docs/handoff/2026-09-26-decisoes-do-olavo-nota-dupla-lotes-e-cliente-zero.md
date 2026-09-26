@@ -7,6 +7,7 @@
 | **Origem** | resposta ao `2026-09-25-parecer-do-planejador-sobre-a-reformulacao.md` |
 | **Estado** | 🟢 as três **decididas**. As condições do §4 são recomendação do chat-mãe e ainda não foram aprovadas |
 | **Efeito** | derruba a recomendação 2 do parecer · define a ordem de construção da v0.1 · abre uma frente nova (cliente-zero) |
+| **🔴 Adendo 26/09** | **O cliente NÃO vê a nota até segunda ordem (O4).** Muda a razão da O1 e barateia a v0.1 — ver §O4 |
 | **Vira ADR** | sim — adendo ao ADR-41 (a O1 e a O2 mexem no D3 e no D10) |
 
 ---
@@ -33,6 +34,15 @@
 - **a série recomputada sob a cobertura de hoje** — a única que pode ser comparada mês a mês.
 
 > **Sem isso, o dia em que o GBP destravar a nota de todo cliente se mexe e ninguém sabe explicar.** Com isso, a resposta é *"ligamos mais um sensor; a linha comparável mostra que você subiu de 61 para 64"*.
+
+---
+
+> 🔴 **Adendo de 26/09 — a razão desta decisão mudou, a decisão não.** Com a **O4** (cliente não vê a
+> nota), **a nota composta não serve ao upsell ainda: serve a você, para priorizar entre clientes.**
+> O upsell continua sendo o motivo de ela existir — só não é o motivo de ela existir **agora**.
+>
+> **E as duas linhas no gráfico do cliente deixam de ser necessárias na v0.1.** O que **não** pode ser
+> adiado é o que as torna possíveis depois: ver o §O4.
 
 ---
 
@@ -86,13 +96,73 @@
 
 ---
 
+## O4 — 🔴 O cliente não vê a nota até segunda ordem
+
+> **Olavo, 26/09:** *"o cliente não terá acesso a nota até segunda ordem."*
+
+✅ **Decidido.** O índice nasce **interno**. O cliente continua recebendo o relatório periódico e a
+reunião — **sem nota**.
+
+### O que isto barateia
+
+| O que cai da v0.1 | Por quê |
+|---|---|
+| as **duas linhas** no gráfico do cliente (O1) | não há gráfico do cliente ainda |
+| explicar cobertura **2 de 8** para fora | ninguém de fora vê |
+| o nome *"Índice Experimental"* como cuidado comercial (D8) | vira cuidado interno, e basta o rótulo no documento |
+| a fragilidade comercial apontada no ADR-41 §7 | **deixa de existir hoje**; volta no dia da liberação |
+
+**A v0.1 deixa de ser produto e vira painel: nota por pilar + alertas, na sua bancada.**
+
+### 🔴 O que NÃO pode ser adiado, mesmo assim
+
+**Uma coisa só, e ela é barata agora e impossível depois: a régua tem de ser versionada com data.**
+
+| Guardar desde o 1º cálculo | Consequência de não guardar |
+|---|---|
+| `L` · `Ti` · `Ts` · `U` de cada indicador, **com data de vigência** | no dia da liberação, **não há como recalcular o passado** — a nota antiga foi feita com uma régua que ninguém sabe mais qual era |
+| **quais pilares entraram na conta** em cada período | duas datas deixam de ser comparáveis e não há como descobrir depois |
+
+> O valor bruto já está guardado (`raw_campaign_data`, `t28_*`). **A régua, não.** Sem a régua datada,
+> o histórico não se reconstrói nem com o dado bruto na mão.
+
+### 🔴 O risco que esta decisão cria — e é o risco desta casa
+
+**Sem cliente e sem a cadeia de análise ativa, o índice nasce com ZERO leitor vivo.**
+
+É o **M11** (*todo dado escrito tem consumidor declarado*) prestes a ser quebrado no artefato mais
+caro da frente — e é a frase do próprio diagnóstico do PHI, um nível acima:
+*"foi construído para transformar silêncio em sinal, e é a coisa que mais silencia."*
+
+**A condição, e ela é do mesmo tipo dos critérios de aceite:** antes de construir, **declarar um leitor
+vivo e o que ele faz diferente por causa da nota.** Hoje o único candidato real é **você, numa visão
+semanal** — o que confirma o painel como forma da v0.1, e não o relatório.
+
+### ⚠️ *"Até segunda ordem"* precisa de gatilho (R12)
+
+*Estado temporário sem prazo vira estado permanente invisível* — já custou três vezes nesta casa.
+
+**Gatilho proposto** (meu, você troca): a nota vai ao cliente quando **(a)** o Raio-X do cliente-zero
+estiver completo **e (b)** houver ao menos **4 pilares pontuados**, sendo pelo menos um do lote 3 —
+porque é o lote 3 que sustenta a conversa de upsell.
+
+### O que a O4 destrava
+
+🟢 **A pendência nº 3 do §4 deixa de bloquear o índice.** A frequência do relatório ao cliente segue
+pendente **para o relatório**, mas **o período do índice passa a ser definido pelo que você precisa
+para agir** — e não pelo que o cliente recebe.
+
+---
+
 ## 4. O que ainda falta decidir
 
 | # | Pergunta | De quem |
 |---|---|---|
 | 1 | As condições do §O2 e do §O3 acima — são recomendação minha, não estão aprovadas | Olavo |
 | 2 | O `client_id` do cliente-zero e se `is_internal` entra no `client_config` (**mexe no schema — tem ADR próprio, o 39**) | Olavo |
-| 3 | 🔴 **A frequência e o conteúdo do relatório ao cliente** — pendente desde 21/09 (`PLANO-ENTREGA-FINAL-PHI.md` §1). **É ela que define o período do índice** | Olavo |
+| 3 | A frequência e o conteúdo do relatório ao cliente — pendente desde 21/09 (`PLANO-ENTREGA-FINAL-PHI.md` §1). 🟢 **Deixou de bloquear o índice pela O4** | Olavo |
+| 5 | 🔴 **O gatilho da O4** — quando a nota vai ao cliente. Proposta no §O4; sem gatilho vira permanente por esquecimento | Olavo |
+| 6 | **Quem é o leitor vivo do índice na v0.1**, e o que ele faz diferente por causa da nota | Olavo |
 | 4 | O **dono por pilar** (`agência`/`cliente`) no dicionário — proposto no parecer, ainda não respondido; **a O2 depende dele para contar a história comercial** | Olavo |
 
 ---
@@ -106,3 +176,4 @@
 | **PLANO-F3** | o **V4** passa a exigir período esperado por tabela |
 | **Dicionário** | coluna de **dono** por indicador · coluna de **lote** |
 | **Frente nova** | cliente-zero: é **operação antes de software** — mora no `Board Agência`, não em `docs/strategic-planning/<frente>/` |
+| **ADR-41 (de novo)** | o **D8** (nome experimental) passa a ser cuidado interno enquanto a O4 valer · a consequência negativa nº 2 do §7 (*fragilidade comercial*) fica **suspensa, não resolvida** |
