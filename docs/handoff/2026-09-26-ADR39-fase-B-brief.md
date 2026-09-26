@@ -26,6 +26,16 @@
 
 ---
 
+> 🟢 **TRÊS DECISÕES DO OLAVO — 26/09.** Elas mudam os passos 4.4 e 4.5.
+>
+> | Pergunta | Resposta |
+> |---|---|
+> | A que horas o dia fecha? | **07h** — a coleta das 07h fica. Ver §3.2 |
+> | Pode congelar o metadado (4.4)? | *"deixo para sua escolha técnica"* → **não congelar. Migrar UM leitor antes.** Ver §3.1 |
+> | O `phi_dev` pode morrer? | 🟢 **pode** — mas **a tabela agora, o dataset depois.** Ver §3.3 |
+
+---
+
 ## 0. Por que esta etapa, e por que agora
 
 **Hoje, um cliente novo que você cadastra no Notion nunca chega ao score.** O writer de produção do `phi_prod.client_config` é um `UPDATE` **sem `INSERT`**; o que **insere** grava no `phi_dev`, que o score não lê. O `INNER JOIN` elimina o cliente — **sem erro e sem alarme**.
@@ -104,7 +114,8 @@ só isso.** Se a coluna nascer vazia, **é o comportamento correto.**
 | **4.2** | Repontar o `MERGE` do workflow `client_config` (`SI5NSzRb8lVUz74RwOhIT`) de `phi_dev` para **`phi_prod`** | — |
 | **4.3** | Garantir que o `MERGE` **INSERE** e provar o **CA3a** com o cliente de teste (§3) | 🔴 sem isso, o bug do cliente-fantasma continua |
 | **4.4** | 🔴 **Só então** remover o `UPDATE` do `PHI - Subworkflow Campanhas` | 🔴 **antes do 4.3, o KIL fica sem nenhum writer e o CPA vira o que estiver na linha** |
-| **4.5** | Apagar `phi_dev.client_config` e fechar o **D2** | — |
+| **4.3b** | 🔴 **NOVO** — migrar o `Buscar Campanhas Alertas` para a métrica da campanha (§3.1) | sem ele, o 4.4 congela um valor que ainda chega ao Olavo |
+| **4.5** | Apagar **`phi_dev.client_config`** e fechar o **D2**. 🔴 **O dataset inteiro só depois da varredura** (§3.3) | apagar o dataset quebra o `WF-T28-Orquestrador` |
 
 ### 3.1 🔴 Os três leitores que o ADR-40 não migrou — medidos em 26/09
 
@@ -121,8 +132,58 @@ só isso.** Se a coluna nascer vazia, **é o comportamento correto.**
 | **Retirar só o `UPDATE` (4.4)** | não quebra nada **hoje**, e **não é inofensivo**: congela um metadado que ainda é lido. Mudança futura de métrica **deixa de chegar aos alertas** |
 | **Retirar a COLUNA** | 🔴 **quebra os três SQLs.** Não está neste brief e **não pode ser feita sem migrar os três leitores antes** |
 
-🔴 **Portanto o 4.4 SÓ acontece com uma decisão explícita do Olavo sobre o congelamento** — e o
-**4.5 (apagar `phi_dev`) não depende disso**: pode acontecer assim que o 4.3 estiver provado.
+### 🟢 A escolha técnica, feita pelo chat-mãe em 26/09: **não congelar — migrar um leitor**
+
+O Olavo delegou (*"não sei dizer, deixo para sua escolha técnica"*). **A escolha é esta, com o porquê:**
+
+| Saída | Veredito |
+|---|---|
+| **Congelar** (tirar o `UPDATE` e deixar a coluna parada) | ❌ **não.** Hoje é inofensivo — 1 cliente, 2 campanhas, as duas `CPA`. **Mas instala um valor que ninguém mais atualiza e que continua chegando ao humano pelos alertas.** É a doença do cabeçalho que mente |
+| **Migrar o `UPDATE` para o novo dono** | ❌ **não.** Preserva o **grão errado**: a métrica é da campanha (ADR-40) |
+| **Migrar os TRÊS leitores e remover a coluna** | 🟡 certo, **e maior do que precisa ser agora** |
+| 🟢 **Migrar UM leitor — o que chega ao humano** | ✅ **é esta.** Ver abaixo |
+
+**Dos três leitores, só um propaga a métrica para fora:**
+
+| Leitor | Precisa da coluna fresca? |
+|---|---|
+| `Buscar Clientes Ativos` | ❌ **não** — usa a coluna para listar cliente, não para julgar |
+| `Calcular e Persistir PHI Score` | ❌ **não** — o `COALESCE` tem **0 dependências** hoje (medido) |
+| 🔴 `Buscar Campanhas Alertas` | ✅ **sim** — é o que leva a métrica ao alerta que o Olavo lê |
+
+**Passo novo, e o 4.4 fica preso a ele:**
+
+| # | Passo |
+|---|---|
+| **4.3b** | 🔴 **`Buscar Campanhas Alertas` passa a ler a métrica DA CAMPANHA**, não de `cc.primary_metric_type`. ⚠️ **Confirme antes que o valor da campanha está disponível na consulta dele** — se não estiver, **PARE e devolva**: o 4.4 não é urgente |
+| **4.4** | **Só depois do 4.3b.** Aí remover o `UPDATE` não congela nada que chegue a humano |
+
+> **A coluna continua existindo.** Removê-la exige mexer nos outros dois leitores, **e não urge** —
+> nada quebra por ela estar lá.
+
+### 3.2 🔴 "O dia fecha às 07h" — e isso cria um requisito para o ADR-37, não para cá
+
+**Decisão do Olavo, 26/09.** Hoje quem coleta às 07h é o **W2** (`PHI - Subworkflow Campanhas`) — exatamente o workflow que a Fase 2 do ADR-37 quer aposentar. O **W1** roda às **00h e 04h**.
+
+> 🔴 **Consequência que ninguém tinha escrito: aposentar o W2 sem mover o relógio fecha o dia às 04h
+> — e o número do score muda.** Medido hoje: Salão, custo **33,948977** às 04h contra **34,49** às
+> 07h, com **1 clique e 3 impressões a mais**.
+
+**Requisito novo para a Fase 2 do ADR-37 (não é desta etapa):** antes de aposentar o W2, **o W1 tem
+de rodar às 07h e produzir os mesmos números que o W2 produzia** — provado com os dois vivos, em
+double-write, comparando. **É o padrão que já funcionou em 21/07 com o `PHI - Loop Alerta Fase 1`.**
+
+### 3.3 🟢 O `phi_dev` pode morrer — a TABELA agora, o DATASET depois
+
+**Autorizado pelo Olavo, 26/09.** Mas em dois tempos, e o motivo é o **CA5**:
+
+| | |
+|---|---|
+| 🟢 **`phi_dev.client_config`** | pode ser apagada assim que o 4.3 estiver provado |
+| 🔴 **o dataset `phi_dev` inteiro** | **só depois da varredura.** O `WF-T28-Orquestrador` lê `phi_dev.t28_campaign` — **apagar o dataset o quebra** |
+
+**Antes de qualquer `DROP SCHEMA`: varra os workflows por `phi_dev` e liste quem ainda lê.** Se a
+lista não estiver vazia, **apague só a tabela e registre a lista** — o dataset morre noutra etapa.
 
 > ⚠️ **E não transfira o `UPDATE` para o novo dono "para preservar a função".** Seria preservar o
 > **grão errado** — a métrica é da campanha. O que precisa migrar é o **leitor**, não o escritor.
