@@ -2,7 +2,8 @@
 
 | | |
 |---|---|
-| **Status** | ✅ **APROVADO** — **Olavo, 2026-09-21** (*"Plano F3 ok"*). Vira brief quando o ADR-39 fechar |
+| **Status** | ✅ **APROVADO** — **Olavo, 2026-09-21** (*"Plano F3 ok"*). 🟢 **VIROU BRIEF EM 2026-09-26:** `docs/handoff/2026-09-26-F3-vigia-de-consistencia-construcao-subchat-brief.md` |
+| **A condição do ADR-39** | 🟢 **LIBERADA em 26/09.** *"Vira brief quando o ADR-39 fechar"* era ordem de fila, e a fila mudou em 24/09. **O vigia não depende do ADR-39** — ele só detecta. Enquanto o 39 não fechar, é esperado que o **V3 acuse**: isso é o vigia funcionando |
 | **Critério que atende** | **F3** do `PLANO-ENTREGA-FINAL-PHI.md` · fecha o **D5** do `CONTRATO-PHI.md` · destrava **C3/C4** da Definição de Pronto |
 | **Razão que serve** | **R-A** — a qualidade do serviço parar de depender da atenção do Olavo |
 | **Posição na fila** | 🔴 **PRIMEIRO** (revisado em 2026-09-24) — ver abaixo |
@@ -65,7 +66,7 @@ saudável ela devolvia zero linhas — e zero itens encerra o ramo no n8n.
 | **V1** | O `Pipeline_v2` chegou até o **último nó** ontem? 🔴 **lendo a execução do n8n, NUNCA o `workflow_execution_log`** | **Fase 3 morta 8 dias**, verde todo dia | 8 dias sem tarefa aberta |
 | **V2** | Cada campanha ativa tem **exatamente 1 score** de ontem? | **score 3× no Notion** | número errado na sua bancada |
 | **V3** | Todo cliente **ativo no Notion** aparece no score? | **CHA morrendo no `phi_dev`** | cliente pago e não monitorado |
-| **V4** | Toda tabela **que tem writer declarado** recebeu linha? | **`raw_ad_data` vazia 3 meses** | coleta que ninguém fez |
+| **V4** | Toda tabela **que tem writer declarado** recebeu linha **no período esperado DELA**? 🔴 **corrigido em 26/09** | **`raw_ad_data` vazia 3 meses** · **Clarity e GA4 mortos 19 dias** | coleta que ninguém fez |
 | **V5** | Algum workflow terminou **verde tendo roteado erro**? | **Agregador na cota do GBP, toda rodada** | 3 de 6 destinos vazios |
 | **V6** | O `operador unico` e o `Pipeline_v2` rodaram **na janela esperada**? | (preventiva) | rodada que não aconteceu |
 | **V7** | Quantas campanhas ficaram **sem `primary_metric_type`** ontem? | (nova, 21/09 — **ADR-40 §6.1**) | campanha julgada por régua inventada |
@@ -85,6 +86,28 @@ saudável ela devolvia zero linhas — e zero itens encerra o ramo no n8n.
 > aquela tabela sofre contenção consigo mesma e **grava `FAILED` em dia que deu certo**. Em 23/09 ela
 > diria que a fase Operacional falhou — num dia em que a Abertura rodou pela primeira vez e entregou
 > tarefa, checklist e log. **Um vigia que lê um instrumento quebrado repete o defeito com autoridade.**
+
+### 🔴 Correção de 2026-09-26 — o V4 era diário e metade das tabelas é semanal
+
+O V4 foi escrito como *"recebeu linha ontem?"*. **As `t28_*` são semanais** (Agregador, segundas 09h).
+Do jeito que estava, ele **gritaria todo dia** para tabela semanal — e seria desligado, ficando cego
+para o caso que o motivou.
+
+**Três coisas entram no V4, e estão detalhadas no brief de construção:**
+
+1. **Período esperado por tabela** — diário para `raw_campaign_data` e `phi_score_history`, semanal
+   para as `t28_*`.
+2. **Distinguir *"parou de receber"* de *"nunca recebeu"*.** `t28_clarity_daily` parou em **06/09**;
+   `t28_gbp_daily` nunca recebeu (cota). **Alerta só para a primeira.** É o **M4** de novo: as duas
+   contam a mesma história para um `COUNT` e histórias opostas para o Olavo.
+3. **Toda consulta filtra `client_id IS NOT NULL`** — a `t28_campaign` tem **318 linhas de teste**
+   sem cliente dentro de `phi_prod`.
+
+> **De onde veio a correção:** o sub-chat da Saúde Digital achou, por acaso, que Clarity e GA4
+> pararam em **06/09** e ninguém viu — *porque o vigia atual só olha as duas tabelas que estão em dia*.
+> Fonte: `docs/handoff/2026-09-25-fase0-indice-saude-digital-relatorio.md` §2.3.
+
+---
 
 ## 5. Onde a expectativa mora
 
