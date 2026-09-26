@@ -126,17 +126,26 @@ reunião — **sem nota**.
 > O valor bruto já está guardado (`raw_campaign_data`, `t28_*`). **A régua, não.** Sem a régua datada,
 > o histórico não se reconstrói nem com o dado bruto na mão.
 
-### 🔴 O risco que esta decisão cria — e é o risco desta casa
+### O leitor — corrigido em 26/09
 
-**Sem cliente e sem a cadeia de análise ativa, o índice nasce com ZERO leitor vivo.**
+> 🔴 **Eu escrevi aqui que *"o índice nasce com zero leitor vivo"*. Está errado, e o Olavo corrigiu:**
+> *"além de ser consumido internamente, ele poderá ser também usado por agentes; será liberado para o
+> cliente quando tivermos plena confiança de que ele reflete o que desejamos. Isso não é falha, não é
+> limitação — tudo isso está sendo desenvolvido para que o consumo interno venha primeiro."*
 
-É o **M11** (*todo dado escrito tem consumidor declarado*) prestes a ser quebrado no artefato mais
-caro da frente — e é a frase do próprio diagnóstico do PHI, um nível acima:
-*"foi construído para transformar silêncio em sinal, e é a coisa que mais silencia."*
+**O M11 está satisfeito, não ameaçado.** A ordem dos leitores é **declarada e deliberada**:
 
-**A condição, e ela é do mesmo tipo dos critérios de aceite:** antes de construir, **declarar um leitor
-vivo e o que ele faz diferente por causa da nota.** Hoje o único candidato real é **você, numa visão
-semanal** — o que confirma o painel como forma da v0.1, e não o relatório.
+| Ordem | Leitor | Estado |
+|---|---|---|
+| **1º** | **Olavo**, no painel semanal | ✅ é o leitor da v0.1 |
+| **2º** | os **agentes** (cadeia de análise) | planejado — entra quando a cadeia estiver ativa |
+| **3º** | o **cliente** | quando houver confiança de que a nota reflete o que se quer dizer |
+
+**A diferença que eu apaguei:** *"ninguém lê"* e *"o leitor é humano antes de ser automático"* não são
+a mesma coisa. As 17 colunas órfãs não tinham consumidor **nenhum**; aqui o consumidor é uma pessoa
+com nome, e liberar para fora só depois de confiar **é sequenciamento, não lacuna**.
+
+**O que continua valendo, e já está feito:** o leitor da v0.1 está escrito. Era só isso que faltava.
 
 ### ⚠️ *"Até segunda ordem"* precisa de gatilho (R12)
 
