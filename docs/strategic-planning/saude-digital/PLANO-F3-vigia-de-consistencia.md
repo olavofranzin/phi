@@ -1,27 +1,31 @@
 # Plano F3 — o vigia de consistência: fazer o silêncio significar saúde
 
-> 🔴 **AS-BUILT 2026-09-26 — A CONSTRUÇÃO NÃO OCORREU. NADA FOI PUBLICADO.**
+> ✅ **AS-BUILT 2026-09-26 — CONSTRUÍDO E PUBLICADO.** `versionId == activeVersionId == 98020749`
 >
-> A volta 1 parou **antes do primeiro nó**, porque o dado desmentiu três premissas (R6):
+> **6 das 7 conferências no ar.** O workflow virou `PHI - Vigia de Consistencia dos Dados`.
+> Relatório: `docs/handoff/2026-09-26-F3-vigia-volta-2-relatorio.md`
 >
-> | Premissa do brief | O que o dado diz | Prova |
-> |---|---|---|
-> | **CA3** — *"o score 3× é defeito vivo, teste de graça"* | **era real em 19/09** (6 linhas para 2 campanhas) e **sumiu até 26/09**: 0 chaves duplicadas em 30 dias · a view devolve 1 linha por campanha · o Notion tem 1 página e 1 score por campanha. **Consertado sem registro** — deduzo: rebuild do ADR-38 | execs **43184**, **43189** + query Notion |
-> | **CA4** — *"`t28_ga4_landing` morto desde 06/09, 19 dias"* | **em dia.** Cadência semanal 06/09 → 13/09 → 20/09, `execution_id` crescente. Idem `t28_clarity_daily` | exec **43184** |
-> | **V1** — *"ler a execução do n8n"* | **não construível**: nenhuma das 26 credenciais é do tipo `n8nApi`, e não há prova pelo dado (a Fase 3 legitimamente não escreve em dia saudável) | leitura das credenciais |
+> | O que ficou diferente do plano | Por quê |
+> |---|---|
+> | 🔴 **o V4 é por tabela × CLIENTE × janela**, não por tabela | um `MAX` por tabela mostra 20/09 e **esconde um cliente parado há 20 dias**. Medido, exec 43326 |
+> | o V4 tem **duas** perguntas: *carregou?* (`ingested_at`) e *avançou?* (`business_date`) | correção de 26/09; a coluna `ingested_at` existe em todas as `t28_*` |
+> | 🔴 **V1 AUSENTE** | a credencial `n8nApi` existe mas a API responde **404** em dois recursos diferentes (401 seria chave inválida). API desabilitada ou URL-base errada — ação de tela |
+> | **V5 parcial**, com rótulo obrigatório na mensagem | lê `t28_errors`: cobre só quem usa o error-handler do T28 |
+> | **V6 completo sem a API** | `ingestion_step` deu o que a execução ia dar. Olha o writer, não o relógio (os dois relógios da tabela discordam) |
+> | **V2b acrescentado** | a view `phi_score_current` agrupa **sem `platform`**: multiplicador armado, contraria o M2 |
+> | `t28_gbp_daily` passou a ser **vigiada** | recebeu 1 linha em 21/06 e parou. *Recebeu uma vez e parou* não é *nunca recebeu* |
+> | o nó `Buscar lacunas de ontem` foi **consolidado**, não aposentado | as duas perguntas dele viraram V4B e V2c no mesmo workflow |
 >
-> **`JMgc0HdLPOFPnFYb` está intocado** (`versionId == activeVersionId`, `sameAsDraft: true`), e **não
-> foi deixado rascunho divergente**, de propósito.
+> 🔴 **E a correção que o executor deve a si mesmo:** o **CA4 original estava CERTO.** O
+> `t28_ga4_landing` **do CLI-4** está parado em **06/09** — 20 dias. A refutação da volta 1 foi
+> errada porque agregou entre clientes. **A Fase 0 de 25/09 estava certa.**
 >
-> ⚠️ **O achado nº 1 do relatório da Fase 0 de 25/09 — *"Clarity e GA4 pararam em 06/09 e ninguém
-> viu"* — está errado**, e ele repriorizou a fila. Ver §2.2 do relatório.
->
-> **Relatório:** `docs/handoff/2026-09-26-F3-vigia-execucao-relatorio.md` (4 perguntas devolvidas)
-> **Desenho pronto das 4 conferências construíveis:** `F3-conferencias-sql-e-codigo.md`
+> **A hipótese *"a carga acontece e a data não anda"* foi REFUTADA por dado:** `defasagem = 1 dia` em
+> todas as 15 linhas medidas. A conferência para detectá-la **ficou construída de todo jeito**.
 
 | | |
 |---|---|
-| **Status** | ✅ **APROVADO** — **Olavo, 2026-09-21** (*"Plano F3 ok"*). 🟢 **VIROU BRIEF EM 2026-09-26:** `docs/handoff/2026-09-26-F3-vigia-de-consistencia-construcao-subchat-brief.md` · 🔴 **CONSTRUÇÃO PARADA NA VOLTA 1 (26/09)** — ver banner acima |
+| **Status** | ✅ **APROVADO** — **Olavo, 2026-09-21** (*"Plano F3 ok"*). 🟢 **VIROU BRIEF EM 2026-09-26:** `docs/handoff/2026-09-26-F3-vigia-de-consistencia-construcao-subchat-brief.md` · ✅ **CONSTRUÍDO E PUBLICADO NA VOLTA 2 (26/09)** — ver banner acima |
 | **A condição do ADR-39** | 🟢 **LIBERADA em 26/09.** *"Vira brief quando o ADR-39 fechar"* era ordem de fila, e a fila mudou em 24/09. **O vigia não depende do ADR-39** — ele só detecta. Enquanto o 39 não fechar, é esperado que o **V3 acuse**: isso é o vigia funcionando |
 | **Critério que atende** | **F3** do `PLANO-ENTREGA-FINAL-PHI.md` · fecha o **D5** do `CONTRATO-PHI.md` · destrava **C3/C4** da Definição de Pronto |
 | **Razão que serve** | **R-A** — a qualidade do serviço parar de depender da atenção do Olavo |

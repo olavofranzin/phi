@@ -2,9 +2,11 @@
 
 | | |
 |---|---|
-| **Estado** | 🟡 **DESENHO PRONTO, NÃO MONTADO.** Nenhuma linha disto está no n8n |
+| **Estado** | ✅ **CONSTRUÍDO EM 26/09** (volta 2) e publicado em `JMgc0HdLPOFPnFYb`. ⚠️ **O que está no ar é a fonte da verdade, não este arquivo** — leia o workflow (R13) |
 | **Data** | 2026-09-26 |
-| **Por que existe** | a volta 1 parou por premissa refutada (ver `docs/handoff/2026-09-26-F3-vigia-execucao-relatorio.md`). O desenho fica escrito para a próxima volta ser **montagem, não desenho** |
+| **Por que existe** | a volta 1 parou por premissa refutada. Este arquivo foi o desenho que a volta 2 montou |
+| **O que mudou do desenho para o construído** | o **V4 virou por cliente** (um `MAX` por tabela esconde cliente morto) · ganhou a segunda pergunta (`ingested_at`) · **V2b** acrescentado · **V4_VAZIA** acrescentado (tabela com zero linha não formava grupo e ficava invisível) · **V3 virou lista branca `ATIVO`** — a lista negra chutada gerou 10 falsos críticos no smoke · `t28_gbp_daily` passou de `conhecido` para **vigiada** · Telegram em `parse_mode HTML`, senão o `_` dos nomes de tabela desaparecia |
+| **Relatório** | `docs/handoff/2026-09-26-F3-vigia-volta-2-relatorio.md` |
 | **Conferido contra** | o schema real de `phi_prod`, execução **43182** (colunas) e **43183** (frescor). **Nenhum nome de coluna aqui foi adivinhado** |
 
 ---
