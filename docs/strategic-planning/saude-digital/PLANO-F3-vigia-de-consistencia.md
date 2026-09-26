@@ -1,8 +1,27 @@
 # Plano F3 — o vigia de consistência: fazer o silêncio significar saúde
 
+> 🔴 **AS-BUILT 2026-09-26 — A CONSTRUÇÃO NÃO OCORREU. NADA FOI PUBLICADO.**
+>
+> A volta 1 parou **antes do primeiro nó**, porque o dado desmentiu três premissas (R6):
+>
+> | Premissa do brief | O que o dado diz | Prova |
+> |---|---|---|
+> | **CA3** — *"o score 3× é defeito vivo, teste de graça"* | **era real em 19/09** (6 linhas para 2 campanhas) e **sumiu até 26/09**: 0 chaves duplicadas em 30 dias · a view devolve 1 linha por campanha · o Notion tem 1 página e 1 score por campanha. **Consertado sem registro** — deduzo: rebuild do ADR-38 | execs **43184**, **43189** + query Notion |
+> | **CA4** — *"`t28_ga4_landing` morto desde 06/09, 19 dias"* | **em dia.** Cadência semanal 06/09 → 13/09 → 20/09, `execution_id` crescente. Idem `t28_clarity_daily` | exec **43184** |
+> | **V1** — *"ler a execução do n8n"* | **não construível**: nenhuma das 26 credenciais é do tipo `n8nApi`, e não há prova pelo dado (a Fase 3 legitimamente não escreve em dia saudável) | leitura das credenciais |
+>
+> **`JMgc0HdLPOFPnFYb` está intocado** (`versionId == activeVersionId`, `sameAsDraft: true`), e **não
+> foi deixado rascunho divergente**, de propósito.
+>
+> ⚠️ **O achado nº 1 do relatório da Fase 0 de 25/09 — *"Clarity e GA4 pararam em 06/09 e ninguém
+> viu"* — está errado**, e ele repriorizou a fila. Ver §2.2 do relatório.
+>
+> **Relatório:** `docs/handoff/2026-09-26-F3-vigia-execucao-relatorio.md` (4 perguntas devolvidas)
+> **Desenho pronto das 4 conferências construíveis:** `F3-conferencias-sql-e-codigo.md`
+
 | | |
 |---|---|
-| **Status** | ✅ **APROVADO** — **Olavo, 2026-09-21** (*"Plano F3 ok"*). 🟢 **VIROU BRIEF EM 2026-09-26:** `docs/handoff/2026-09-26-F3-vigia-de-consistencia-construcao-subchat-brief.md` |
+| **Status** | ✅ **APROVADO** — **Olavo, 2026-09-21** (*"Plano F3 ok"*). 🟢 **VIROU BRIEF EM 2026-09-26:** `docs/handoff/2026-09-26-F3-vigia-de-consistencia-construcao-subchat-brief.md` · 🔴 **CONSTRUÇÃO PARADA NA VOLTA 1 (26/09)** — ver banner acima |
 | **A condição do ADR-39** | 🟢 **LIBERADA em 26/09.** *"Vira brief quando o ADR-39 fechar"* era ordem de fila, e a fila mudou em 24/09. **O vigia não depende do ADR-39** — ele só detecta. Enquanto o 39 não fechar, é esperado que o **V3 acuse**: isso é o vigia funcionando |
 | **Critério que atende** | **F3** do `PLANO-ENTREGA-FINAL-PHI.md` · fecha o **D5** do `CONTRATO-PHI.md` · destrava **C3/C4** da Definição de Pronto |
 | **Razão que serve** | **R-A** — a qualidade do serviço parar de depender da atenção do Olavo |
@@ -97,9 +116,12 @@ para o caso que o motivou.
 
 1. **Período esperado por tabela** — diário para `raw_campaign_data` e `phi_score_history`, semanal
    para as `t28_*`.
-2. **Distinguir *"parou de receber"* de *"nunca recebeu"*.** `t28_clarity_daily` parou em **06/09**;
-   `t28_gbp_daily` nunca recebeu (cota). **Alerta só para a primeira.** É o **M4** de novo: as duas
-   contam a mesma história para um `COUNT` e histórias opostas para o Olavo.
+2. **Distinguir *"parou de receber"* de *"nunca recebeu"*.** ~~`t28_clarity_daily` parou em **06/09**~~
+   🔴 **corrigido em 26/09: o Clarity NÃO parou — último dado 20/09, em cadência semanal.**
+   `t28_gbp_daily` nunca recebeu de verdade: **1 linha única, de 21/06, há 97 dias** — o que é uma
+   **quarta** cara do vazio (não está vazio, então "tem dado?" passa; não está em dia, então frescor
+   grita). **Alerta só para quem de fato parou.** É o **M4** de novo: os estados contam a mesma
+   história para um `COUNT` e histórias opostas para o Olavo.
 3. **Toda consulta filtra `client_id IS NOT NULL`** — a `t28_campaign` tem **318 linhas de teste**
    sem cliente dentro de `phi_prod`.
 
@@ -142,7 +164,7 @@ Herdada da **D10** do contrato (*"1 e 3"*):
 |---|---|---|
 | **CA1** | No dia saudável, o vigia **emite a linha de prova de vida** | rodar com tudo certo e ver a mensagem chegar |
 | **CA2** | Cada uma das 6 perguntas **pega o seu defeito** | injetar o defeito em ambiente controlado, ou provar pelo dado histórico do dia em que ele aconteceu |
-| **CA3** | **V2 detecta o score 3×** que existe hoje | é o único defeito **vivo** — ele deve acusar na primeira execução |
+| **CA3** | ~~**V2 detecta o score 3×** que existe hoje~~ 🔴 **REFUTADO EM 26/09** | o defeito **não existe** em `phi_score_history`, na view `phi_score_current` nem no Notion. Nunca havia sido confirmado por query (as-built de 20/09, §L1: *"falta acesso ao BigQuery, 2 queries"*). **O critério está aberto — ver P1 do relatório de 26/09** |
 | **CA4** | O vigia **não morre calado**: zero achados ≠ zero itens | ler o nó final e confirmar que ele sempre recebe entrada |
 | **CA5** | 6 conferências = **1 mensagem** | contar as mensagens de um dia |
 | **CA6** | O próprio vigia tem `errorWorkflow` apontado | ler `settings` (vale sem publicar — R13 item 4) |

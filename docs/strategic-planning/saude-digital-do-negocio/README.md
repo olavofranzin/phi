@@ -46,3 +46,34 @@ O índice do material tem **8 pilares somando 100**. O PHI hoje mede **uma fatia
 | Arquivo | O que é |
 |---|---|
 | `fundamentos-presenca-digital.md` | o material trazido pelo Olavo — **insumo, não decisão** |
+| 🟢 **`CONTRATO-DE-FONTES-v0.md`** | 🔴 **O documento que manda na construção** (decisão do Olavo, 25/09: **a fonte vem antes do workflow**). Os 92 indicadores com fonte, campo, grão e selo — **24 na v0.1 · 56 depois · 5 "não coletamos" · 5 só ferramenta**. Registra que **a Clarity saiu do índice** e voltou a ser ferramenta de análise. **21 dos 24 vêm de 3 fontes que já estão em produção** |
+| 🟢 **`REGUAS-D6-D9-v0.md`** | As réguas de D6 e D9, **elicitadas do Olavo**, com autoria e força de evidência (C/D, n=1) declaradas. Traz a correção de que a Clarity estava **zerada** e o que o GA4 revelou |
+| 🟢 **`DICIONARIO-DE-INDICADORES-v0.md`** | 🔴 **O DOCUMENTO CANÔNICO desta frente** (decisão do Olavo, 25/09). A Versão 0 que a `Metodologia Estatística` exige: finalidade, **92 indicadores** com fonte e estado na casa, duplicidades eliminadas e regras de evidência. **Não decide pilares nem pesos** — isso é camada acima, e foi decidido pelo ADR-41 |
+| 🟢 **`../../handoff/2026-09-25-indice-saude-digital-v0.1-construcao-subchat-brief.md`** | **Brief de construção do índice v0.1** (R1: briefs moram em `docs/handoff/`). Escopo fechado: **3 pilares, 24 indicadores, zero coleta nova**. Traz a **entrevista de alinhamento** (8 itens) e os **12 critérios de aceite escritos antes** (R9). 🔴 **Fase 0 obrigatória:** verificar em BigQuery o que o dicionário afirma — pode reduzir a cobertura para 2/8. **Aguarda o OK do Olavo** |
+| 🟢 **`adr-rascunhos/ADR-41-…md`** | 🔴 **ACEITO em 2026-09-25** e publicado no Notion ([página](https://app.notion.com/p/3e6b65e5c72b8150857cea4596fb6ffe)). Fixa: pesos **iguais provisórios** (D2) · **cobertura declarada** — pilar não medido nunca é zero (D3) · **peso só para pilar com fonte** (D7), a regra que impede repetir o ADR-21 · **superseção parcial do ADR-21**, com banner, não apagamento (já executada). Invariantes **S1–S6**. Seis itens continuam declaradamente em aberto no §4 |
+| `MAPA-material-x-casa.md` | 🟡 **insumo, com CORREÇÃO no cabeçalho.** Entrega de 25/09 — o material × o que a casa tem, pilar por pilar e dimensão por dimensão, com nome de workflow, tabela e coluna. **Confirma 3 linhas da tabela acima e derruba 4** (ver §6 do mapa). Traz 6 perguntas para o Olavo |
+
+> ⚠️ **A tabela "o que já dá para ver" acima é a leitura PRELIMINAR do chat-mãe, de antes do estudo.**
+> **Quatro linhas dela não se sustentaram** — Experiência, Aquisição, Conversão/atendimento e Dados/governança.
+> **O `MAPA-material-x-casa.md` §6 é o que vale.** Esta tabela fica como registro do que se supunha (R6:
+> hipótese desmentida também se registra).
+
+---
+
+## 🔴 O que a leitura dos ADRs mudou (2026-09-25)
+
+**A casa já tinha um índice de pilares, e ele foi esquecido.** O **ADR-21** (Aceito 11/06/2026)
+promoveu o PHI a **Índice de Saúde Digital** com 6 pilares — Paga 35 · Funil 20 · Orgânico 15 ·
+Social 10 · Reputação 10 · Dados 10 — e nunca saiu do papel. O **ADR-22** (mesma data) já decidiu o
+ciclo de aprendizado. **O material novo não é a descoberta: é a segunda tentativa dela.**
+
+Com isso, existem **quatro estruturas de peso incompatíveis** na casa (ADR-21 · duas dentro da
+`Análise Estatística` · pesos iguais na `Metodologia`). 🟢 **Resolvido em 25/09 pelo ADR-41: não
+vale nenhuma das quatro** — vale pesos **iguais provisórios** com **cobertura declarada**, e peso só
+para pilar que tenha fonte. **O que segue aberto é o agrupamento nominal dos pilares**, e com pesos
+iguais essa escolha deixou de ser urgente. Ver §2 do dicionário.
+
+> 🔴 **Decisão do Olavo em 25/09:** esta frente **se sobrepõe** ao que estava em andamento. As regras
+> e normas anteriores **deixam de ser fixas** e passam a ser lidas à luz do material novo. O que sair
+> daqui é canônico. **Os workflows da área serão construídos ou reformados** — depois do dicionário e
+> do ADR, nunca antes (R7).
