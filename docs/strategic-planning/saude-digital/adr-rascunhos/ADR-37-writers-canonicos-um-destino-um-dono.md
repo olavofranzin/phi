@@ -1,5 +1,36 @@
 # ADR-37 — Writers canônicos do pipeline do Score: um destino, um dono
 
+> 🔴 **REMEDIDO EM 2026-09-26 (Fase R) — o retrato da §3.0.3 virou HISTÓRIA. Não decida por ele.**
+>
+> | O que a §3.0.3 dizia (09/09) | O que foi medido em 26/09 |
+> |---|---|
+> | `sw metricas campanhas` grava **`client_id` vazio** | **0 vazios e 0 nulos em 509 linhas** |
+> | e **`campaign_id` no padrão `CMP.<SLUG>.CAMP-N`** | **0 CMP e 0 prefixo `GADS-`** — só ID nativo |
+> | *"os dois nunca colidem"* | 🔴 **colidem: 14 chaves tocadas pelos dois** |
+> | o `INNER JOIN` **descarta 100%** das linhas dele | **descarta 12,5%** (2 de 16, e são do CLI-13, sem cadastro) |
+> | **`GADS_INSERT` é a única fonte do score** | ❌ **falso** — das 14 linhas do KIL, **12 terminam com valores de W2 e 2 com valores de W1** |
+> | só o `GADS_INSERT` escreve `revenue` | ❌ **caiu** — `revenue` de W1 persistido **antes** da coleta de W2 |
+>
+> 🔴 **A leitura que nenhum documento tinha:** **o ADR-38 consertou a identidade — e, ao consertá-la,
+> LIGOU a colisão que este ADR descrevia em 08/09 e que a §3.0.3 tinha declarado inexistente em
+> 09/09.** Não é regressão: é a consequência esperada da correção, e ninguém a escreveu.
+>
+> **A prova, medida hoje, numa linha só:** no Salão, às 04h o W1 gravou custo **33,948977** / 63
+> cliques / 1.342 impressões; às 07h o W2 gravou **34,49** / 64 / 1.345. **A linha atual tem o
+> carimbo `DAILY_ENTRY` e os valores do W2.** E a diferença **não é arredondamento — é o horário da
+> consulta à API.**
+>
+> 🔴 **Consequência para a Fase 2:** a escolha **não é só qual writer fica — é a que horas o dia
+> fecha.** Desligar o W2 troca o retrato das 07h pelo das 04h, e o número do score muda.
+>
+> **A aposentadoria segue bloqueada**, por motivo novo: `client_config.primary_metric_type` é lido
+> por **três SQLs publicados** do `Pipeline_v2`, incluindo a entrega operacional. **O ADR-40 migrou o
+> cálculo, não os consumidores.**
+>
+> **Relatório:** Fase R de 2026-09-26 · execuções `43390`–`43397` · brief
+> `docs/handoff/2026-09-26-ADR37-raw-campaign-data-fase-R-brief.md`.
+> **O corpo deste ADR é preservado como registro do raciocínio** (R2).
+
 | | |
 |---|---|
 | **Status** | ⚠️ **ACEITO com D1 EM REVISÃO** — 2026-09-08 · Fase 0.1 executada · **Fases 1 e 2 suspensas em 2026-09-09** pelo achado da §3.0.3 |

@@ -8,6 +8,24 @@
 
 ---
 
+> 🔴 **REVISADO EM 26/09, depois da Fase R do ADR-37 — leia antes de seguir qualquer passo.**
+>
+> A pergunta **R7** foi medida e **derrubou a premissa deste brief.** Eu tinha escrito que o ADR-40
+> já esvaziara o `UPDATE` do `client_config`. **Não esvaziou:**
+>
+> | O que foi medido (execuções `43393`, `43396`, `43261`) | |
+> |---|---|
+> | No **cálculo do score** | ✅ **0 de 2 campanhas dependem do `COALESCE`** — aí a coluna é redundante |
+> | Na **entrega operacional** | 🔴 **três SQLs publicados do `Pipeline_v2` ainda leem `cc.primary_metric_type`**, e **2 alertas de hoje saíram por esse caminho** |
+>
+> **O ADR-40 migrou o cálculo. Não migrou os consumidores.** Ver §3.1 — ele mudou os passos 4.4 e 4.5.
+>
+> **E o CA3a mudou:** eu exigia Métrica-Mãe `CPA` no cliente de teste. **Estava errado** — isso
+> inventa um atributo de cliente que o ADR-40 decidiu que pertence à campanha. **O CA3a prova que a
+> linha nasce; não precisa de métrica nenhuma.**
+
+---
+
 ## 0. Por que esta etapa, e por que agora
 
 **Hoje, um cliente novo que você cadastra no Notion nunca chega ao score.** O writer de produção do `phi_prod.client_config` é um `UPDATE` **sem `INSERT`**; o que **insere** grava no `phi_dev`, que o score não lê. O `INNER JOIN` elimina o cliente — **sem erro e sem alarme**.
@@ -68,7 +86,10 @@
 2. Rode o `client_config` e confirme a linha nascendo em **`phi_prod`** por `WHEN NOT MATCHED`
 3. **Remova-o na mesma sessão** e registre a remoção
 
-🔴 **A Métrica-Mãe do cliente de teste tem de ser `CPA`.** O motor do score **só calcula CPA** — qualquer outra sai `METRIC_TYPE_UNSUPPORTED`, e você concluiria que falhou quando não falhou.
+🔴 **CORRIGIDO EM 26/09 — não defina Métrica-Mãe nenhuma no cliente de teste.** Eu exigia `CPA`
+aqui; **estava errado.** A métrica pertence à **campanha** (ADR-40), e pedir um valor no cliente
+reinstala o grão que a casa acabou de abandonar. **O CA3a prova que a linha nasce em `phi_prod` —
+só isso.** Se a coluna nascer vazia, **é o comportamento correto.**
 
 ⚠️ **Sem declarar e sem datar, você cria o terceiro caso de dado de teste morando em produção.** Os dois primeiros já custaram uma exceção no vigia cada um.
 
@@ -85,6 +106,27 @@
 | **4.4** | 🔴 **Só então** remover o `UPDATE` do `PHI - Subworkflow Campanhas` | 🔴 **antes do 4.3, o KIL fica sem nenhum writer e o CPA vira o que estiver na linha** |
 | **4.5** | Apagar `phi_dev.client_config` e fechar o **D2** | — |
 
+### 3.1 🔴 Os três leitores que o ADR-40 não migrou — medidos em 26/09
+
+| Nó publicado no `Pipeline_v2` | O que lê |
+|---|---|
+| `Buscar Clientes Ativos` | `SELECT client_id, model_id, primary_metric_type FROM phi_prod.client_config` |
+| `Calcular e Persistir PHI Score` | `COALESCE(j.primary_metric_type, cc.primary_metric_type)` |
+| 🔴 `Buscar Campanhas Alertas` | seleciona `cc.primary_metric_type`, **que segue para o fluxo operacional** — 2 alertas de hoje saíram por aí (execução `43261`) |
+
+**O que isso muda nos passos:**
+
+| | |
+|---|---|
+| **Retirar só o `UPDATE` (4.4)** | não quebra nada **hoje**, e **não é inofensivo**: congela um metadado que ainda é lido. Mudança futura de métrica **deixa de chegar aos alertas** |
+| **Retirar a COLUNA** | 🔴 **quebra os três SQLs.** Não está neste brief e **não pode ser feita sem migrar os três leitores antes** |
+
+🔴 **Portanto o 4.4 SÓ acontece com uma decisão explícita do Olavo sobre o congelamento** — e o
+**4.5 (apagar `phi_dev`) não depende disso**: pode acontecer assim que o 4.3 estiver provado.
+
+> ⚠️ **E não transfira o `UPDATE` para o novo dono "para preservar a função".** Seria preservar o
+> **grão errado** — a métrica é da campanha. O que precisa migrar é o **leitor**, não o escritor.
+
 > ✅ **Hipótese já refutada, não a levante de novo:** *"repontar sobrescreveria o CPA do KIL com ROAS"*
 > — **falso.** O KIL cai em `WHEN MATCHED`, que não toca essa coluna. A precaução continua certa, mas
 > protege **o cliente novo**, não o existente.
@@ -97,7 +139,7 @@
 |---|---|---|
 | **CA1** | `phi_prod.client_config` tem **UM** writer | ler os nós dos dois workflows e confirmar |
 | **CA2** | O KIL continua **`CPA`** | consultar a linha do `CLI-4` **depois** do 4.4, nunca antes |
-| **CA3a** | 🟢 Cliente novo **ganha linha em `phi_prod`** | o cliente de teste do §3, nascendo por `WHEN NOT MATCHED` |
+| **CA3a** | 🟢 Cliente novo **ganha linha em `phi_prod`** | o cliente de teste do §3, nascendo por `WHEN NOT MATCHED`. **Sem exigir métrica** — coluna vazia é o certo |
 | **CA3b** | ⬜ Cliente novo **recebe score** | **fica em aberto** — não há cliente real. O V3 do vigia avisa no dia |
 | **CA5** | `phi_dev` não é mais escrito nem lido | varrer os workflows por `phi_dev` — 🔴 **inclui o `WF-T28-Orquestrador`**, que lê `phi_dev.t28_campaign` |
 | **CA6** | Nada rodou fora da janela **09h–23h** | horário das execuções |

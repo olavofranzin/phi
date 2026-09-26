@@ -15,7 +15,7 @@
 
 | # | Defeito | A limpeza resolve? | Por quê |
 |---|---|---|---|
-| 1 | **318 linhas sem `client_id`** na `t28_campaign` | 🟡 **sim, por ora** | o produtor foi uma rodada de teste. **Se o caminho que as criou ainda existir, elas voltam** |
+| 1 | **318 linhas sem `client_id`** na `t28_campaign` | 🟢 **sim** — 🔴 **corrigido em 26/09, ver o fim** | **estão paradas desde 07/09.** Não voltam sozinhas |
 | 2 | **CLI-13 com dado de meta_ads de teste** | ❌ **não** | 🔴 **o produtor está funcionando certo.** A campanha segue cadastrada; o dado volta na próxima rodada |
 | 3 | `t28_gbp_daily` — 1 linha em 97 dias | ❌ **não** | a cota do GBP falha **toda rodada**. Limpo, fica vazio |
 | 4 | `t28_ga4_landing` parado há 20 dias | ❌ **não** | é coleta, não é dado velho |
@@ -64,7 +64,7 @@ E a régua mudou desde então — o `primary_metric_type` passou a viajar com a 
 
 | # | Alvo | Operação | Pré-requisito |
 |---|---|---|---|
-| **1** | as **318 linhas sem `client_id`** | `DELETE WHERE client_id IS NULL` na `t28_campaign` | 🔴 **achar e fechar quem as escreveu.** Senão voltam |
+| **1** | as **318 linhas sem `client_id`** | `DELETE WHERE client_id IS NULL` na `t28_campaign` | 🟡 **o produtor já parou** (07/09). Mas **216 das 318 são do KIL, com custo real** — ver a correção no fim |
 | **2** | o **dado de teste do CLI-13** | decisão sua: apagar **ou** manter como exceção declarada (já está assim) | o campo `Tipo` do §5 — senão a exceção continua sendo texto no código |
 | **3** | a **data-sentinela 2000-01-01** | corrigir o writer **primeiro**; as linhas antigas só depois | é código, não é dado |
 
@@ -98,3 +98,28 @@ E a régua mudou desde então — o `primary_metric_type` passou a viajar com a 
 4. **Só então** os três `DELETE` cirúrgicos do §4, cada um com snapshot antes
 
 > **O vigia vai dizer, todo dia, se a ordem está funcionando.** É a primeira vez que a casa pode fazer uma limpeza e **saber no dia seguinte se ela pegou.**
+
+---
+
+## 🔴 Correção factual — 2026-09-26, Fase R do ADR-37
+
+**Duas afirmações deste documento caíram, e as duas eram minhas:**
+
+| O que eu escrevi | O que foi medido (execuções `43394` e `43396`) |
+|---|---|
+| que **eram produção diária** do `sw metricas campanhas`, e *"se o produtor ainda existir, elas voltam"* | ❌ **refutado.** **Zero cargas órfãs nos últimos 7 dias.** Última carga **07/09, 09:01 BRT**; último `business_date` **06/09** |
+| *"resíduo de teste"* | ⚠️ **não provado.** São **11 `execution_id`** espalhados entre **27/07 e 07/09**, **153 `source_execution_id`**, **197 linhas com custo positivo** — e **216 delas são do KIL**, não do CHA |
+
+**A composição real:** `CMP.CHA.CAMP-10` = 102 · `CMP.KIL.CAMP-7` = 108 · `CMP.KIL.CAMP-8` = 108.
+E **255 chaves distintas para 318 linhas** — há **63 excedentes** sobre a chave da tabela.
+
+> 🔴 **As duas classificações estavam erradas, em direções opostas: não é produção diária, e também
+> não é "um lote de teste".** É **resíduo histórico da cadeia antiga de ingestão**, de várias rodadas,
+> **com dado de custo real do cliente de verdade dentro.**
+>
+> **Efeito prático:** a limpeza **deixa de ser urgente** (nada as repõe) **e passa a exigir mais
+> cuidado** (parte é produção real). **Nenhuma exclusão foi feita.**
+
+✅ **A decisão sobre o CLI-13 NÃO precisa ser revista:** a hipótese que a reabriria — produção diária
+— foi refutada. **Mas a narrativa *"um lote de teste"* precisa ser corrigida:** o dado do CLI-13
+(12 linhas, 09→20/09, custo zero, métrica NULL) é **um conjunto separado** das 318 órfãs legadas.
