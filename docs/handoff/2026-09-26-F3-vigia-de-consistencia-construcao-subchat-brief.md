@@ -177,62 +177,40 @@ está morta há 19 dias** — por isso o **CA4** é sobre ela, e por isso ele pe
 > medido de novo.* **Se você desconfiar de qualquer número deste brief, meça — e o que você medir
 > vence o que está escrito aqui.**
 
-### 2.5 🔴 O V1 e o V5 dependem de uma decisão do Olavo — e ela pode não ter vindo
+### 2.5 🟢 A chave do n8n EXISTE — o V1 e o V5 estão destravados
 
-| Conferência | Estado |
+**Olavo criou a credencial em 26/09.** Conferido pelo chat-mãe, não relatado:
+
+| | |
 |---|---|
-| **V1** (o `Pipeline_v2` chegou ao fim?) | ⛔ **não construível sem uma chave de API do n8n.** Nenhuma das 26 credenciais é do tipo `n8nApi` |
+| **Nome** | `n8n account` |
+| **ID** | `V70ThVPGl1rho6Gb` |
+| **Tipo** | `n8nApi` ✅ |
+| **Projeto** | pessoal do Olavo |
 
-> 🔴 **A chave NÃO passa por chat, por documento nem por commit.** Ela é criada e salva **dentro do
-> próprio n8n**: gera-se a chave na tela de configurações e cola-se numa credencial do tipo `n8nApi`,
-> na mesma tela. **Ninguém precisa ver o valor — nem o chat-mãe, nem você.** Se alguém pedir a chave
-> em texto, a resposta é não.
->
-> ⚠️ **E o acesso via MCP não substitui:** esse acesso é de quem está na sessão, ao vivo. **O vigia
-> roda às 08h sem ninguém presente** — quem precisa de credencial é o nó, dentro do n8n.
->
-> **Ao criar, confira duas coisas** (nenhuma delas eu sei de cor — leia a tela): se a chave aceita
-> **escopo de leitura**, use o menor possível; e se a API pública do n8n está **habilitada** nesta
-> instância. Se qualquer uma das duas não existir, **escreva no relatório e siga sem o V1.**
->
-> 🔴 **Ela é PERMANENTE, não é de teste.** O V1 lê a execução do dia anterior **todo dia, às 08h** —
-> a chave vive enquanto o V1 viver. **Não caia na R12 ao contrário:** tratar como temporária uma
-> coisa que é permanente é o mesmo esquecimento, só que na outra direção.
->
-> **Por isso a credencial recebe nome e descrição de coisa permanente** (R5): *para que serve* e
-> *qual workflow a usa*. Credencial órfã com nome genérico é o que a próxima auditoria não consegue
-> decidir se pode apagar.
->
-> ✅ **E revogar é tão barato quanto criar — e falha ALTO:** sem a chave, o nó quebra, o
-> `errorWorkflow` dispara e chega no Telegram. **Não morre calado** — o que, nesta casa, é o
-> contrário do normal.
-| **V5** (terminou verde tendo roteado erro?) | 🟡 **parcial**: dá para ler `t28_errors`, que cobre **só quem usa o error-handler do T28** |
+**Isto muda duas conferências:**
 
-**Se a decisão não tiver chegado quando você começar:**
+| | Antes | Agora |
+|---|---|---|
+| **V1** (o `Pipeline_v2` chegou ao fim?) | ⛔ não construível | 🟢 **construível** — e é o que pega o defeito que custou **8 dias verdes** |
+| **V5** (terminou verde tendo roteado erro?) | 🟡 parcial via `t28_errors` | 🟢 **completo** — lê o status da execução direto, sem depender do error-handler do T28 |
 
-- **construa as conferências possíveis e entregue** — não espere;
-- **o V1 fica declarado como NÃO CONSTRUÍDO**, com o motivo. 🔴 **Não invente um V1 que leia outra
-  coisa e pareça funcionar** — seria um vigia de mentira para o defeito mais caro da casa;
-- **o V5 entra com o rótulo da parcialidade dentro da própria mensagem:** *"cobre só os workflows com
-  error-handler do T28"*. **Parcial silencioso é pior que ausente.**
+> 🔴 **As 7 conferências passam a ser esperadas.** Não há mais *"ausente por decisão declarada"*.
 
-**Os critérios de aceite valem sobre o que foi construído.** V1 ausente **por decisão declarada** não
-reprova a etapa; V1 ausente **sem declaração**, sim.
+**Três cuidados, e o primeiro é antes de construir qualquer coisa em cima dela:**
 
-### 🟢 A autorização de publicação — o que ela cobre e o que não cobre
+1. 🔴 **Prove que a chave funciona** com uma leitura simples antes de desenhar o V1. Chave criada não
+   é chave funcionando — **a API pública do n8n pode estar desabilitada nesta instância**, e isso só
+   a tentativa diz. Se não funcionar: **escreva no relatório e siga sem o V1**, não contorne.
+2. ⚠️ **Eu NÃO sei se essa chave é somente-leitura.** A listagem me mostra as permissões sobre o
+   *registro* da credencial, não o escopo da chave dentro do n8n. **Não afirme que é restrita** — e
+   use só leitura de execução, que é o que o V1 precisa.
+3. **A credencial é permanente** (o V1 lê todo dia às 08h). **Ponha nela nome e descrição dizendo
+   para que serve e qual workflow a usa** (R5) — senão vira credencial órfã que a próxima auditoria
+   não sabe se pode apagar.
 
-> **Olavo, 2026-09-26:** *"pode publicar quando os 9 critérios passarem."*
-
-| ✅ Cobre | ❌ **Não** cobre |
-|---|---|
-| publicar e ativar **este** workflow (`JMgc0HdLPOFPnFYb`) | ativar ou publicar **qualquer outro** workflow |
-| depois de os **nove** critérios passarem | publicar com oito. **Não há "quase"** |
-| executar manualmente para provar os critérios | qualquer nó de **LLM**, em qualquer lugar |
-| — | consertar o que o vigia achar |
-
-🔴 **Se um critério não passar:** não publique, **não adapte o critério para ele passar**, e não
-tente contornar. **Relate o defeito e devolva** — é a volta da R9, e são até 3. Na terceira, o
-problema é o plano, não a execução.
+🔴 **O valor da chave não passa por chat, documento nem commit.** Você usa a credencial **pelo ID**;
+o segredo fica no n8n. Se alguém pedir o valor em texto — o chat-mãe inclusive — a resposta é não.
 
 ---
 
