@@ -58,7 +58,7 @@ O plano escreveu o V4 como *"toda tabela que tem writer declarado recebeu linha?
 | `t28_ga4_landing` | **semanal** | 🔴 **06/09 — 19 dias de atraso.** É a fonte que sobrou |
 | `t28_adset` · `t28_meta_campaign` · `t28_gbp_daily` | **semanal** | vazias — ver 2.3 |
 | `raw_ad_data` | **diário** | vazia desde 30/06 |
-| ⛔ `t28_clarity_daily` | **NÃO VIGIAR** | o Clarity saiu do índice em 25/09 — ver 2.4 |
+| 🟡 `t28_clarity_daily` | **em estudo — não alerta, mas lista** | saiu do índice, **mas a coleta fica**. Ver 2.4 |
 
 **Fonte destes números:** `docs/handoff/2026-09-25-fase0-indice-saude-digital-relatorio.md` §2.3. **Confira antes de usar** (R6) — são de 25/09.
 
@@ -90,9 +90,21 @@ combater (**M11**), só que instalado por engano dentro do próprio vigia.
 única fonte do único indicador de Experiência com valor real** (`SD-EXP-07`, taxa de engajamento,
 0,64–0,81, execução `43061`). **A fonte que sobrou é a que está morta há 19 dias.**
 
-⚠️ **O que você NÃO faz com essa informação:** não aposente o ramo do Clarity no Agregador, não apague
-a tabela, não mexa em nada. **O destino dele é decisão pendente do chat-mãe** — só não entra na
-expectativa do vigia.
+🟢 **E a coleta FICA** (Olavo, 26/09): *"mantenha o Clarity, depois vamos estudar a documentação para
+sabermos se o que queremos dá pra extrair"*. **Não aposente o ramo, não apague a tabela, não mexa em
+nada.**
+
+**Então ela vira a terceira categoria do V4:**
+
+| Categoria | Exemplo | O que o vigia faz |
+|---|---|---|
+| **parou de receber** | `t28_ga4_landing` | 🔴 **alerta** |
+| **nunca recebeu** | `t28_gbp_daily` (cota) | 🟡 lista como conhecido |
+| 🆕 **em estudo, sem consumidor** | `t28_clarity_daily` | **não alerta, mas aparece no resumo** |
+
+> **Por que listar em vez de ignorar:** é a **R12**. *Coisa desligada não tem cor, não tem alarme e
+> não aparece em lista nenhuma* — e some da memória de todo mundo. **Uma linha no resumo custa nada e
+> impede o esquecimento.**
 
 ---
 
@@ -155,7 +167,8 @@ problema é o plano, não a execução.
 **Não construa, não conserte, não investigue:**
 
 - ❌ **Por que o GA4 parou em 06/09.** O vigia **avisa**; a causa é outro brief — **e é o próximo**
-- ❌ **Aposentar o ramo do Clarity** no Agregador. Decisão pendente; você só o tira da expectativa
+- ❌ **Aposentar o ramo do Clarity** no Agregador — **ele fica, por decisão de 26/09.** Você só o move para *"em estudo"*
+- ❌ **Estudar a API do Clarity.** É outra etapa, e é pesquisa, não construção
 - ❌ O **score 3×**. O vigia acusa; consertar é outro trabalho
 - ❌ As **318 linhas sem cliente**. Filtre; não apague, não investigue
 - ❌ O **ADR-39/40**, a **etapa 8 do ADR-38**, o **Agregador**, o **índice de Saúde Digital**

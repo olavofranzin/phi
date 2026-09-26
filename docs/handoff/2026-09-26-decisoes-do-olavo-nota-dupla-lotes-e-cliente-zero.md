@@ -199,8 +199,42 @@ A regra entra no `CONTRATO-DE-FONTES-v0.md` como critério de entrada.
 | **O pilar Experiência** | fica com **GA4** (engajamento) **+ PageSpeed** (Core Web Vitals). Segue como **alerta**, per A3 |
 | 🔴 **O `t28_ga4_landing` vira fonte única** | e está **morto há 19 dias**. A urgência sobe, não desce |
 | **O F3** | `t28_clarity_daily` **sai da expectativa do V4**; o CA4 passa a exigir só o GA4 |
-| ⬜ **O ramo do Clarity no Agregador** | **decisão pendente:** aposentar pelo procedimento da R5, ou manter e declarar um consumidor. **Enquanto ninguém decidir, ele coleta toda semana para ninguém** |
+| 🟢 **O ramo do Clarity no Agregador** | **MANTIDO** — decisão do Olavo, 26/09. Ver §O5.1 |
 | **As faixas de frustração** (A8 do ADR-42) | continuam **em reserva, sem consumidor** — coerente com esta decisão |
+
+### O5.1 — 🟢 O ramo fica. Antes de decidir o destino, estuda-se a documentação
+
+> **Olavo, 26/09:** *"Mantenha o Clarity, depois vamos estudar a documentação do Clarity para sabermos
+> se o que queremos dá pra extrair."*
+
+✅ **Decidido: nada é aposentado.** A coleta continua rodando semanalmente enquanto o estudo não
+acontecer. **Isto fecha a pendência 7 e abre uma etapa pequena e barata.**
+
+🔴 **E há uma leitura do dado que muda a pergunta do estudo:**
+
+> **Uma tabela de zeros num site com tráfego não quer dizer *"não houve rage click"*. Quer dizer
+> *"a coleta não está medindo"*.**
+>
+> É o **M4** mais uma vez: `clarity_sessions = 0` nas 15 linhas — **sessões**, não só cliques de
+> raiva. Um site que teve visita e reporta zero sessão não está reportando sobre o site: está
+> reportando sobre a extração.
+
+**O que o estudo precisa responder** (é pesquisa, custo zero, nenhum workflow tocado):
+
+| # | Pergunta |
+|---|---|
+| 1 | A API do Clarity **entrega** mapa de calor e gravação como **dado**, ou só como **link para a tela**? |
+| 2 | Quais métricas ela entrega de verdade, com que **janela** e que **limite de chamadas**? |
+| 3 | 🔴 Por que a nossa extração devolve **zero sessão**? Endpoint errado, projeto sem configuração, ou nome de métrica errado? |
+| 4 | **Aplicando a regra do O5:** do que dá para extrair, o que é **número que alguém compara** e o que é **tela que alguém olha**? |
+
+> ⚠️ **Eu não vou responder nenhuma das quatro de memória.** Tenho impressão de que existe uma API de
+> exportação com janela curta e poucas chamadas por dia, **mas isso é lembrança, não fato** — e
+> documentação de produto muda mais rápido que a minha memória. **O estudo lê a documentação atual.**
+
+**Consequência para o F3:** a tabela **não volta a alertar** — ela vira a terceira categoria do V4,
+*"em estudo"*: **não grita, mas aparece no resumo.** Assim não fica invisível (a lição da **R12**:
+*coisa desligada não tem cor e não aparece em lista nenhuma*) e não vira ruído diário.
 
 ---
 
@@ -213,7 +247,7 @@ A regra entra no `CONTRATO-DE-FONTES-v0.md` como critério de entrada.
 | 3 | A frequência e o conteúdo do relatório ao cliente — pendente desde 21/09 (`PLANO-ENTREGA-FINAL-PHI.md` §1). 🟢 **Deixou de bloquear o índice pela O4** | Olavo |
 | 5 | 🔴 **O gatilho da O4** — quando a nota vai ao cliente. Proposta no §O4; sem gatilho vira permanente por esquecimento | Olavo |
 | 6 | **Quem é o leitor vivo do índice na v0.1**, e o que ele faz diferente por causa da nota | Olavo |
-| 7 | 🔴 **O destino do ramo do Clarity no Agregador** — aposentar (R5) ou manter com consumidor declarado. Hoje ele coleta toda semana para ninguém | Olavo |
+| ~~7~~ | ~~O destino do ramo do Clarity~~ — 🟢 **respondida em 26/09: mantém.** Vira etapa de estudo (§O5.1) | ✅ |
 | 4 | O **dono por pilar** (`agência`/`cliente`) no dicionário — proposto no parecer, ainda não respondido; **a O2 depende dele para contar a história comercial** | Olavo |
 
 ---
