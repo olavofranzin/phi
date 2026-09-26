@@ -126,3 +126,38 @@ A `t28_campaign` tem **318 linhas sem `client_id`, com `campaign_id` no padrão 
 - Ele é **ponte**. Decisão que aparecer → **pare, escreva a pergunta com opções e consequências, devolva.**
 - **Separe o que leu do que mediu.** Nesta etapa, **só o medido conta**.
 - 🔴 **Derrubar o ADR-37 é um resultado desejado.** Ele já se derrubou uma vez sozinho, em 09/09, e aquilo salvou o score. **Se o dado disser que a Fase 2 é impossível, isso é a entrega — não é falha.**
+
+---
+
+## 8. 🔴 Se quem executar NÃO for um Claude Code com o `CLAUDE.md` carregado
+
+**Este brief cita regras pelo número** (R6, R9, R11, R12, R13) e **invariantes** (M1–M12). Num
+ambiente que não carrega o `CLAUDE.md` da raiz automaticamente — **Codex, por exemplo** — esses
+números não querem dizer nada, e o brief perde metade do peso.
+
+**Leia estes arquivos ANTES de qualquer coisa, na ordem:**
+
+| # | Arquivo | O que tirar dele |
+|---|---|---|
+| 1 | `CLAUDE.md` (raiz) | **R6** (o dado vence o plano) + **corolário 2** (número lido ≠ medido) · **R11** (sucesso silencioso, as 5 regras) · **R12** · **R13** (leia o que está no ar) · **R9** (3 voltas) |
+| 2 | `docs/strategic-planning/saude-digital/CONTRATO-PHI.md` | os invariantes **M1–M12** e a matriz de dono por tabela |
+| 3 | o ADR desta etapa, **inteiro** | não só a parte citada aqui |
+
+🔴 **Três coisas que esta casa exige e que não são padrão em lugar nenhum:**
+
+1. **No n8n, o que roda é `activeVersion.nodes`** — `nodes` é o rascunho. Antes de afirmar o que um
+   workflow faz, compare `versionId` com `activeVersionId`.
+2. **Zero nunca é ausência.** `COUNT(x IS NOT NULL)` prova que a coluna foi escrita, **não que algo
+   foi medido**. Olhe valor, distribuição e mín/máx.
+3. **Um `SELECT` agregado sempre devolve uma linha** — *"não achei"* e *"achei zero"* saem idênticos.
+   **Traga a contagem do que casou, ao lado.**
+
+### E o portão que vale para qualquer executor
+
+- 🔴 **Ferramentas:** esta etapa precisa de acesso ao **n8n** e, por ele, ao **BigQuery**. **Confirme
+  que você tem antes de começar** — se não tiver, diga logo, em vez de improvisar outro caminho.
+- 🔴 **Quem revisa não é quem executou** (R9). **Traga os números e a sua leitura em blocos
+  separados.** O chat-mãe revisa a leitura; os números são seus.
+- **Precedente da casa:** em 28/06 o Codex entregou a idempotência do MERGE e a **pré-revisão
+  encontrou um dedup que perdia `PARTITION`/`CLUSTER`.** O trabalho estava certo e a revisão pegou o
+  que faltava — **é assim que funciona aqui, e não é desconfiança.**
