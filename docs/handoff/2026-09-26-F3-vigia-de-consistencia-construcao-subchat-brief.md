@@ -42,7 +42,7 @@
 
 ## 2. O que construir — as 7 conferências
 
-**A tabela completa está no §4 do plano.** Aqui vão só as **três correções** que entraram depois de o plano ser aprovado. Elas são obrigatórias:
+**A tabela completa está no §4 do plano.** Aqui vão só as **quatro correções** que entraram depois de o plano ser aprovado. Elas são obrigatórias:
 
 ### 2.1 🔴 O V4 precisa de **período esperado por tabela**
 
@@ -66,45 +66,47 @@ O plano escreveu o V4 como *"toda tabela que tem writer declarado recebeu linha?
 
 A `t28_campaign` tem **318 linhas sem `client_id`**, com `campaign_id` em padrão de teste (`CMP.CHA.CAMP-10`), dentro de `phi_prod` — **mais que as 304 do cliente real.** Sem o filtro, ou elas entram na conta, ou somem do `GROUP BY` em silêncio. **As duas coisas são ruins.**
 
-### 2.3 Tabela vazia desde sempre ≠ tabela que parou
+### 2.3 🔴 Três estados diferentes, três tratamentos
 
-São dois estados diferentes e o alerta precisa distinguir:
+*"Tabela sem linha"* não é um estado só. São três, e o alerta precisa distinguir:
 
-| Estado | Exemplo | Como tratar |
+| Estado | Exemplo | O que o vigia faz |
 |---|---|---|
-| **parou de receber** | `t28_clarity_daily` — recebia, parou em 06/09 | 🔴 **alerta** |
-| **nunca recebeu** | `t28_gbp_daily` (cota do GBP) · `raw_ad_data` | 🟡 **listar como conhecido**, não gritar todo dia |
+| **parou de receber** | `t28_ga4_landing` — recebia, parou em **06/09** | 🔴 **alerta** |
+| **nunca recebeu** | `t28_gbp_daily` (cota do GBP) · `raw_ad_data` (desde 30/06) | 🟡 **lista como conhecido**, não grita todo dia |
+| **em estudo, sem consumidor** | `t28_clarity_daily` — ver 2.4 | 🟡 **não alerta, mas aparece no resumo** |
 
-> **Isto é o M4 outra vez:** *"zero nunca é ausência"*. Uma tabela em zero desde o nascimento e uma que morreu ontem **contam a mesma história para um `COUNT`, e histórias opostas para você.**
+> **Isto é o M4 outra vez:** *"zero nunca é ausência"*. Uma tabela em zero desde o nascimento, uma que
+> morreu ontem e uma que está em estudo **contam a mesma história para um `COUNT`, e histórias
+> opostas para o Olavo.**
 
-### 2.4 ⛔ `t28_clarity_daily` sai da lista — **decisão do Olavo, 25 e 26/09**
+### 2.4 O `t28_clarity_daily` **fica coletando, mas não alerta**
 
-> *"O Clarity sai do índice e volta a ser ferramenta. O pensamento inicial era que ele substituísse o
-> Hotjar e pudéssemos extrair mapa de calor e gravação — **instrumentos de análise para pessoa.
-> Nunca foram para ser coluna em BigQuery.**"*
+**Duas decisões do Olavo, e as duas importam:**
 
-**Não vigie essa tabela.** Vigiar dado que ninguém consome é o defeito que este vigia existe para
-combater (**M11**), só que instalado por engano dentro do próprio vigia.
+> **25/09 —** *"O Clarity sai do índice e volta a ser ferramenta. O pensamento inicial era que ele
+> substituísse o Hotjar e pudéssemos extrair mapa de calor e gravação — **instrumentos de análise
+> para pessoa. Nunca foram para ser coluna em BigQuery.**"*
+>
+> **26/09 —** *"**Mantenha o Clarity**, depois vamos estudar a documentação para sabermos se o que
+> queremos dá pra extrair."*
 
-🔴 **E isto NÃO diminui a urgência do CA4 — aumenta.** Com o Clarity fora, **o `t28_ga4_landing` é a
-única fonte do único indicador de Experiência com valor real** (`SD-EXP-07`, taxa de engajamento,
-0,64–0,81, execução `43061`). **A fonte que sobrou é a que está morta há 19 dias.**
+**O que isso significa para você, exatamente:**
 
-🟢 **E a coleta FICA** (Olavo, 26/09): *"mantenha o Clarity, depois vamos estudar a documentação para
-sabermos se o que queremos dá pra extrair"*. **Não aposente o ramo, não apague a tabela, não mexa em
-nada.**
-
-**Então ela vira a terceira categoria do V4:**
-
-| Categoria | Exemplo | O que o vigia faz |
-|---|---|---|
-| **parou de receber** | `t28_ga4_landing` | 🔴 **alerta** |
-| **nunca recebeu** | `t28_gbp_daily` (cota) | 🟡 lista como conhecido |
-| 🆕 **em estudo, sem consumidor** | `t28_clarity_daily` | **não alerta, mas aparece no resumo** |
+| | |
+|---|---|
+| ✅ **a coleta continua** | **não aposente o ramo, não apague a tabela, não mexa em nada** |
+| ✅ **o vigia a LISTA** | uma linha no resumo: *"em estudo, sem consumidor, último dado 06/09"* |
+| ❌ **o vigia NÃO alerta** por ela | ela não tem consumidor hoje. **Alertar por dado que ninguém usa seria instalar, dentro do próprio vigia, o defeito que ele existe para combater (M11)** |
 
 > **Por que listar em vez de ignorar:** é a **R12**. *Coisa desligada não tem cor, não tem alarme e
-> não aparece em lista nenhuma* — e some da memória de todo mundo. **Uma linha no resumo custa nada e
-> impede o esquecimento.**
+> não aparece em lista nenhuma* — e some da memória de todo mundo. **Uma linha no resumo custa nada
+> e impede o esquecimento.**
+
+🔴 **E atenção ao efeito colateral, porque ele vai na direção contrária da intuição:** com o Clarity
+fora do índice, **o `t28_ga4_landing` virou a ÚNICA fonte do único indicador de Experiência com valor
+real** (`SD-EXP-07`, taxa de engajamento, 0,64–0,81, execução `43061`). **A fonte que sobrou é a que
+está morta há 19 dias** — por isso o **CA4** é sobre ela, e por isso ele pesa.
 
 ---
 
@@ -117,7 +119,7 @@ nada.**
 | **CA1** | No dia saudável o vigia emite a **linha de prova de vida** | uma execução com tudo certo, e a mensagem no Telegram |
 | **CA2** | Cada uma das 7 conferências **pega o seu defeito** | injetar em ambiente controlado **ou** provar pelo dado histórico do dia em que aconteceu |
 | **CA3** | 🟢 **V2 acusa o score 3×** — defeito **vivo**, teste de graça | tem de acusar na primeira execução real |
-| **CA4** | 🟢 **V4 acusa `t28_ga4_landing`** — segundo defeito vivo, e é a **única** fonte de Experiência que sobrou | idem. **Se não acusar, o vigia não serve.** ⛔ `t28_clarity_daily` **não** entra na expectativa (§2.4) |
+| **CA4** | 🟢 **V4 acusa `t28_ga4_landing`** — segundo defeito vivo, e é a **única** fonte de Experiência que sobrou | idem. **Se não acusar, o vigia não serve.** E o `t28_clarity_daily` aparece no resumo **sem alertar** (§2.4) |
 | **CA5** | O vigia **não morre calado**: zero achados ≠ zero itens | ler o nó final e confirmar que ele **sempre** recebe entrada |
 | **CA6** | 7 conferências = **1 mensagem** por dia | contar as mensagens de uma execução |
 | **CA7** | As consultas **filtram `client_id IS NOT NULL`** | as 318 linhas de teste **não** aparecem em nenhuma contagem |
