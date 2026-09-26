@@ -258,8 +258,29 @@ que o plano já esteja **aceito** num ADR. Se o dado desmentir o plano:
 > **Executar um plano aceito que o dado já desmentiu é o pior dos dois mundos** — tem a autoridade do
 > ADR e a consequência do erro.
 >
-> **Corolário:** **hipótese desmentida também se registra.** Se a refutação não for escrita, a
+> **Corolário 1:** **hipótese desmentida também se registra.** Se a refutação não for escrita, a
 > próxima auditoria levanta o mesmo alarme e o trabalho se repete.
+
+> 🔴 **Corolário 2 (2026-09-26) — número herdado de documento não vira critério de aceite sem ser
+> medido de novo.**
+>
+> **Um documento registra o que era verdade no dia em que foi escrito. Um critério de aceite afirma o
+> que é verdade agora.** São coisas diferentes.
+>
+> **Motivo:** em 26/09 o brief do F3 escreveu dois critérios de aceite em cima de *"defeitos vivos"*
+> copiados de um relatório do dia anterior — **o score 3× e o `t28_ga4_landing` morto há 19 dias.**
+> Nenhum dos dois estava acontecendo. O executor mediu antes de construir, **três das quatro
+> premissas caíram, e a etapa parou antes do primeiro nó.** Um dos achados errados tinha inclusive
+> sido apresentado como *"mais urgente que construir o índice"*.
+>
+> **Custo de obedecer: uma query. Preço pago por não obedecer: uma etapa inteira.**
+>
+> **Teste prático:** *este número eu medi, ou eu li?* Se leu, e ele vai virar critério, **meça.** E
+> **o que se mede vence o que está escrito** — inclusive o que está escrito por mim.
+>
+> ⚠️ **Vale também para o contrário:** a mesma sessão descobriu que **o score 3× era real em 19/09 e
+> foi consertado até 26/09 sem ninguém registrar** — e cinco briefs seguidos mandaram não tocar num
+> defeito que já não existia. **Defeito que some também se escreve** (é o Corolário 1, do outro lado).
 
 ### R7 — Nada se cria sem plano pronto. E todo plano começa procurando o que já existe
 **Antes de construir qualquer coisa nova** — workflow, skill, agente, coluna, tabela, pasta — **tem de
