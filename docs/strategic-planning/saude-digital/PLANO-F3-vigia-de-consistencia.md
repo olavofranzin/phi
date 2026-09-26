@@ -1,6 +1,6 @@
 # Plano F3 — o vigia de consistência: fazer o silêncio significar saúde
 
-> ✅ **AS-BUILT 2026-09-26 — CONSTRUÍDO E PUBLICADO.** `versionId == activeVersionId == 8c19e88f`
+> ✅ **AS-BUILT 2026-09-26 — CONSTRUÍDO E PUBLICADO.** `versionId == activeVersionId == 125b437b`
 >
 > **AS 7 CONFERÊNCIAS NO AR** (a volta 2 subiu 6; a volta 3 fechou o V1 e o V6 quando a URL da credencial foi corrigida). O workflow virou `PHI - Vigia de Consistencia dos Dados`.
 > Relatórios: volta 2 `2026-09-26-F3-vigia-volta-2-relatorio.md` · **volta 3 (vale)** `2026-09-26-F3-vigia-volta-3-as-7-conferencias.md`
@@ -12,6 +12,7 @@
 > | ✅ **V1 no ar** | o 404 era **URL-base errada** na credencial, corrigida pelo Olavo. O V1 lê a execução e confere se chegou ao nó `If Operacional OK?` — status verde **não** basta, e foi assim que a Fase 3 morreu 8 dias |
 > | **V5 confirma, e segue com cobertura parcial declarada** | casa o `execution_id` da `t28_errors` com o status real da execução: *"terminou VERDE tendo roteado erro"* deixou de ser suposição. Cobre só quem usa o error-handler do T28, e isso vai na mensagem |
 > | **V6 pelos dois lados** | a janela de execução vem da API (`operador unico` 03:30–05:30, `Pipeline_v2` 06:30–08:00) e o `ingestion_step` dá o lado do dado, com o cuidado de que ele é *"quem tocou por último"* |
+> | 🔴 **Exceção declarada para dado de teste** | o dado de `meta_ads` do CLI-13 é de teste do caminho Meta (Olavo, 26/09) e gerava 4 alertas. Virou exceção **datada, listada todo dia**, nunca silenciada: exceção que ninguém vê vira silêncio permanente |
 > | 🔴 **V3 ganhou portão de tráfego pago, e o V3B nasceu** | *"cliente ativo"* não basta: o CLI-7 está ATIVO e é CRIAÇÃO DE SITE — alertar por ele seria ruído crítico diário. Mas o CLI-13 tem `meta_ads` e **também** não declara mídia, então o portão sozinho viraria falso negativo. O V3B acusa a contradição |
 > | **V2b acrescentado** | a view `phi_score_current` agrupa **sem `platform`**: multiplicador armado, contraria o M2 |
 > | `t28_gbp_daily` passou a ser **vigiada** | recebeu 1 linha em 21/06 e parou. *Recebeu uma vez e parou* não é *nunca recebeu* |

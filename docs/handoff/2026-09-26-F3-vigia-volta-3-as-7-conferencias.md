@@ -3,8 +3,8 @@
 | | |
 |---|---|
 | **Data** | 2026-09-26 |
-| **Resultado** | ✅ **7 de 7 conferências no ar.** `versionId == activeVersionId == 8c19e88f-b054-4001-9ebb-8c4961d2296b`, 8 nós, ativo |
-| **O que destravou** | duas respostas do Olavo: a URL da credencial estava errada (corrigida por ele) e **o CLI-7 não é cliente de tráfego pago** |
+| **Resultado** | ✅ **7 de 7 conferências no ar.** `versionId == activeVersionId == 125b437b-dcce-414b-839f-8e61ffd2a3a9`, 8 nós, ativo |
+| **O que destravou** | três respostas do Olavo: a URL da credencial estava errada (corrigida por ele), **o CLI-7 não é cliente de tráfego pago**, e **o dado do CLI-13 é de teste do caminho Meta Ads** |
 | **Substitui** | o `V1 AUSENTE` do relatório da volta 2 — aquele documento está **superado neste ponto** |
 | **Custo de modelo** | **zero** |
 
@@ -162,11 +162,60 @@ foi a **acusação errada** de que ele e o CLI-7 eram clientes pagos sem monitor
 
 ---
 
+## 8b. 🔴 O CLI-13 não era cadastro velho: era dado de teste em produção
+
+**Resposta do Olavo:** *"a campanha cadastrada foi para configurar e testar o caminho do Meta Ads, os
+dados não pertencem a ele."*
+
+**Isso reescreve o achado.** O V3B estava certo em apontar a divergência e **errado na explicação** que
+eu tinha oferecido — não é cadastro velho nem coleta sobrando: é **dado de teste morando em `phi_prod`**,
+a mesma família das 318 linhas sem `client_id` da `t28_campaign`.
+
+**Quatro alertas do vigia eram ruído**, todos com a mesma raiz: `V4 raw_campaign_data | CLI-13`,
+`V4 t28_errors | CLI-13`, `V4B CLI-13 | meta_ads` e `V3B CLI-13`.
+
+### Como tratei, e por que não silenciei
+
+Virou **exceção declarada e datada** no código, que o vigia **lista todo dia em vez de alertar**:
+
+```js
+const DADO_NAO_E_DO_CLIENTE = {
+  'CLI-13': 'campanha criada para configurar e testar o caminho do Meta Ads; o dado nao pertence ao cliente (Olavo, 26/09)',
+};
+```
+
+E a exceção sai num **bloco próprio da mensagem, todos os dias, inclusive no dia bom**:
+
+```
+Excecao declarada: CLI-13 - campanha criada para configurar e testar o caminho do
+Meta Ads; o dado nao pertence ao cliente (Olavo, 26/09). Enquanto esse dado estiver
+em phi_prod, ele nao gera alerta.
+```
+
+> **Por que não uma exclusão simples:** exceção que ninguém vê vira silêncio permanente — o defeito que
+> este vigia existe para combater. É a **R12** aplicada a regra de negócio: *coisa desligada não tem cor,
+> não tem alarme e não aparece em lista nenhuma*. **Uma linha no resumo custa nada e impede o
+> esquecimento.** E acrescentar nome nessa lista é decisão do Olavo, nunca minha — está escrito no nó.
+
+### O efeito no ruído
+
+| | antes do CLI-13 | depois |
+|---|---|---|
+| críticos | 0 | **0** |
+| atenção | 7 | **3** |
+| listados | 8 | 12 |
+
+**As 3 atenções que sobraram são todas do CLI-4 e todas reais:** `t28_ga4_landing` D-7 parado há 20
+dias, o mesmo D-30 há 57, e `t28_gbp_daily` há 97. **O sinal ficou limpo — o que resta é o que precisa
+de ação.** (exec **43358**)
+
+---
+
 ## 9. O que continua em aberto
 
-1. **O CLI-13:** cadastro diz CRIAÇÃO DE SITE, o PHI tem `meta_ads` dele até 20/09, e a campanha está
-   `Concluído` no Notion. **Alguém precisa dizer qual lado está velho** — o vigia vai lembrar todo dia
-   até lá, em ATENÇÃO.
+1. 🔴 **Dado de teste dentro de `phi_prod`.** O CLI-13 é o segundo caso: as 318 linhas sem `client_id`
+   da `t28_campaign` são o primeiro. **Isto é padrão, não acidente** — e vale uma decisão de onde
+   testar caminho novo. **Pergunta devolvida, não resolvida.**
 2. **CLI-9 e CLI-10 sem Status.** O vigia lista como *não conferido* em vez de adivinhar.
 3. **Os dois relógios da `raw_campaign_data`** (`ingested_at` em BRT+3 e `execution_id` noutra base).
    Não investiguei, e é por isso que o V6-dado olha o step.
