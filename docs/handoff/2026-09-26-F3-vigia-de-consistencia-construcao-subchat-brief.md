@@ -194,6 +194,18 @@ está morta há 19 dias** — por isso o **CA4** é sobre ela, e por isso ele pe
 > **Ao criar, confira duas coisas** (nenhuma delas eu sei de cor — leia a tela): se a chave aceita
 > **escopo de leitura**, use o menor possível; e se a API pública do n8n está **habilitada** nesta
 > instância. Se qualquer uma das duas não existir, **escreva no relatório e siga sem o V1.**
+>
+> 🔴 **Ela é PERMANENTE, não é de teste.** O V1 lê a execução do dia anterior **todo dia, às 08h** —
+> a chave vive enquanto o V1 viver. **Não caia na R12 ao contrário:** tratar como temporária uma
+> coisa que é permanente é o mesmo esquecimento, só que na outra direção.
+>
+> **Por isso a credencial recebe nome e descrição de coisa permanente** (R5): *para que serve* e
+> *qual workflow a usa*. Credencial órfã com nome genérico é o que a próxima auditoria não consegue
+> decidir se pode apagar.
+>
+> ✅ **E revogar é tão barato quanto criar — e falha ALTO:** sem a chave, o nó quebra, o
+> `errorWorkflow` dispara e chega no Telegram. **Não morre calado** — o que, nesta casa, é o
+> contrário do normal.
 | **V5** (terminou verde tendo roteado erro?) | 🟡 **parcial**: dá para ler `t28_errors`, que cobre **só quem usa o error-handler do T28** |
 
 **Se a decisão não tiver chegado quando você começar:**
