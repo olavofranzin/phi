@@ -1,5 +1,10 @@
 # F3 — o vigia de consistência: relatório da volta 2 (CONSTRUÍDO E PUBLICADO)
 
+> ⚠️ **SUPERADO EM PARTE, no mesmo dia.** Onde este relatório diz **`V1 AUSENTE`** e **`V5 parcial por
+> falta da API`**, leia a volta 3: a URL da credencial estava errada, foi corrigida, e **as 7
+> conferências entraram no ar**. O V3 também mudou (ganhou portão de tráfego pago).
+> **Vale:** `docs/handoff/2026-09-26-F3-vigia-volta-3-as-7-conferencias.md` — versão no ar: `8c19e88f`.
+
 | | |
 |---|---|
 | **Data** | 2026-09-26 |

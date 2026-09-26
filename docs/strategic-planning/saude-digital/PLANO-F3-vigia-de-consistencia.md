@@ -1,17 +1,18 @@
 # Plano F3 — o vigia de consistência: fazer o silêncio significar saúde
 
-> ✅ **AS-BUILT 2026-09-26 — CONSTRUÍDO E PUBLICADO.** `versionId == activeVersionId == 98020749`
+> ✅ **AS-BUILT 2026-09-26 — CONSTRUÍDO E PUBLICADO.** `versionId == activeVersionId == 8c19e88f`
 >
-> **6 das 7 conferências no ar.** O workflow virou `PHI - Vigia de Consistencia dos Dados`.
-> Relatório: `docs/handoff/2026-09-26-F3-vigia-volta-2-relatorio.md`
+> **AS 7 CONFERÊNCIAS NO AR** (a volta 2 subiu 6; a volta 3 fechou o V1 e o V6 quando a URL da credencial foi corrigida). O workflow virou `PHI - Vigia de Consistencia dos Dados`.
+> Relatórios: volta 2 `2026-09-26-F3-vigia-volta-2-relatorio.md` · **volta 3 (vale)** `2026-09-26-F3-vigia-volta-3-as-7-conferencias.md`
 >
 > | O que ficou diferente do plano | Por quê |
 > |---|---|
 > | 🔴 **o V4 é por tabela × CLIENTE × janela**, não por tabela | um `MAX` por tabela mostra 20/09 e **esconde um cliente parado há 20 dias**. Medido, exec 43326 |
 > | o V4 tem **duas** perguntas: *carregou?* (`ingested_at`) e *avançou?* (`business_date`) | correção de 26/09; a coluna `ingested_at` existe em todas as `t28_*` |
-> | 🔴 **V1 AUSENTE** | a credencial `n8nApi` existe mas a API responde **404** em dois recursos diferentes (401 seria chave inválida). API desabilitada ou URL-base errada — ação de tela |
-> | **V5 parcial**, com rótulo obrigatório na mensagem | lê `t28_errors`: cobre só quem usa o error-handler do T28 |
-> | **V6 completo sem a API** | `ingestion_step` deu o que a execução ia dar. Olha o writer, não o relógio (os dois relógios da tabela discordam) |
+> | ✅ **V1 no ar** | o 404 era **URL-base errada** na credencial, corrigida pelo Olavo. O V1 lê a execução e confere se chegou ao nó `If Operacional OK?` — status verde **não** basta, e foi assim que a Fase 3 morreu 8 dias |
+> | **V5 confirma, e segue com cobertura parcial declarada** | casa o `execution_id` da `t28_errors` com o status real da execução: *"terminou VERDE tendo roteado erro"* deixou de ser suposição. Cobre só quem usa o error-handler do T28, e isso vai na mensagem |
+> | **V6 pelos dois lados** | a janela de execução vem da API (`operador unico` 03:30–05:30, `Pipeline_v2` 06:30–08:00) e o `ingestion_step` dá o lado do dado, com o cuidado de que ele é *"quem tocou por último"* |
+> | 🔴 **V3 ganhou portão de tráfego pago, e o V3B nasceu** | *"cliente ativo"* não basta: o CLI-7 está ATIVO e é CRIAÇÃO DE SITE — alertar por ele seria ruído crítico diário. Mas o CLI-13 tem `meta_ads` e **também** não declara mídia, então o portão sozinho viraria falso negativo. O V3B acusa a contradição |
 > | **V2b acrescentado** | a view `phi_score_current` agrupa **sem `platform`**: multiplicador armado, contraria o M2 |
 > | `t28_gbp_daily` passou a ser **vigiada** | recebeu 1 linha em 21/06 e parou. *Recebeu uma vez e parou* não é *nunca recebeu* |
 > | o nó `Buscar lacunas de ontem` foi **consolidado**, não aposentado | as duas perguntas dele viraram V4B e V2c no mesmo workflow |

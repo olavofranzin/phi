@@ -2,11 +2,12 @@
 
 | | |
 |---|---|
-| **Estado** | ✅ **CONSTRUÍDO EM 26/09** (volta 2) e publicado em `JMgc0HdLPOFPnFYb`. ⚠️ **O que está no ar é a fonte da verdade, não este arquivo** — leia o workflow (R13) |
+| **Estado** | ✅ **CONSTRUÍDO EM 26/09** (voltas 2 e 3) e publicado em `JMgc0HdLPOFPnFYb`, versão `8c19e88f`, **as 7 conferências no ar**. ⚠️ **O que está no ar é a fonte da verdade, não este arquivo** — leia o workflow (R13) |
 | **Data** | 2026-09-26 |
 | **Por que existe** | a volta 1 parou por premissa refutada. Este arquivo foi o desenho que a volta 2 montou |
 | **O que mudou do desenho para o construído** | o **V4 virou por cliente** (um `MAX` por tabela esconde cliente morto) · ganhou a segunda pergunta (`ingested_at`) · **V2b** acrescentado · **V4_VAZIA** acrescentado (tabela com zero linha não formava grupo e ficava invisível) · **V3 virou lista branca `ATIVO`** — a lista negra chutada gerou 10 falsos críticos no smoke · `t28_gbp_daily` passou de `conhecido` para **vigiada** · Telegram em `parse_mode HTML`, senão o `_` dos nomes de tabela desaparecia |
-| **Relatório** | `docs/handoff/2026-09-26-F3-vigia-volta-2-relatorio.md` |
+| **Relatórios** | volta 2 · **volta 3 (vale):** `docs/handoff/2026-09-26-F3-vigia-volta-3-as-7-conferencias.md` |
+| **O que a volta 3 acrescentou** | **V1** (lê a execução do n8n e confere se chegou ao nó `If Operacional OK?`) · **V6 pela janela de execução**, além do step · **V5 confirma** o "terminou verde" casando o `execution_id` com o status real · **V3 com portão de tráfego pago** e o **V3B** para a contradição inversa |
 | **Conferido contra** | o schema real de `phi_prod`, execução **43182** (colunas) e **43183** (frescor). **Nenhum nome de coluna aqui foi adivinhado** |
 
 ---
@@ -271,9 +272,9 @@ return [{ json: { alert_message: partes.join('\n'),
 
 | Vigia | Por quê |
 |---|---|
-| **V1** | exige ler a execução do n8n; **não há credencial `n8nApi`** na instância. Pergunta **P2** do relatório |
-| **V5** | cobre só erro roteado ao `WF-T28-Error-Handler`. Pergunta **P3** |
-| **V6** | só o lado `Pipeline_v2`. O lado `operador unico` não tem como ser provado: `raw_campaign_data` **não tem coluna de timestamp de carga** |
+| ~~**V1**~~ | ✅ **resolvido na volta 3**: a credencial existe e a URL-base estava errada. No ar |
+| **V5** | cobre só erro roteado ao `WF-T28-Error-Handler` — e isso vai escrito na mensagem diária. O "terminou verde" passou a ser **confirmado** pela API |
+| ~~**V6**~~ | ✅ **completo na volta 3**: a janela dos dois workflows vem da API. (E a premissa aqui estava errada: `raw_campaign_data` **tem** `ingested_at` — eu não a tinha visto porque filtrei o schema por padrões de nome sem `%ingest%`) |
 
 > 🔴 **Antes de montar, refazer as contagens.** Os números que calibram o `ESPERADO` são de **26/09**.
 > Quem montar isto daqui a uma semana está usando número velho para decidir o que é atraso — e foi
