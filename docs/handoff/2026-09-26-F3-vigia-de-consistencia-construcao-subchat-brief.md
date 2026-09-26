@@ -31,7 +31,7 @@
 | # | Regra |
 |---|---|
 | **1** | **Você estende um workflow ATIVO.** Vale a **R13** inteira: leia `activeVersion.nodes`, compare `versionId` com `activeVersionId`, e **depois de publicar releia e confirme**. *"Não deu erro"* não é *"está no ar"* |
-| **2** | 🔴 **PARE antes de publicar/ativar e peça o OK.** É regra do `CLAUDE.md`. Construa, prove em execução manual, **depois** peça |
+| **2** | 🟢 **PUBLICAR JÁ ESTÁ AUTORIZADO** — Olavo, 26/09: *"pode publicar quando os 9 critérios passarem"*. **A autorização é condicional: os nove, todos.** Um só que não passe ⇒ **não publique** — relate e devolva |
 | **3** | **O vigia avisa; não conserta.** Ele vai encontrar coisa quebrada. **Não conserte nada** — nem a coleta morta, nem o score 3×, nem as linhas sem cliente. Consertar é outro brief |
 | **4** | **Nada mudado para teste fica para trás** (R12). Antes de fechar, releia o artefato e confirme que voltou |
 | **5** | **Limite de 3 voltas** (R9). Se na terceira o critério não passar, o problema é o plano — devolva ao chat-mãe |
@@ -99,6 +99,21 @@ São dois estados diferentes e o alerta precisa distinguir:
 > acontecendo agora.** Se o vigia não acusar os dois na estreia, ele não serve — e a gente descobre
 > no primeiro dia, não em oito.
 
+### 🟢 A autorização de publicação — o que ela cobre e o que não cobre
+
+> **Olavo, 2026-09-26:** *"pode publicar quando os 9 critérios passarem."*
+
+| ✅ Cobre | ❌ **Não** cobre |
+|---|---|
+| publicar e ativar **este** workflow (`JMgc0HdLPOFPnFYb`) | ativar ou publicar **qualquer outro** workflow |
+| depois de os **nove** critérios passarem | publicar com oito. **Não há "quase"** |
+| executar manualmente para provar os critérios | qualquer nó de **LLM**, em qualquer lugar |
+| — | consertar o que o vigia achar |
+
+🔴 **Se um critério não passar:** não publique, **não adapte o critério para ele passar**, e não
+tente contornar. **Relate o defeito e devolva** — é a volta da R9, e são até 3. Na terceira, o
+problema é o plano, não a execução.
+
 ---
 
 ## 4. O que entregar para dizer "concluído"
@@ -137,7 +152,7 @@ São dois estados diferentes e o alerta precisa distinguir:
 
 Ele é **ponte**, não decisor do meio do caminho.
 
-- **Uma pergunta só, no fim, e ela já está prevista:** o **OK para publicar/ativar**.
+- 🟢 **Nem a pergunta do fim existe mais:** publicar já está autorizado, condicionado aos 9 critérios.
 - Qualquer outra decisão que aparecer → **pare, escreva a pergunta com opções e a consequência de cada uma, e devolva ao chat-mãe.** Não decida por ele.
 - **Separe o que leu do que deduziu.** Escreva *"deduzo que"* quando for dedução.
 - **Discordar do plano é permitido e desejado** (R6): se o dado desmentir o plano aprovado, **pare, não execute, e registre.**
