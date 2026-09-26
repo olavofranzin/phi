@@ -1,6 +1,17 @@
 # Plano F3 — o vigia de consistência: fazer o silêncio significar saúde
 
-> 🔴 **AS-BUILT 2026-09-26 — A CONSTRUÇÃO NÃO OCORREU. NADA FOI PUBLICADO.**
+> 🟢 **CONSTRUÍDO E NO AR — 2026-09-26, volta 3.** `PHI - Vigia de Consistencia dos Dados`
+> (`JMgc0HdLPOFPnFYb`), **7 de 7 conferências**, `versionId == activeVersionId == 125b437b`,
+> `errorWorkflow` apontado, 8 nós, 1 gatilho às 08h BRT. **Conferido pelo chat-mãe na API, não
+> relatado.** Estreia: **0 críticos · 3 atenções, todas reais e todas do CLI-4.**
+> Relatório: `docs/handoff/2026-09-26-F3-vigia-volta-3-as-7-conferencias.md`.
+>
+> **O banner abaixo é da VOLTA 1 e virou histórico** — guardado porque é o registro de por que a
+> volta 1 parou.
+
+---
+
+> 🔴 **[HISTÓRICO — VOLTA 1] A CONSTRUÇÃO NÃO OCORREU. NADA FOI PUBLICADO.**
 >
 > A volta 1 parou **antes do primeiro nó**, porque o dado desmentiu três premissas (R6):
 >
@@ -21,7 +32,7 @@
 
 | | |
 |---|---|
-| **Status** | ✅ **APROVADO** — **Olavo, 2026-09-21** (*"Plano F3 ok"*). 🟢 **VIROU BRIEF EM 2026-09-26:** `docs/handoff/2026-09-26-F3-vigia-de-consistencia-construcao-subchat-brief.md` · 🔴 **CONSTRUÇÃO PARADA NA VOLTA 1 (26/09)** — ver banner acima |
+| **Status** | 🟢 **ENTREGUE — 2026-09-26, na volta 3 de 3.** Aprovado em 21/09, brief em 26/09, construído no mesmo dia depois de duas voltas que o dado derrubou |
 | **A condição do ADR-39** | 🟢 **LIBERADA em 26/09.** *"Vira brief quando o ADR-39 fechar"* era ordem de fila, e a fila mudou em 24/09. **O vigia não depende do ADR-39** — ele só detecta. Enquanto o 39 não fechar, é esperado que o **V3 acuse**: isso é o vigia funcionando |
 | **Critério que atende** | **F3** do `PLANO-ENTREGA-FINAL-PHI.md` · fecha o **D5** do `CONTRATO-PHI.md` · destrava **C3/C4** da Definição de Pronto |
 | **Razão que serve** | **R-A** — a qualidade do serviço parar de depender da atenção do Olavo |

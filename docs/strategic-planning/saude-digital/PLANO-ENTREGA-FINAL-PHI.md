@@ -320,8 +320,8 @@ da Prospecção.
 | # | Critério | De onde veio | Hoje |
 |---|---|---|---|
 | **F1** | **Todo cliente que contrata tráfego aparece no PHI sem ninguém precisar lembrar** | *"todos os que contratarem"* + *"eu cadastro no Notion"* | 🟡 **caminho construído (Fase A, 21-22/09), prova pendente** — o CHA teve a campanha concluída em 22/09 e não há cliente novo para exercer o CA3. **O F1 só fecha com um cliente real entrando** |
-| **F2** | **O número que está no Notion é o número certo** — sem duplicata, sem zero que significa "não achei" | *"o que dói é dado errado"* + virada item 1 | 🔴 o score chega **3×** |
-| **F3** | **Silêncio significa saúde** — se o que devia acontecer não aconteceu, chega alarme | *"perceberia pela falta"* × *"quase nunca chega alarme"* | 🔴 21 de 26 sem cobertura |
+| **F2** | **O número que está no Notion é o número certo** — sem duplicata, sem zero que significa "não achei" | *"o que dói é dado errado"* + virada item 1 | 🟡 **o 3× ACABOU** — medido em 26/09: 0 chaves duplicadas em 30 dias, 1 página e 1 score por campanha. **Foi consertado entre 19 e 26/09 e ninguém registrou** (R6, corolário 2). Falta a outra metade: *zero que significa "não achei"* |
+| **F3** | **Silêncio significa saúde** — se o que devia acontecer não aconteceu, chega alarme | *"perceberia pela falta"* × *"quase nunca chega alarme"* | 🟢 **FECHADO 2026-09-26.** `PHI - Vigia de Consistencia dos Dados` (`JMgc0HdLPOFPnFYb`), **7 de 7 conferências no ar**, `versionId == activeVersionId == 125b437b`, 1 mensagem/dia **inclusive no dia bom**. Placar da estreia: **0 críticos · 3 atenções, todas reais** |
 | **F4** | **O PHI enxerga a campanha como a plataforma a enxerga — campanha, conjunto e anúncio — e aponta em qual nível está a causa, a tempo de agir** | *"quero o anúncio culpado"* + §3.3.2 + **R-D** | 🔴 pontua só o agregado, e só o dia de hoje |
 | **F5** | **Rodou 30 dias sem intervenção manual** | virada item 2 · **R-A** | ⬜ nunca medido |
 | **F7** | 🔴 **O PHI sabe se a orientação funcionou** — mede o número depois da ação e guarda o resultado | **R-B** (acumular aprendizado) | 🔴 **não existe** — é o `acerto_previsao` que a Saúde Digital nunca teve |
