@@ -182,6 +182,18 @@ está morta há 19 dias** — por isso o **CA4** é sobre ela, e por isso ele pe
 | Conferência | Estado |
 |---|---|
 | **V1** (o `Pipeline_v2` chegou ao fim?) | ⛔ **não construível sem uma chave de API do n8n.** Nenhuma das 26 credenciais é do tipo `n8nApi` |
+
+> 🔴 **A chave NÃO passa por chat, por documento nem por commit.** Ela é criada e salva **dentro do
+> próprio n8n**: gera-se a chave na tela de configurações e cola-se numa credencial do tipo `n8nApi`,
+> na mesma tela. **Ninguém precisa ver o valor — nem o chat-mãe, nem você.** Se alguém pedir a chave
+> em texto, a resposta é não.
+>
+> ⚠️ **E o acesso via MCP não substitui:** esse acesso é de quem está na sessão, ao vivo. **O vigia
+> roda às 08h sem ninguém presente** — quem precisa de credencial é o nó, dentro do n8n.
+>
+> **Ao criar, confira duas coisas** (nenhuma delas eu sei de cor — leia a tela): se a chave aceita
+> **escopo de leitura**, use o menor possível; e se a API pública do n8n está **habilitada** nesta
+> instância. Se qualquer uma das duas não existir, **escreva no relatório e siga sem o V1.**
 | **V5** (terminou verde tendo roteado erro?) | 🟡 **parcial**: dá para ler `t28_errors`, que cobre **só quem usa o error-handler do T28** |
 
 **Se a decisão não tiver chegado quando você começar:**
