@@ -26,6 +26,62 @@
 
 ---
 
+> 🔴 **VOLTA 1 PAROU EM 27/09, NO CA3a — e há um estado vivo falhando. Leia o §0.1.**
+>
+> | Passo | Estado |
+> |---|---|
+> | **4.2 / 4.3** | ✅ publicados — `client_config` em `df62def3` |
+> | **4.3b** | ✅ publicado — `Pipeline_v2` em `88c65762`, consulta validada na execução `43693` |
+> | **CA3a** | 🔴 **FALHOU** (execução `43699`): o BigQuery recusou o `INSERT` do `CLI-14` — **`primary_metric_type` é `REQUIRED`** |
+> | **4.4** | ⬜ não executado, corretamente |
+>
+> 🔴 **O erro é meu:** escrevi *"coluna vazia é o comportamento certo"* **sem ler o schema.** O schema
+> proíbe. É a terceira vez em dois dias que eu afirmo comportamento de artefato a partir da intenção
+> de design — e é exatamente o que o corolário 2 da R6 manda não fazer.
+>
+> ⚠️ **E há um achado por trás:** **não existe DDL do `client_config` versionada no repositório.**
+> Procurei: zero `.sql` menciona a tabela. **Por isso ninguém sabia que a coluna era obrigatória.**
+>
+> ## §0.1 🔴 O estado vivo que precisa de decisão hoje
+>
+> O workflow `client_config` está **publicado apontando para `phi_prod`** e tem gatilho de **1 hora**.
+> O **CLI-13 existe no Notion e não existe em `phi_prod`** → **o `MERGE` vai tentar inserir e falhar,
+> de hora em hora.**
+>
+> **Não corrompe dado** — falha e para. **Mas é barulho recorrente e a sincronização fica morta.**
+>
+> | Saída | Quando usar |
+> |---|---|
+> | 🟢 **Aplicar a opção A** (abaixo) | **é a saída.** Uma DDL resolve |
+> | 🟡 **Desativar o gatilho do `client_config`** | **se a decisão demorar.** Reversível, e **a nota diz quando religar** (R12) |
+> | ❌ Reverter o 4.2 | só se A e B caírem — desfaz trabalho bom |
+>
+> ## §0.2 A escolha entre A, B e C — recomendação do chat-mãe
+>
+> **Concordo com o executor: é a A.**
+>
+> | | O que é | Veredito |
+> |---|---|---|
+> | 🟢 **A** | tornar `primary_metric_type` **NULLABLE** e repetir o CA3a | ✅ **uma DDL.** É a direção do ADR-40 — a coluna está a caminho de sair, e relaxar é um passo para lá, não um desvio |
+> | 🟡 **B** | migrar os outros 2 leitores e **remover a coluna** | certo no fim, **e maior agora**. A vira pré-requisito natural dela |
+> | ❌ **C** | manter o schema e preencher CPA/ROAS no cliente | **reinstala o grão que o ADR-40 aboliu.** Rejeitada |
+>
+> **Os três leitores aguentam `NULL`:** `Buscar Clientes Ativos` usa a coluna para listar;
+> o `COALESCE` do score **existe exatamente para isso**; e o `Buscar Campanhas Alertas` **já foi
+> migrado no 4.3b**.
+>
+> ⚠️ **Dois avisos sobre a A:**
+> 1. 🔴 **Relaxar `REQUIRED` → `NULLABLE` é caminho de uma direção só** no BigQuery. Voltar exige
+>    recriar a tabela. **Por isso precisa do OK do Olavo, e não da minha escolha técnica.**
+> 2. **Confirme o comando aceito pelo ambiente antes de rodar.** Se o BigQuery recusar a relaxação,
+>    **PARE** — aí a B passa a ser a única saída e o escopo muda.
+>
+> **Consequência a observar depois do CA3a passar:** o **CLI-13 entra** em `client_config`. Se entrar
+> como ativo, o `Pipeline_v2` passa a processá-lo. **O V3B do vigia já o acompanha** — não é bloqueio,
+> é coisa para olhar no dia seguinte.
+
+---
+
 > 🟢 **TRÊS DECISÕES DO OLAVO — 26/09.** Elas mudam os passos 4.4 e 4.5.
 >
 > | Pergunta | Resposta |
