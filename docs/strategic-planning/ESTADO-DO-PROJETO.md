@@ -81,9 +81,28 @@ Qualquer cliente cuja Métrica-Mãe seja **CPL, ROAS ou qualquer outra** entra n
 | **Não foi causado por nós** | o ADR-40 **não criou** o defeito; ele o **tornou visível**. Ele estava lá desde o primeiro dia do motor |
 
 ⏭️ **O passo imediato continua sendo o 4.4** (rodada de 28/09, 09h BRT) — ele é curto, está
-pré-autorizado e fecha o ADR-39. **Mas o bloqueio estrutural é o motor mono-métrica**, e ele só sai
-de pé com decisão de arquitetura: **ou o motor aprende as outras métricas, ou o PHI declara por
-escrito que só atende cliente de CPA.**
+pré-autorizado e fecha o ADR-39.
+
+### ✅ **RESOLVIDO no mesmo dia — Olavo, 2026-09-27: a v1 atende cliente de CPA**
+
+Nenhum cliente a cadastrar nos próximos 30 dias tem métrica diferente de CPA. Então o motor
+multi-métrica **deixa de ser bloqueio** e passa a **dívida declarada**, com ADR próprio e sem prazo
+apertado. 🔴 **Sobra um trabalho, não um aviso:** o **CHA (`CLI-13`) é real e é CPL** ⇒ não será
+pontuado, e o **V3 do vigia vai acusá-lo todo dia** enquanto não houver marca de *"fora do índice por
+decisão"*. **Vigia que grita todo dia por caso conhecido para de ser lido.**
+
+### 🔜 A fila decidida pelo Olavo em 2026-09-27 — **A → B → C**
+
+| Ordem | O que | Estado |
+|---|---|---|
+| **1º** | **4.4 e 4.5 do ADR-39** | ⏳ rodada de **28/09, 09h BRT** — pré-autorizados |
+| **2º** | **D1-d** — uma credencial ruim não pode derrubar a coleta de todos os clientes | 🟢 **desenho aprovado em 24/09** (ADR-38 §28.4), virou fila hoje. Falta o brief |
+| **3º** | **religar as 3 fontes paradas** — GA4 **20 dias**, GA4 D-30 **57 dias**, GBP **97 dias** | ⬜ é o que trava o **F5** |
+| **4º** | **F4 — o grão de anúncio** (*"quero o anúncio culpado"*) | ⬜ o que ele pediu para os 15 dias, **agora depois da coleta parar de cair** |
+
+> **O argumento da ordem, dele e meu:** os dois primeiros são *"o sistema não coleta"*. **Construir
+> sobre coleta que cai é o `raw_ad_data` outra vez** — três meses de escrita diária para uma tabela
+> vazia, sem um único alarme.
 
 ### 🔴🔴 2026-09-09 17:35 UTC — a credencial do BigQuery caiu (URGENTE, além do ADR-38)
 

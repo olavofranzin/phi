@@ -2335,6 +2335,13 @@ ao contrário da B.1, mexer na janela de coleta **não é aditivo**.
 
 ## 28.4. 📋 D1-d — a proposta, em uma tela
 
+> ✅ **2026-09-27 — O D1-d É O PRÓXIMO DA FILA, por decisão do Olavo.** Perguntei o que vem depois de
+> o ADR-39 fechar e ele respondeu **A > B > C**: **(A) D1-d** → **(B) religar as 3 fontes paradas**
+> (GA4 20 dias, GA4 D-30 57 dias, **GBP 97 dias**) → **(C) o F4, grão de anúncio**.
+>
+> **O desenho abaixo não muda** — ele foi aprovado no desenho em 24/09; o que faltava era **quando**,
+> e agora tem. **Vira brief de sub-chat assim que o 4.4/4.5 do ADR-39 estiverem provados.**
+
 **O defeito, lido no artefato:** o corpo do laço é **uma corrente única**, **nenhum nó tem `onError`**,
 e **só o nó de SQL reconecta ao `Loop Over Items`**. Erro em qualquer ponto encerra a execução e o
 laço **nunca avança** — foi o 22/09.

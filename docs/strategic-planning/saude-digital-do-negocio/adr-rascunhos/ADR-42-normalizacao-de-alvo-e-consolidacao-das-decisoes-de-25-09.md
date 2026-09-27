@@ -1,8 +1,8 @@
-# [RASCUNHO] ADR-42 — Normalização de indicador de alvo, e consolidação das decisões de 25/09
+# ADR-42 — Normalização de indicador de alvo, e consolidação das decisões de 25/09
 
 | | |
 |---|---|
-| **Status** | 🟡 **RASCUNHO** (git, per ADR-012). **Não é decisão.** Vira `Aceito` quando o Olavo aprovar |
+| **Status** | 🟢 **ACEITO — Olavo, 2026-09-27** (*"7) Sim"*, resposta à fila de decisões daquele dia). Rascunho de 25/09 a 27/09 |
 | **Data** | 2026-09-25 |
 | **Decisor** | **Olavo** |
 | **Tipo** | Arquitetura |
@@ -174,3 +174,75 @@ Há **duas razões diferentes** para um valor estar acima da faixa, e tratá-las
 | 🔴 **O que NÃO foi verificado** | **nenhum valor de `L/Ti/Ts/U` foi calibrado contra base.** São réguas de julgamento, força **C/D**, n=1 |
 
 **Confiança na fórmula e na generalização: 0,9** — é álgebra, e é conferível relendo o D5. **Na reclassificação do §3: 0,8.** **Nos limites numéricos: não são meus — são do Olavo, e estão declarados como tal.**
+
+---
+
+# 8. 🟢 Decisões do Olavo de 2026-09-27 — quem lê o índice, quando o cliente vê, e o que ele recebe
+
+> **Por que entram aqui.** Este ADR existe, entre outras coisas, para **registrar no lugar onde se
+> procura** decisões que só moravam no corpo de outros documentos (§1). As três abaixo vinham
+> ocupando a fila de decisões desde 25/09 e **não tinham lugar canônico nenhum**.
+
+## 8.1. B1 — O índice v0.1 tem **dois** leitores, e um deles é máquina
+
+> *"Eu e um agente (pode ser um que lê tudo do cliente e trabalhará auxiliando para que os objetivos
+> de negócio sejam alcançados)."* — Olavo, 27/09
+
+| | |
+|---|---|
+| **Fecha** | a pendência *"quem é o leitor vivo do índice na v0.1"*, aberta desde 25/09 |
+| **Atende o M11** | *todo dado escrito tem consumidor declarado*. **Agora o índice tem dois, nominais** |
+
+🔴 **A consequência que essa resposta cria, e que não estava escrita em nenhum ADR:** um dos
+leitores é **agente**. Isso muda o que a nota tem de ser.
+
+| Se o leitor fosse só humano | Com um agente lendo |
+|---|---|
+| a nota pode ser um número com um texto ao lado | a nota tem de ser **estruturada** — campo por campo, legível sem interpretar prosa |
+| evidência é boa prática | **evidência é obrigatória**: o agente não "sabe" o contexto, ele só tem o que o registro carrega |
+| *"índice 62"* basta para conversar | *"índice 62 · cobertura 3 de 8 · pilares não medidos: …"* é o mínimo para um agente **não inventar** |
+
+> ✅ **Isto promove o D9 do ADR-41** (*toda nota carrega evidência: fonte, período, força A/B/C/D,
+> problema, impacto, prioridade, responsável, próxima ação*) **de boa prática a requisito de
+> interface.** O D9 já estava certo; o que faltava era o motivo — e o motivo é o segundo leitor.
+>
+> ⚠️ **E cria uma pergunta nova, que é de arquitetura e não de dado:** *o agente lê o índice pronto,
+> ou lê os indicadores e forma a própria opinião?* **Não decidido. Não deduzir.**
+
+## 8.2. B2 — O cliente vê a nota depois de **90 dias rodando + auditoria**. A data vem depois
+
+> *"Após 90 dias rodando faremos uma auditoria para determinar se os números refletem o que deveriam
+> refletir, após isso decidiremos uma data."* — Olavo, 27/09
+
+| | |
+|---|---|
+| **Fecha** | o gatilho do **O4** (26/09), que até hoje dizia *"até segunda ordem"* |
+| **Por que é melhor que uma data** | *"até segunda ordem"* **não é gatilho, é a falta de um.** Agora existe condição: **90 dias de operação** e depois **auditoria de aderência** — os números refletem o que deviam refletir? |
+| **O relógio começa** | ⬜ **quando o índice v0.1 estiver calculando** — não hoje. **Nada a contar ainda** |
+| 🔴 **O que essa decisão exige e ainda não existe** | a **auditoria dos 90 dias** precisa de critério escrito **antes** de chegar, senão vira opinião no dia. Não é urgente; é inevitável |
+
+## 8.3. B3 — O relatório é **no mínimo semanal, toda segunda**, com peso por nível de cliente
+
+> *"Dependerá do nível do cliente para nós (quanto maior o valor $$ maior o peso — podemos
+> estabelecer algum tipo de peso como bronze, prata e ouro), mas o mínimo será semanal (toda
+> segunda)."* — Olavo, 27/09
+
+| | |
+|---|---|
+| **Fecha** | o molde do **F8** do `PLANO-ENTREGA-FINAL-PHI` (*o cliente recebe alguma coisa*) |
+| **O piso** | **toda segunda**, para todo cliente. Quem é mais caro recebe **mais**, nunca menos |
+| **Encaixe feliz** | o **Agregador** já roda **semanalmente, nas segundas 09h**. O relatório semanal **não precisa de coleta nova** |
+| 🔴 **O que falta para isto ser implementável** | **o nível não existe como dado.** Bronze/prata/ouro não é campo em lugar nenhum — nem no Notion, nem no `client_config`. **Sem esse campo, "peso por nível" é regra sem fonte** — exatamente o erro que o **D7** deste ADR e do ADR-41 proíbe |
+
+> ⚠️ **Registrado como decisão de destino, não de implementação.** O *quanto mais* cada nível recebe
+> (frequência? profundidade? reunião?) **não foi decidido**, e deduzir isso seria inventar produto.
+
+## 8.4. ⬜ O que ficou aberto de propósito nesta rodada
+
+| # | Pendência | Estado |
+|---|---|---|
+| **1** | **dono de cada dimensão** (agência × cliente) | 🟡 o Olavo pediu a **lista** para nomear — apresentada em 27/09, resposta pendente |
+| **2** | o agente lê o índice pronto ou os indicadores? (§8.1) | ⬜ não decidido |
+| **3** | critério da auditoria dos 90 dias (§8.2) | ⬜ não escrito |
+| **4** | o que cada nível recebe além do semanal (§8.3) | ⬜ não decidido |
+| **5** | **campo de nível** (bronze/prata/ouro) na DB Clientes | ⬜ não existe — pré-requisito do §8.3 |

@@ -6,7 +6,38 @@
 | **Por que existe** | o painel diz *"o que falta"* e *"o que trava"*. **Não dizia de quem é a bola.** Decisão sem dono e sem lugar volta como surpresa |
 | **Como usar** | responder de cima para baixo. As duas primeiras mudam o que acontece nesta semana; as outras não |
 | **Regra** | quando ele responder, a resposta vai para o **documento canônico do assunto** (ADR ou plano) na mesma sessão — **R2**. Este arquivo é fila, não é memória |
-| **Atualizado** | 2026-09-27 |
+| **Atualizado** | 2026-09-27 — **8 das 11 respondidas no mesmo dia** |
+
+---
+
+## 🟢 PLACAR — respondido por Olavo em 27/09
+
+| # | Pergunta | Resposta | Onde ficou registrada |
+|---|---|---|---|
+| **D-1** | qualquer métrica ou só CPA? | **só CPA na v1** (*"Não"* a *"tem cliente de outra métrica nos próximos 30 dias?"*) | `PLANO-ENTREGA-FINAL-PHI` §4 · cabeçalho do **ADR-40** · painel |
+| **D-2** | qual o próximo da fila? | **A > B > C** — D1-d → 3 fontes → F4 | painel (§0, tabela da fila) · **ADR-38 §28.4** |
+| **D-3** | quem lê o índice na v0.1? | **o Olavo e um agente** que lê tudo do cliente e trabalha pelos objetivos de negócio dele | **ADR-42 §8.1** · F6 do plano |
+| **D-4** | gatilho para o cliente ver a nota? | **90 dias rodando + auditoria de aderência**, e só então a data | **ADR-42 §8.2** |
+| **D-5** | dono de cada pilar? | 🟡 **pediu a lista para nomear** — apresentada em 27/09 | ⬜ **resposta pendente** |
+| **D-6** | frequência e conteúdo do relatório? | **mínimo semanal, toda segunda**; peso por **nível** (bronze/prata/ouro por valor) | **ADR-42 §8.3** · F8 do plano |
+| **D-7** | aprovo o ADR-42? | ✅ **sim** | ADR-42 → **ACEITO 27/09** |
+| **D-8** | §1 e §2 do plano | 🟡 **pediu para rever o conteúdo antes de redigir** | ⬜ **pendente** |
+| **D-9 · D-10 · D-11** | campo `Tipo` · limpeza da Prospecção · T28 parado | ⬜ **não respondidas** | — |
+
+### 🔴 As quatro perguntas que as respostas de 27/09 CRIARAM
+
+**Isto não é burocracia: cada uma é um requisito que apareceu junto com a decisão.**
+
+| # | Pergunta nova | De onde veio |
+|---|---|---|
+| **N-1** | 🔴 **como o sistema marca *"cliente fora do índice por decisão"***, para o **V3** não acusar o CHA todo dia? | da decisão **D-1**. Sem isso, a decisão certa estraga o único detector da casa |
+| **N-2** | **bronze/prata/ouro precisa ser campo** — onde? (Notion Clientes? `client_config`?) | da decisão **D-6**. Hoje o nível não existe como dado, e regra sem fonte é o erro que o D7 proíbe |
+| **N-3** | **o agente lê o índice pronto, ou lê os indicadores e forma a própria opinião?** | da decisão **D-3**. É arquitetura, não dado |
+| **N-4** | **qual o critério da auditoria dos 90 dias**, escrito antes de ela chegar? | da decisão **D-4**. Critério escrito no dia vira opinião |
+
+> ⚠️ **A N-1 e a N-2 apontam para o mesmo lugar: a DB Clientes do Notion.** Junto com a **D-9** (campo
+> `Tipo`: Real/Teste/Interno), são **três campos** que o cadastro de cliente não tem — e os três
+> nasceram de decisões diferentes, em dias diferentes. **Vale resolver os três de uma vez.**
 
 ---
 

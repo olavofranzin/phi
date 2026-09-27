@@ -325,8 +325,8 @@ da Prospecção.
 | **F4** | **O PHI enxerga a campanha como a plataforma a enxerga — campanha, conjunto e anúncio — e aponta em qual nível está a causa, a tempo de agir** | *"quero o anúncio culpado"* + §3.3.2 + **R-D** | 🔴 pontua só o agregado, e só o dia de hoje |
 | **F5** | **Rodou 30 dias sem intervenção manual** | virada item 2 · **R-A** | ⬜ nunca medido |
 | **F7** | 🔴 **O PHI sabe se a orientação funcionou** — mede o número depois da ação e guarda o resultado | **R-B** (acumular aprendizado) | 🔴 **não existe** — é o `acerto_previsao` que a Saúde Digital nunca teve |
-| **F8** | 🔴 **O cliente recebe alguma coisa** — o que foi detectado e corrigido no período | **R-C** (provar valor) | 🔴 **não existe** |
-| **F6** | **Alguém da equipe opera sem ter desenhado** | *"alguém da equipe"* — **fato de uso, não razão de existir** | ⬜ **prioridade rebaixada em 21/09** |
+| **F8** | 🔴 **O cliente recebe alguma coisa** — o que foi detectado e corrigido no período | **R-C** (provar valor) | 🔴 **não existe** — 🟢 **mas o molde chegou em 27/09:** *no mínimo semanal, **toda segunda***, com **peso por nível de cliente** (bronze/prata/ouro por valor). O Agregador já roda **segundas 09h**, então o semanal **não pede coleta nova**. ⬜ **Falta o dado do nível: bronze/prata/ouro não é campo em lugar algum.** Ver ADR-42 §8.3 |
+| **F6** | **Alguém da equipe opera sem ter desenhado** | *"alguém da equipe"* — **fato de uso, não razão de existir** | ⬜ **prioridade rebaixada em 21/09** — 🟢 **e em 27/09 o leitor do índice ficou nominal: o Olavo e um agente** que lê tudo do cliente e trabalha pelos objetivos de negócio dele. 🔴 **Um dos dois é máquina**, e isso vira requisito de formato, não só de conteúdo — ADR-42 §8.1 |
 
 > **F1 a F3 são os pré-requisitos da virada** que o Olavo definiu (*"confiar no número"* + *"rodar
 > sozinho 30 dias"*). **F4 é o que ele pediu para os 15 dias.** F5 e F6 são consequência: só medíveis
@@ -349,6 +349,26 @@ da Prospecção.
 > métricas (CPL, ROAS, CPM…), ou o PHI **declara por escrito** que a v1 atende apenas cliente com
 > Métrica-Mãe **CPA** — e aí o F1 muda de redação. **Nenhuma das duas é gratuita; continuar sem
 > escolher é a única que já está custando.**
+
+> ### ✅ **DECIDIDO — Olavo, 2026-09-27: a v1 do PHI atende cliente de CPA**
+>
+> Perguntei o que decide: *"algum cliente que você vai cadastrar nos próximos 30 dias tem métrica
+> diferente de CPA?"* — **resposta: não.** Então:
+>
+> | | |
+> |---|---|
+> | **O F1 passa a ler** | *"todo cliente que contrata tráfego **e tem Métrica-Mãe CPA** aparece no PHI sem ninguém precisar lembrar"* |
+> | **O motor multi-métrica** | 🟡 **ADR próprio, sem prazo apertado** — deixa de ser bloqueio nº 1 e passa a ser dívida declarada |
+> | **Por que declarar vale, mesmo custando nada** | *"o PHI não pontua CPL"* escrito é **limite conhecido**. Não escrito, é **promessa que falha em silêncio** no dia em que alguém cadastrar um cliente de CPL — e o cliente aparece no painel **sem nota**, que é a cara de um defeito |
+>
+> 🔴 **A consequência imediata, e ela é um trabalho, não um aviso:** o **CHA (`CLI-13`) é cliente real
+> e é CPL.** Com esta decisão ele **não será pontuado** — e o **V3 do vigia**, que pergunta todo dia
+> *"todo cliente ativo aparece no score?"*, **vai acusá-lo todo dia, para sempre.**
+>
+> **Um vigia que grita todo dia por um caso conhecido para de ser lido** — é a lição da salvaguarda de
+> 18/09, na forma mais barata de aparecer. **Então a declaração exige uma marca:** o cliente fora do
+> índice **por decisão** tem de ser distinguível do cliente fora **por defeito**. Sem isso, a decisão
+> certa estraga o único detector que a casa tem.
 
 ### ⚖️ A tensão de calendário, registrada e não resolvida
 
