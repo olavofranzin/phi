@@ -1,7 +1,11 @@
 # [BRIEF sub-chat] ADR-39 Fase B — dar dono único ao `client_config` e matar o `phi_dev`
 
 > **Como usar:** sub-chat **novo**. Cole este arquivo como primeira mensagem.
-> **Modelo:** Opus · **Repo:** `olavofranzin/phi` · **Branch:** `claude/consolidacao-2026-08`
+> **Modelo:** Opus
+> **Repo:** `olavofranzin/phi` · 🔴 **BRANCH DE TRABALHO — a única:** `claude/consolidacao-2026-08`
+> **URL completa:** https://github.com/olavofranzin/phi/tree/claude/consolidacao-2026-08
+> ⚠️ **Antes do primeiro passo:** `git fetch origin && git checkout claude/consolidacao-2026-08 && git pull`.
+> **Todo commit e todo push vão para ela.** Outra branch = trabalho que ninguém acha depois.
 > **Papel do Olavo:** **ponte.** Decisão que aparecer → **pare e devolva ao chat-mãe.**
 >
 > 🔴 **Esta etapa ALTERA PRODUÇÃO e tem um passo irreversível.** Leia o §3 antes de tocar em nada.

@@ -188,6 +188,14 @@ mexer em servidor, caçar bug.
 - **Fica no chat-mãe:** decisão, ADR, priorização, roadmap, leitura de estado, revisão de plano,
   desenho de arquitetura e escrita de brief.
 
+> 🔴 **Todo brief e toda mensagem de execução dizem a BRANCH, com a URL completa** (pedido do Olavo,
+> 2026-09-27): `claude/consolidacao-2026-08` ·
+> `https://github.com/olavofranzin/phi/tree/claude/consolidacao-2026-08`, mais o comando de checkout.
+>
+> **Motivo:** em 26/09 um sub-chat commitou numa branch diferente porque a instrução da sessão dele
+> apontava para outra — **e o ADR-41 passou a citar como base um documento que não existia na branch
+> dele.** Branch dita por engano custa merge, conflito e documento canônico que mente.
+
 > **Motivo:** quando a execução mora aqui, o contexto lota de detalhe operacional e **o
 > planejamento — que é o que só este chat faz — se perde.**
 
