@@ -4,6 +4,26 @@
 > 2026-07-31 (sessão E1). Vira `Aceito` quando o E1 for ativado em produção
 > (pós-credencial + smoke-test).
 
+> ## ⏸️ **PARADO POR DECISÃO — Olavo, 2026-09-27**
+>
+> | | |
+> |---|---|
+> | **O que era antes** | 🔴 **parado por esquecimento.** Medido em 27/09: os dois workflows inativos, sem alteração desde **24/07** e **01/08** — e ninguém sabia dizer por quê |
+> | **O que é agora** | ⏸️ **parado de propósito, com gatilho de volta: quando o F2 fechar** (*o número que está no Notion é o número certo*) |
+> | **Por que o F2 e não uma data** | o T28 **lê o `phi_value`**. Ligar análise sobre número em obra produz **diagnóstico bonito sobre dado errado** — que é pior que diagnóstico nenhum, porque tem cara de resposta |
+> | **Onde a parada está carimbada** | na **descrição dos dois workflows** (R5/R12), lidas de volta e conferidas em 27/09 — `fhYmJH0o9BW1IO4i` e `8Q5ofmAZju0hTN08` |
+>
+> 🔴 **Dois defeitos que a parada expôs, e que quem religar tem de resolver ANTES:**
+>
+> | # | Achado de 27/09 | Consequência |
+> |---|---|---|
+> | **1** | o `WF-T28-Orquestrador-Analises` **lê `phi_dev`** | o `phi_dev` **morre no passo 4.5 do ADR-39**. Religar sem trocar a fonte **quebra** |
+> | **2** | o nó `BQ Read T28 Score` tem `sqlQuery` com `{{ $... }}` **sem o prefixo `=`** | 🔴 **a expressão não é avaliada** — a query iria ao BigQuery com `{{ }}` literal. É a **Regra Crítica nº 8** (montar SQL no Code node, nunca `{{ }}` dentro da query) quebrada, **em rascunho, antes de custar** |
+>
+> ✅ **Este é o argumento a favor de declarar a parada em vez de deixar parado:** a decisão obrigou a
+> ler os dois artefatos, **e a leitura achou dois defeitos que estavam esperando o dia da religação
+> para aparecer.** Parada declarada é inspeção; parada por esquecimento é surpresa adiada.
+
 ## Contexto
 
 O cérebro de análise (Módulo 28 / Otimização) foi desenhado como **Maestro + 6

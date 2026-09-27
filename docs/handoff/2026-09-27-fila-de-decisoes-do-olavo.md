@@ -6,7 +6,7 @@
 | **Por que existe** | o painel diz *"o que falta"* e *"o que trava"*. **Não dizia de quem é a bola.** Decisão sem dono e sem lugar volta como surpresa |
 | **Como usar** | responder de cima para baixo. As duas primeiras mudam o que acontece nesta semana; as outras não |
 | **Regra** | quando ele responder, a resposta vai para o **documento canônico do assunto** (ADR ou plano) na mesma sessão — **R2**. Este arquivo é fila, não é memória |
-| **Atualizado** | 2026-09-27 — **8 das 11 respondidas no mesmo dia** |
+| **Atualizado** | 2026-09-27 — **11 das 11 respondidas no mesmo dia.** Sobram 2 pendências de redação dele (§1 do plano já veio; falta o §2) e a lista de donos das dimensões |
 
 ---
 
@@ -24,7 +24,7 @@
 | **D-8** | §1 e §2 do plano | 🟡 **pediu para rever o conteúdo antes de redigir** | ⬜ **pendente** |
 | **D-9** | campo `Tipo` na DB Clientes? | ✅ **sim**, com a objeção *"pode virar item que esqueceremos"* — respondida pelo desenho: **o V3 lê o campo todo dia** | **PLANO-F3** (emenda do V3) |
 | **D-10** | limpeza da Prospecção? | ✅ **sim** | **ADR-35 §3.5** · painel |
-| **D-11** | T28 parado por decisão ou esquecimento? | **"possivelmente esquecimento"** ⇒ proponho **declarar parado com gatilho de volta no F2** | painel (linha do T28) — 🟡 **aguarda OK** |
+| **D-11** | T28 parado por decisão ou esquecimento? | ✅ **era esquecimento; virou parada declarada** com gatilho de volta no **F2** | **ADR-28** (topo) · painel · **descrição dos 2 workflows** no n8n |
 
 ### ⚖️ Duas coisas que eu registrei ERRADO e ele corrigiu no mesmo dia
 
