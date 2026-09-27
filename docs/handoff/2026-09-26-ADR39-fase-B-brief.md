@@ -56,7 +56,26 @@
 > | 🟡 **Desativar o gatilho do `client_config`** | **se a decisão demorar.** Reversível, e **a nota diz quando religar** (R12) |
 > | ❌ Reverter o 4.2 | só se A e B caírem — desfaz trabalho bom |
 >
-> ## §0.2 A escolha entre A, B e C — recomendação do chat-mãe
+> ## §0.2 🟢 OPÇÃO A AUTORIZADA — Olavo, 27/09: *"pode aplicar a A"*
+>
+> **Relaxar `phi_prod.client_config.primary_metric_type` de `REQUIRED` para `NULLABLE`**, repetir o
+> CA3a e seguir.
+>
+> | ✅ Cobre | ❌ Não cobre |
+> |---|---|
+> | a relaxação dessa coluna, nessa tabela | qualquer outra alteração de schema |
+> | repetir o CA3a com cliente de teste **declarado, datado e removido na mesma sessão** | o **4.4**, que continua parando e pedindo |
+> | — | improvisar contorno se a relaxação for recusada |
+>
+> 🔴 **Se o BigQuery recusar a relaxação: PARE.** Aí só resta a **B** (migrar os outros dois leitores
+> e remover a coluna), o escopo muda, e isso é nova decisão.
+>
+> 📌 **Entrega nova, e ela conserta a causa:** escrever a **DDL do `client_config` no repositório**
+> — `docs/strategic-planning/agregador-t28/ddl/phi_prod_client_config.sql`, com o schema **como ficou
+> depois da mudança** e um comentário dizendo o que mudou, quando e por quê. **A falha do CA3a
+> aconteceu porque essa tabela nunca teve schema escrito em lugar nenhum.**
+>
+> ## §0.3 A escolha entre A, B e C — recomendação do chat-mãe
 >
 > **Concordo com o executor: é a A.**
 >
