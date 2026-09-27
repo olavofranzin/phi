@@ -75,6 +75,33 @@
 > depois da mudança** e um comentário dizendo o que mudou, quando e por quê. **A falha do CA3a
 > aconteceu porque essa tabela nunca teve schema escrito em lugar nenhum.**
 >
+> ## §0.2b 🟢 4.4 PRÉ-AUTORIZADO — Olavo, 27/09: *"pode pré-autorizar o 4.4"*
+>
+> **Remover o `UPDATE` do `PHI - Subworkflow Campanhas`**, sem parar para perguntar — **desde que as
+> duas condições estejam provadas ANTES, com execução ao lado:**
+>
+> | # | Condição |
+> |---|---|
+> | **1** | **o CA3a passou** — cliente de teste nasceu em `phi_prod` por `WHEN NOT MATCHED` |
+> | **2** | 🔴 **o 4.3b está provado AO VIVO** — um alerta real saiu com a métrica vinda **da campanha**, não de `cc.primary_metric_type` |
+>
+> **Uma das duas sem prova ⇒ não execute o 4.4.** Relate e devolva.
+>
+> | ✅ Cobre | ❌ Não cobre |
+> |---|---|
+> | remover **aquele nó**, naquele workflow | **remover a coluna** — continua fora |
+> | publicar e reler confirmando (R13) | **aposentar o `PHI - Subworkflow Campanhas`** — é a Fase 2 do ADR-37 |
+> | o **4.5** (tabela `phi_dev.client_config`) | **apagar o dataset `phi_dev`** — só depois da varredura (§3.3) |
+>
+> 🔴 **O CA2 se prova DEPOIS do 4.4, nunca antes:** o `CLI-4` continua `CPA`?
+>
+> **Se o CA2 falhar:** 🔴 **reponha o nó e relate.** O SQL dele está documentado no ADR-37 e no
+> `CONTRATO-PHI`. **Não tente consertar por outro caminho** — é a terceira volta, e a terceira volta
+> é do plano, não da execução.
+>
+> 📌 **R5, na mesma sessão:** a descrição do `PHI - Subworkflow Campanhas` passa a dizer **que o nó
+> saiu, quando e por quê** — senão a próxima auditoria pergunta ao Olavo, e a descrição falhou.
+>
 > ## §0.3 A escolha entre A, B e C — recomendação do chat-mãe
 >
 > **Concordo com o executor: é a A.**
@@ -312,7 +339,7 @@ lista não estiver vazia, **apague só a tabela e registre a lista** — o datas
 ## 8. Como falar com o Olavo
 
 - Ele é **ponte**. Decisão → **pare, escreva a pergunta com opções e consequências, devolva.**
-- 🔴 **Publicar/ativar nesta etapa NÃO está pré-autorizado** — a autorização de 26/09 valia para o vigia. **Aqui você para antes do 4.4 e pede**, porque é o passo irreversível.
+- 🟢 **Atualizado em 27/09:** a opção **A** e o **4.4** estão pré-autorizados, **cada um com as suas condições** (§0.2 e §0.2b). **Condição sem prova ⇒ não execute e devolva.**
 - **Separe o que leu do que mediu.** Nesta etapa, **só o medido conta**.
 
 ---
