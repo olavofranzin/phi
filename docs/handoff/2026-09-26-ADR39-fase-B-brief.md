@@ -114,7 +114,27 @@
 > | # | Condição |
 > |---|---|
 > | **1** | **o CA3a passou** — cliente de teste nasceu em `phi_prod` por `WHEN NOT MATCHED` |
-> | **2** | 🔴 **o 4.3b está provado AO VIVO** — um alerta real saiu com a métrica vinda **da campanha**, não de `cc.primary_metric_type` |
+> | **2** | 🔴 **o 4.3b está provado AO VIVO** — ver a redação exata abaixo |
+>
+> ### 🔴 A condição 2, redigida melhor — 27/09, antes da volta 3
+>
+> **Eu escrevi *"um alerta real saiu"*. Assim redigida, ela pode nunca se cumprir:** um alerta só
+> nasce se alguma campanha entrar em condição de alerta. **Se amanhã nenhuma entrar, não há o que
+> inspecionar — e a etapa fica presa esperando um defeito acontecer.** É a mesma armadilha do
+> **CA3 com o CHA**, que travou este ADR por cinco dias.
+>
+> **O que a condição realmente precisa provar:** que o SQL, **rodando de verdade e com dado real**,
+> devolve a métrica **vinda da campanha**. Então:
+>
+> | Cenário na rodada agendada | Vale como prova? |
+> |---|---|
+> | O `Buscar Campanhas Alertas` rodou e **devolveu linha(s) com a métrica preenchida pela campanha** | 🟢 **sim** — é a prova, haja tarefa no Notion ou não |
+> | Rodou e devolveu **zero linhas** (nenhuma campanha em alerta) | ❌ **não prova nada.** Não force: **relate e espere a próxima rodada** |
+> | O nó **não rodou** | ❌ **não prova nada** |
+>
+> ⚠️ **Se der zero linhas dois dias seguidos, PARE e devolva** — a condição precisa de outro desenho,
+> e isso é decisão do chat-mãe, não contorno seu.
+
 >
 > **Uma das duas sem prova ⇒ não execute o 4.4.** Relate e devolva.
 >
