@@ -17,7 +17,10 @@ classificar em EXCELLENT / GOOD / WARNING / CRITICAL e pôr o diagnóstico **ond
 | 3 | `panorama-workflows-phi.md` | o parque: 81 workflows, quem faz o quê, quem só está ligado |
 | 4 | `adr-rascunhos/ADR-37-writers-canonicos-um-destino-um-dono.md` | por que o contrato existe |
 | 5 | `adr-rascunhos/ADR-38-identidade-neutra-e-rebuild-serie-historica.md` | a identidade sem prefixo e o rebuild |
-| 6 | `../../modulo-28-analise-cognitiva.md` | o T28 — a camada de análise sobre o score |
+| 6 | `PLANO-ENTREGA-FINAL-PHI.md` | **para quê** a frente existe — os 8 critérios **F1–F8** e o placar deles |
+| 7 | `PLANO-F3-vigia-de-consistencia.md` | **o vigia que já existe** — as 7 conferências V1–V7. **Leia antes de propor qualquer alarme novo** (R7) |
+| 8 | `adr-rascunhos/ADR-39-dono-unico-client-config.md` + `ADR-40-metrica-mae-viaja-com-a-campanha.md` | quem escreve o cadastro, e onde mora a Métrica-Mãe |
+| 9 | `../../modulo-28-analise-cognitiva.md` | o T28 — a camada de análise sobre o score |
 
 ## Os invariantes que mais se quebram aqui
 - **M1** — um destino, um dono. Exceção só no padrão S4 (mesmo workflow, colunas disjuntas).
@@ -42,6 +45,13 @@ classificar em EXCELLENT / GOOD / WARNING / CRITICAL e pôr o diagnóstico **ond
 6. **Dois scores no projeto.** Aqui é `phi_value` (campanha). `potencial_comercial` é lead —
    outra frente, outro contrato, **não confundir**.
 7. **Descrição copiada de outro workflow é bug** (R5). Há pelo menos um caso ativo no parque.
+8. 🔴 **Número que você leu num documento não é número medido** (R6, corolário 2). Em 26/09 dois
+   critérios de aceite nasceram de *"defeitos vivos"* copiados de um relatório de um dia antes —
+   **nenhum dos dois estava acontecendo**, e a etapa parou antes do primeiro nó. *Este número eu
+   medi, ou eu li?*
+9. 🔴 **O motor do score só calcula CPA.** `primary_metric_type != 'CPA'` sai como
+   `INSUFFICIENT_DATA`. Cliente de **CPL/ROAS entra e sai sem nota** — não é bug de dado, é limite
+   do motor, e **ainda não tem ADR**.
 
 ## Onde as coisas moram
 | Coisa | Onde |
@@ -49,7 +59,7 @@ classificar em EXCELLENT / GOOD / WARNING / CRITICAL e pôr o diagnóstico **ond
 | Workflows | n8n — sem prefixo padronizado ⚠️ (`PHI - *`, `sw *`, `WF-*`, `Onb - *`) |
 | Dado cru e score | BigQuery `phi_prod` — ver a matriz do §4 do contrato |
 | Interface do gestor | Notion — IDs das DBs no `CLAUDE.md` da raiz |
-| Alarmes | Telegram do Olavo |
+| Alarmes | Telegram do Olavo — **duas fontes, não uma:** `PHI - Alerta de Falha` (`UZ7sIE5cWrrO8xea`, falha dura) e **`PHI - Vigia de Consistencia dos Dados`** (`JMgc0HdLPOFPnFYb`, 08h, *"o que eu esperava aconteceu?"*) |
 | ADRs de design | `adr-rascunhos/` |
 | Briefs de execução | `docs/handoff/` |
 

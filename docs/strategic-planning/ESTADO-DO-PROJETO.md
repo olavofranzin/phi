@@ -21,53 +21,79 @@
 > **VERSÃO.** v0.1 (2026-06-04). Atualizado ao final de cada lote
 > entregue + em auditoria quinzenal proposta + qualquer atualização
 > proposta pelo Curador depois que ele estiver vivo. Última
-> atualização: **2026-08-18** (Comercial/HubSpot Card GBP + hardening do Agregador).
+> atualização: **2026-09-27** (F3 fechado · ADR-39 Fase B até o portão do 4.4 · ADR-37 remedido
+> na Fase R · frente do índice do negócio registrada aqui pela 1ª vez).
 
 ---
 
 ## 0. PAINEL — onde estamos e quanto falta
 
-> **Atualizado: 2026-09-08.** 🎯 **PHI v1 tem data: 30/11/2026** (checkpoint 31/10) — 14 critérios
-> na `DEFINICAO-DE-PRONTO-PHI-V1.md`, hoje **2 prontos**.
+> **Atualizado: 2026-09-27** — e desta vez **medido**, não herdado: estado ativo/inativo,
+> `versionId` vs `activeVersionId` e histórico de versões lidos ao vivo no n8n via MCP nesta sessão.
+> 🎯 **PHI v1 tem data: 30/11/2026** (checkpoint 31/10) — 14 critérios na
+> `DEFINICAO-DE-PRONTO-PHI-V1.md`, hoje **2 prontos**.
 > Este painel é **o primeiro lugar a olhar e o último a atualizar**.
 > Regra **R2** do `CLAUDE.md`: etapa concluída sem painel atualizado = **etapa não concluída**.
 > Vocabulário proposital: não usamos "%" inventado — usamos estado + o que falta + o que trava.
 
-> 🔍 **Nota da auditoria semanal de 2026-09-21:** este painel estava sem atualização desde
-> 09-09 apesar de ~90 commits no período (ADR-36 aceito **e executado**, ADR-37/38 avançando,
-> ADR-39 aceito em 20/09, `saude-digital/CONTRATO-PHI.md` virou lei em 20/09, novo
-> `saude-digital/PLANO-ENTREGA-FINAL-PHI.md` em construção — inclusive com commit de hoje,
-> 21/09). Corrigidos abaixo apenas os itens com evidência direta (live check no n8n via MCP e
-> leitura dos ADRs); para o detalhe mais recente da frente Saúde Digital, ver os dois documentos
-> citados — ainda em obra, não totalmente lidos nesta auditoria.
+> 🔴 **Confissão da R2, nesta sessão.** Entre a auditoria de **21/09** e hoje (**27/09**) o painel
+> ficou **6 dias parado** enquanto a Saúde Digital **fechou um critério de ponta final** (F3),
+> **aceitou dois ADRs** (40 e 41) e **abriu uma frente inteira** (o índice do negócio). Pior: o
+> critério **D1** da `DEFINICAO-DE-PRONTO` — *"painel atualizado a cada entrega"* — estava marcado
+> **✅ desde 08/09**, e **isso era falso**. Corrigido lá e aqui. **Painel que mente custa mais que
+> painel vazio**, que é exatamente o motivo pelo qual a R2 existe.
+
+> ⚖️ **A regra desta atualização (R6, corolário 2):** o que foi medido aparece com a evidência; o
+> que **não** foi medido aparece escrito **"não medido"** — nunca como verde. Duas frentes estão
+> assim de propósito: **CRM Odoo** (não há MCP do Odoo nesta sessão) e a **adesão dos sub-chats à
+> R3** (o digest do Notion).
 
 | Frente | Estado | O que falta | O que trava |
 |---|---|---|---|
-| **Prospecção** (lead → CRM) | 🟢 **construída e migrada para o Odoo** — `PROSP-05O`/`PROSP-06O` ativos no n8n (desde 14/09 e 16-19/09; confirmado ao vivo em 21/09); os workflows do HubSpot (`PROSP-05`, `Sync HubSpot → Planilha`) foram aposentados (**ADR-36 executado**) | renomear `Comercial - Guarda-Schema + Backup` para `PROSP-07` · **arquivar os 5 workflows mortos do ADR-35 §3.5 — confirmado em 21/09 que os 5 ainda existem no n8n, nenhum arquivado**, e um deles (`Intake - db's apify`) foi **editado hoje** (21/09, 02:44 UTC) sem registro aqui · rodar `BF`/`LO` · auditoria nó a nó | — |
-| **CRM Odoo** | 🟢 **F1 + F2 CONCLUÍDOS** (2026-09-08) — **NÃO VERIFICADO nesta auditoria** se F3 (campos GBP/IA via API) e F5 (migração HubSpot) avançaram; a Prospecção já grava `id_crm` mas os demais campos GBP/IA não foram conferidos | **F3** n8n↔Odoo (a API escrevendo os campos GBP/IA) · F5 migração de dados do HubSpot | — |
-| **PHI·Mídia Score v2** | 🟡 **ADR-34 desenhado** e validado em dado real (jan–ago) — **NÃO VERIFICADO** se avançou desde 09-09 | implementar | consolidação dos writers |
-| **Consolidação de writers** | 🟡 a credencial do BigQuery que caiu em 09-09 **foi reconectada no mesmo dia** (ADR-38 §12) — o painel carregava um bloqueio já resolvido há 12 dias. **ADR-39** (dono único de `client_config`) **aceito em 20/09**; nota de **21/09 dentro do próprio ADR-39** reabre a discussão (grão da coluna pode estar errado) e aguarda decisão do chat-mãe sobre uma "opção D" ainda não lida | executar ADR-39 · Fases 1-2 do ADR-37 · decisão do chat-mãe sobre a opção D (ver nota de 21/09 no ADR-39) | decisão pendente, não mais a credencial |
-| **T28 / Otimização** | 🟡 Diagnóstico vive; **Maestro E1 em rascunho** — **NÃO VERIFICADO** se avançou desde 09-09 | ativar E1 (ADR-28) | budget de token |
-| **Governança / documentação** | 🟢 regras **R1–R13** no `CLAUDE.md` (evoluiu de R1-R5 — **NÃO VERIFICADO** o conteúdo de R6-R13 nesta auditoria) · Rotina de auditoria ativa | fazer os sub-chats cumprirem **R3** (Notion) · manter este painel atualizado a cada entrega (**R2** — que este próprio bloco descumpriu por 12 dias) | — |
+| **Saúde Digital — o score de campanha** (frente principal hoje) | 🟡 **em obra, e andou muito nesta semana.** 🟢 **F3 FECHADO em 26/09:** `PHI - Vigia de Consistencia dos Dados` (`JMgc0HdLPOFPnFYb`) ativo, **7 conferências**, **1 mensagem/dia inclusive no dia bom** — a casa passou a ter detector. 🟡 **ADR-39 Fase B executada em 27/09 até o portão do 4.4:** `primary_metric_type` virou NULLABLE, o **CA3a passou** (o `CLI-15` nasceu em `phi_prod` com métrica NULL e foi removido na mesma sessão), `client_config` em `b4742c15`, `Pipeline_v2` em `88c65762` — **o 4.3b, confirmado no histórico de versões às 13:49 UTC de hoje** | o **4.4** (remover o `UPDATE` do `PHI - Subworkflow Campanhas`) e o **4.5** (apagar `phi_dev.client_config`) — **pré-autorizados pelo Olavo, cada um com condição a provar** · depois deles, o **CA2** | ⏳ **nada de decisão.** Espera a rodada natural do `Pipeline_v2` de **28/09, 09h BRT**, que é a prova da condição do 4.4 |
+| **Consolidação de writers (ADR-37)** | 🟡 **o retrato foi REMEDIDO em 26/09 (Fase R) e três documentos meus estavam errados.** Os dois writers **colidem** — 14 chaves tocadas pelos dois; o `client_id` vazio **acabou** (0 em 509 linhas); e **o ADR-38, ao consertar a identidade, LIGOU a colisão** que o ADR declarava inexistente em 09/09 | **Fase 2** (aposentar o `GADS_INSERT`) e **Fase 3** | 🔴 **dois travamentos, ambos novos:** o requisito do Olavo de que **o dia fecha às 07h** (o W1 tem de rodar às 07h e dar os mesmos números, provado em escrita dupla) · e **três SQLs publicados** do `Pipeline_v2` que ainda leem `client_config.primary_metric_type` — **o ADR-40 migrou o cálculo, não os consumidores** |
+| **Índice de Saúde Digital do NEGÓCIO** (frente nova — 25/09) | 🟡 **desenho aceito, construção não começou.** **ADR-41 ACEITO** (Olavo, 25/09) — pesos iguais provisórios + cobertura declarada, **supersede parcialmente o ADR-21**; **ADR-42 em rascunho** (normalização de alvo). Decisões do Olavo em 26/09: **nota por pilar + nota composta** · **liberação em lotes** (API → nós → cliente) · **a agência como cliente-zero** · **o cliente não vê a nota até segunda ordem** · **Clarity sai do índice e volta a ser ferramenta** | aprovar o ADR-42 · escrever os **§1 e §2** do `PLANO-ENTREGA-FINAL-PHI.md` (são do Olavo) · definir **dono por pilar** e o **gatilho** do O4 | ⏳ **fila** — está atrás do ADR-39 de propósito. **Não está bloqueada** |
+| **Prospecção** (lead → CRM) | 🟢 **construída e migrada para o Odoo.** **Medido hoje:** `PROSP-01`, `02`, `03`, `04`, `05O` e `06O` **ativos** | exercer o caminho **P4 → P5O numa prospecção real** (é o critério **A2**) · renomear `Comercial - Guarda-Schema + Backup` → `PROSP-07` · **arquivar os 5 mortos do ADR-35 §3.5** — **medido hoje: os 5 continuam existindo, inativos e não arquivados** (`tDdJIhFLyyDqqSNE`, `ZV1fFFrRTRQX2dik`, `GUQkIWnMZEH32PXH`, `2BWz5V6MGK5IBaxa`, `nuEJi4WO8NFJjrUP`) · rodar `BF`/`LO` | — só fila |
+| **CRM Odoo** | 🟡 **F1 + F2 concluídos (08/09).** ⬜ **NÃO MEDIDO nesta sessão** — não há MCP do Odoo aqui | **F3** (campos GBP/IA escritos pela API) · **F5** (migração de dados do HubSpot) | — **o que mediria:** ler um lead no Odoo e conferir se os campos GBP/IA estão preenchidos pela IA |
+| **T28 / Otimização** (cérebro de análise) | 🔴 **parado, e agora com data medida:** `WF-T28-Analise-Campaign` (`fhYmJH0o9BW1IO4i`) **inativo**, última alteração **01/08**; `WF-T28-Orquestrador-Analises` (`8Q5ofmAZju0hTN08`) **inativo**, última alteração **24/07**. **Quase dois meses sem tocar** | ativar o **E1 Maestro** (ADR-28) | budget de token · **e a fila: ele consome o score, que está em obra** |
+| **PHI·Mídia Score v2 (ADR-34)** | 🟡 desenhado e validado em dado real (jan–ago); **não implementado** | implementar | consolidação dos writers (Fases 2 e 3 do ADR-37) |
+| **Agregador multi-fonte** (fonte do índice) | 🟢 **ativo** (`4sdG2UKMCBuFq8xn`, 2 gatilhos) — 🔴 **mas com 3 fontes paradas**, medido pelo vigia na estreia de 26/09: **GA4 D-7 (20 dias), GA4 D-30 (57 dias), GBP (97 dias)** | religar as 3 fontes | 🔴 **é o que trava o F5** ("30 dias sem intervenção manual") |
+| **Governança / documentação** | 🟢 **R1–R13 no `CLAUDE.md`**, e duas regras novas nesta semana: **R6 corolário 2** (26/09 — *número herdado de documento não vira critério de aceite sem ser medido de novo*) e a **regra da branch** (27/09 — *todo brief diz a branch com a URL completa*) | ⬜ **adesão dos sub-chats à R3** (escrever na DB do Notion) — **não medido nesta sessão** · manter **este** painel a cada entrega | — |
 
-🟢 pronto ou em acabamento · 🟡 em obra · 🔴 parado
+🟢 pronto ou em acabamento · 🟡 em obra · 🔴 parado · ⬜ não medido / não iniciado
 
 ### O bloqueio nº 1 do projeto hoje
-~~Formalizar o Odoo como CRM e reapontar a Prospecção para ele~~ — **RESOLVIDO.** O ADR-36 foi
-aceito em 2026-09-08 e **já foi executado**: `PROSP-05O` (Odoo) está ativo desde 14/09 e
-`PROSP-06O` (Odoo) desde 16/09, confirmado ao vivo no n8n nesta auditoria (21/09). Os workflows do
-HubSpot equivalentes foram aposentados.
 
-O bloqueio nº 1 hoje, pela leitura mais recente encontrada em git (`CONTRATO-PHI.md`,
-`PLANO-ENTREGA-FINAL-PHI.md`), parece ser **de decisão, não de execução**: o `ADR-39` tem uma nota
-de hoje (21/09) dizendo que o chat-mãe ainda não decidiu sobre uma "opção D" proposta pelo
-executor, e o `PLANO-ENTREGA-FINAL-PHI.md` está com as seções 1-2 propositalmente em branco,
-esperando o Olavo preenchê-las. **NÃO VERIFICADO a fundo** — esta auditoria não leu o
-`CONTRATO-PHI.md` nem o `PLANO-ENTREGA-FINAL-PHI.md` por completo (documentos extensos, em obra
-no momento desta auditoria); a leitura completa fica como pendência para a próxima rodada ou para
-o Olavo confirmar diretamente.
+🔴 **O motor do score só sabe calcular CPA.**
+
+Não é fila, não é token, não é decisão pendente de desenho: é uma **limitação de produto** que o
+`Pipeline_v2` carrega no SQL — `WHEN primary_metric_type != 'CPA' THEN 'INSUFFICIENT_DATA'`.
+Qualquer cliente cuja Métrica-Mãe seja **CPL, ROAS ou qualquer outra** entra no score e **sai com
+`phi_value` NULL**.
+
+**Por que isso é o nº 1, e não o 4.4 de amanhã:**
+
+| | |
+|---|---|
+| **Trava o F1 de verdade** | *"todo cliente que contrata aparece no PHI"* — aparece, e sai sem nota. Foi exatamente o que aconteceu com o **CHA** (`CLI-13`), cuja métrica é **CPL** |
+| **Trava a receita do índice** | a nota por pilar e o upsell dependem de o pilar de mídia dar número para **clientes reais**, não só para o KIL |
+| **Não tem ADR** | o **ADR-40 registrou a descoberta em 22/09** e escreveu *"precisa de ADR próprio"*. **Cinco dias depois, esse ADR não existe** — e nenhum sub-chat foi encarregado dele |
+| **Não foi causado por nós** | o ADR-40 **não criou** o defeito; ele o **tornou visível**. Ele estava lá desde o primeiro dia do motor |
+
+⏭️ **O passo imediato continua sendo o 4.4** (rodada de 28/09, 09h BRT) — ele é curto, está
+pré-autorizado e fecha o ADR-39. **Mas o bloqueio estrutural é o motor mono-métrica**, e ele só sai
+de pé com decisão de arquitetura: **ou o motor aprende as outras métricas, ou o PHI declara por
+escrito que só atende cliente de CPA.**
 
 ### 🔴🔴 2026-09-09 17:35 UTC — a credencial do BigQuery caiu (URGENTE, além do ADR-38)
+
+> ✅ **HISTÓRICO — RESOLVIDO NO MESMO DIA (09/09), e a pendência que ele deixou também fechou.**
+> A credencial foi reconectada em 09/09 (ADR-38 §12) — o painel carregou este bloco como bloqueio
+> vivo por **12 dias** sem estar. **E a pendência escrita aqui** — *"fazer o pipeline avisar quando
+> isso acontecer"* — **está atendida por dois artefatos:** o `PHI - Alerta de Falha (errorWorkflow)`
+> (`UZ7sIE5cWrrO8xea`, ativo desde 10/09, provado em 17/09) para falha dura, e o
+> `PHI - Vigia de Consistencia dos Dados` (`JMgc0HdLPOFPnFYb`, 26/09) para o resto. **A falha
+> silenciosa descrita aqui não é mais silenciosa.** Mantido como memória, não como tarefa.
 
 `The credential "Google BigQuery account" needs to be reconnected.` Credencial `UhLRAanVarQeOpQy`.
 
@@ -87,6 +113,14 @@ O bloco de corte do ADR-38 (etapas 4, 5 e 6) está travado nisso. As etapas 2 e 
 rascunho; o Notion está no formato antigo. **Nada foi apagado.**
 
 ### 🔴 2026-09-09 — a verificação da Fase 0.3 desmentiu a premissa e achou coisa pior
+
+> 🔴 **HISTÓRICO — TODO ESTE BLOCO FOI REMEDIDO E CAIU EM 2026-09-26 (Fase R do ADR-37).** Não
+> decida por ele. O que foi medido de novo: **0 `client_id` vazios em 509 linhas** (aqui se diz que
+> são todos vazios) · **os dois writers COLIDEM** — 14 chaves tocadas pelos dois (aqui se diz que
+> "nunca colidiram") · o `INNER JOIN` descarta **12,5%**, não 100% · e **o `GADS_INSERT` não é a
+> única fonte do score**. **A causa da virada:** o ADR-38 consertou a identidade e, ao consertá-la,
+> **ligou** a colisão que este bloco declarou inexistente. Fica como memória do raciocínio de 09/09
+> — o retrato vigente está no banner do topo do `ADR-37`.
 
 Os pipelines das 04h e 07h rodaram com sucesso — a mudança de ontem não quebrou nada. `DAILY_ENTRY`
 apareceu na tabela. **Mas não por mérito da Fase 0.1.**

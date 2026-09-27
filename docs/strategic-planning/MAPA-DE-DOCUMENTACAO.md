@@ -142,6 +142,9 @@ plano de lotes e padrões inegociáveis:
 | **Inventário dos 81 workflows** em 5 camadas + o placar do parque | git `saude-digital/panorama-workflows-phi.md` |
 | **Entrevista de alinhamento** (30 perguntas de as-built + 22 de decisão) | git `docs/handoff/2026-09-19-parque-phi-contrato-e-entrevista-subchat-brief.md` |
 | Os 2 ativos que não produzem nada desde 30/06 | git `docs/handoff/2026-09-18-achado-parque-workflows-sem-producao.md` |
+| 🔴 **Ponta final da frente — os 8 critérios F1–F8** (*para quê* o PHI existe) | git `saude-digital/PLANO-ENTREGA-FINAL-PHI.md` — **§1 e §2 são do Olavo, em branco** |
+| **O vigia de consistência** — plano, as-built e as 7 conferências V1–V7 | git `saude-digital/PLANO-F3-vigia-de-consistencia.md` (construído 26/09) |
+| **Métrica-Mãe: onde ela mora** (por campanha, não por cliente) | git `saude-digital/adr-rascunhos/ADR-40-*.md` (Aceito 21/09) |
 
 ### 7.2 Saúde Digital — arquitetura em 4 camadas
 | Tema | Documento |
@@ -176,6 +179,9 @@ plano de lotes e padrões inegociáveis:
 | 2 · Análise | Orquestrador · Analise-Campaign | `8Q5ofmAZju0hTN08` · `fhYmJH0o9BW1IO4i` |
 | 3 · Entrega/Loop | ~~Loop Alerta~~ (**aposentado 2026-07-21** — lógica inline no Pipeline_v2) · Fechar Otimização · Alerta Erro | `JqPwFD9udCq2hRPw` (off) · `83vfKD8XMYmjZjFQ` · `Oj1RbA0laZTzJZPx` |
 | 4 · Erro | WF-T28-Error-Handler | `rTS5pE34eElfuMPl` |
+| **Vigilância** | **PHI - Vigia de Consistencia dos Dados** (08h, 7 conferências, 1 msg/dia) | `JMgc0HdLPOFPnFYb` |
+| **Erro (vivo)** | PHI - Alerta de Falha (`errorWorkflow` do parque) | `UZ7sIE5cWrrO8xea` |
+| **Cadastro** | `client_config` — dono único do destino em `phi_prod` (ADR-39, 27/09) | `SI5NSzRb8lVUz74RwOhIT` |
 
 > Dump recente do Pipeline_v2 p/ auditoria: git `docs/audits/PHI - Pipeline_v2.json`.
 > Índice de workflows (legado): [Registro de Workflows n8n](https://app.notion.com/p/354b65e5c72b815bb166ff8ea26861ae).
@@ -184,6 +190,24 @@ plano de lotes e padrões inegociáveis:
 - **Notion:** PHI - ANÁLISES `38fb65e5-c72b-80db-a425-e5939fc35c7a` · Campanhas `19fb65e5-c72b-8043-a82d-f47ede397928` · Clientes `19fb65e5-c72b-8147-8aa3-c63aa273d205` · Log de Otimizações `19fb65e5-c72b-8106-8e76-f1e684197316` · Demandas `a5c6b6ae-3e9c-4619-a3c3-48e58c75c25b`.
 - **BQ contract T28:** `t28_campaign / t28_adset / t28_ga4_landing / t28_gbp_daily / t28_clarity_daily / t28_meta_campaign / t28_errors`.
 - **Telemetria operacional interna** (tangencial): strawman `docs/strategic-planning/telemetria-minima/` + DB Snapshots.
+
+### 7.5 Índice de Saúde Digital do NEGÓCIO (frente nova — 2026-09-25)
+
+> ⚠️ **Não confundir com o §7.1.** O **PHI·Mídia** pontua a **campanha**. Este índice pontua a
+> **presença digital do negócio** do cliente, por pilares. É outra pasta, outros ADRs, outro dado de
+> entrada (o Agregador multi-fonte). Antes de 27/09 esta frente **não aparecia neste mapa** — era
+> possível ler o mapa inteiro sem saber que ela existe.
+
+| Tema | Documento |
+|---|---|
+| **Pesos iguais provisórios + cobertura declarada** (supersede parcialmente o ADR-21) | **ADR-41 — ACEITO 25/09** · git `saude-digital-do-negocio/adr-rascunhos/ADR-41-*.md` · [Notion](https://app.notion.com/p/3e6b65e5c72b8150857cea4596fb6ffe) |
+| Normalização de indicador de alvo + consolidação das decisões de 25/09 | ADR-42 — 🟡 **rascunho** · git `…/ADR-42-*.md` |
+| **Os 92 indicadores** (canônico do que existe para medir) | git `saude-digital-do-negocio/DICIONARIO-DE-INDICADORES-v0.md` |
+| De onde cada indicador vem, e o que fazer quando a fonte falha | git `…/CONTRATO-DE-FONTES-v0.md` · `…/REGUAS-D6-D9-v0.md` |
+| **Substrato estatístico** (os 3 documentos-base, a hierarquia entre eles e as 4 arbitragens) | git `docs/handoff/2026-09-25-substrato-estatistico-do-phi-brief.md` |
+| **Decisões do Olavo em 26/09** — nota por pilar + composta · lotes API→nós→cliente · agência como cliente-zero · cliente não vê a nota · Clarity sai do índice | git `docs/handoff/2026-09-26-decisoes-do-olavo-nota-dupla-lotes-e-cliente-zero.md` |
+| **Checagem de rota** — *"não estamos complicando?"* (provocação do Olavo e a resposta) | git `docs/handoff/2026-09-26-checagem-de-rota-estamos-complicando.md` |
+| Fonte de dado da frente | workflow **PHI — Agregador de Métricas Multi-fonte** `4sdG2UKMCBuFq8xn` → tabelas `t28_*` |
 
 ## 8. Convenções rápidas
 
@@ -204,3 +228,9 @@ faz isso, vivo). Atualize-a só quando:
 - muda uma **regra de governança** (ADR sobre documentação).
 
 Não liste docs aqui — registre-os no Catálogo. Assim esta página não envelhece.
+
+> 🔄 **Última atualização: 2026-09-27.** Motivo, dentro da própria regra acima: **uma frente nova
+> ganhou porta de entrada** (§7.5 — o índice do negócio, com ADR aceito desde 25/09 e nenhuma menção
+> aqui até hoje), e o parque ganhou **um workflow de vigilância** (§7.3), que é porta de entrada de
+> *"como eu sei que parou?"*. **O sintoma de que faltava:** dava para ler este mapa do começo ao fim
+> e não descobrir que existe um índice de saúde digital do negócio sendo desenhado há duas semanas.

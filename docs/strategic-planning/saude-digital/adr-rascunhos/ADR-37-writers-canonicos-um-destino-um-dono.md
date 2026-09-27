@@ -22,6 +22,17 @@
 >
 > 🔴 **Consequência para a Fase 2:** a escolha **não é só qual writer fica — é a que horas o dia
 > fecha.** Desligar o W2 troca o retrato das 07h pelo das 04h, e o número do score muda.
+
+> ✅ **DECISÃO DO OLAVO — 2026-09-26: o dia fecha às 07h.** Registrada aqui em **27/09** porque até
+> então ela existia só no chat e no brief da Fase B — e **decisão que não está no ADR não é decisão**
+> (R2: *se não está escrito, não aconteceu*).
+>
+> | | |
+> |---|---|
+> | **O que foi decidido** | o número oficial do dia é o **retrato das 07h**, não o das 04h |
+> | **Requisito que isso cria para a Fase 2** | 🔴 **o W1 (`sw metricas campanhas`) tem de rodar às 07h e produzir os MESMOS números do W2** — provado em **escrita dupla**, antes de o W2 ser aposentado |
+> | **Por que não é detalhe** | aposentar o W2 sem isso **troca a fonte do número do score sem avisar ninguém** — e a diferença medida em 26/09 (33,948977 vs 34,49 de custo no Salão) **não é arredondamento: é o horário da consulta à API** |
+> | **Estado** | ⬜ **a Fase 2 está BLOQUEADA por este requisito** — e não por falta de decisão |
 >
 > **A aposentadoria segue bloqueada**, por motivo novo: `client_config.primary_metric_type` é lido
 > por **três SQLs publicados** do `Pipeline_v2`, incluindo a entrega operacional. **O ADR-40 migrou o

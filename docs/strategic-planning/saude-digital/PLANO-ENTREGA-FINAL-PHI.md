@@ -332,6 +332,24 @@ da Prospecção.
 > sozinho 30 dias"*). **F4 é o que ele pediu para os 15 dias.** F5 e F6 são consequência: só medíveis
 > depois dos outros.
 
+> ### 🔴 **2026-09-27 — o F1 tem um teto que nenhum dos 8 critérios descreve: o motor só calcula CPA**
+>
+> O `Pipeline_v2` reprova qualquer `primary_metric_type != 'CPA'` como `INSUFFICIENT_DATA`. Então o
+> **F1, como está escrito, pode "fechar" e não entregar nada:** o cliente novo **aparece** no PHI e
+> **sai sem nota**. Foi literalmente o caso do **CHA (`CLI-13`), cuja Métrica-Mãe é CPL**.
+>
+> | | |
+> |---|---|
+> | **Quem descobriu, e quando** | o executor do ADR-40, em **22/09** — está no cabeçalho daquele ADR |
+> | **O que aquele ADR escreveu** | *"precisa de ADR próprio"* |
+> | **O que existe hoje, 5 dias depois** | ⬜ **nada** — o ADR não foi aberto e ninguém foi encarregado |
+> | **Por que isso entra AQUI e não fica só no ADR-40** | porque muda o significado do **F1**: *"aparece no PHI"* não é o mesmo que *"é monitorado pelo PHI"*. Com o motor mono-métrica, os dois só coincidem para cliente de CPA |
+>
+> **Duas saídas, e as duas são decisão do Olavo — não de sub-chat:** ou o motor aprende as outras
+> métricas (CPL, ROAS, CPM…), ou o PHI **declara por escrito** que a v1 atende apenas cliente com
+> Métrica-Mãe **CPA** — e aí o F1 muda de redação. **Nenhuma das duas é gratuita; continuar sem
+> escolher é a única que já está custando.**
+
 ### ⚖️ A tensão de calendário, registrada e não resolvida
 
 O Olavo elegeu o **grão de anúncio (F4)** para os 15 dias. As respostas do propósito apontam para

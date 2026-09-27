@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | ✅ **VIGENTE** — cortes e data aprovados pelo Olavo em 2026-09-08 |
+| **Status** | ✅ **VIGENTE** — cortes e data aprovados pelo Olavo em 2026-09-08 · **placar revisto em 2026-09-27** (C2, C3, C4, D1 e D2) |
 | **Data-alvo** | 🎯 **30/11/2026** · checkpoint **31/10/2026** |
 | **Data** | 2026-09-08 |
 | **Por que existe** | Em 2026-09-08 a pergunta *"quanto falta para finalizarmos?"* não tinha resposta — porque **nunca declaramos o que é "pronto"**. Sem linha de chegada, sempre falta. |
@@ -54,15 +54,15 @@ descobre lead → pontua → enriquece → cria no CRM → [HUMANO dá o play] �
 | # | Critério | Hoje |
 |---|---|---|
 | C1 | Score v2 (ADR-34) em produção — **sem contradição** entre score e métrica-mãe | 🟡 desenhado e validado; **o caminho abriu em 18/09** com o C2 — e a série limpa que ele exige já está carregada (`BACKFILL_2026-09`) |
-| C2 | Escrita de dados consolidada: **um dado, um writer** | 🟡 **DESBLOQUEADO em 2026-09-18** — o ADR-38 unificou a identidade **e fechou o P-10**; os dois writers já colidem no `MERGE`. Falta executar as Fases 1 e 2 do ADR-37. ⚠️ **Atualizado pela auditoria de 21/09:** `client_config` (um dos destinos do "um dado, um writer") ganhou o **ADR-39** (aceito 20/09) por ter **dois** writers em ambientes diferentes — mais grave do que se sabia em 18/09. O próprio ADR-39 tem nota de 21/09 reabrindo a questão (grão da coluna). **NÃO VERIFICADO** se isso muda o placar de C2 — fica registrado para não repetir a surpresa de 08/09 |
-| C3 | Diagnóstico T28 entregando na DB `PHI - ANÁLISES` para **todas** as campanhas ativas | 🔴 **risco conhecido (18/09)** — a perna BigQuery → Notion **não é vigiada por ninguém**, e o P-24 provou que ela pode parar em silêncio |
-| C4 | Tarefa abre no Notion a partir do diagnóstico, com checklist | 🔴 **mesmo risco do C3** — nada vigia a entrega, e o Notion é a única superfície que o gestor vê |
+| C2 | Escrita de dados consolidada: **um dado, um writer** | 🟡 **atualizado em 27/09, com medição.** `client_config` tem **dono único desde hoje**: o workflow `client_config` (`SI5NSzRb8lVUz74RwOhIT`) escreve em `phi_prod`, faz **INSERT** de cliente novo (**CA3a provado**) e está em `versionId == activeVersionId == b4742c15`. 🔴 **Mas `raw_campaign_data` continua com DOIS writers, e a Fase R do ADR-37 (26/09) provou que eles COLIDEM** — 14 chaves tocadas pelos dois. A premissa de 09/09 (*"nunca colidem"*) **caiu**: o ADR-38, ao consertar a identidade, ligou a colisão. **Falta: 4.4 + 4.5 do ADR-39 (amanhã) e as Fases 2/3 do ADR-37** — esta travada pelo requisito das **07h** |
+| C3 | Diagnóstico T28 entregando na DB `PHI - ANÁLISES` para **todas** as campanhas ativas | 🔴 **não construído — medido em 27/09:** `WF-T28-Analise-Campaign` **inativo** (última alteração 01/08) e `WF-T28-Orquestrador-Analises` **inativo** (24/07). ✅ **O risco de 18/09 mudou de natureza:** a perna de coleta passou a ser vigiada em 26/09 (o **V4** confere as `t28_*` no período semanal delas), então a parada não é mais silenciosa. **O que falta agora é ligar a análise, não vigiá-la** |
+| C4 | Tarefa abre no Notion a partir do diagnóstico, com checklist | 🟡 **o risco fechou em 26/09:** o **V1** do vigia pergunta todo dia se o `Pipeline_v2` chegou ao **último nó** — e o último nó é a **abertura** da Fase 3. Era exatamente o defeito que matou a Fase 3 por 8 dias, verde. **A abertura pelo score existe e agora é observada; a abertura a partir do diagnóstico T28 depende do C3** |
 
 ### Frente D — Governança: o projeto se enxerga
 | # | Critério | Hoje |
 |---|---|---|
-| D1 | Painel do `ESTADO-DO-PROJETO` atualizado a cada entrega (**R2**) | ✅ 2026-09-08 |
-| D2 | Digest diário chega **com conteúdo real** (**R3** — sub-chats alimentando o Notion) | ⬜ |
+| D1 | Painel do `ESTADO-DO-PROJETO` atualizado a cada entrega (**R2**) | 🔴 **REBAIXADO em 27/09 — estava ✅ e era falso.** O painel ficou de **09/09 a 21/09** e de **21/09 a 27/09** sem atualização, com entregas no meio (F3 fechado, ADR-40 e ADR-41 aceitos, Fase B executada). **Só volta a ✅ com duas entregas seguidas em que o painel andou no mesmo dia** — critério de evidência, não de intenção |
+| D2 | Digest diário chega **com conteúdo real** (**R3** — sub-chats alimentando o Notion) | ⬜ **não medido em 27/09.** O `PHI — Digest Diário` (`rhobbBEeQaiWIuiF`) segue **ativo** (08:30 BRT). O que mede este critério: abrir o Telegram de 3 dias seguidos e ver se veio progresso real ou *"sem progresso"* |
 | D3 | Rotina semanal de auditoria *doc × realidade* rodando | ✅ criada + conector n8n anexado (1ª execução 14/09) |
 
 ---
@@ -74,6 +74,14 @@ descobre lead → pontua → enriquece → cria no CRM → [HUMANO dá o play] �
 | ✅ **Pronto** | **2** de 14 |
 | 🟡 Parcial | 4 |
 | ⬜ Não iniciado | 6 |
+
+> 🔄 **Atualizado em 2026-09-27 — o placar dos 14 NÃO mudou, e isso é informação.** A semana de 21 a
+> 27/09 fechou o **F3** do `PLANO-ENTREGA-FINAL-PHI` (2º dos 8 critérios da ponta final), aceitou
+> dois ADRs e executou a Fase B do ADR-39 — **e nenhum dos 14 critérios daqui virou ✅.** Não é
+> contradição: **estes 14 medem o produto no ar; os 8 do plano medem o caminho até ele.** O que
+> mudou aqui foi qualidade de informação, não placar: o **C2** ganhou dono único em `client_config`,
+> o **C3** trocou *"ninguém vigia"* por *"não está ligado"*, o **C4** deixou de ter risco silencioso —
+> e o **D1 caiu de ✅ para 🔴**, porque estava mentindo.
 | ❓ **A verificar** | 2 |
 
 ### Caminho crítico até 30/11
