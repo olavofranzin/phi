@@ -206,8 +206,22 @@ leitores é **agente**. Isso muda o que a nota tem de ser.
 > problema, impacto, prioridade, responsável, próxima ação*) **de boa prática a requisito de
 > interface.** O D9 já estava certo; o que faltava era o motivo — e o motivo é o segundo leitor.
 >
-> ⚠️ **E cria uma pergunta nova, que é de arquitetura e não de dado:** *o agente lê o índice pronto,
-> ou lê os indicadores e forma a própria opinião?* **Não decidido. Não deduzir.**
+> ✅ **RESPONDIDO por Olavo, 27/09:** *"o agente poderia ler os indicadores e formar hipóteses e dar
+> sugestões."*
+>
+> | | |
+> |---|---|
+> | **O agente lê** | os **indicadores** — não a nota fechada |
+> | **O agente produz** | **hipóteses** e **sugestões** |
+> | 🔴 **O que ele NÃO produz** | **conclusão** e **ação**. *Hipótese* não é diagnóstico; *sugestão* não é execução |
+>
+> **Isto é o guardrail da casa aplicado uma camada acima:** *"o PHI detecta, classifica e orienta —
+> otimizar é humano"*. O agente do índice fica do mesmo lado da linha: **ele opina sobre o negócio, e
+> o play é do Olavo.**
+>
+> ⚠️ **Consequência de projeto:** se o agente lê **indicador**, e não nota, então **a nota não é
+> pré-requisito dele**. Os dois consumos são independentes — **o agente pode existir antes do índice
+> fechar**, e o índice não precisa esperar o agente.
 
 ## 8.2. B2 — O cliente vê a nota depois de **90 dias rodando + auditoria**. A data vem depois
 
@@ -220,6 +234,7 @@ leitores é **agente**. Isso muda o que a nota tem de ser.
 | **Por que é melhor que uma data** | *"até segunda ordem"* **não é gatilho, é a falta de um.** Agora existe condição: **90 dias de operação** e depois **auditoria de aderência** — os números refletem o que deviam refletir? |
 | **O relógio começa** | ⬜ **quando o índice v0.1 estiver calculando** — não hoje. **Nada a contar ainda** |
 | 🔴 **O que essa decisão exige e ainda não existe** | a **auditoria dos 90 dias** precisa de critério escrito **antes** de chegar, senão vira opinião no dia. Não é urgente; é inevitável |
+| ✅ **Quando o critério se escreve** — Olavo, 27/09 | *"após terminarmos a configuração voltaremos e escreveremos os critérios."* **Gatilho, não data:** a configuração do índice terminar. 🔴 **E uma condição que eu acrescento:** escrever **antes** de o 90º dia chegar, nunca no dia — critério escrito depois do resultado deixa de ser critério |
 
 ## 8.3. B3 — O relatório é **no mínimo semanal, toda segunda**, com peso por nível de cliente
 
@@ -232,7 +247,10 @@ leitores é **agente**. Isso muda o que a nota tem de ser.
 | **Fecha** | o molde do **F8** do `PLANO-ENTREGA-FINAL-PHI` (*o cliente recebe alguma coisa*) |
 | **O piso** | **toda segunda**, para todo cliente. Quem é mais caro recebe **mais**, nunca menos |
 | **Encaixe feliz** | o **Agregador** já roda **semanalmente, nas segundas 09h**. O relatório semanal **não precisa de coleta nova** |
-| 🔴 **O que falta para isto ser implementável** | **o nível não existe como dado.** Bronze/prata/ouro não é campo em lugar nenhum — nem no Notion, nem no `client_config`. **Sem esse campo, "peso por nível" é regra sem fonte** — exatamente o erro que o **D7** deste ADR e do ADR-41 proíbe |
+| 🔴 **O que falta para isto ser implementável** | **o nível não existe como dado** — e o Olavo nunca disse que existia. Ele **propôs criar** |
+| ⚖️ **Correção de 27/09** | eu escrevi como se ele tivesse afirmado que o campo existe. Ele corrigiu: *"não disse que os campos existem, disse que poderíamos criar (e apenas no Notion) essa categorização."* |
+| 🟢 **Onde o nível mora — decidido** | **só no Notion.** 🔴 **Não vai para o `client_config`, não vira coluna em BigQuery** enquanto ninguém no BigQuery precisar dele (**M11**: dado escrito tem consumidor declarado). Quem lê o nível é o **envio do relatório**, não o cálculo do score |
+| 🟢 **A primeira utilidade dele, no dia 1** | **decidir quem é elegível à reunião de 30 minutos** — ver `PLANO-ENTREGA-FINAL-PHI.md` §1. **O nível não nasce esperando uso: ele nasce decidindo uma coisa** |
 
 > ⚠️ **Registrado como decisão de destino, não de implementação.** O *quanto mais* cada nível recebe
 > (frequência? profundidade? reunião?) **não foi decidido**, e deduzir isso seria inventar produto.
@@ -241,8 +259,8 @@ leitores é **agente**. Isso muda o que a nota tem de ser.
 
 | # | Pendência | Estado |
 |---|---|---|
-| **1** | **dono de cada dimensão** (agência × cliente) | 🟡 o Olavo pediu a **lista** para nomear — apresentada em 27/09, resposta pendente |
-| **2** | o agente lê o índice pronto ou os indicadores? (§8.1) | ⬜ não decidido |
-| **3** | critério da auditoria dos 90 dias (§8.2) | ⬜ não escrito |
-| **4** | o que cada nível recebe além do semanal (§8.3) | ⬜ não decidido |
-| **5** | **campo de nível** (bronze/prata/ouro) na DB Clientes | ⬜ não existe — pré-requisito do §8.3 |
+| **1** | **dono de cada dimensão** (agência × cliente) | 🟡 a lista D1–D10 foi apresentada em 27/09 — **resposta pendente** |
+| **2** | ~~o agente lê o índice pronto ou os indicadores?~~ | ✅ **RESPONDIDO 27/09** — indicadores → hipóteses e sugestões (§8.1) |
+| **3** | critério da auditoria dos 90 dias | ✅ **gatilho definido 27/09** — ao fim da configuração (§8.2). ⬜ o critério em si segue a escrever |
+| **4** | o que cada nível recebe **além** do semanal | 🟡 **parcial:** a **reunião de 30 min** é o que o nível decide (§8.3). ⬜ falta o resto da escada |
+| **5** | **campo de nível** (bronze/prata/ouro) | 🟢 **decidido 27/09: criar, só no Notion** (§8.3). ⬜ falta criar |

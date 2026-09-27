@@ -97,36 +97,70 @@ O score é um **retrato do dia**. *"Pegar no dia 2"* exige **tendência** — e 
 > fosse o todo seria o erro que a casa já cometeu com dado de teste: **transformar o que se tem em
 > mão na resposta inteira.** A metade que faltava mudou o ponto final — de **6 critérios para 8**.
 
-## 1. O que existe hoje — 🟡 **resposta parcial (21/09) · redação do Olavo ainda pendente**
+## 1. O que existe hoje — 🟢 **RESPONDIDO pelo Olavo em 2026-09-27**
 
-> ⚠️ **O que segue veio de escolha de opções, não da redação dele.** No plano da Prospecção o §1 foi
-> *"escrito pelo Olavo, preservado"* — **tratar escolha de chip como redação seria o mesmo erro de
-> transformar o que se tem em mão na resposta inteira.** Fica aberto para ele redigir.
+> 🔴 **CORREÇÃO DE ROTA — o §1 anterior estava ERRADO, e o erro era meu.** De 21 a 27/09 este §1
+> afirmou que *"o cliente recebe hoje um relatório periódico montado à mão pelo Olavo"*. **Não
+> recebe.** A frase nasceu de **escolha de opção minha interpretada como redação dele** — exatamente
+> o risco que o próprio aviso daquele §1 dizia estar evitando. **O aviso estava lá e não impediu
+> nada**, porque o texto ao lado já afirmava o fato.
 
-**O cliente recebe hoje as duas coisas:**
+**A resposta dele, verbatim (27/09):**
 
-| | |
+> *"Hoje esse relatório não é feito, a periodicidade será semanal, para alguns clientes enviado por
+> WhatsApp, caso o cliente seja elegível para a reunião de apresentação de resultados será uma
+> reunião remota com período de 30 minutos."*
+
+| | Hoje | O destino |
+|---|---|---|
+| **Relatório** | 🔴 **não existe** | **semanal** |
+| **Canal** | — | **WhatsApp** para alguns clientes |
+| **Reunião** | — | **remota, 30 minutos**, só para **cliente elegível** |
+
+### 🔴 O que a correção muda no F8 — e é o inverso do que eu tinha escrito
+
+| O que eu escrevi em 21/09 | O que é verdade |
 |---|---|
-| **Relatório periódico** | montado **à mão** pelo Olavo |
-| **Reunião ou conversa** | ele explica o que aconteceu e o que vai fazer |
+| *"o F8 deixa de ser criar valor novo"* | 🔴 **o F8 É criar valor novo.** Não há o que automatizar: não existe relatório |
+| *"devolver horas do Olavo"* | ❌ **não devolve hora nenhuma** — a hora ainda não está sendo gasta |
+| *"copiar o formato existente é mais barato que inventar um"* | ❌ **não há formato para copiar.** O molde tem de ser desenhado |
+| *"municiar a conversa falada"* | 🟢 **este sobrevive** — e agora tem forma: **30 minutos, remoto, para quem é elegível** |
 
-### 🔴 O que isso muda no F8
+> ⚖️ **Por que isso importa mais do que parece.** Eu usei *"o relatório já é feito"* como argumento de
+> que o **F8 era barato**. Ele não é. **Um critério de ponta final teve o custo subestimado por seis
+> dias por causa de um fato que eu preenchi sozinho** — é a **R6, corolário 2**, na forma mais difícil
+> de pegar: não foi número herdado de documento, foi **fato herdado da minha própria dedução**.
+>
+> ✅ **O que a resposta dele dá de graça:** *"cliente elegível"* é a **primeira aplicação concreta do
+> nível** (bronze/prata/ouro, ADR-42 §8.3). **Elegibilidade para a reunião de 30 minutos é o que o
+> nível decide** — e isso torna o campo de nível útil no dia 1, não um campo à espera de uso.
 
-**O F8 deixa de ser "criar valor novo" e passa a ser duas coisas mais baratas e mais úteis:**
+## 2. O que poderemos fazer — 🟡 **parcialmente respondido em 27/09: primeiro ele disse o que o PHI NÃO é**
 
-1. **Devolver horas** — o relatório já é feito, e é trabalho recorrente do Olavo. Automatizá-lo
-   serve à **R-A** (a qualidade parar de depender da atenção dele) tanto quanto à **R-C**.
-2. **Municiar a conversa** — a reunião é falada. O F8 não precisa gerar um documento bonito:
-   precisa entregar **o que foi detectado e corrigido no período**, em forma de pauta.
+> 🔴 **Eu pedi a coisa errada.** Pedi *"escreva aqui os 12 itens como você fez na Prospecção"*. A
+> resposta dele **recusou a analogia — e a recusa é conteúdo**, não desvio:
 
-> ⬜ **Lacuna:** **com que frequência** o relatório sai, e **o que ele tem dentro hoje**. Sem isso o
-> F8 não tem molde — e copiar o formato existente é mais barato que inventar um.
+> *"Prospecção não tem nada relacionado ao PHI, por mais que alguns indicadores venham da mesma
+> fonte; prospecção é uma etapa do comercial que atenderá a dinâmica do comercial e as suas políticas
+> (que poderão mudar mês a mês, coisa que o PHI não). O PHI poderá ou não ser usado como diferencial
+> competitivo. Até declararmos o PHI como 'pronto', ou seja, com números que acreditamos corresponder
+> à realidade, não poderei ficar sem prospectar."* — Olavo, 27/09
 
-## 2. O que poderemos fazer — ✍️ **a escrever pelo Olavo**
+### 🔴 Três regras saem daí, e nenhuma estava escrita
 
-> O que o PHI deveria permitir que hoje não é possível.
+| # | Regra | Consequência prática |
+|---|---|---|
+| **G1** | **O PHI não herda a cadência do Comercial.** A política comercial muda mês a mês; **o PHI não pode** | um indicador do índice **não muda porque a política de vendas mudou**. Fonte compartilhada ≠ regra compartilhada |
+| **G2** | **O PHI como diferencial de venda é OPCIONAL e CONDICIONAL** — só depois de *"pronto"* | ⬜ **nada do PHI entra em material comercial até isso.** Não é timidez: é não vender número em que a casa ainda não confia |
+| **G3** | 🔴 **A Prospecção não pode esperar o PHI.** *"Não poderei ficar sem prospectar"* | a Prospecção **não é fila atrás da Saúde Digital** — as duas correm em paralelo, e priorizar uma **não suspende a outra** |
 
-⬜ *em branco*
+> ⚠️ **O G1 tem um alvo concreto nesta casa:** *"alguns indicadores vêm da mesma fonte"* — GBP,
+> PageSpeed e site aparecem **na Prospecção (pontuando lead)** e **no índice (pontuando negócio)**.
+> **Mesma fonte, réguas diferentes, donos diferentes.** É o mesmo cuidado que separa `phi_value` de
+> `potencial_comercial`, agora um nível acima: **na origem do dado, não só no score.**
+
+⬜ **Continua aberto:** a lista do que o PHI vai permitir que hoje não dá. **O que ele respondeu foi a
+fronteira; falta a ambição.**
 
 ---
 
@@ -325,7 +359,7 @@ da Prospecção.
 | **F4** | **O PHI enxerga a campanha como a plataforma a enxerga — campanha, conjunto e anúncio — e aponta em qual nível está a causa, a tempo de agir** | *"quero o anúncio culpado"* + §3.3.2 + **R-D** | 🔴 pontua só o agregado, e só o dia de hoje |
 | **F5** | **Rodou 30 dias sem intervenção manual** | virada item 2 · **R-A** | ⬜ nunca medido |
 | **F7** | 🔴 **O PHI sabe se a orientação funcionou** — mede o número depois da ação e guarda o resultado | **R-B** (acumular aprendizado) | 🔴 **não existe** — é o `acerto_previsao` que a Saúde Digital nunca teve |
-| **F8** | 🔴 **O cliente recebe alguma coisa** — o que foi detectado e corrigido no período | **R-C** (provar valor) | 🔴 **não existe** — 🟢 **mas o molde chegou em 27/09:** *no mínimo semanal, **toda segunda***, com **peso por nível de cliente** (bronze/prata/ouro por valor). O Agregador já roda **segundas 09h**, então o semanal **não pede coleta nova**. ⬜ **Falta o dado do nível: bronze/prata/ouro não é campo em lugar algum.** Ver ADR-42 §8.3 |
+| **F8** | 🔴 **O cliente recebe alguma coisa** — o que foi detectado e corrigido no período | **R-C** (provar valor) | 🔴 **não existe, e é construção nova** (o §1 foi corrigido em 27/09: **não há relatório hoje**) — 🟢 **mas o molde ficou inteiro em 27/09:** **semanal, toda segunda** · **WhatsApp** para alguns · **reunião remota de 30 min** para quem é **elegível** · o nível (bronze/prata/ouro) é **quem decide a elegibilidade**, e mora **só no Notion**. O Agregador já roda **segundas 09h**, então o semanal **não pede coleta nova**. ⬜ Falta criar o campo de nível e desenhar o conteúdo |
 | **F6** | **Alguém da equipe opera sem ter desenhado** | *"alguém da equipe"* — **fato de uso, não razão de existir** | ⬜ **prioridade rebaixada em 21/09** — 🟢 **e em 27/09 o leitor do índice ficou nominal: o Olavo e um agente** que lê tudo do cliente e trabalha pelos objetivos de negócio dele. 🔴 **Um dos dois é máquina**, e isso vira requisito de formato, não só de conteúdo — ADR-42 §8.1 |
 
 > **F1 a F3 são os pré-requisitos da virada** que o Olavo definiu (*"confiar no número"* + *"rodar
@@ -350,25 +384,34 @@ da Prospecção.
 > Métrica-Mãe **CPA** — e aí o F1 muda de redação. **Nenhuma das duas é gratuita; continuar sem
 > escolher é a única que já está custando.**
 
-> ### ✅ **DECIDIDO — Olavo, 2026-09-27: a v1 do PHI atende cliente de CPA**
+> ### ⚖️ **CORRIGIDO NO MESMO DIA — o que o Olavo decidiu foi MENOS do que eu registrei**
 >
-> Perguntei o que decide: *"algum cliente que você vai cadastrar nos próximos 30 dias tem métrica
-> diferente de CPA?"* — **resposta: não.** Então:
+> Às 27/09 eu escrevi aqui *"DECIDIDO: a v1 do PHI atende cliente de CPA"*. **Ele me corrigiu:**
+>
+> > *"Declarei o CPA porque sua pergunta foi se nos próximos dias iria entrar algum cliente com
+> > métrica diferente e eu disse não — e disse isso para que essa parte fosse destravada agora,
+> > porque não teríamos como testar."*
+>
+> **A diferença entre as duas leituras não é de palavra, é de escopo:**
+>
+> | O que eu registrei | O que ele decidiu |
+> |---|---|
+> | *"a v1 atende cliente de CPA"* — **fronteira de produto** | *"não há cliente de outra métrica entrando agora"* — **fato de calendário** |
+> | o motor multi-métrica vira dívida **sem prazo apertado** | o motor multi-métrica segue **obrigatório**, com **gatilho**: o **primeiro cliente não-CPA** |
+> | o F1 muda de redação | 🔴 **o F1 NÃO muda de redação** |
+>
+> **Ele respondeu para destravar a execução de hoje** — sem cliente de outra métrica, o 4.4 não tem
+> como ser testado com outra métrica, e travar por isso seria travar por hipótese. **Eu transformei
+> um "não tem agora" num "não vai ter".** É a **R6** virada do avesso: em vez de herdar número de
+> documento, herdei **conclusão da minha própria pergunta** — a pergunta era sobre 30 dias e a
+> resposta foi sobre 30 dias.
 >
 > | | |
 > |---|---|
-> | **O F1 passa a ler** | *"todo cliente que contrata tráfego **e tem Métrica-Mãe CPA** aparece no PHI sem ninguém precisar lembrar"* |
-> | **O motor multi-métrica** | 🟡 **ADR próprio, sem prazo apertado** — deixa de ser bloqueio nº 1 e passa a ser dívida declarada |
-> | **Por que declarar vale, mesmo custando nada** | *"o PHI não pontua CPL"* escrito é **limite conhecido**. Não escrito, é **promessa que falha em silêncio** no dia em que alguém cadastrar um cliente de CPL — e o cliente aparece no painel **sem nota**, que é a cara de um defeito |
->
-> 🔴 **A consequência imediata, e ela é um trabalho, não um aviso:** o **CHA (`CLI-13`) é cliente real
-> e é CPL.** Com esta decisão ele **não será pontuado** — e o **V3 do vigia**, que pergunta todo dia
-> *"todo cliente ativo aparece no score?"*, **vai acusá-lo todo dia, para sempre.**
->
-> **Um vigia que grita todo dia por um caso conhecido para de ser lido** — é a lição da salvaguarda de
-> 18/09, na forma mais barata de aparecer. **Então a declaração exige uma marca:** o cliente fora do
-> índice **por decisão** tem de ser distinguível do cliente fora **por defeito**. Sem isso, a decisão
-> certa estraga o único detector que a casa tem.
+> | ✅ **Vale, e destrava** | o motor mono-métrica **não bloqueia** o 4.4, o 4.5 nem a fila de 27/09 |
+> | 🔴 **NÃO vale** | declarar que o PHI só atende CPA. **Nada disso vai para material comercial nem para o F1** |
+> | 🟡 **O gatilho da dívida** | **o primeiro cliente com métrica diferente de CPA.** Quando ele aparecer, o motor vira prioridade — e **esse dia não se escolhe, ele chega** |
+> | 🔴 **Continua verdade, e continua trabalho** | o **CHA (`CLI-13`) é real e é CPL** ⇒ hoje não é pontuado, e o **V3 do vigia vai acusá-lo todo dia**. Precisa da marca de *"fora do índice por decisão"* — e agora ela é **temporária**, não permanente |
 
 ### ⚖️ A tensão de calendário, registrada e não resolvida
 

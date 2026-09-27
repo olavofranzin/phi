@@ -22,7 +22,32 @@
 | **D-6** | frequência e conteúdo do relatório? | **mínimo semanal, toda segunda**; peso por **nível** (bronze/prata/ouro por valor) | **ADR-42 §8.3** · F8 do plano |
 | **D-7** | aprovo o ADR-42? | ✅ **sim** | ADR-42 → **ACEITO 27/09** |
 | **D-8** | §1 e §2 do plano | 🟡 **pediu para rever o conteúdo antes de redigir** | ⬜ **pendente** |
-| **D-9 · D-10 · D-11** | campo `Tipo` · limpeza da Prospecção · T28 parado | ⬜ **não respondidas** | — |
+| **D-9** | campo `Tipo` na DB Clientes? | ✅ **sim**, com a objeção *"pode virar item que esqueceremos"* — respondida pelo desenho: **o V3 lê o campo todo dia** | **PLANO-F3** (emenda do V3) |
+| **D-10** | limpeza da Prospecção? | ✅ **sim** | **ADR-35 §3.5** · painel |
+| **D-11** | T28 parado por decisão ou esquecimento? | **"possivelmente esquecimento"** ⇒ proponho **declarar parado com gatilho de volta no F2** | painel (linha do T28) — 🟡 **aguarda OK** |
+
+### ⚖️ Duas coisas que eu registrei ERRADO e ele corrigiu no mesmo dia
+
+| O que eu escrevi | O que ele decidiu | Onde corrigi |
+|---|---|---|
+| *"a v1 do PHI atende cliente de CPA"* — fronteira de produto | **"não entra cliente de outra métrica nos próximos 30 dias"** — fato de calendário, dito **para destravar a execução de hoje**. O motor multi-métrica **continua obrigatório**, com gatilho no **primeiro cliente não-CPA** | `PLANO-ENTREGA-FINAL-PHI` §4 · **ADR-40** · painel |
+| *"o nível não existe como dado"*, como se ele tivesse dito que existia | ele **propôs criar** — e **só no Notion**, nunca no `client_config` | **ADR-42 §8.3** |
+
+> 🔴 **A primeira é a mais séria: eu transformei a resposta de uma pergunta de 30 dias numa fronteira
+> de produto.** A pergunta era *"entra cliente de outra métrica nos próximos 30 dias?"*; a resposta
+> foi sobre 30 dias. **É a R6 pelo lado que não tem defesa escrita: não herdei número de documento,
+> herdei conclusão da minha própria pergunta.**
+
+### 🔴 O §1 do plano estava errado desde 21/09 — e o erro barateou um critério
+
+Por seis dias o `PLANO-ENTREGA-FINAL-PHI` §1 afirmou que *"o cliente recebe hoje um relatório
+periódico montado à mão pelo Olavo"*. **Ele não recebe: o relatório não é feito.** Eu usei essa frase
+como argumento de que o **F8 era barato** (*"só devolver horas"*). **O F8 é construção nova.**
+
+| | |
+|---|---|
+| **O que a resposta de 27/09 deu** | semanal · **toda segunda** · **WhatsApp** para alguns · **reunião remota de 30 min** para **cliente elegível** |
+| 🟢 **O ganho escondido** | *"elegível"* é a **primeira utilidade real do nível** bronze/prata/ouro. **O campo nasce decidindo uma coisa, não esperando uso** |
 
 ### 🔴 As quatro perguntas que as respostas de 27/09 CRIARAM
 

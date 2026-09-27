@@ -96,6 +96,43 @@ saudável ela devolvia zero linhas — e zero itens encerra o ramo no n8n.
 | **V1** | O `Pipeline_v2` chegou até o **último nó** ontem? 🔴 **lendo a execução do n8n, NUNCA o `workflow_execution_log`** | **Fase 3 morta 8 dias**, verde todo dia | 8 dias sem tarefa aberta |
 | **V2** | Cada campanha ativa tem **exatamente 1 score** de ontem? | **score 3× no Notion** | número errado na sua bancada |
 | **V3** | Todo cliente **ativo no Notion** aparece no score? | **CHA morrendo no `phi_dev`** | cliente pago e não monitorado |
+
+> ### 🔴 EMENDA PROPOSTA AO V3 — 2026-09-27: o vigia vai gritar todo dia, e isso o mata
+>
+> **O que mudou hoje:** o Olavo confirmou que **não há cliente de outra métrica entrando agora**, e o
+> **CHA (`CLI-13`) é cliente real com Métrica-Mãe CPL** — que o motor do score **não sabe calcular**.
+> Logo o CHA **nunca aparece no score**, e o **V3 vai acusá-lo todos os dias, indefinidamente**.
+>
+> | | |
+> |---|---|
+> | 🔴 **Por que isso é grave** | **alarme que grita todo dia por caso conhecido para de ser lido.** É a lição da salvaguarda de 18/09 chegando pelo lado mais barato — e desta vez dá para prever antes de doer |
+> | ❌ **O que NÃO fazer** | tirar o CHA da conferência à mão, ou baixar a severidade do V3. Isso **esconde** o defeito, e o dia em que um cliente **de verdade** faltar passa igual |
+>
+> **A emenda (proposta minha, aguarda OK do Olavo):** o V3 deixa de perguntar *"todo cliente aparece?"*
+> e passa a perguntar **duas coisas**, sempre com a contagem:
+>
+> ```
+> clientes ativos sem score: <n>
+>   por motivo declarado: <m>  (lista nominal + motivo)
+>   SEM MOTIVO DECLARADO: <n-m>   ← só isto acorda o Olavo
+> ```
+>
+> **Isto é a Regra Crítica do vazio (R11, nº 5) aplicada ao cadastro:** *se um número pode significar
+> "não achei", traga junto a contagem do que casou*. Aqui: **se "0 problemas" pode significar "ignorei
+> tudo", traga a lista do que foi ignorado e por quê.**
+>
+> **O motivo mora no Notion** (decisão do Olavo em 27/09 de que a categorização fica só lá). Dois
+> campos, nascidos de decisões diferentes e resolvidos de uma vez:
+>
+> | Campo na DB Clientes | Para quê | Nasceu de |
+> |---|---|---|
+> | **`Tipo`** — Real · Teste · Interno | separar quem paga de quem existe para testar | fila de decisões **D-9**, aprovada em 27/09 |
+> | **`Fora do índice (motivo)`** | *métrica não suportada · sem campanha ativa · em implantação* — vazio = **é defeito, acorde o Olavo** | a declaração do CPA, 27/09 |
+>
+> ✅ **E isto responde a objeção do Olavo ao campo `Tipo`** (*"poderá virar mais um item que
+> esqueceremos depois"*): **um campo que o vigia lê todo dia às 08h não é esquecível.** Se alguém
+> preencher errado, o alarme diverge no dia seguinte. **A garantia contra o esquecimento não é
+> disciplina — é ter um leitor automático.**
 | **V4** | Toda tabela **que tem writer declarado** recebeu linha **no período esperado DELA**? 🔴 **corrigido em 26/09** | **`raw_ad_data` vazia 3 meses** · **Clarity e GA4 mortos 19 dias** | coleta que ninguém fez |
 | **V5** | Algum workflow terminou **verde tendo roteado erro**? | **Agregador na cota do GBP, toda rodada** | 3 de 6 destinos vazios |
 | **V6** | O `operador unico` e o `Pipeline_v2` rodaram **na janela esperada**? | (preventiva) | rodada que não aconteceu |

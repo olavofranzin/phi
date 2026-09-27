@@ -106,6 +106,12 @@ validar identidade mínima · `I7` score é fato (ADR-003) · `I8` só o 05 escr
 `kED2 HubSpot - Atualizar status` (48 nós) · `5VRPLUB3 Criar deal` (absorvido pelo 05).
 
 ### 3.5. Ainda presentes e inativos — **arquivar** (único item de limpeza que resta)
+
+> ✅ **AUTORIZADO por Olavo em 2026-09-27** (*"10) Sim"*). **Medido no mesmo dia: os 5 continuam de pé,
+> inativos e não arquivados.** Entra junto o que faltava de acabamento da frente: renomear
+> `Comercial - Guarda-Schema + Backup` → **`PROSP-07`**. **Procedimento obrigatório é o da R5** — os 5
+> passos, com prefixo `[APOSENTADO <data>]` e sticky dizendo por que e proibindo reuso. **Arquivar sem
+> os 5 passos apaga a memória e é pior que deixar o workflow de pé.**
 `WPP Intake - Evolution API` `tDdJIhFLyyDqqSNE` · `WPP Intake copy 2` `ZV1fFFrRTRQX2dik` ·
 `Intake - db's apify` `GUQkIWnMZEH32PXH` · `SCRATCH reviews` `2BWz5V6MGK5IBaxa` ·
 `💥 Apify vide II` `nuEJi4WO8NFJjrUP`
