@@ -26,7 +26,34 @@
 
 ---
 
-> 🔴 **VOLTA 1 PAROU EM 27/09, NO CA3a — e há um estado vivo falhando. Leia o §0.1.**
+> 🟢 **VOLTA 2 — 27/09: o mecanismo do F1 funcionou pela primeira vez.** O `CLI-15` nasceu em
+> `phi_prod` por `WHEN NOT MATCHED`, com métrica `NULL`, e foi removido na mesma sessão. **A porta de
+> entrada de cliente existe.**
+>
+> 🔴 **E a rodada achou um segundo bloqueador que ninguém sabia:** o `MERGE` **encerrava depois do
+> primeiro item**. É a **Regra Crítica nº 5** (o último nó do laço tem de reconectar ao
+> `splitInBatches`). **Mesmo com o repontamento correto, a sincronização nunca teria passado de um
+> cliente** — e isso não apareceria como erro.
+>
+> ⬜ **4.4 e 4.5 parados, corretamente:** **zero execuções do `Pipeline_v2` depois do 4.3b.** A
+> consulta `43693` valida o SQL; **não prova alerta real.** O executor recusou tratar as duas coisas
+> como equivalentes — **é a condição 2 sendo obedecida ao pé da letra.**
+>
+> ## 🔴 Duas coisas a conferir na volta 3, antes do 4.4
+>
+> | # | O quê | Por quê |
+> |---|---|---|
+> | **1** | **O `CLI-13` nasceu com `client_slug` NULL?** | O **§9.4 deste ADR** já avisava: o `WHEN NOT MATCHED` **não escreve `client_slug`**, e `cc.client_slug` é lido pelo `Buscar Campanhas Alertas` **e chega à tarefa do gestor no Notion.** 🔴 **O CA3a provou que a linha NASCE; o próprio ADR diz que ela nasce incompleta** |
+> | **2** | **Que `model_id` o `CLI-13` recebeu, e de onde veio?** | `model_id` é `NOT NULL`, e o `model_config` guarda **os pesos do score por modelo de negócio**. Se vier de um mapa fixo, **todo cliente novo entra com os pesos de outro tipo de negócio** — é a mesma doença do `'ROAS'` fixo, num campo que ninguém olha |
+>
+> 📌 **E a DDL está em commit LOCAL (`5279e62`), não chegou na branch remota.** *Se não está no
+> repositório, não aconteceu* — empurre.
+>
+> ---
+>
+> <details><summary>Histórico — volta 1 (27/09): o CA3a falhou no schema</summary>
+>
+> 🔴 **VOLTA 1 PAROU NO CA3a — e havia um estado vivo falhando. Leia o §0.1.**
 >
 > | Passo | Estado |
 > |---|---|
