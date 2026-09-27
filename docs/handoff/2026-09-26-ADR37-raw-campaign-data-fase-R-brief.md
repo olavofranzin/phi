@@ -1,7 +1,11 @@
 # [BRIEF sub-chat] ADR-37 no `raw_campaign_data` — Fase R: o retrato de hoje, antes de aposentar ninguém
 
 > **Como usar:** sub-chat **novo**. Cole este arquivo como primeira mensagem.
-> **Modelo:** Opus · **Repo:** `olavofranzin/phi` · **Branch:** `claude/consolidacao-2026-08`
+> **Modelo:** Opus
+> **Repo:** `olavofranzin/phi` · 🔴 **BRANCH DE TRABALHO — a única:** `claude/consolidacao-2026-08`
+> **URL completa:** https://github.com/olavofranzin/phi/tree/claude/consolidacao-2026-08
+> ⚠️ **Antes do primeiro passo:** `git fetch origin && git checkout claude/consolidacao-2026-08 && git pull`.
+> **Todo commit e todo push vão para ela.** Outra branch = trabalho que ninguém acha depois.
 > **Papel do Olavo:** **ponte.** Decisão que aparecer, **pare e devolva ao chat-mãe.**
 
 ---

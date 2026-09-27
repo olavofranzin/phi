@@ -1,7 +1,11 @@
 # [BRIEF sub-chat] F3 — o vigia de consistência: construção
 
 > **Como usar:** abra um sub-chat **novo** e cole este arquivo como primeira mensagem.
-> **Modelo:** Opus · **Repo:** `olavofranzin/phi` · **Branch:** `claude/consolidacao-2026-08`
+> **Modelo:** Opus
+> **Repo:** `olavofranzin/phi` · 🔴 **BRANCH DE TRABALHO — a única:** `claude/consolidacao-2026-08`
+> **URL completa:** https://github.com/olavofranzin/phi/tree/claude/consolidacao-2026-08
+> ⚠️ **Antes do primeiro passo:** `git fetch origin && git checkout claude/consolidacao-2026-08 && git pull`.
+> **Todo commit e todo push vão para ela.** Outra branch = trabalho que ninguém acha depois.
 > **Idioma com o Olavo:** português simples, sem jargão.
 > **O papel dele nesta etapa:** 🔴 **ponte entre você e o chat-mãe.** Ele não vai decidir no meio do
 > caminho. Se aparecer decisão, **pare e devolva a pergunta** — não escolha por ele.
