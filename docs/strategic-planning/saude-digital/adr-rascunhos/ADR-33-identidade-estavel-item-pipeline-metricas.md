@@ -269,6 +269,82 @@ série.** Concretamente:
 - `Code Cálcula Métricas` mostrar que precisa de mais campos de identidade (ex. `adset_id`)
   → estender o contrato.
 
+## Extensão de escopo proposta — Agregador Multi-fonte (2026-09-28)
+
+> **Estado desta seção:** desenho medido, **não publicado**. O ADR continua `RASCUNHO`.
+> O Agregador ativo permaneceu em `versionId == activeVersionId == c54114b3-fdf3-46c7-83fb-20c3bdffee54`.
+
+A execução `41535` provou a mesma falha de contrato em outro workflow. Depois que o laço termina,
+o `Adaptador Input T28` usa `nodeFirst(...)` para combinar o primeiro `Set dados` com respostas
+coletadas nas passagens seguintes. O primeiro cliente era `CLI-13`; GA4 e Clarity pertenciam ao
+`CLI-4`. A linha resultante tem formato válido, `execution_id` válido e dono errado.
+
+### Veredito sobre o contrato existente
+
+O princípio do ADR-33 **cobre** o Agregador: identidade explícita viaja com o dado e todo casamento
+é por chave. Os cinco campos originais, porém, descrevem a entidade de mídia e não distinguem o
+dono de um lote multi-cliente. O contrato precisa desta extensão mínima:
+
+| Campo | Papel no Agregador |
+|---|---|
+| `client_id` | dono obrigatório da coleta e da linha de destino |
+| `source` | `ga4`, `clarity`, `gbp`, `google_ads` ou `meta_ads` |
+| `source_id` | propriedade/conta/local/projeto que respondeu |
+| `date_start` + `date_end` | janela da coleta; substitui casamento implícito por posição |
+
+Os campos originais `platform`, `entity_level`, `entity_id` e `page_id` continuam valendo para
+campanha, conjunto e anúncio. Não nasce ADR novo nem subworkflow: é o Contrato de Identidade do
+ADR-33 aplicado ao segundo pipeline que repetiu a mesma doença.
+
+### Passivo medido em 2026-09-28
+
+Medição BigQuery read-only, execuções de auditoria `44188`–`44190`. A assinatura conclusiva foi
+comparar a configuração observada na própria execução com a tabela escrita; contagem e período
+vieram juntos para não confundir ausência com zero.
+
+| Tabela | Passivo provado | Cliente | Período | Prova |
+|---|---:|---|---|---|
+| `t28_ga4_landing` | **4 linhas** | `CLI-13` | 13/09 e 20/09 | `CLI-13.id_ga4 = null`; 2 linhas de `EXEC-T28-39103` + 2 de `EXEC-T28-41535` |
+| `t28_clarity_daily` | **2 linhas** | `CLI-13` | 13/09 e 20/09 | execuções `39103` e `41535`; o payload repetido contém páginas e URLs de `kbbecker.com.br` |
+| `t28_gbp_daily` | **0 impossíveis identificadas** | — | — | a única linha com cliente é do `CLI-4`, que tem `id_gbp_local` |
+| `t28_campaign` | **0 impossíveis pela peneira** | — | — | as 12 linhas do `CLI-13` usam sua campanha Meta `120223097083780450` |
+| `t28_adset` | **0 linhas existentes** | — | — | tabela sem linhas no conjunto medido |
+| `t28_meta_campaign` | **0 linhas existentes** | — | — | tabela sem linhas no conjunto medido |
+
+Além disso existem 318 linhas de `t28_campaign`, 2 de `t28_ga4_landing` e 1 de
+`t28_clarity_daily` com `client_id` nulo. Elas são outro passivo de identidade, mas **não provam
+troca entre clientes** e não entram nas seis linhas acima.
+
+**Limite da peneira:** ela não pega troca entre dois clientes que ambos têm a fonte configurada,
+propriedade errada dentro do mesmo cliente, configuração removida depois da escrita, linha
+sobrescrita por `MERGE` nem mistura parcial dentro de uma agregação. Configuração atual, sozinha,
+também não prova impossibilidade histórica; por isso a conta conclusiva usa a configuração que
+viajou na execução que escreveu.
+
+### Desenho do conserto
+
+1. Dentro de cada passagem do `Loop`, carimbar a resposta de cada fonte com
+   `client_id + source + source_id + date_start + date_end` antes de ela chegar ao `Merge1`.
+   Resposta vazia ou `not_configured` também conserva esse envelope; nunca vira `{}`.
+2. O `Adaptador Input T28` recebe os envelopes e indexa por essa chave. Ele não lê
+   `$('Set dados').first()`, `nodeFirst(...)` nem posição de array.
+3. Cada linha normalizada herda o `client_id` do próprio envelope. Para entidades de mídia, o
+   casamento acrescenta `entity_level + entity_id`; ausência ou conflito de chave roteia erro e
+   bloqueia somente aquela fonte/cliente.
+4. Antes de publicar, reproduzir localmente a ordem de `41535`: `CLI-13` sem GA4 primeiro e
+   `CLI-4` depois. O resultado esperado é zero GA4/Clarity do KIL sob `CLI-13` e os mesmos valores
+   sob `CLI-4`. Depois da publicação autorizada, a prova final é a rodada semanal natural.
+
+### Destino do passivo — decisão do Olavo
+
+| Opção | Custo e consequência |
+|---|---|
+| **Apagar as 6 linhas provadas** | menor risco de atribuição falsa, mas abre dois buracos históricos; destrutivo e exige autorização + inventário antes/depois |
+| **Remarcar para `CLI-4`** | preserva a série e é defensável para `39103`/`41535` quando o payload prova KIL; maior risco de colisão no `MERGE` e exige conferir chave por chave |
+| **Deixar declarado** | não reescreve história; exige exclusão explícita dos consumidores ou quarentena registrada, senão a nota continua usando dado contaminado |
+
+Nenhuma opção foi executada nesta volta.
+
 ## Conexões com ADRs vigentes
 
 - **ADR-003** (autoridade do score / só-acrescenta): mesma filosofia, agora sobre

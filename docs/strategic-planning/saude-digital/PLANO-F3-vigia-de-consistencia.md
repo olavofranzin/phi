@@ -227,6 +227,20 @@ saudável ela devolvia zero linhas — e zero itens encerra o ramo no n8n.
 > publicado nesta volta; o desenho precisa preservar o cliente de cada passagem antes de mudar o
 > workflow semanal.
 
+> ### 🟢 VOLTA 2 MEDIDA EM 2026-09-28 — passivo e desenho no ADR-33
+>
+> A assinatura impossível confirmou **6 linhas contaminadas sob `CLI-13`**: 4 em
+> `t28_ga4_landing` (13/09 e 20/09) e 2 em `t28_clarity_daily` nas mesmas datas. O Clarity
+> devolveu páginas e URLs de `kbbecker.com.br` nas três passagens de `41535`, confirmando que o
+> defeito não se limita ao GA4. Campanha, GBP, adset e meta_campaign não acrescentaram linha
+> impossível pela peneira barata. O limite ficou explícito: clientes ambos configurados podem ser
+> trocados sem serem pegos.
+>
+> O desenho foi incorporado ao
+> `adr-rascunhos/ADR-33-identidade-estavel-item-pipeline-metricas.md`: estender o contrato existente
+> com `client_id + source + source_id + janela`, carimbar dentro do loop e casar por chave no
+> adaptador. **Nada foi publicado**; o Agregador segue em `c54114b3`.
+
 > ### ⚖️ A leitura do chat-mãe — **isto é pior que dado faltando, e é da família mais cara da casa**
 >
 > **Dado que falta é visível. Dado no cliente errado parece certo.**
