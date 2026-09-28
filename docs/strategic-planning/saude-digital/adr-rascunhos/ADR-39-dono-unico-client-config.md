@@ -2,8 +2,8 @@
 
 | | |
 |---|---|
-| **Status** | 🟡 **ACEITO · EXECUÇÃO RETOMADA E EM CURSO — FASE A CONCLUÍDA EM 2026-09-21** · fundido com o **ADR-40** (os dois mexem na mesma coluna) · brief: `2026-09-21-adr39-adr40-metrica-e-cadastro-subchat-brief.md`. **A Fase B (subtrativa) ainda NÃO começou** — ela depende da parada obrigatória de um dia |
-| **Data efetiva da execução** | 🟡 **Fase A: 2026-09-21, 19h–22h BRT (dentro da janela 09h–23h).** ALTERADO EM PRODUÇÃO: 2 `ADD COLUMN`, 1 backfill, 2 workflows publicados (`sw metricas campanhas` → `752e5300`, `PHI - Pipeline_v2` → `b880adee`) e 1 publicado antes (`PHI - Subworkflow Campanhas` → `4f42b244`). **Fase B: ⬜ não ocorreu** — o `client_config` segue em `versionId = activeVersionId = 99abdada` e `phi_dev` segue de pé |
+| **Status** | ✅ **ACEITO · FASE A CONCLUÍDA EM 2026-09-21 · FASE B CONCLUÍDA EM 2026-09-28** · fundido com o **ADR-40** |
+| **Data efetiva da execução** | ✅ **Fase A: 2026-09-21. Fase B: 2026-09-27 a 2026-09-28**, dentro da janela 09h–23h. Relatório: `docs/handoff/2026-09-28-ADR39-fase-B-relatorio.md` |
 | **Por que parou** | 🔴 **O passo 4.1 não tem fonte: a DB Clientes do Notion não possui campo `Métrica-Mãe`.** Ela é **por campanha**, na DB Campanhas — ver §8 |
 | **Destravado em** | ✅ **20/09** — Olavo escolheu a **opção D** (§8.7), que virou o **ADR-40**. As saídas A e B morreram com a decisão de grão. Relatórios: `docs/handoff/2026-09-20-adr39-volta-1-relatorio-do-defeito.md` e `docs/handoff/2026-09-21-adr39-adr40-fase-A-relatorio.md` |
 | **CA2** | ✅ **linha de base provada em 20/09**: `phi_prod.client_config` tem `CLI-4` com `primary_metric_type = 'CPA'`, `updated_at 2026-09-20T07:01:10 BRT` (execução 41352) |
@@ -13,7 +13,7 @@
 | **Bloqueia** | **Fase 3 do ADR-37** — e, por consequência corrigida, a **Fase 2** |
 | **Passo 4.1** | 🔴 **REVOGADO** pelo brief de 21/09 §0 — não se corrige a derivação de um campo que sai na mesma sessão |
 | 🔴 **Passo B2 — SEM BASE desde 22/09** | O B2 é *"cadastrar o CHA e vê-lo chegar ao score"*, que o brief chama de **"o ponto do ADR-39 inteiro"** (o **CA3**, o **F1**). **A única campanha do CHA foi encerrada em 2026-09-22** (`[CHA] IG_MENS__PROD.TESTE__`, status `Concluído`), e o filtro do coletor exige `Status = "Em execução"`. **E a Métrica-Mãe dela é `CPL`, que o motor do score não sabe calcular** — o CHA "chegaria" e sairia com `phi_value` NULL. **O CA3 não pode ser provado com o CHA.** Ver `docs/handoff/2026-09-22-conferencia-parada-e-o-B2-sem-base.md` §3 |
-| **Fase B — 27/09** | 🟡 **EXECUTADA ATÉ O PORTÃO DO 4.4.** ✅ **4.2, 4.3, 4.3b e a DDL feitos.** `primary_metric_type` virou **NULLABLE** (exec `43731`/`43732`); **CA3a PASSOU** — o `CLI-15` nasceu em `phi_prod` com métrica `NULL` (`43733`/`43734`) e foi removido na mesma sessão (`43735`/`43737`); **`CLI-13` inserido**, `CLI-4` preservado como `CPA` (`43738`/`43739`); `client_config` em `b4742c15`; `Pipeline_v2` em `88c65762`.<br>🔴 **Achado da rodada:** o `MERGE` **encerrava após o primeiro item** — corrigido. **Antes disso, a sincronização nunca teria passado de um cliente**, mesmo com o repontamento certo.<br>⬜ **4.4 e 4.5 parados por condição não cumprida:** **zero execuções do `Pipeline_v2` depois do 4.3b**. A consulta `43693` valida o SQL, **não prova alerta real com a métrica da campanha** |
+| **Fase B — 27–28/09** | ✅ **CONCLUÍDA.** 4.2/4.3/4.3b publicados; DDL aplicada; CA3a passou; `client_slug` e contrato `Segmento → model_id` provados; writer do Subworkflow removido na versão `0cc36334`; `phi_dev.client_config` apagada (`44093`); CA2 passou depois do 4.4 — `CLI-4 = CPA` (`44095`). O dataset `phi_dev` permanece porque ainda tem leitor fora desta etapa. |
 | ~~**Fase B (antes de 27/09)**~~ | ⬜ **NÃO COMEÇOU.** Nenhuma remoção aconteceu: `phi_dev` de pé, `client_config` em `99abdada`, `UPDATE` do Subworkflow no lugar, `COALESCE` ainda no score (**prazo do sticky venceu hoje, 22/09 — e venceu por decisão, não por esquecimento**) |
 | **Base factual** | `docs/handoff/2026-09-20-parque-phi-lista-A-as-built.md` §A9, §A10, §A15 |
 | **Destrava** | o **D2** (`phi_dev` some) e o cadastro de cliente novo no score |
@@ -273,3 +273,18 @@ das duas.**
 O CA4 diz *"a Métrica-Mãe do Notion **vence** o mapa fixo — trocar a métrica de **um cliente** e ver a
 coluna mudar"*. **Ele pressupõe que a métrica é do cliente**, o que a decisão do §9 nega. O critério
 precisa ser reescrito junto com a saída escolhida.
+
+
+
+---
+
+## 10. Fechamento da Fase B — 2026-09-28
+
+A rodada natural do `Pipeline_v2` (`43984`) provou o 4.3b ao vivo: `Buscar Campanhas Alertas` devolveu a campanha `21149189736` com `CPA` vindo de `phi_score_history`. O 4.4 removeu o nó `Execute SQL client_config sincronizado` do `PHI - Subworkflow Campanhas`; a versão ativa `0cc36334` liga o INSERT de campanha diretamente a `Fim subworkflow` e descreve por que o writer saiu.
+
+O contrato de cadastro ficou explícito: `client_slug` vem da fórmula `Sigla Cliente`; `model_id` deriva do `Segmento` por mapa explícito (`Negócio Local → MODEL-VAREJO-001`). O Code implementa falha antes do MERGE para segmento desconhecido; esse caminho negativo não foi executado nesta fase. Para `CLI-13`, a linha medida foi `client_slug=CHA`, `model_id=MODEL-VAREJO-001`; o modelo ativo é `VAREJO_LOCAL v1.2`, com pesos MAS 0,34, TSS 0,33 e FIS 0,33 (`44090`).
+
+A tabela `phi_dev.client_config` foi removida em `44093`; `44095` confirmou zero tabela e o CA2: `CLI-4` continuou `CPA` depois do 4.4. O dataset `phi_dev` não foi apagado: `WF-T28-Orquestrador-Analises` ainda o referencia, embora esteja inativo.
+
+**Regra Crítica nº 5:** a Volta 2 descobriu que o BigQuery não devolvia item após o MERGE; o `splitInBatches` terminava verde depois do primeiro cliente. `Always Output Data` foi habilitado e `43738` provou duas iterações. Sem essa correção, o repontamento teria continuado silenciosamente incompleto.
+
