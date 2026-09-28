@@ -134,6 +134,38 @@ saudável ela devolvia zero linhas — e zero itens encerra o ramo no n8n.
 > preencher errado, o alarme diverge no dia seguinte. **A garantia contra o esquecimento não é
 > disciplina — é ter um leitor automático.**
 | **V4** | Toda tabela **que tem writer declarado** recebeu linha **no período esperado DELA**? 🔴 **corrigido em 26/09** | **`raw_ad_data` vazia 3 meses** · **Clarity e GA4 mortos 19 dias** | coleta que ninguém fez |
+
+> ### 🔴 2026-09-28 — O V4 vai ficar quieto sobre o GA4, e **ninguém sabe por quê ele gritou**
+>
+> **Medido hoje** (diagnóstico das fontes do Agregador, execuções `44023` e `44140`):
+>
+> | Quando | `t28_ga4_landing` |
+> |---|---|
+> | **25–26/09** | 24 linhas · 12 datas · **máxima `06/09`** — o V4 acusou, com razão |
+> | **28/09, 09h01** | **32 linhas · 2 clientes · 16 datas · até `27/09`** — a rodada semanal escreveu, e os dois nós GA4 voltaram **com sucesso** |
+>
+> 🔴 **A fonte voltou sozinha. Não houve conserto — ninguém tocou nela.** E o buraco de **06/09 a
+> 27/09** (~3 semanas, ~3 rodadas semanais) **não tem causa registrada.**
+>
+> **Por que isso é problema, e não alívio:**
+>
+> | | |
+> |---|---|
+> | **O alarme some amanhã** | o V4 vai parar de acusar o GA4 — e com ele some **o único ponteiro** para o buraco |
+> | **O que não sabemos** | por que 3 rodadas seguidas não escreveram, e o que mudou na de hoje. **Credencial? cota temporária? falha dura sem handler?** |
+> | 🔴 **E o handler não existia** | o Agregador **ficou sem `errorWorkflow` até 28/09**. Se aquelas rodadas falharam duro, **o aviso não tinha para onde ir** — é a explicação mais provável, e segue **não provada** |
+> | **É a terceira vez na semana** | o **score 3×** sumiu sem registro (26/09) · o *"GA4 morto há 19 dias"* foi refutado (26/09) · agora isto |
+>
+> ### ⚖️ A regra que sai daí — **defeito que some é evento, não é alívio**
+>
+> **Quando um defeito desaparece sem causa conhecida, o desaparecimento é o que se investiga** — e
+> se não for investigado **enquanto o rastro existe**, ele volta e a conta recomeça do zero. É o
+> **corolário 1 da R6** pelo lado que ninguém pratica: *hipótese desmentida se registra* vale também
+> para *defeito curado sem médico*.
+>
+> ⬜ **Aberto, e barato enquanto as execuções ainda estão no n8n:** olhar as rodadas semanais do
+> Agregador de **07/09 a 21/09** e dizer o que aconteceu com os nós GA4. **Depois da retenção, não
+> há mais o que olhar.**
 | **V5** | Algum workflow terminou **verde tendo roteado erro**? | **Agregador na cota do GBP, toda rodada** | 3 de 6 destinos vazios |
 | **V6** | O `operador unico` e o `Pipeline_v2` rodaram **na janela esperada**? | (preventiva) | rodada que não aconteceu |
 | **V7** | Quantas campanhas ficaram **sem `primary_metric_type`** ontem? | (nova, 21/09 — **ADR-40 §6.1**) | campanha julgada por régua inventada |
