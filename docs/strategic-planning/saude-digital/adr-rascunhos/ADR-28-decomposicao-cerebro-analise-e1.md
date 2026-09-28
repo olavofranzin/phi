@@ -17,7 +17,7 @@
 >
 > | # | Achado de 27/09 | Consequência |
 > |---|---|---|
-> | **1** | o `WF-T28-Orquestrador-Analises` **lê `phi_dev`** | o `phi_dev` **morre no passo 4.5 do ADR-39**. Religar sem trocar a fonte **quebra** |
+> | **1** | o `WF-T28-Orquestrador-Analises` **lê `phi_dev`** (nó `Set config`) | ✅ **CONFIRMADO EM 28/09 POR OUTRO MÉTODO:** a execução da Fase B do ADR-39 varreu **82 workflows** procurando `phi_dev` e achou **este, e só este**. 🔴 **Inverteu-se quem espera quem:** a tabela `phi_dev.client_config` já morreu, e **o dataset inteiro agora só continua de pé por causa deste workflow parado** |
 > | **2** | o nó `BQ Read T28 Score` tem `sqlQuery` com `{{ $... }}` **sem o prefixo `=`** | 🔴 **a expressão não é avaliada** — a query iria ao BigQuery com `{{ }}` literal. É a **Regra Crítica nº 8** (montar SQL no Code node, nunca `{{ }}` dentro da query) quebrada, **em rascunho, antes de custar** |
 >
 > ✅ **Este é o argumento a favor de declarar a parada em vez de deixar parado:** a decisão obrigou a

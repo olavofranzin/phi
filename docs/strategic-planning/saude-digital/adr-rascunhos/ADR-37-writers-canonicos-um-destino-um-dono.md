@@ -34,6 +34,17 @@
 > | **Por que não é detalhe** | aposentar o W2 sem isso **troca a fonte do número do score sem avisar ninguém** — e a diferença medida em 26/09 (33,948977 vs 34,49 de custo no Salão) **não é arredondamento: é o horário da consulta à API** |
 > | **Estado** | ⬜ **a Fase 2 está BLOQUEADA por este requisito** — e não por falta de decisão |
 >
+> ✅ **2026-09-28 — A FASE 3 DESTRAVOU.** O **ADR-39 fechou a Fase B**: `client_config` passou a ter
+> **writer único em `phi_prod`**, com `INSERT` de cliente novo provado (`CA3a`) e `phi_dev.client_config`
+> apagada. **A dependência que segurava a Fase 3 deste ADR não existe mais.**
+>
+> 🔴 **A Fase 2 continua bloqueada**, e por dois motivos independentes — **um deles nasceu ontem**:
+>
+> | # | O que bloqueia a Fase 2 | Estado |
+> |---|---|---|
+> | **1** | o requisito das **07h** (escrita dupla antes de aposentar o W2) | ⬜ decidido, não executado |
+> | **2** | os **três SQLs publicados** do `Pipeline_v2` que ainda leem `client_config.primary_metric_type` | 🟡 **um deles migrou** no 4.3b de 28/09 (`Buscar Campanhas Alertas` passou a ler de `phi_score_history`). **Faltam dois** |
+>
 > **A aposentadoria segue bloqueada**, por motivo novo: `client_config.primary_metric_type` é lido
 > por **três SQLs publicados** do `Pipeline_v2`, incluindo a entrega operacional. **O ADR-40 migrou o
 > cálculo, não os consumidores.**
