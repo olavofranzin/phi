@@ -286,6 +286,22 @@ Esta casa já perdeu semanas com três caras do vazio (**R11, regra 5**). No seu
 |---|---|---|
 | **1** | o **`.env` da raiz está versionado** (chaves `VITE_SUPABASE_*`) e o `.gitignore` **não ignora `.env`** | são chaves `VITE_` (vão para o navegador de qualquer jeito), mas **tirar o arquivo pode quebrar o build da VPS**. **Relate. Não apague.** |
 | **2** | existe `src/integrations/supabase/` e `supabase/functions/` no repositório | **pode ser resto do Lovable** — ou pode estar em uso. **Não remova nada.** Diga o que achou |
+| **3** | 🔴 **ACHADO NA VOLTA 2 (28/09): o `package-lock.json` está fora de sincronia com o `package.json`** — `npm ci` **falha** no repositório | **Não conserte nesta volta** (é fora do escopo do W4), mas **é dívida declarada, não curiosidade.** Ver abaixo |
+
+> ### 🔴 Por que o lockfile dessincronizado importa mais do que parece
+>
+> O `Dockerfile` da raiz usa **`npm install`**, não `npm ci`. Isso significa que **o build da VPS
+> resolve as dependências do zero a cada deploy** — e **o lockfile não está prendendo nada**.
+>
+> | | |
+> |---|---|
+> | **O que se perde** | duas builds do **mesmo commit** podem subir com **versões diferentes** de dependência transitiva |
+> | **Como isso aparece** | 🔴 **não aparece.** A build passa verde, o site sobe, e o que mudou não está em commit nenhum |
+> | **Por que é a doença da casa** | é **mudança silenciosa em produção sem autor** — a mesma família do `onError: continueRegularOutput` e do nó verde que não produz |
+> | **O conserto** | sincronizar o lockfile e trocar para `npm ci` no Dockerfile — **tarefa própria, junto com a limpeza da pasta `webview/`** |
+>
+> ✅ **A conduta da volta 2 foi a certa:** reproduzir com `--package-lock=false`, **não atualizar o
+> lockfile no meio de outra etapa**, e registrar a diferença.
 
 ---
 
