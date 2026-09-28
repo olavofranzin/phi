@@ -1,6 +1,27 @@
-# [RASCUNHO] ADR-33 — Identidade Estável do Item na Pipeline de Métricas (fim do `results[0]` e do merge sem chave)
+# ADR-33 — Identidade Estável do Item na Pipeline de Métricas (fim do `results[0]` e do merge sem chave)
 
-> **STATUS:** RASCUNHO (git, design-canônico). Escrito 2026-08-09 como desenho dos
+> # ✅ ACEITO — Olavo, 2026-09-28
+>
+> **Aceito com a extensão do §"Agregador Multi-fonte":** o Contrato de Identidade ganha
+> **`client_id` + `source` + `source_id` + `date_start`/`date_end`**, além dos cinco campos
+> originais. **Junto foram aprovados:** apagar as **6 linhas** do passivo, na ordem
+> *conserta → recoleta → apaga*, e **recoletar** o período depois do conserto.
+>
+> ## 🔴 A lição que este ADR passou a carregar, e que vale mais que o desenho
+>
+> **Ele ficou RASCUNHO de 09/08 a 28/09 — sete semanas.** Nesse tempo o mesmo defeito
+> **reapareceu num segundo workflow** (o Agregador), gravou dado no cliente errado em **duas
+> rodadas** e só foi achado porque o vigia, construído para outra coisa, apontou uma tabela.
+>
+> **Desenho aceito não conserta nada. Desenho que fica em rascunho é dívida com juros** — e o juro
+> aqui foi o defeito se espalhar para um pipeline que ainda nem tinha consumidor.
+>
+> ⚠️ **O que ESTE aceite NÃO autoriza:** executar o contrato nos writers originais
+> (`sw metricas anuncios` / `sw metricas campanhas`). **O escopo liberado agora é o Agregador.**
+> Ampliar é decisão do Olavo, não extensão de executor.
+
+
+> **STATUS (histórico):** era RASCUNHO até 2026-09-28. Escrito 2026-08-09 como desenho dos
 > **2 itens estruturais** que ficaram fora do escopo das correções desta sessão (Fases 1–6
 > em `sw metricas anuncios`/`campanhas`). Vira `Aceito` quando o Contrato de Identidade
 > rodar em produção e o smoke em KIL confirmar 1-item-por-anúncio sem vazamento.
@@ -407,5 +428,6 @@ B3 → B4), decisão de produto pendente (no-data ⇒ linha ou não) e plano de 
 
 ---
 
-*Rascunho de desenho. Não implementar sem: (a) granularidade confirmada, (b) baseline
-salvo, (c) OK de budget do Olavo, (d) smoke em KIL antes de publicar.*
+*🟢 **Aceito em 2026-09-28 para o Agregador.** As quatro condições continuam valendo para os
+writers originais, cujo escopo NÃO foi liberado: (a) granularidade confirmada, (b) baseline salvo,
+(c) OK de budget do Olavo, (d) smoke em KIL antes de publicar.*
