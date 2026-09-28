@@ -40,18 +40,50 @@ cd phi-dashboard-webview && git checkout webview
 
 ## 1. 🔴 A restrição que não se negocia: NADA MUDA DE LUGAR
 
-**O repositório `phi-dashboard-webview` está ligado ao deploy da VPS (EasyPanel).** O build usa:
-
-```
-Build Path  = /                      (contexto = raiz do repositório)
-Dockerfile  = webview/Dockerfile
-```
+> ## ⚖️ CORREÇÃO DE 2026-09-28 — **esta seção estava errada, e o erro era meu**
+>
+> A volta 1 **parou aqui, corretamente**, e a premissa que caiu era minha: eu escrevi que o build
+> usa `webview/Dockerfile` **porque um comentário dentro do `Dockerfile` da raiz diz isso.**
+> **Comentário de artefato não é configuração de deploy** — tomei texto por fato, que é a mesma
+> falha da R6 pela terceira vez nesta casa.
+>
+> ### O que eu medi em 28/09, no histórico do repositório
+>
+> | Fato medido | Prova |
+> |---|---|
+> | `webview/src` e `webview/server` **nunca existiram** | `git log --all -- 'webview/src/*'` e `'webview/server/*'` devolvem **vazio** |
+> | a pasta `webview/` nasceu em **23/09** de uma série de commits *"Rename X to webview/X"* | `1789fbd` (package.json), `8916a24` (Dockerfile) |
+> | o `webview/Dockerfile` **não pode construir** — ele faz `COPY webview/ .` e ali não há código | reproduzido pelo executor: *Rollup failed to resolve import "/src/main.tsx"* |
+> | depois da tentativa, o **Dockerfile da raiz foi recriado e corrigido** para copiar da raiz | `3c401e6` → `5b5eabc` *"copy package.json from root"* → `60f17cb` |
+> | o `index.html` da **raiz é mais novo** que o de `webview/` | fontes diferentes; a raiz tem `Plus Jakarta Sans`, aplicada no commit `fc0dc2c` |
+>
+> 🔴 **O que a pasta `webview/` é, então:** **resíduo de um rename começado e nunca terminado em
+> 23/09.** Move-se os arquivos de configuração, **esquece-se do código**, o build quebra, e a solução
+> foi recriar tudo na raiz — **deixando a metade antiga de pé.** Eu escrevi no brief da volta 1 que
+> *"ela duplica configs, é assim de propósito"*. **Não é de propósito. É entulho — e entulho que
+> mente.**
+>
+> ### 🟢 O build verdadeiro (usar este)
+>
+> ```
+> Build Path  = /            (contexto = raiz do repositório)
+> Dockerfile  = Dockerfile   (o da RAIZ, não o de webview/)
+> ```
+>
+> **Por que é este:** é o único coerente (`COPY . .` traz `src/` e `server/`), e o site **está no ar**
+> com commits posteriores a 23/09 — logo, algum build passou depois da tentativa quebrada.
+> ⚠️ **Isto é inferência forte, não leitura do painel.** A confirmação de 30 segundos é do Olavo, no
+> EasyPanel. **Não bloqueia o W4:** o dossiê não depende de Docker.
+>
+> 🔴 **A armadilha que sobra, e que não é sua para consertar:** quem editar `webview/package.json`,
+> `webview/vite.config.ts` ou `webview/index.html` **mexe em arquivo morto e não vê efeito nenhum.**
+> Relatado ao Olavo; a limpeza é decisão dele.
 
 | ❌ Proibido nesta etapa | Por quê |
 |---|---|
 | mover, renomear ou reorganizar **qualquer** arquivo ou pasta | o deploy quebra, e quebra **em produção**, não no seu terminal |
 | mexer em `Dockerfile`, `webview/Dockerfile`, `package.json`, `vite.config.ts`, `tsconfig*` | são o caminho do build |
-| "limpar" a pasta `webview/` (ela duplica configs da raiz — **é assim de propósito**) | idem |
+| "limpar" a pasta `webview/` — ela é **entulho de um rename inacabado de 23/09** (§1), mas remover é **decisão do Olavo** | mexer em pasta de repositório ligado a deploy sem confirmação é risco em produção, não faxina |
 | apagar ou editar o `.env` da raiz | ver §7 |
 
 ✅ **Você pode criar arquivos novos** — desde que em pastas que já existem (`server/`, `src/lib/phi/`,
@@ -177,6 +209,19 @@ e **conte quantos clientes passaram a ter telefone** — sem a contagem, não h�
 
 ---
 
+## 3.1. 🟢 O que a volta 1 MEDIU — e onde corrigiu o meu número
+
+**Nada aqui é estimativa. Substitui o que eu escrevi de cabeça.**
+
+| O que eu escrevi | O que foi medido (27/09) |
+|---|---|
+| *"~35 chaves"* | 🔧 **41 chaves** nas 9 seções |
+| *"corrija o `Fone` e conte quantos ganharam telefone"* | 🟢 **a conta existe: 11 clientes casados, 6 com telefone no Notion, e o código acha 0.** O ganho do conserto é **0 → 6**, medido antes de consertar |
+
+> ⚠️ **E um achado de governança da volta 1:** o ledger *"PHI — Registro de Execuções"* **não tem a
+> opção `Frente = Webview`** — o executor registrou como `Produto PHI (core)` **sem alterar o schema,
+> o que foi a atitude certa**. Criar a opção é decisão do Olavo (um clique no Notion).
+
 ## 4. O que fazer, em ordem
 
 | # | Passo | Cuidado |
@@ -221,7 +266,7 @@ Esta casa já perdeu semanas com três caras do vazio (**R11, regra 5**). No seu
 | **CA6** | 🔴 **Nada foi movido** | `git diff --stat` não mostra `rename`; `Dockerfile`, `webview/Dockerfile`, `package.json`, `vite.config.ts` e `tsconfig*` **intocados** |
 | **CA7** | 🔴 **Nada escreve no Notion** | `grep -rn "method: *\"\(POST\|PATCH\|PUT\|DELETE\)\"" server/` — nenhuma chamada nova a `api.notion.com` |
 | **CA8** | 🔴 **Nenhum segredo entrou no git** | `git diff` do `.env` da raiz = **vazio**. O `NOTION_TOKEN` mora **só** no `.env` da VPS |
-| **CA9** | O build passa como a VPS faz | `docker build -f webview/Dockerfile .` **ou**, se Docker não estiver disponível, `npm run build` + a razão escrita |
+| **CA9** | 🔧 **CORRIGIDO em 28/09** — o build passa como a VPS faz: **`docker build -f Dockerfile .` na raiz** (não `webview/Dockerfile`, ver §1) | se Docker não estiver no host, **`npm run build` na raiz** já prova o front, e o `server/` não tem etapa de build. Escreva qual dos dois usou |
 | **CA10** | O `/api/phi-snapshot` (BigQuery) **continua igual** | comparar a resposta antes e depois. **Esta etapa não toca no caminho do score** |
 
 ---
