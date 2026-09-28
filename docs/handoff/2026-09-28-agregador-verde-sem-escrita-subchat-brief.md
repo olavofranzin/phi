@@ -1,5 +1,28 @@
 # Brief de execução — O Agregador coleta, termina verde e não escreve
 
+> # ❌ TÍTULO E PREMISSA ERRADOS — REFUTADO EM 2026-09-28, na mesma volta
+>
+> **A execução `41535` ESCREVEU.** Prova: consulta `44156` achou as 2 linhas ainda na tabela
+> (`CLI-13` · `2026-09-20` · `EXEC-T28-41535`), mais 21 em `t28_campaign` e 1 em `t28_clarity_daily`.
+>
+> **O erro foi meu, e foi de leitura:** tomei `lastNodeExecuted: [T28] Filter t28_meta_campaign` como
+> *"onde a corrente parou"*. Com **seis filtros em paralelo**, `lastNodeExecuted` é apenas **o último
+> a terminar**. Aquele filtro **nem está no caminho do GA4**.
+>
+> ## 🔴 O defeito real é outro, e é pior
+>
+> O `Adaptador Input T28` usa **`nodeFirst(...)`**: ele associa a resposta do GA4 ao **primeiro
+> cliente do lote**, não ao cliente daquela passagem. Em `41535` o primeiro era o **`CLI-13`** —
+> então **o GA4 do `CLI-4` foi gravado como se fosse do CHA**. Em `44023` o primeiro já era o
+> `CLI-4`, e por isso *pareceu* que a escrita "voltou".
+>
+> **Dado que falta é visível. Dado no cliente errado parece certo** — e alimenta o índice do negócio.
+>
+> **Este brief fica como histórico.** O trabalho continua em
+> `docs/handoff/2026-09-28-identidade-do-cliente-no-agregador-brief.md`, e a análise está no
+> `PLANO-F3-vigia-de-consistencia.md`, na seção do V4.
+
+
 | | |
 |---|---|
 | **Frente** | Saúde Digital / Agregador |

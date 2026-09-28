@@ -163,7 +163,14 @@ saudável ela devolvia zero linhas — e zero itens encerra o ramo no n8n.
 > **corolário 1 da R6** pelo lado que ninguém pratica: *hipótese desmentida se registra* vale também
 > para *defeito curado sem médico*.
 >
-> ### 🔴 RESPONDIDO NO MESMO DIA (28/09) — e a resposta é pior do que "parou"
+> ### ❌ [REFUTADO NO MESMO DIA] O bloco abaixo era MEU e está ERRADO — leia a correção logo depois
+>
+> **Eu li `lastNodeExecuted: [T28] Filter t28_meta_campaign` e concluí que o ramo tinha morrido ali.**
+> **Errado.** Com **seis filtros em paralelo**, `lastNodeExecuted` é só **o último a terminar** — não
+> é onde a corrente parou. **A execução `41535` ESCREVEU** (prova: `44156`). Guardo o texto abaixo
+> porque ele explica de onde veio o alarme falso, **e o raciocínio errado é a parte que ensina.**
+>
+> ### 🔴 [HISTÓRICO, ERRADO] RESPONDIDO NO MESMO DIA (28/09) — e a resposta é pior do que "parou"
 >
 > **Abri a execução `41535` (21/09, rodada semanal) e li os dois nós do GA4. O dado ESTAVA LÁ.**
 >
@@ -219,6 +226,34 @@ saudável ela devolvia zero linhas — e zero itens encerra o ramo no n8n.
 > com risco de atribuir GA4/Clarity e outros contextos ao cliente errado. Nenhum conserto foi
 > publicado nesta volta; o desenho precisa preservar o cliente de cada passagem antes de mudar o
 > workflow semanal.
+
+> ### ⚖️ A leitura do chat-mãe — **isto é pior que dado faltando, e é da família mais cara da casa**
+>
+> **Dado que falta é visível. Dado no cliente errado parece certo.**
+>
+> | | |
+> |---|---|
+> | **O que está na tabela hoje** | 2 linhas de `t28_ga4_landing` com o **GA4 do CLI-4 gravado sob `CLI-13`** (exec `41535`) |
+> | **Quem consome isso** | o **Índice de Saúde Digital do Negócio** — o pilar de Experiência sai de `t28_ga4_landing` |
+> | **O que aconteceria** | o **CHA receberia nota calculada com o tráfego do KIL**. Ninguém notaria: a nota sai, é plausível, e não há a quem comparar |
+> | **De que família é** | 🔴 **identidade** — a mesma do `client_id` vazio (ADR-37), do prefixo no `campaign_id` (ADR-38) e da Métrica-Mãe no grão errado (ADR-40). **É a família que mais custou a esta casa** |
+>
+> 🔴 **E o mecanismo é o de sempre: `nodeFirst()` pega o primeiro, não o correspondente.** É o mesmo
+> vício do `lookupValue` vazio que devolveu a planilha inteira e do filtro sem valor que não cortava
+> nada (**R11, regra 1**): **quando falta a chave, o n8n não para — ele escolhe por você.**
+>
+> ### O que isto exige, e o que NÃO é
+>
+> | | |
+> |---|---|
+> | ❌ **Não é** | conserto de um nó no meio da semana |
+> | ✅ **É** | decidir **como o cliente viaja junto do dado** dentro do Agregador — as 6 fontes usam o mesmo trecho compartilhado |
+> | 🔴 **E tem passivo** | as linhas **já gravadas** com cliente trocado. **Quantas, em quais tabelas, desde quando** — ninguém sabe ainda |
+> | ⚠️ **Regra herdada** | o **ADR-38** resolveu identidade **antes** de reconstruir a série. Aqui vale igual: **descobrir o tamanho do passivo antes de reescrever qualquer coisa** |
+>
+> ✅ **O crédito continua do vigia**, e agora por um motivo melhor: o **V4** perguntou *"esta tabela
+> recebeu linha no período dela?"* e, sem saber nada de `nodeFirst()`, **acabou apontando para um
+> defeito de identidade que ninguém procurava.**
 | **V5** | Algum workflow terminou **verde tendo roteado erro**? | **Agregador na cota do GBP, toda rodada** | 3 de 6 destinos vazios |
 | **V6** | O `operador unico` e o `Pipeline_v2` rodaram **na janela esperada**? | (preventiva) | rodada que não aconteceu |
 | **V7** | Quantas campanhas ficaram **sem `primary_metric_type`** ontem? | (nova, 21/09 — **ADR-40 §6.1**) | campanha julgada por régua inventada |
