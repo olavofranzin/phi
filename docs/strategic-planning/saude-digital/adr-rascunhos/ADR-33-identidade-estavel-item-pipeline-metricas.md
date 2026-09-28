@@ -345,6 +345,48 @@ viajou na execução que escreveu.
 
 Nenhuma opção foi executada nesta volta.
 
+### ⚖️ Recomendação do planejador sobre o passivo — 2026-09-28
+
+**Recomendo APAGAR as 6 linhas. Não remarcar.** E há um motivo de prazo que muda a ordem das coisas.
+
+| Opção | Veredito | Por quê |
+|---|---|---|
+| **Apagar** | ⭐ **recomendada** | as 6 linhas **não têm dono legítimo onde estão**. Apagá-las não destrói informação: destrói uma **afirmação falsa** |
+| **Remarcar para `CLI-4`** | ❌ **não** | é **reescrever história por inferência**. O payload sugere o KIL, mas *sugerir* não é *provar quem coletou* — e se o KIL já tiver linha nessas datas, o `MERGE` colide ou sobrescreve. **Trocar um dono errado por um dono deduzido não é conserto: é a mesma aposta, com mais confiança** |
+| **Deixar declarado** | 🟡 **aceitável só como estado temporário** | funciona **enquanto não há consumidor** — e hoje realmente não há: **o índice ainda não foi construído**. Mas "declarado" só vale se **alguém precisar ler a declaração**, e a próxima pessoa a montar o pilar de Experiência **não vai ler este ADR** |
+
+> 🔴 **A ordem importa, e ela não é óbvia:** apagar **antes** do conserto deixa o buraco e o defeito.
+> **Conserte primeiro, recolete depois, apague por último** — assim o dado certo entra antes de o
+> errado sair, e em nenhum momento a tabela fica pior do que está.
+
+### ⏳ O prazo que ninguém pediu, e que decide se dá para recoletar
+
+**As 6 linhas cobrem 13/09 e 20/09.** Recoletar depois do conserto **só é possível enquanto a fonte
+ainda guardar aquele período**:
+
+| Fonte | Janela de retenção | 13/09 ainda existe? |
+|---|---|---|
+| **GA4** | longa | 🟢 **sim**, com folga |
+| **Clarity** | 🔴 **curta — a plataforma guarda poucas semanas** | ⚠️ **13/09 está no limite, e some primeiro** |
+
+> **Se a recoleta do Clarity importa, ela tem data de validade** — e ela chega antes do conserto, se
+> o conserto esperar. **Confirmar a retenção real do Clarity é a primeira medição da próxima volta**,
+> e é barata. Se já tiver passado, a saída honesta é **apagar e declarar o buraco**, nunca
+> reconstruir por estimativa (**S1**: o que não foi medido não vira número).
+
+### 🔴 E o passivo maior está ao lado, não medido
+
+A mesma volta encontrou **318 linhas de `t28_campaign`, 2 de `t28_ga4_landing` e 1 de
+`t28_clarity_daily` com `client_id` NULO**. **Isso é 53× o passivo que acabamos de medir** — e é
+outro defeito: não é dono trocado, é **dono nenhum**.
+
+| | |
+|---|---|
+| **Não se mistura com este** | são causas diferentes e consertos diferentes |
+| **Já tinha sido visto** | o `PLANO-F3` §4 registra *"a `t28_campaign` tem 318 linhas de teste sem cliente dentro de `phi_prod`"* — e por isso o **V4 filtra `client_id IS NOT NULL`** |
+| 🔴 **O que isso significa** | **o vigia está passando por cima delas de propósito.** Foi a decisão certa para o vigia funcionar, **e criou um ponto cego declarado**: 318 linhas que ninguém olha e ninguém conta |
+| **Encaminhamento** | **etapa própria**, depois desta. **Não apagar por conta** — "linha de teste" é rótulo herdado, não medição (**R6, corolário 2**) |
+
 ## Conexões com ADRs vigentes
 
 - **ADR-003** (autoridade do score / só-acrescenta): mesma filosofia, agora sobre
