@@ -191,9 +191,34 @@ saudável ela devolvia zero linhas — e zero itens encerra o ramo no n8n.
 > ✅ **E é o V4 que entregou isso.** Ele não achou "o GA4 parado": ele achou **uma tabela que não
 > recebeu linha** — que é a pergunta certa, porque **não depende de saber onde o caminho se rompe.**
 >
-> ⬜ **O que falta, e é do sub-chat:** achar **em que nó exato** o ramo morre entre o GA4 e a escrita,
-> e por que a rodada de **28/09** passou. **Enquanto isso não se fecha, o dado do índice pode sumir
-> de novo sem ninguém saber** — e o único aviso continua sendo o vigia, um dia depois.
+> ### 🔴 CORREÇÃO DE 2026-09-28 — a premissa *"verde sem escrita"* caiu
+>
+> A execução retida `41535` **chegou à escrita**. O filtro entregou 2 itens, o construtor montou o
+> `MERGE`, o nó `[T28] BQ Merge t28_ga4_landing` executou, e a consulta de conferência
+> (**execução `44156`**) encontrou as duas linhas ainda na tabela:
+> `CLI-13` · `2026-09-20` · `EXEC-T28-41535`. A mesma consulta encontrou também 21 linhas em
+> `t28_campaign` e 1 em `t28_clarity_daily` com esse `execution_id`.
+>
+> O que mudou entre as rodadas foi **o primeiro cliente**, não a passagem pelo writer:
+>
+> | | `41535` — 21/09 | `44023` — 28/09 |
+> |---|---|---|
+> | primeiro item de `Set dados` | `CLI-13` (sem `id_ga4`) | `CLI-4` |
+> | linhas gravadas em `t28_ga4_landing` | 2 para `CLI-13`, data 20/09 | 2 para `CLI-4`, data 27/09 |
+> | destinos que escreveram | campaign · GA4 · Clarity | campaign · GA4 · Clarity |
+> | destinos sem item no filtro | adset · GBP · Meta | adset · GBP · Meta |
+>
+> A causa do falso diagnóstico está no **grão**: o `Adaptador Input T28` usa `nodeFirst(...)` para
+> `Set dados` e para as respostas GA4 depois que o laço terminou. Em `41535`, associou ao primeiro
+> cliente (`CLI-13`) a resposta GA4 coletada nas passadas do `CLI-4`. Em `44023`, o primeiro cliente
+> já era o `CLI-4`, então a linha apareceu onde a medição esperava. O
+> `[T28] Filter t28_meta_campaign` foi apenas o último dos seis filtros paralelos a executar.
+>
+> **Conclusão:** o V4 encontrou uma divergência real de frescor por cliente, mas a explicação
+> *"coletou e não escreveu"* estava errada. O defeito vivo é **associação ao primeiro item do lote**,
+> com risco de atribuir GA4/Clarity e outros contextos ao cliente errado. Nenhum conserto foi
+> publicado nesta volta; o desenho precisa preservar o cliente de cada passagem antes de mudar o
+> workflow semanal.
 | **V5** | Algum workflow terminou **verde tendo roteado erro**? | **Agregador na cota do GBP, toda rodada** | 3 de 6 destinos vazios |
 | **V6** | O `operador unico` e o `Pipeline_v2` rodaram **na janela esperada**? | (preventiva) | rodada que não aconteceu |
 | **V7** | Quantas campanhas ficaram **sem `primary_metric_type`** ontem? | (nova, 21/09 — **ADR-40 §6.1**) | campanha julgada por régua inventada |
