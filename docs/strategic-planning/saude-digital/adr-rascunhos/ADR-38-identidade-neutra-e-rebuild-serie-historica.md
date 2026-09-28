@@ -2333,7 +2333,71 @@ ao contrário da B.1, mexer na janela de coleta **não é aditivo**.
 **Recomendação, não decisão: a opção (a).** Com um writer só depois da Fase C a janela passa a ser
 única, e a rodada das 00h é a de menor valor como leitura do dia — logo a mais barata de transformar.
 
-## 28.4. 📋 D1-d — a proposta, em uma tela
+## 28.4. ✅ D1-d — EXECUTADO EM 2026-09-28
+
+> ## ✅ **FEITO. Publicado e conferido no ar.**
+>
+> | | |
+> |---|---|
+> | **Workflow** | `sw metricas campanhas` (`W571K320aqIHsdtH`) |
+> | **Versão ativa** | **`dfcc9b21`** — `versionId == activeVersionId`, conferido pelo chat-mãe **depois** da entrega (**R13**) |
+> | **Tamanho** | 38 → **39 nós** (o nó novo é o `Campanha pulada`) |
+> | **Brief** | `docs/handoff/2026-09-28-D1d-fronteira-de-erro-do-writer-subchat-brief.md` |
+> | **Descrição (R5)** | *"Desde 2026-09-28, 12 portas externas encaminham falhas a Campanha pulada, que avisa no Telegram e devolve o laço ao próximo cliente."* |
+>
+> ### O que ficou no ar, conferido nó a nó
+>
+> **12 de 12 portas externas** com `onError: continueErrorOutput`, e **as 12 com a saída de erro
+> ligada ao `Campanha pulada`** — que é um nó **Telegram** e **reconecta ao `Loop Over Items`**.
+>
+> | Grupo | Nós |
+> |---|---|
+> | Google Ads (6) | `v23 Bloco 1 Core` · `v23 Bloco 2 Termos` · `v23 Bloco 3 Canais` · `HTTP Request Google Ontem (D1)` · `(D3)` · `(D7)` |
+> | Meta Ads (2) | `HTTP Request Meta Ads` · `HTTP Request Meta Ads D-2` |
+> | BigQuery (2) | `BigQuery Série Diária` · `Execute SQL inserir daily entry` |
+> | Notion (2) | `Create a database page Create Observation` · `Update a database page` |
+>
+> ⚠️ **As 4 últimas não estavam na proposta de 24/09** — ela dizia *"nos nós HTTP"*, que são 8. A
+> medição de 28/09 mostrou **12 portas dentro do laço**, e o chat-mãe estendeu a fronteira ao
+> conjunto inteiro: **fronteira que cobre 8 de 12 deixa três quartos do problema com aparência de
+> resolvido.**
+>
+> ### As três provas
+>
+> | Teste | Execução | Resultado |
+> |---|---|---|
+> | **A — o dia saudável** (feito primeiro, de propósito) | **`44123`** | 2 campanhas processadas, **zero puladas**, **zero alarme falso** |
+> | **B — a falha forçada** | **`44131`** | URL D1 quebrada **só** para a campanha `21149189736`: alerta no Telegram com **cliente, campanha, nó e motivo**, e **a outra campanha continuou** |
+> | **A restauração** (R12) | **`44132`** | execução saudável de novo, zero puladas — **o que foi quebrado voltou, e voltou provado por execução, não por lembrança** |
+>
+> 🔴 **O teste A é o que dá valor ao B.** A pergunta desta casa nunca foi *"a rede pega o erro?"* —
+> é ***"o que acontece no dia em que ela não pega nada?"***, que é todo dia. Foi o que a salvaguarda
+> de 18/09 não respondeu, e por isso matou a Fase 3 por 8 dias, verde.
+
+---
+
+## 28.4b. 🔴 Hipótese do chat-mãe REFUTADA na mesma etapa (R6, corolário 1)
+
+**Eu escrevi no brief (§5), como suspeita a medir:**
+
+> *"O nó `Schedule Trigger` (`executeWorkflowTrigger`), que é a porta pela qual o `operador unico`
+> chama este workflow às 04h, está DESABILITADO — e a descrição afirma que ele roda 2×/dia. Se a
+> porta estiver fechada, ele roda só às 00h, a descrição mente, e muda a conta do requisito das 07h
+> da Fase 2 do ADR-37."*
+
+**Medido: ❌ falso.** A execução **`43937`** do `operador unico metricas` **chamou este workflow**, na
+subexecução **`43938`** — **com o nó desabilitado.**
+
+| | |
+|---|---|
+| **O que aprendi** | no n8n, **desabilitar o `executeWorkflowTrigger` não fecha a porta** da chamada por `Execute Workflow`. O precedente do `[P5] Entrada` (16/09) era **outro tipo de nó**, e eu generalizei |
+| **O que NÃO muda** | a descrição do workflow **está honesta**: ele roda mesmo 2×/dia · e **o requisito das 07h da Fase 2 do ADR-37 continua de pé, sem alteração de conta** |
+| **Por que fica escrito** | **hipótese desmentida também se registra.** Sem isto, a próxima auditoria vê um trigger desabilitado, levanta o mesmo alarme e repete o trabalho |
+
+---
+
+## 28.4c. 📋 O desenho original (24/09), preservado
+
 
 > ✅ **2026-09-27 — O D1-d É O PRÓXIMO DA FILA, por decisão do Olavo.** Perguntei o que vem depois de
 > o ADR-39 fechar e ele respondeu **A > B > C**: **(A) D1-d** → **(B) religar as 3 fontes paradas**

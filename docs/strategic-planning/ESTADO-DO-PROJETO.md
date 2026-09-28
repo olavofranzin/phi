@@ -106,8 +106,8 @@ que grita todo dia por caso conhecido para de ser lido.**
 | Ordem | O que | Estado |
 |---|---|---|
 | ~~1º~~ | ~~**4.4 e 4.5 do ADR-39**~~ | ✅ **FEITOS em 28/09.** O ADR-39 fechou |
-| 🔜 **1º agora** | **D1-d** — uma credencial ruim não pode derrubar a coleta de todos os clientes | 🟢 **desenho aprovado em 24/09** (ADR-38 §28.4), fila decidida em 27/09, **e a vez é agora**. ⬜ Falta o brief |
-| **3º** | **religar as 3 fontes paradas** — GA4 **20 dias**, GA4 D-30 **57 dias**, GBP **97 dias** | ⬜ é o que trava o **F5** |
+| ~~1º~~ | ~~**D1-d**~~ | ✅ **FEITO em 28/09.** `sw metricas campanhas` na versão `dfcc9b21`, **12 portas externas** com saída de erro para o nó `Campanha pulada`, que avisa no Telegram e devolve o laço ao próximo cliente. **Conferido nó a nó pelo chat-mãe: 12 de 12.** Provas: dia saudável `44123` · falha forçada `44131` (uma campanha caiu, a outra seguiu, alerta com cliente/campanha/nó/motivo) · restauração `44132` |
+| 🔜 **1º agora** | **religar as 3 fontes paradas** — GA4 **20 dias**, GA4 D-30 **57 dias**, GBP **97 dias** | ⬜ é o que trava o **F5**, e é a fonte do índice do negócio. **Falta o brief** |
 | **4º** | **F4 — o grão de anúncio** (*"quero o anúncio culpado"*) | ⬜ o que ele pediu para os 15 dias, **agora depois da coleta parar de cair** |
 
 > **O argumento da ordem, dele e meu:** os dois primeiros são *"o sistema não coleta"*. **Construir
