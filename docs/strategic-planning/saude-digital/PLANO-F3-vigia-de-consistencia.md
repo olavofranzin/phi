@@ -163,9 +163,37 @@ saudável ela devolvia zero linhas — e zero itens encerra o ramo no n8n.
 > **corolário 1 da R6** pelo lado que ninguém pratica: *hipótese desmentida se registra* vale também
 > para *defeito curado sem médico*.
 >
-> ⬜ **Aberto, e barato enquanto as execuções ainda estão no n8n:** olhar as rodadas semanais do
-> Agregador de **07/09 a 21/09** e dizer o que aconteceu com os nós GA4. **Depois da retenção, não
-> há mais o que olhar.**
+> ### 🔴 RESPONDIDO NO MESMO DIA (28/09) — e a resposta é pior do que "parou"
+>
+> **Abri a execução `41535` (21/09, rodada semanal) e li os dois nós do GA4. O dado ESTAVA LÁ.**
+>
+> | Nó, na execução `41535` | Resultado |
+> |---|---|
+> | `HTTP Request GA4 Orgânico` | ✅ **sucesso, 12 linhas**, datas de **14/09 a 20/09** |
+> | `HTTP Request GA4 Pago (LPs)` | ✅ sucesso — **2 linhas** numa passada, e **nenhuma chave `rows`** na outra |
+> | **`lastNodeExecuted`** | 🔴 **`[T28] Filter t28_meta_campaign`** |
+> | **Status da execução** | 🟢 **`success`** |
+>
+> **E quatro dias depois, em 25/09, `t28_ga4_landing` ainda tinha data máxima `06/09`.**
+>
+> ## 🔴 Então o GA4 nunca parou de coletar. A ESCRITA é que não aconteceu — e a rodada terminou verde.
+>
+> | O que parecia | O que é |
+> |---|---|
+> | *"a fonte GA4 parou 3 semanas"* | ❌ **a fonte respondeu normalmente** |
+> | *"voltou sozinha em 28/09"* | ❌ **nunca esteve fora**; o que mudou foi a rodada ter chegado até a escrita |
+> | *"execução com sucesso = dado gravado"* | 🔴 **a execução terminou num `Filter`** — e terminar num filtro é o **fim do ramo**, não o fim do trabalho |
+>
+> **Isto é o M10 quebrado com prova na mão:** *workflow ativo tem de ter saída observável; verde sem
+> produção é o modo de falha desta casa.* É **exatamente** o defeito que matou a Fase 3 por 8 dias —
+> `zero itens = fim do ramo`, verde todo dia — **agora no Agregador, e pego pelo vigia**.
+>
+> ✅ **E é o V4 que entregou isso.** Ele não achou "o GA4 parado": ele achou **uma tabela que não
+> recebeu linha** — que é a pergunta certa, porque **não depende de saber onde o caminho se rompe.**
+>
+> ⬜ **O que falta, e é do sub-chat:** achar **em que nó exato** o ramo morre entre o GA4 e a escrita,
+> e por que a rodada de **28/09** passou. **Enquanto isso não se fecha, o dado do índice pode sumir
+> de novo sem ninguém saber** — e o único aviso continua sendo o vigia, um dia depois.
 | **V5** | Algum workflow terminou **verde tendo roteado erro**? | **Agregador na cota do GBP, toda rodada** | 3 de 6 destinos vazios |
 | **V6** | O `operador unico` e o `Pipeline_v2` rodaram **na janela esperada**? | (preventiva) | rodada que não aconteceu |
 | **V7** | Quantas campanhas ficaram **sem `primary_metric_type`** ontem? | (nova, 21/09 — **ADR-40 §6.1**) | campanha julgada por régua inventada |
