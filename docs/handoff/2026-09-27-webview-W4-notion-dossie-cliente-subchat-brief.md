@@ -70,10 +70,19 @@ cd phi-dashboard-webview && git checkout webview
 > Dockerfile  = Dockerfile   (o da RAIZ, não o de webview/)
 > ```
 >
-> **Por que é este:** é o único coerente (`COPY . .` traz `src/` e `server/`), e o site **está no ar**
-> com commits posteriores a 23/09 — logo, algum build passou depois da tentativa quebrada.
-> ⚠️ **Isto é inferência forte, não leitura do painel.** A confirmação de 30 segundos é do Olavo, no
-> EasyPanel. **Não bloqueia o W4:** o dossiê não depende de Docker.
+> ✅ **CONFIRMADO NO PAINEL DO EASYPANEL — Olavo, 2026-09-28.** Não é mais inferência:
+>
+> | Campo no EasyPanel | Valor |
+> |---|---|
+> | Repositório | `olavofranzin/phi-dashboard-webview` |
+> | Ramo | **`webview`** |
+> | Caminho de Build | **`/`** |
+> | Construção | Dockerfile |
+> | **Arquivo** | 🟢 **`Dockerfile`** — o da **raiz** |
+>
+> **O comentário da linha 7 do `Dockerfile` da raiz — *"Dockerfile = webview/Dockerfile"* — é falso,
+> e foi ele que me enganou.** Um artefato que descreve errado a própria configuração é testemunha
+> falsa (R13, regra 3): documentar a intenção no lugar do que está valendo.
 >
 > 🔴 **A armadilha que sobra, e que não é sua para consertar:** quem editar `webview/package.json`,
 > `webview/vite.config.ts` ou `webview/index.html` **mexe em arquivo morto e não vê efeito nenhum.**
