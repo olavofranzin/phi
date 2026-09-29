@@ -539,6 +539,42 @@ rodada**, depois do laço, e aplica **a presença de id do primeiro cliente às 
 > todos os clientes). **Não medi uma ocorrência real.** Vale a **R6 corolário 2** contra mim mesmo:
 > *este número eu medi, ou eu li?* **Li o código — não vi acontecer.**
 
+### 🟡 O `sd[0]` foi medido e **não** apareceu — e por que isso não o absolve (**R6 corolário 1**)
+
+**Registro obrigatório de hipótese não confirmada**, para a próxima auditoria não levantar o mesmo
+alarme e o trabalho não se repetir.
+
+| | |
+|---|---|
+| **Hipótese (minha, 29/09)** | o `Reclassifica IDs (not_configured)` lê `sd[0]` e aplica a presença de id do **primeiro** cliente às linhas de **todos** |
+| **Medição** | execução **`44239`** (saudável) — **a ocorrência não apareceu** |
+| 🔴 **Por que a medição não decide** | a `44239` rodou com **um cliente**. **Com um cliente, `sd[0]` É o cliente certo** — o defeito é *"aplica a todos"*, e não havia "todos". **A medição não refutou: ela não teve como testar** |
+
+> **É a lição de 18/09 aplicada ao teste em vez do nó:** *"o que acontece no dia em que ela não pega
+> nada?"* Aqui o teste **não pegou nada porque não havia o que pegar** — e um teste que não pode
+> falhar não é prova, **é um verde a mais**.
+
+**A forma permanece provada** (o `sd[0]` está no código; o `Set dados` carrega todos os clientes,
+porque é ele que alimenta o `Loop`). **O que não está provado é a ocorrência.**
+
+**E há uma guarda que torna o disparo raro:**
+
+```js
+const na = (key, present) => { if (!present && ss[key] !== 'ok') ss[key] = 'not_configured'; };
+```
+
+`ss[key] !== 'ok'` **protege fonte que respondeu bem.** O estrago exige **três condições juntas**:
+(1) mais de um cliente na rodada; (2) o **primeiro** sem um id que um **posterior** tem; (3) essa
+fonte **não** ter retornado `ok` para o posterior.
+
+| | |
+|---|---|
+| **Classificação** | **defeito real na forma · raro no disparo · silencioso quando dispara** |
+| 🔴 **Por que ainda importa** | quando dispara, troca `error`/`missing` por `not_configured` — **troca um alarme por um "de propósito"**. Um falso alarme incomoda; **um alarme que não toca engana** |
+| 🟢 **Decisão (29/09)** | **não consertar nesta volta.** Fica **latente, com a condição de disparo escrita**. O conserto — leitura pareada por `client_id`, como manda este ADR — viaja **na próxima vez que esse nó for aberto** |
+| **Por quê não agora** | é obra nova em produção no mesmo dia de outra obra, e a **R11** é explícita: *salvaguarda é código novo e exige o mesmo smoke que a mudança que ela protege* |
+| **Onde o teste sai de brinde** | o **teste da ordem invertida** (`CLI-13` sem GA4, depois `CLI-4` com GA4) é **exatamente** a condição 1+2. **Um teste, dois critérios** |
+
 ### 🔴 E o passivo maior está ao lado, não medido
 
 A mesma volta encontrou **318 linhas de `t28_campaign`, 2 de `t28_ga4_landing` e 1 de

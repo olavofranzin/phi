@@ -9,6 +9,7 @@
 | **Branch dos documentos** | `claude/consolidacao-2026-08` · `https://github.com/olavofranzin/phi/tree/claude/consolidacao-2026-08` |
 | **Janela** | 🔴 **09h–23h BRT (D9)** |
 | **Limite** | **3 voltas** |
+| 🔵 **ESTADO** | **Construído em draft, NÃO publicado — e está certo assim.** Falta o teste invertido contra o **draft atual**. 🔴 **Leia o §0.3: o `CA13` NÃO está cumprido** (a medição não podia falhar) |
 | 🟢 **EMENDA 29/09** | 🔴 **LEIA O §0.1 E O §0.2 ANTES DE TUDO.** §0.1: o passo 1 rodou e derrubou uma premissa **minha** — a Clarity **não se recoleta** (72h) e a **porta dela fecha**. §0.2: **li o workflow ativo** — o conserto da Clarity custa **um nó e uma linha**, e **achei um defeito novo** no guarda `Reclassifica IDs` |
 
 ---
@@ -162,6 +163,97 @@ rodada**, depois do laço, e aplica **a presença de id do primeiro cliente às 
 > **O conserto, se a medição confirmar:** trocar `sd[0]` por leitura pareada por `client_id`, do mesmo
 > jeito que o 2.3 manda para o adaptador. **É o mesmo conserto, no mesmo ADR.**
 
+---
+
+## 0.3. 🔵 ESTADO EM 2026-09-29, fim do dia — construído, **não publicado**, e está certo assim
+
+**O executor parou porque a condição do §4 não foi cumprida. Isso não é volta reprovada — é a
+pré-autorização funcionando.** O §4 diz *"uma das duas sem prova ⇒ não publique"*, e a prova que ele
+tinha era **de um draft anterior**. **Parar foi obedecer.**
+
+| O que está pronto | Onde |
+|---|---|
+| carimbo por **cliente / fonte / janela** + casamento por chave + **`Filtro Clarity?`** | **draft** do Agregador |
+| execução saudável **`44239`** passou: CLI-4 GA4 orgânico **19** / pago **4**; Normalizador **1** `t28_campaign` + **2** `t28_ga4_landing`; **Clarity `not_configured`, zero linhas** | ✅ **`CA5` e `CA12`** |
+| `t28_clarity_daily` fora do V4, **com o motivo escrito** | **draft** do V4 |
+| **produção intacta** | Agregador `c54114b3-…` · V4 `125b437b-dcce-414b-839f-8e61ffd2a3a9` |
+
+> ⚠️ **A R9 fala de "limite de 3 voltas" para trabalho REPROVADO.** As três voltas desta etapa não
+> foram reprovações: **volta 1 refutou minha premissa do `lastNodeExecuted`, volta 2 mediu o passivo,
+> volta 3 matou a recoleta do Clarity e achou o guarda sem irmão.** **Etapa que devolve achado a cada
+> volta não é execução falhando — é medição funcionando.** O limite não dispara aqui.
+
+### 🔴 O `CA13` não está cumprido — a medição não podia falhar
+
+**Ele mediu e a ocorrência do `sd[0]` não apareceu. Mas olhe onde ela foi medida:** a `44239` é a
+execução **saudável**, e os números relatados são **de um cliente só**.
+
+> 🔴 **Se a rodada tem um cliente, `sd[0]` É o cliente certo.** O defeito é *"aplica o id do primeiro
+> a todos"* — **com um só, não há "todos".** A medição não desmentiu a hipótese: **ela não teve como
+> testá-la.** É a lição de 18/09 outra vez, do lado do teste: *"o que acontece no dia em que ela não
+> pega nada?"* — aqui, **o teste não pegou nada porque não havia o que pegar.**
+
+**E o teste que falta é o mesmo que já está na fila:** a ordem invertida (`CLI-13` depois `CLI-4`) é
+**exatamente** a condição do defeito — dois clientes, e **o primeiro sem o `id_ga4` que o segundo
+tem**. 🟢 **Um teste, dois critérios: `CA4` e `CA13` saem juntos.**
+
+**Mas nem esse teste garante que o defeito apareça** — e isto é a parte honesta:
+
+```js
+const na = (key, present) => { if (!present && ss[key] !== 'ok') ss[key] = 'not_configured'; };
+```
+
+**A guarda `ss[key] !== 'ok'` protege fonte que respondeu bem.** Então o estrago só se materializa
+com **três condições ao mesmo tempo**:
+
+| # | Condição |
+|---|---|
+| **1** | mais de um cliente na rodada |
+| **2** | o **primeiro** cliente **sem** um id que um cliente **posterior tem** |
+| **3** | 🔴 e essa fonte **não** ter retornado `ok` para o cliente posterior (ou seja, ter dado `error`/`missing`) |
+
+> **Veredito: defeito real na forma, raro no disparo, e silencioso quando dispara** — ele troca um
+> alarme (`error`/`missing`) por um "de propósito" (`not_configured`). **Isso é pior que um falso
+> alarme: é um alarme que não toca.**
+>
+> 🟢 **DECISÃO: não consertar nesta volta.** O executor fez certo em não mexer. Fica **registrado como
+> defeito latente com a condição de disparo escrita**, e o conserto (leitura pareada por `client_id`)
+> viaja **na próxima vez que alguém abrir esse nó**. Consertar agora é obra nova em produção no mesmo
+> dia de outra obra — e a R11 é clara sobre salvaguarda instalada às pressas.
+
+**`CA13` passa a ser:** *"o `Reclassifica IDs` foi medido **numa rodada com mais de um cliente**, e
+está consertado **ou** registrado como latente com a condição de disparo"*. **O segundo já está feito
+aqui.** O primeiro sai de brinde do teste invertido.
+
+### 🟢 Siga. A pré-autorização do §4 continua valendo, e agora com duas ordens
+
+| # | O que |
+|---|---|
+| **1** | rode o **teste invertido contra o draft ATUAL** (§3). Ele é `CA4` **e** `CA13` |
+| **2** | 🔴 **durante ele, olhe o `source_status` das linhas do `CLI-4`.** Se algum ficar `not_configured` tendo id, **o defeito do `sd[0]` apareceu** — aí **pare e me diga**, não conserte |
+| **3** | passou ⇒ **publique os DOIS drafts na mesma janela** (Agregador **e** V4) |
+| **4** | prove os dois com `versionId == activeVersionId` (**R13**) |
+
+> 🔴 **Publicar o Agregador e esquecer o V4 é o pior dos dois mundos:** a porta da Clarity fecha, a
+> tabela para de receber linha, **e o vigia continua cobrando a tabela.** Alarme diário, para sempre,
+> por uma tabela que fechamos de propósito. **Os dois drafts são um só movimento.**
+
+### ⚠️ Forçar a ordem dos clientes vale a R12 inteira
+
+Igual ao §5, e pelo mesmo motivo:
+
+| | |
+|---|---|
+| **Declare antes** | o que muda, para qual valor, por quanto tempo |
+| **Desfaça na mesma sessão** e **prove relendo** | não lembrando |
+| 🔴 **Se forçar a ordem exigir mais de uma alteração** | **PARE e devolva.** Duas mudanças para montar um teste em workflow ativo é obra, não teste |
+
+### ⚠️ E a alteração local no `CONTRATO-PHI.md`
+
+**Você fez certo em não tocar.** Mas **me diga o que ela é** — cole o `git diff`. O container é
+efêmero: **alteração não commitada morre com ele.** Se for trabalho de alguém, ela precisa de commit
+ou de descarte **declarado** — não de esquecimento.
+
 ## 1. ✅ Passo 1 — FEITO EM 29/09 (a medição que tem prazo). `CA1` cumprido — ver §0.1
 
 **As 6 linhas cobrem 13/09 e 20/09.** Recoletar só é possível enquanto a fonte guardar o período.
@@ -220,6 +312,8 @@ forçado** e confirme que as 6 fontes escrevem o que escreviam.
 
 **Uma das duas sem prova ⇒ não publique. Relate e devolva.**
 
+🔴 **E são DOIS drafts, num só movimento (emenda §0.3): o Agregador E o V4.** Publicar a porta fechada e deixar o V4 cobrando a tabela cria **alarme diário para sempre** numa tabela que fechamos de propósito. Produção hoje: Agregador `c54114b3-…` · V4 `125b437b-dcce-414b-839f-8e61ffd2a3a9` — **os dois são o rollback.**
+
 Depois de publicar: **releia e confirme** `versionId == activeVersionId` (**R13**).
 
 ---
@@ -267,7 +361,7 @@ Depois de publicar: **releia e confirme** `versionId == activeVersionId` (**R13*
 | **CA10** | A descrição do Agregador conta o que mudou (**R5**) | duas frases |
 | 🆕 **CA11** | 🔴 **`t28_clarity_daily` saiu da lista do `V4`**, com o motivo escrito | senão o vigia **grita todo dia para sempre** |
 | 🆕 **CA12** | O envelope da Clarity **existe e diz `not_configured`** | provado **relendo o nó**, não pelo log (**R13**) |
-| 🆕 **CA13** | O `Reclassifica IDs` foi **medido** (§0.2 / 2.7) — e está consertado **ou** está declarado por que não precisava | a medição, colada |
+| 🆕 **CA13** | 🔴 **REESCRITO em §0.3.** O `Reclassifica IDs` foi medido **numa rodada com MAIS DE UM cliente** — e está consertado **ou** registrado como **latente, com a condição de disparo** | ⚠️ medir com **um** cliente não vale: `sd[0]` é trivialmente o certo. **A metade do registro já está feita no §0.3** |
 
 ---
 
