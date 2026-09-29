@@ -72,3 +72,23 @@ Pela documentação do Google e pelos relatos públicos da comunidade:
 - [Prerequisites — Google Business Profile APIs](https://developers.google.com/my-business/content/prereqs)
 - [My Business API enabled but 0 quota (Google Cloud Dev)](https://groups.google.com/g/google-cloud-dev/c/-PMXjld3OL8)
 - [Business Profile API quota increase request — no response from Google](https://support.google.com/business/thread/222003029/business-profile-api-quota-increase-request-no-response-from-google?hl=en)
+
+---
+
+## ✅ Fechamento — 2026-09-29: o pedido foi feito, e agora tem prazo
+
+**O Olavo enviou a solicitação ao Google.** Prazo informado pelo próprio Google: **7 a 10 dias úteis**
+para verificar.
+
+| | |
+|---|---|
+| **Pedido enviado** | **29/09** |
+| **Resposta esperada** | entre **08/10** e **13/10** (7 a 10 dias úteis) |
+| 🔴 **O que isso muda no projeto** | **o GBP sai da mesa de decisão e vira espera.** Nada deve ficar bloqueado nele: os 12 indicadores e 2 pilares que dependem do GBP continuam **declarados como não cobertos** (não como zero — **S1**) até a liberação |
+| **Gatilho de cobrança** | **13/10.** Se não houver resposta, o próximo passo é **cobrar**, não replanejar |
+
+> 🔴 **Enquanto a cota for `DefaultRequestsPerMinutePerProject = 0`, nenhuma tentativa de chamada
+> muda nada** — e continuar tentando só gasta execução. A porta abre do lado do Google.
+
+> ⚠️ **E quando abrir, o `t28_gbp_daily` não nasce pronto:** ele tem **1 linha, de 21/06**. Liberar a
+> API é a condição, **não a coleta**. A coleta é etapa própria, depois do sim.

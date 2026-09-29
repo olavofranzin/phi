@@ -395,6 +395,150 @@ ainda guardar aquele período**:
 > e é barata. Se já tiver passado, a saída honesta é **apagar e declarar o buraco**, nunca
 > reconstruir por estimativa (**S1**: o que não foi medido não vira número).
 
+### ✅ Medido em 2026-09-29 — o prazo venceu, e a resposta certa não era recoletar
+
+**A primeira medição da volta 3 derrubou a quarta premissa desta etapa — e esta era minha.**
+
+**O que o executor mediu, antes de tocar em nó nenhum:**
+
+| # | Medição | Consequência |
+|---|---|---|
+| **1** | a API usada consulta **só as últimas 72 horas** | 13/09 e 20/09 **morreram**. Recoletar Clarity é **impossível** |
+| **2** | o cadastro **não tem** projeto/ID Clarity por cliente | não existe chave de cliente para casar |
+| **3** | o nó usa **um único projeto fixo** em todas as passagens do `Loop` | o dado é **sempre do mesmo projeto**, seja qual for o cliente da vez |
+| **4** | o payload **não devolve** `project_id` | o `source_id` **não pode vir da resposta** |
+
+> 🔴 **O item 3 é maior que o defeito que fomos consertar.** O `nodeFirst()` grava o dado no cliente
+> errado **por acidente de ordem**. O projeto fixo grava o dado do mesmo projeto em **qualquer**
+> cliente **por construção** — e nenhuma correção de índice no adaptador conserta isso, porque não
+> há o que indexar.
+
+**A falta de um ID de projeto por cliente virou "vale para todos". É o quarto caso da R11 regra 1
+nesta casa** — e o primeiro em que o vazio não estava num filtro nem numa busca, mas **na ausência de
+um campo de cadastro**.
+
+#### A decisão já existia, e eu não a li antes de escrever o brief
+
+`saude-digital-do-negocio/CONTRATO-DE-FONTES-v0.md` **§1.1**, decisão do Olavo de **25/09**:
+
+> *"`t28_clarity_daily` **deixa de ser fonte do índice** — a integração zerada **sai do parque em vez
+> de entrar na fila de conserto**."*
+
+**O brief da volta 3 pôs a Clarity na fila de conserto.** Escrevi o `CA2` como *"as **6 fontes**
+carimbam..."* herdando o número da topologia do Agregador, **sem conferir o contrato de fontes** —
+que é justamente o documento que manda na construção. É a **R7** quebrada por mim: não procurei o
+que já existia. E é a **R6 corolário 2** no seu formato mais barato: *este número eu medi, ou eu li?*
+**Eu nem li — eu contei nós.**
+
+> **Custo de obedecer: um `grep`. Preço pago: o executor parou a etapa inteira esperando uma decisão
+> que estava tomada havia quatro dias.**
+
+#### O que fica decidido — e não é nenhuma das três opções apresentadas
+
+🔴 **A porta da Clarity fecha com carimbo explícito. Ela não sai do envelope — ela entra no envelope
+como "não configurada".**
+
+| | |
+|---|---|
+| **O envelope continua cobrindo as 6 fontes** | o `CA2` **não reprova** — *"inclusive quando vazias"* é **exatamente** este caso |
+| **O envelope da Clarity carrega** | `source_id = null` · `source_status = 'not_configured'` · **zero linhas** |
+| **O vazio passa a ser "pare", escolhido** | hoje ele é **"todos"**, herdado. **É a diferença inteira** |
+| **Ninguém perde consumidor** | a Clarity está **fora do índice** por decisão de 25/09; o **ADR-42** já a registra como *"hoje sem consumidor"* |
+| **E isso é o M11, não conveniência** | *dado escrito tem consumidor declarado.* Sem consumidor, **escrever é o erro** — parar de escrever é o conserto |
+
+**Por que não a opção 3 como foi proposta:** *"retirar a Clarity desta construção"* deixaria a porta
+como está — **escrevendo linha para o cliente da vez**. Tirar do escopo não fecha porta. **Fechar a
+porta é a correção; tirar do escopo era só adiá-la.**
+
+**Por que não a opção 2:** criar configuração por cliente é construir cadastro, credencial e schema
+para uma fonte que **não alimenta nada**. É o inverso da ordem certa.
+
+**Por que não a opção 1:** declarar a Clarity como *"exclusiva do KIL/CLI-4"* põe a regra **dentro do
+nó**, em comentário. No dia em que entrar um segundo projeto, a regra não avisa — **volta a escrever
+para todos, em silêncio.** É o modo de falha da casa.
+
+#### As três consequências que viajam com a decisão
+
+| # | Consequência | Onde |
+|---|---|---|
+| **1** | 🔴 **`t28_clarity_daily` sai da lista do `V4` na mesma sessão** | o V4 pergunta *"toda tabela **que tem writer declarado** recebeu linha?"* — sem tirar, o vigia **grita todo dia para sempre**, e **alarme que sempre grita é alarme desligado** |
+| **2** | as **2 linhas de Clarity** sob o `CLI-13` **se apagam e não se recoletam** | e o buraco **não precisa ser declarado a consumidor nenhum** — não há consumidor. O `S1` fica respeitado por não haver número |
+| **3** | a porta **reabre por dado, não por código** | 🟢 **e o mecanismo já existe** — ver a leitura do artefato abaixo. O `id` mora no **cadastro do Notion** (`Get database clientes` → `Set dados`), não no `client_config`. 🔴 **Nada é criado agora** |
+
+#### O que NÃO fica decidido aqui
+
+**Aposentar a integração da Clarity** (o procedimento de 5 passos da **R5**) **não é esta decisão.**
+Fechar a porta com `not_configured` já entrega o comportamento honesto sem mexer na topologia de um
+workflow ativo na mesma sessão do conserto de identidade.
+
+> **Gatilho da aposentadoria:** o **item 7 do §7 do contrato de fontes** — *"verificar se o script da
+> Clarity está instalado"*. **Se não estiver, a ferramenta não serve nem ao novo papel**, e aí a
+> integração se aposenta pela R5, com sticky e nome. **Duas pontas soltas que são a mesma ponta.**
+
+### 🟢 Lido no ar em 2026-09-29 — o conserto da Clarity custa **um nó e uma linha**
+
+**Li o Agregador ativo** (`versionId == activeVersionId == c54114b3-fdf3-46c7-83fb-20c3bdffee54`,
+`sameAsDraft: true` — **R13** satisfeita) **antes de estimar o custo. A estimativa caiu por um
+fator grande, e para baixo.**
+
+#### O guarda que eu ia propor já existe — e foi construído em 18/08
+
+| O que existe, vivo | Evidência |
+|---|---|
+| `Filtro GA4?` · `Filtro Google Ads?` · `Filtro GBP?` | três nós **antes** da chamada HTTP, testando `$('Set dados').item.json.id_ga4` / `id_google_customer` / `id_gbp_local` com `notEmpty` |
+| `Reclassifica IDs (not_configured)` | nó de código que **já emite `source_status = 'not_configured'`** — exatamente o valor que esta decisão precisa |
+| 🔴 **A Clarity não tem nenhum dos dois** | `HTTP Request Clarity` pende **direto da saída 1 do `Loop`**, ao lado dos filtros dos outros — **sem filtro, sem id, sem guarda** |
+
+> 🔴 **O defeito que caçamos por duas voltas mora exatamente no buraco que o endurecimento de 18/08
+> não cobriu.** A casa já tinha decidido, em agosto, que **fonte sem id não é chamada**. A Clarity
+> ficou fora dessa decisão — e foi a única fonte cuja porta permaneceu aberta para todo mundo.
+
+**O conserto, então, não é desenho novo. É o quarto irmão de três que já existem:**
+
+| # | O que fazer | Molde |
+|---|---|---|
+| **1** | `Filtro Clarity?` antes do `HTTP Request Clarity`, testando `$('Set dados').item.json.id_clarity` com `notEmpty` | **cópia** do `Filtro GBP?` |
+| **2** | uma linha em `Reclassifica IDs`: `na('clarity', hasClarity)` | as outras cinco já estão lá |
+
+> **E o campo `id_clarity` não precisa existir para a porta fechar.** Campo ausente ⇒ `undefined` ⇒
+> `notEmpty` falso ⇒ **zero chamadas, zero linhas, `not_configured` carimbado.** O dia em que um
+> cliente tiver projeto de verdade, **o campo entra no cadastro do Notion e a porta abre sozinha —
+> sem tocar em código.** É o vazio escolhido de propósito (**R11 regra 5**), e ele se abre por dado.
+>
+> ⚠️ **Correção do que escrevi antes nesta mesma sessão:** eu disse que o id entraria no
+> `client_config`. **Errado.** Os três guardas leem do **`Set dados`, alimentado por
+> `Get database clientes` — o cadastro do Notion.** Escrevi a intenção em vez de ler o artefato, que é
+> a **R13 regra 3** contra a qual eu mesmo escrevi a regra.
+
+**Ganho de brinde:** hoje o `HTTP Request Clarity` é chamado **uma vez por cliente, toda semana**,
+sempre contra o mesmo projeto fixo. Fechar a porta **para de gastar a chamada**, além de parar de
+gravar a linha.
+
+#### 🔴 E achei um defeito novo, da mesma família, no próprio guarda
+
+`Reclassifica IDs (not_configured)` lê os ids assim:
+
+```js
+const sd = $('Set dados').all();
+const ids = (sd && sd[0] && sd[0].json) ? sd[0].json : {};
+```
+
+**`sd[0]` é o PRIMEIRO cliente. E o `Set dados` carrega todos** — é ele que alimenta o `Loop`
+(`Get database clientes` → `Set dados` → `Code prepara datas` → `Loop`). O nó roda **uma vez por
+rodada**, depois do laço, e aplica **a presença de id do primeiro cliente às linhas de todos**.
+
+| | |
+|---|---|
+| **Os três filtros acertam** | usam `$('Set dados').**item**` — item pareado, um por cliente |
+| 🔴 **O guarda erra** | usa `.all()[0]` — **identidade por posição**, o defeito deste ADR |
+| **E ele diz isso no próprio comentário** | *"Lê os IDs do cliente **do mesmo jeito que o Adaptador** (primeiro item de `Set dados`)"* — e o jeito do Adaptador é **o defeito provado em 28/09** |
+| **Estrago possível** | ele **não** rebaixa um `ok` (a guarda `ss[key] !== 'ok'` protege). Mas **converte `error`/`missing` em `not_configured`** para um cliente que **tem** o id, quando o primeiro cliente não tem |
+| 🔴 **Por que isso é grave** | `not_configured` significa *"de propósito"*. **Transformar falha em ausência deliberada é desligar o alarme** — é a doença da **R11** na forma mais pura: o nó construído para evitar **falso alarme** pode produzir **falso silêncio** |
+
+> **Não meça isto por dedução, meça.** Eu provei a **forma** (o `sd[0]`, e que o `Set dados` carrega
+> todos os clientes). **Não medi uma ocorrência real.** Vale a **R6 corolário 2** contra mim mesmo:
+> *este número eu medi, ou eu li?* **Li o código — não vi acontecer.**
+
 ### 🔴 E o passivo maior está ao lado, não medido
 
 A mesma volta encontrou **318 linhas de `t28_campaign`, 2 de `t28_ga4_landing` e 1 de

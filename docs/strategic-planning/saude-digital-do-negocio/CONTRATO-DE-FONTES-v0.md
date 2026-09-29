@@ -44,6 +44,43 @@
 | O grão que faltava (URL, dispositivo, origem) | 🟢 **o GA4 tem nativamente** — o que a Clarity agregada nunca daria |
 | ⚠️ **Pendência que não desaparece** | os zeros podem significar **script não instalado**. Se for isso, o mapa de calor também não existe, e a ferramenta não serve nem ao novo papel. **Verificar é execução** |
 
+#### 🟢 2026-09-29 — a decisão de 25/09 ganhou mecanismo (e cobrou um preço)
+
+**"Sai do parque" era uma frase. Agora tem forma:** a porta da Clarity no Agregador **fecha com
+carimbo** — `source_id = null`, `source_status = 'not_configured'`, **zero linhas**. Não se remove a
+fonte do envelope: **declara-se o vazio.** (Desenho em `saude-digital/adr-rascunhos/ADR-33`, seção de
+29/09.)
+
+**O que a medição de 29/09 acrescentou a este §1.1 — e nenhum dos quatro itens era conhecido aqui:**
+
+| # | Medido | Por que importa para este contrato |
+|---|---|---|
+| **1** | a API consulta **só as últimas 72 horas** | 🔴 **a Clarity agregada nunca poderá ser recoletada.** Qualquer indicador que dependesse de histórico dela era impossível **antes** de ser decidido |
+| **2** | não há projeto/ID Clarity **no cadastro** | não havia como ligar dado da Clarity a cliente. **O selo `ferramenta` não era só a escolha certa — era a única disponível** |
+| **3** | 🔴 o nó usa **um projeto fixo** em toda passagem do `Loop` | **todo dado de Clarity no BigQuery é do mesmo projeto**, gravado sob o cliente da vez. Os zeros do §1.1 podem ser **de outro ativo**, não do cliente |
+| **4** | o payload não devolve `project_id` | não há como auditar de quem é o dado que já está gravado |
+
+> 🔴 **O item 3 muda o item 7 do §7.** A pendência estava escrita como *"verificar se o script da
+> Clarity está instalado"* — **pressupondo que o número zerado era do cliente.** Com um projeto fixo
+> para todos, o zero pode ser do projeto errado. **A verificação continua valendo; a conclusão que se
+> pode tirar dela, não.** Verificar o script responde *"a ferramenta serve?"* — **não** responde
+> *"por que a tabela veio zerada"*.
+
+**Consequência para o vigia (`PLANO-F3`, V4):** `t28_clarity_daily` **sai da lista de tabelas
+cobradas**, junto com o fechamento da porta. O V4 só cobra tabela **com writer declarado** — e sem
+tirar, **o vigia grita todo dia para sempre.** *Alarme que sempre grita é alarme desligado.*
+
+**Reabertura:** por **dado**, não por código — e 🟢 **o mecanismo já existe**. A leitura do workflow
+ativo em 29/09 mostrou **três guardas iguais já construídos em 18/08** (`Filtro GA4?`,
+`Filtro Google Ads?`, `Filtro GBP?`) testando o id do cliente com `notEmpty`, mais o nó
+`Reclassifica IDs (not_configured)` que **já emite o selo**. **A Clarity é a única fonte sem guarda** —
+e é por isso que a porta dela ficou aberta para todo mundo. Fechar custa **um nó e uma linha**.
+
+⚠️ **Correção:** escrevi antes que o id entraria no `client_config`. **Errado** — os guardas leem do
+`Set dados`, alimentado por `Get database clientes`: **o cadastro do Notion**. 🔴 **E o campo não
+precisa existir para a porta fechar:** ausente ⇒ `notEmpty` falso ⇒ zero chamadas. **Nada foi criado**
+— schema para fonte sem consumidor é a **R7** do outro lado.
+
 ### 1.2. `não coletamos` é resposta válida
 
 Sem esse selo o documento viraria lista de desejos. **Com ele, a ausência é decisão registrada** — e para de reaparecer em toda auditoria.
