@@ -622,6 +622,59 @@ publicado** — custa uma linha e **uma republicação a menos**; (3) 🔴 **o G
 ausente ⇒ não reclassifica e sinaliza — nunca cair para `[0]`, nunca para "todos"** (**R11 regra 1**,
 que é exatamente o que criou este defeito). A guarda `ss[key] !== 'ok'` **fica**.
 
+### ✅ AS-BUILT — 2026-09-29: a extensão do ADR-33 no Agregador está NO AR
+
+**O real bate com o desenho.** Registrado na mesma sessão (**R2**).
+
+| O que foi construído | Onde |
+|---|---|
+| carimbo por **`client_id` + `source` + `source_id` + janela**, conservado inclusive quando vazio | Agregador `ecec7073-a8ef-4d98-9502-ba2fb8c08d67` |
+| adaptador **indexa por chave** — saiu o `nodeFirst()`, saiu a posição de array | idem |
+| `Filtro Clarity?` — **porta fechada**, `not_configured`, zero linhas, zero chamadas | idem |
+| `Reclassifica IDs` — **índice por `client_id`, sem fallback posicional**; chave ausente **preserva o status** e emite **`CLIENT_IDS_NOT_FOUND`** | idem |
+| `t28_clarity_daily` fora do `V4` | vigia `9f443157-8787-444a-9bf0-11d1fd3d7981` |
+| **rollbacks preservados** | Agregador `c54114b3-…` · V4 `125b437b-…` |
+
+**As provas, contra o draft final:**
+
+| Teste | Resultado |
+|---|---|
+| saudável `44507` | GA4 orgânico 20 / pago 4 · GBP **`error`** · Clarity **`not_configured`** |
+| 🎯 invertido `44510` | **zero linhas sob `CLI-13`** · só `CLI-4` · **GBP continuou `error`** |
+
+> 🟢 **O `CA13` passou no lugar exato onde havia falhado:** na `44493` o GBP virava
+> `not_configured`; na `44510` ele **segue `error`**. **O alarme voltou a tocar** — e a API do GBP
+> volta do Google entre **08 e 13/10**, para dentro de um cano que agora diz a verdade sobre ela.
+
+> 🟢 **`CLIENT_IDS_NOT_FOUND` é a R11 regra 1 cumprida ao pé da letra.** Chave ausente não virou *"o
+> primeiro"* nem *"todos"* — virou **sinal com nome**. É assim que o guarda devia ter nascido em
+> 18/08.
+
+#### 🔴 Achado do fechamento: o Agregador não sabe fazer backfill
+
+A recoleta de 13/09 e 20/09 **parou no gate do §5**: duas datas exigem **duas trocas de janela**, e
+uma alteração única que emitisse as duas **exigiria mexer no adaptador** — *"ele agrupa somente por
+cliente e colapsaria as janelas"*.
+
+| | |
+|---|---|
+| **O que isso é** | **uma rodada = uma janela.** Para um workflow semanal nunca incomodou |
+| 🔴 **Quando vai doer** | **no dia em que o Índice de Saúde Digital precisar de histórico.** É a parede que espera aquela frente |
+| **Encaminhamento** | **tarefa própria, não construir agora.** Registrar para a frente do Índice saber |
+
+#### A recoleta saiu — e com ela mudou a justificativa do apagamento
+
+**O Olavo autorizou apagar em 28/09 sob a premissa** *"recoletar primeiro, apagar depois"*. **Sem
+recoleta, apagar deixa de ser troca e vira perda** ⇒ premissa diferente ⇒ **decisão nova, dele**
+(**R6**: antes de ação irreversível, verifique a premissa que a justifica, **mesmo com o plano
+aceito**).
+
+**Recomendação registrada: apagar mesmo assim** — (1) linha sob o cliente errado é **afirmação
+falsa**, pior que buraco; (2) **o GA4 ainda tem o dado** — falta caminho de ingestão, não fonte; (3)
+remarcar exigiria afirmar que as linhas **são do `CLI-4`**, e provamos apenas que **não são do
+`CLI-13`** — *escrever inferência em tabela de fato foi como chegamos aqui*; (4) o conserto **já está
+no ar**, então apagar não deixa mais *"buraco E defeito"*.
+
 ### 🔴 E o passivo maior está ao lado, não medido
 
 A mesma volta encontrou **318 linhas de `t28_campaign`, 2 de `t28_ga4_landing` e 1 de

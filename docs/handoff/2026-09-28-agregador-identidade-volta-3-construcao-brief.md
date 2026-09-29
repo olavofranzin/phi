@@ -9,7 +9,7 @@
 | **Branch dos documentos** | `claude/consolidacao-2026-08` · `https://github.com/olavofranzin/phi/tree/claude/consolidacao-2026-08` |
 | **Janela** | 🔴 **09h–23h BRT (D9)** |
 | **Limite** | **3 voltas** |
-| 🔵 **ESTADO** | **Draft, não publicado.** 🟢 **`CA4` PASSOU** na `44493` — zero linhas sob `CLI-13` na ordem que causou o defeito. 🔴 **`CA13` REPROVOU** — o `sd[0]` foi provado. **LEIA O §0.4: revertei a decisão, conserta AGORA antes de publicar** |
+| ✅ **ESTADO** | **PUBLICADO em 29/09.** Agregador `ecec7073-…` · V4 `9f443157-…`, os dois com `versionId == activeVersionId`. 🟢 **`CA4` e `CA13` passaram** (`44507` e `44510`): zero linhas sob `CLI-13` **e o GBP continuou `error`** — o alarme voltou a tocar. 🔴 **Pendente: o apagamento das 6 linhas**, e a premissa dele mudou. **Ver §0.5** |
 | 🟢 **EMENDA 29/09** | 🔴 **LEIA O §0.1 E O §0.2 ANTES DE TUDO.** §0.1: o passo 1 rodou e derrubou uma premissa **minha** — a Clarity **não se recoleta** (72h) e a **porta dela fecha**. §0.2: **li o workflow ativo** — o conserto da Clarity custa **um nó e uma linha**, e **achei um defeito novo** no guarda `Reclassifica IDs` |
 
 ---
@@ -331,6 +331,87 @@ depois do 2.1/2.4.
 | **1** | **teste saudável** (§3, sem nada forçado) — as 6 fontes escrevem o que escreviam |
 | **2** | **teste invertido** (§3) — e agora ele tem **dois** critérios de saída: **zero linhas sob `CLI-13`** (`CA4`) **e** `gbp` **continuar `ok`/`error` sob `CLI-4`, nunca `not_configured`** (`CA13`) |
 | **3** | passou nos dois ⇒ **publique os dois drafts** (Agregador **e** V4), e prove com `versionId == activeVersionId` |
+
+---
+
+## 0.5. ✅ FECHAMENTO — publicado em 2026-09-29. E o gate do §5 achou algo maior que a recoleta
+
+### O que está no ar
+
+| | |
+|---|---|
+| **Conserto do `sd[0]`** | índice por `client_id`, **sem fallback posicional**; chave ausente **preserva o status** e emite `CLIENT_IDS_NOT_FOUND` |
+| **Agregador publicado** | `ecec7073-a8ef-4d98-9502-ba2fb8c08d67` · `versionId == activeVersionId` |
+| **V4 publicado** | `9f443157-8787-444a-9bf0-11d1fd3d7981` · `versionId == activeVersionId` |
+| **Rollbacks preservados** | Agregador `c54114b3-…` · V4 `125b437b-…` |
+| **R12** | `Set dados` restaurado com **igualdade integral** |
+
+**Os dois testes, contra o draft final:**
+
+| Teste | Resultado |
+|---|---|
+| **saudável `44507`** | GA4 orgânico **20**, pago **4** · GBP **`error`** · Clarity **`not_configured`** |
+| 🎯 **invertido `44510`** | **zero linhas sob `CLI-13`**, só `CLI-4` — **e o GBP continuou `error`** |
+
+> 🟢 **`CA4` e `CA13` passaram juntos, e o `CA13` passou no lugar exato onde falhou:** na `44493` o
+> GBP virava `not_configured`; na `44510` ele **continua `error`**. **O alarme voltou a tocar.**
+>
+> 🕐 **E o momento não podia ser melhor: o GBP volta do Google entre 08 e 13/10.** Ele vai chegar num
+> cano que **diz a verdade sobre ele** — que era exatamente o motivo pelo qual eu revertí a decisão
+> de deixar o defeito latente.
+
+> 🟢 **E o `CLIENT_IDS_NOT_FOUND` é a R11 regra 1 cumprida ao pé da letra:** chave ausente **não**
+> virou *"o primeiro"*, **não** virou *"todos"* — virou **um sinal com nome**. Foi assim que este
+> defeito devia ter nascido em 18/08.
+
+### 🔴 O gate do §5 pegou o que devia pegar — e revelou uma limitação de projeto
+
+**Ele parou. Certo.** As duas datas exigem **duas trocas de janela**, e uma alteração única que
+emitisse as duas **exigiria mexer no adaptador**, porque *"ele agrupa somente por cliente e
+colapsaria as janelas"*.
+
+> 🔴 **Isso não é um obstáculo da recoleta. É um achado sobre o Agregador:**
+> **ele não sabe fazer backfill.** Uma rodada = **uma janela**. Para um workflow semanal isso é
+> suficiente e nunca incomodou — **mas no dia em que o Índice de Saúde Digital precisar de
+> histórico, esta é a parede.**
+
+**Vira tarefa própria, e ela não é pequena:** *"o Agregador não tem caminho de backfill — uma rodada
+só emite uma janela"*. **Não construir agora.** Registrar, para a frente do Índice saber o que a
+espera.
+
+### 🔴 A recoleta sai — e isso muda a justificativa do apagamento (R6)
+
+**O apagamento foi autorizado pelo Olavo em 28/09 sob uma premissa que acabou de cair:**
+*"recoletar primeiro, apagar depois — o dado certo entra antes de o errado sair"*.
+**Sem recoleta, apagar deixa de ser troca e vira perda.** É premissa diferente ⇒ **é decisão nova**,
+e é do Olavo (**R6**: antes de ação irreversível, verifique a premissa que a justifica — **mesmo que
+o plano já esteja aceito**).
+
+**Recomendação do planejador: apagar mesmo assim.** Quatro razões:
+
+| # | |
+|---|---|
+| **1** | 🔴 **linha sob o cliente errado é pior que buraco.** Buraco é ausência; linha errada é **afirmação falsa** — e o `M4` da casa já diz que zero nunca é ausência |
+| **2** | **apagar não perde o dado: o GA4 ainda tem.** O que falta é **caminho de ingestão**, não fonte. O buraco é **preenchível depois**, pelo mecanismo certo |
+| **3** | **remarcar continua recusado, e por um bom motivo.** Provamos que as linhas **não são do `CLI-13`** (assinatura de impossibilidade: `id_ga4` nulo). **Isso não prova que são do `CLI-4`** — é inferência. **Escrever inferência em tabela de fato foi exatamente como chegamos aqui** |
+| **4** | **o conserto já está no ar.** A regra *"apagar é o último"* existia para não deixar **buraco E defeito**. O defeito saiu em 29/09 — **a ordem está satisfeita** |
+
+**As 2 linhas de Clarity são caso diferente:** essas **não** voltam nunca (72h). **Mas não têm
+consumidor** e a porta está fechada — **apagar não custa nada a ninguém**.
+
+### O que continua valendo para o apagamento
+
+| | |
+|---|---|
+| **Mira** | trio `client_id` + `execution_id` + `date`. 🔴 **nunca por `client_id` sozinho** |
+| 🔴 **Trava** | `SELECT` que conta e lista **antes** — **se não der exatamente 6, PARE** |
+| **Depois** | o mesmo `SELECT` devolvendo **zero** + total da tabela antes/depois |
+
+### O buraco, se o apagamento acontecer — declarado aqui
+
+**`t28_ga4_landing` fica sem linha de `CLI-4` em 13/09 e 20/09.** Sem consumidor hoje (o Índice não
+foi construído). **Preenchível quando houver backfill.** 🔴 **Nunca reconstruir por estimativa** —
+`S1`: pilar não medido nunca é zero.
 
 ## 1. ✅ Passo 1 — FEITO EM 29/09 (a medição que tem prazo). `CA1` cumprido — ver §0.1
 

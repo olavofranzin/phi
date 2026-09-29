@@ -134,7 +134,7 @@ saudável ela devolvia zero linhas — e zero itens encerra o ramo no n8n.
 > preencher errado, o alarme diverge no dia seguinte. **A garantia contra o esquecimento não é
 > disciplina — é ter um leitor automático.**
 | **V4** | Toda tabela **que tem writer declarado** recebeu linha **no período esperado DELA**? 🔴 **corrigido em 26/09** | **`raw_ad_data` vazia 3 meses** · **Clarity e GA4 mortos 19 dias** | coleta que ninguém fez |
-| ↳ 🔴 **V4 — emenda de 29/09** | **`t28_clarity_daily` SAI da lista de tabelas cobradas.** A porta da Clarity no Agregador fecha (`source_status = 'not_configured'`, zero linhas) porque ela **saiu do índice em 25/09** e **não tem `source_id` por cliente** — medido em 29/09. O V4 só cobra tabela **com writer declarado**, e este writer deixou de ser declarado | se ficar na lista, **o vigia grita todo dia para sempre** — e *alarme que sempre grita é alarme desligado* | ver `ADR-33` (seção 29/09) e `CONTRATO-DE-FONTES-v0` §1.1 |
+| ↳ ✅ **V4 — emenda de 29/09, PUBLICADA** (versão `9f443157-8787-444a-9bf0-11d1fd3d7981`, `versionId == activeVersionId`; rollback `125b437b-…`) | **`t28_clarity_daily` SAI da lista de tabelas cobradas.** A porta da Clarity no Agregador fecha (`source_status = 'not_configured'`, zero linhas) porque ela **saiu do índice em 25/09** e **não tem `source_id` por cliente** — medido em 29/09. O V4 só cobra tabela **com writer declarado**, e este writer deixou de ser declarado | se ficar na lista, **o vigia grita todo dia para sempre** — e *alarme que sempre grita é alarme desligado* | ver `ADR-33` (seção 29/09) e `CONTRATO-DE-FONTES-v0` §1.1 |
 
 > ### 🔴 2026-09-28 — O V4 vai ficar quieto sobre o GA4, e **ninguém sabe por quê ele gritou**
 >
