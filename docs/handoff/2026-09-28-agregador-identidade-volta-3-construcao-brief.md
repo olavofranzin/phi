@@ -9,7 +9,7 @@
 | **Branch dos documentos** | `claude/consolidacao-2026-08` · `https://github.com/olavofranzin/phi/tree/claude/consolidacao-2026-08` |
 | **Janela** | 🔴 **09h–23h BRT (D9)** |
 | **Limite** | **3 voltas** |
-| 🔵 **ESTADO** | **Construído em draft, NÃO publicado — e está certo assim.** Falta o teste invertido contra o **draft atual**. 🔴 **Leia o §0.3: o `CA13` NÃO está cumprido** (a medição não podia falhar) |
+| 🔵 **ESTADO** | **Draft, não publicado.** 🟢 **`CA4` PASSOU** na `44493` — zero linhas sob `CLI-13` na ordem que causou o defeito. 🔴 **`CA13` REPROVOU** — o `sd[0]` foi provado. **LEIA O §0.4: revertei a decisão, conserta AGORA antes de publicar** |
 | 🟢 **EMENDA 29/09** | 🔴 **LEIA O §0.1 E O §0.2 ANTES DE TUDO.** §0.1: o passo 1 rodou e derrubou uma premissa **minha** — a Clarity **não se recoleta** (72h) e a **porta dela fecha**. §0.2: **li o workflow ativo** — o conserto da Clarity custa **um nó e uma linha**, e **achei um defeito novo** no guarda `Reclassifica IDs` |
 
 ---
@@ -254,6 +254,84 @@ Igual ao §5, e pelo mesmo motivo:
 efêmero: **alteração não commitada morre com ele.** Se for trabalho de alguém, ela precisa de commit
 ou de descarte **declarado** — não de esquecimento.
 
+---
+
+## 0.4. 🔴 EMENDA — o teste invertido PROVOU o defeito, e eu reverto minha própria decisão
+
+**Execução `44493`, manual, sucesso.** `CLI-13` primeiro sem ids, `CLI-4` depois com os seus.
+
+| Critério | Veredito |
+|---|---|
+| 🟢 **`CA4` PASSOU** | o Normalizador emitiu **linhas só sob `CLI-4`**, **nenhuma sob `CLI-13`** — **na ordem exata que causou o defeito original**. **É a entrega da etapa, provada onde dói** |
+| 🔴 **`CA13` REPROVOU** | `CLI-4` tinha `id_gbp_local = 269166995970029765`, e **depois do `Reclassifica IDs` o `gbp` ficou `not_configured`**. Causa confirmada: `$('Set dados').all()[0]` |
+| 🟢 **R12 cumprida** | só o `Set dados` mudou · restaurado · **releitura com `same = true`** · draft `0dd2c89c-e7a1-4bea-8a7f-9df58c7be137` · produção intacta em `c54114b3-…` |
+
+> 🟢 **E o `CA13` reprovar é a prova de que o §0.3 estava certo:** a medição anterior disse *"não
+> apareceu"* porque **rodou com um cliente**. Bastou o teste poder falhar para ele falhar **na
+> primeira tentativa**.
+
+### 🔴 Onde eu errei, e o que muda
+
+**Classifiquei o defeito como *"raro no disparo"* e decidi deixá-lo latente. As duas coisas estão
+erradas** — e a prova que as derruba é a própria execução `44493`.
+
+**Minha terceira condição de disparo era:** *"essa fonte não ter retornado `ok` para o cliente
+posterior"*. Eu a tratei como coincidência rara. **Para o GBP ela é permanente:** enquanto a cota do
+Google for **zero**, o GBP **nunca** retorna `ok`. Então, para o GBP, o defeito dispara **toda rodada
+em que um cliente sem `id_gbp_local` venha antes de um que tenha.** Isso não é raro. **É a regra.**
+
+> 🔴 **E a consequência é pior que um dado errado: é um alarme trocado.** `error`/`missing` vira
+> `not_configured` — *"falhou"* vira *"é assim de propósito"*. **O vigia e qualquer leitor de
+> `source_status` leem silêncio onde havia falha.**
+>
+> ⚠️ **Hipótese que isso levanta — e é hipótese, não medição:** parte do motivo de o GBP ter ficado
+> **três meses morto sem ninguém ver** pode ser este nó. A causa-raiz do GBP **não** muda (cota zero,
+> medido). **O que este defeito explicaria é o silêncio, não a falha.** Barato de checar: olhar o
+> `source_status` histórico do `gbp` e ver se ele diz `not_configured` em vez de `error`. **Se o
+> executor não quiser abrir esta frente agora, registre e siga** — ela não bloqueia nada.
+
+### 🟢 DECISÃO REVERTIDA: consertar AGORA, no mesmo draft, ANTES de publicar
+
+| Antes (§0.3) | Agora |
+|---|---|
+| latente, conserta na próxima vez que abrir o nó | 🔴 **conserta agora** |
+
+**Os três motivos:**
+
+| # | |
+|---|---|
+| **1** | **a premissa caiu.** *"Raro"* e *"não provado"* eram as duas pernas da decisão — **as duas quebraram na mesma execução** |
+| **2** | **o nó já está aberto.** Ele está no draft, lido e entendido, e **não publicado**. Consertar agora custa uma linha e **uma republicação a menos** |
+| **3** | 🔴 **o GBP chega entre 08 e 13/10.** Quando a API abrir, queremos `source_status` **dizendo a verdade**. Publicar agora é decidir que o GBP volta para dentro de um cano que mente sobre ele |
+
+> ⚠️ **E o argumento que considerei do outro lado, para ficar registrado:** o defeito é
+> **pré-existente em produção** — publicar o draft como está **não o introduz**. Era a defesa da
+> opção "publica agora, conserta depois". **Ela perde para o motivo 3:** não é sobre não piorar, é
+> sobre **o que estará no ar quando o GBP voltar**.
+
+### O conserto, e ele tem uma regra dura
+
+**Trocar `$('Set dados').all()[0]` por leitura pareada pelo `client_id` do próprio item** — o mesmo
+conserto que o **2.3** manda para o adaptador, no mesmo ADR-33. O item já carrega o `client_id`
+depois do 2.1/2.4.
+
+| # | Regra |
+|---|---|
+| **1** | monte um índice `client_id → ids` a partir do `Set dados`, e **procure por chave** |
+| **2** | 🔴 **chave ausente ⇒ NÃO reclassifica e sinaliza.** **Nunca** cair para `[0]`, **nunca** cair para *"todos"* — é a **R11 regra 1**, e foi exatamente ela que criou este defeito |
+| **3** | a guarda `ss[key] !== 'ok'` **fica como está** — ela protege fonte que respondeu bem, e isso está certo |
+
+### 🔴 E o preço: os DOIS testes voltam a correr
+
+**Conserto novo ⇒ prova nova.** Não vale herdar o verde da `44493`, que foi medido em **outro draft**
+— é o mesmo motivo pelo qual você parou ontem, e ele continua valendo contra mim.
+
+| # | |
+|---|---|
+| **1** | **teste saudável** (§3, sem nada forçado) — as 6 fontes escrevem o que escreviam |
+| **2** | **teste invertido** (§3) — e agora ele tem **dois** critérios de saída: **zero linhas sob `CLI-13`** (`CA4`) **e** `gbp` **continuar `ok`/`error` sob `CLI-4`, nunca `not_configured`** (`CA13`) |
+| **3** | passou nos dois ⇒ **publique os dois drafts** (Agregador **e** V4), e prove com `versionId == activeVersionId` |
+
 ## 1. ✅ Passo 1 — FEITO EM 29/09 (a medição que tem prazo). `CA1` cumprido — ver §0.1
 
 **As 6 linhas cobrem 13/09 e 20/09.** Recoletar só é possível enquanto a fonte guardar o período.
@@ -278,7 +356,7 @@ ou de descarte **declarado** — não de esquecimento.
 | **2.4** | Cada linha normalizada **herda o `client_id` do próprio envelope** |
 | **2.5** | Chave **ausente ou em conflito** → **roteia erro** e bloqueia **só aquela fonte daquele cliente** — não a rodada inteira |
 | 🆕 **2.6** | 🔴 **FECHAR A PORTA DA CLARITY** — e **§0.2 mostra que custa um nó e uma linha**: `Filtro Clarity?` (cópia do `Filtro GBP?`) + `na('clarity', hasClarity)` no `Reclassifica IDs`. Resultado: **zero chamadas, zero linhas, `not_configured` carimbado**. E **tirar `t28_clarity_daily` da lista do `V4`** no mesmo movimento |
-| 🆕 **2.7** | 🔴 **MEDIR** se o `Reclassifica IDs` erra de cliente (§0.2): ele lê `sd[0]` — o **primeiro** cliente — e aplica às linhas de todos. **Se a medição confirmar**, troque por leitura pareada por `client_id`, como o 2.3. **Se te desmentir, não conserte e me diga** |
+| 🆕 **2.7** | ✅ **MEDIDO e CONFIRMADO em `44493` (§0.4) — agora é CONSERTAR**, índice por `client_id`, chave ausente **não** cai para `[0]`. Antes: medir se o `Reclassifica IDs` erra de cliente (§0.2): ele lê `sd[0]` — o **primeiro** cliente — e aplica às linhas de todos. **Se a medição confirmar**, troque por leitura pareada por `client_id`, como o 2.3. **Se te desmentir, não conserte e me diga** |
 
 > 💡 **O 2.5 tem molde pronto e provado hoje:** é a mesma fronteira do **D1-d**, feita de manhã no
 > `sw metricas campanhas` — um nó que recolhe o que foi pulado, avisa com nome e devolve o laço.
@@ -361,7 +439,7 @@ Depois de publicar: **releia e confirme** `versionId == activeVersionId` (**R13*
 | **CA10** | A descrição do Agregador conta o que mudou (**R5**) | duas frases |
 | 🆕 **CA11** | 🔴 **`t28_clarity_daily` saiu da lista do `V4`**, com o motivo escrito | senão o vigia **grita todo dia para sempre** |
 | 🆕 **CA12** | O envelope da Clarity **existe e diz `not_configured`** | provado **relendo o nó**, não pelo log (**R13**) |
-| 🆕 **CA13** | 🔴 **REESCRITO em §0.3.** O `Reclassifica IDs` foi medido **numa rodada com MAIS DE UM cliente** — e está consertado **ou** registrado como **latente, com a condição de disparo** | ⚠️ medir com **um** cliente não vale: `sd[0]` é trivialmente o certo. **A metade do registro já está feita no §0.3** |
+| 🆕 **CA13** | 🔴 **REPROVADO em 29/09 (`44493`) — ver §0.4. Conserta agora.** Antes, em §0.3: O `Reclassifica IDs` foi medido **numa rodada com MAIS DE UM cliente** — e está consertado **ou** registrado como **latente, com a condição de disparo** | ⚠️ medir com **um** cliente não vale: `sd[0]` é trivialmente o certo. **A metade do registro já está feita no §0.3** |
 
 ---
 

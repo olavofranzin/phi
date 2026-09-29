@@ -575,6 +575,53 @@ fonte **não** ter retornado `ok` para o posterior.
 | **Por quê não agora** | é obra nova em produção no mesmo dia de outra obra, e a **R11** é explícita: *salvaguarda é código novo e exige o mesmo smoke que a mudança que ela protege* |
 | **Onde o teste sai de brinde** | o **teste da ordem invertida** (`CLI-13` sem GA4, depois `CLI-4` com GA4) é **exatamente** a condição 1+2. **Um teste, dois critérios** |
 
+### ✅ CONFIRMADO em 2026-09-29 (`44493`) — o `sd[0]` dispara, e não é raro
+
+**A seção anterior classificou este defeito como *"raro no disparo"* e decidiu deixá-lo latente. As
+duas coisas caíram na mesma execução.**
+
+| | |
+|---|---|
+| **Execução** | `44493`, manual, sucesso — `CLI-13` primeiro **sem ids**, `CLI-4` depois **com** os seus |
+| **O que aconteceu** | `CLI-4` tinha `id_gbp_local = 269166995970029765`, e **depois do `Reclassifica IDs` o `gbp` ficou `not_configured`** |
+| **Causa** | confirmada: `$('Set dados').all()[0]` — os ids do **primeiro** cliente aplicados aos demais |
+| 🟢 **E ao lado, a boa notícia** | **`CA4` passou**: o Normalizador emitiu linhas **só sob `CLI-4`**, **nenhuma sob `CLI-13`** — o conserto de identidade funciona **na ordem exata que causou o defeito original** |
+
+#### Por que *"raro"* estava errado
+
+**A terceira condição de disparo era** *"a fonte não ter retornado `ok` para o cliente posterior"*.
+Tratei isso como coincidência. **Para o GBP é permanente:** enquanto a cota do Google for **zero**, o
+GBP **nunca** retorna `ok`. Logo, para o GBP, o defeito dispara **toda rodada em que um cliente sem
+`id_gbp_local` venha antes de um que tenha**.
+
+> 🔴 **E o estrago não é um número errado — é um alarme trocado.** `error`/`missing` vira
+> `not_configured`: *"falhou"* vira *"é assim de propósito"*. **Quem lê `source_status` lê silêncio
+> onde havia falha.**
+
+> ⚠️ **Hipótese levantada, não medida:** parte do motivo de o GBP ter ficado **três meses morto sem
+> ninguém ver** pode ser este nó. 🔴 **A causa-raiz do GBP não muda** — é cota zero, medido. **O que
+> este defeito explicaria é o silêncio, não a falha.** Checagem barata: olhar o `source_status`
+> histórico do `gbp` e ver se diz `not_configured` em vez de `error`. **Fica registrada; não bloqueia
+> nada** (**R6 corolário 1**).
+
+#### Decisão revertida — consertar antes de publicar
+
+| Antes | Agora |
+|---|---|
+| latente, conserta quando alguém abrir o nó | 🟢 **conserta agora, no mesmo draft, antes da publicação** |
+
+**Motivos:** (1) as duas premissas da decisão anterior caíram; (2) o nó **já está aberto e não
+publicado** — custa uma linha e **uma republicação a menos**; (3) 🔴 **o GBP volta entre 08 e
+13/10**, e publicar como está é decidir que ele volta para dentro de um cano que **mente sobre ele**.
+
+> ⚠️ **O argumento contrário, registrado:** o defeito é **pré-existente em produção** — publicar o
+> draft **não o introduz**. Era a defesa de *"publica agora, conserta depois"*. **Perde para o motivo
+> 3:** a pergunta não é se piora, é **o que estará no ar quando o GBP voltar**.
+
+**O conserto:** índice `client_id → ids` montado do `Set dados`, procurado **por chave**. 🔴 **Chave
+ausente ⇒ não reclassifica e sinaliza — nunca cair para `[0]`, nunca para "todos"** (**R11 regra 1**,
+que é exatamente o que criou este defeito). A guarda `ss[key] !== 'ok'` **fica**.
+
 ### 🔴 E o passivo maior está ao lado, não medido
 
 A mesma volta encontrou **318 linhas de `t28_campaign`, 2 de `t28_ga4_landing` e 1 de
