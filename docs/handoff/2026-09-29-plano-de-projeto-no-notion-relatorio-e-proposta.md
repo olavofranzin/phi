@@ -3,8 +3,8 @@
 | | |
 |---|---|
 | **Pedido** | brief `docs/handoff/2026-09-29-plano-de-projeto-no-notion-subchat-brief.md` |
-| **Estado desta entrega** | 🔴 **PAREI antes de escrever no `PHI - Gestão de Projetos`.** O DB não comporta o pedido (ver §1). O Olavo escolheu, nesta sessão, **"parar e devolver proposta"** |
-| **O que foi escrito no Notion** | **uma linha** no Registro de Execuções (R3) — a do início; a do fim é atualizada junto com este relatório. Nenhuma linha nova ou alterada no DB de projetos |
+| **Estado desta entrega** | ✅ **APLICADO em 29/09, depois do OK do Olavo** ("pode continuar"). Antes, a execução parou (o DB não comportava o pedido — §1) e o Olavo escolheu "parar e devolver proposta"; a proposta foi então aprovada. Ver **§11 (as-built)** |
+| **O que foi escrito no Notion** | 3 propriedades no DB de projetos · 92 linhas novas · 10 linhas antigas reconciliadas · 2 visões · a página-espinha · a linha do Registro (R3). Detalhe no §11 |
 | **Regra que rege** | não medi nada (sem BigQuery, sem n8n): cada número abaixo é **citado com documento e data**; o que não pude confirmar está escrito como tal |
 | **Branch** | `claude/plano-projeto-notion-v20z3g` (a do brief, `claude/consolidacao-2026-08`, é a base; ver §9) |
 
@@ -370,15 +370,15 @@ Estado do DB em 29/09: **39 linhas** — 23 de `Origem = Planejamento Estrategic
 | # | Critério | Resultado |
 |---|---|---|
 | **CA1** | Inventariou o Notion antes e registrou a busca | ✅ **Achou:** o DB alvo (39 linhas); o Registro de Execuções (`8d8eb685…`); a DB de ADRs (`237a5e12…`); e **um que o brief não lista: `PHI™ — Painel de Entregas` (`fad6713a…`)**, que li só no schema — é o ledger de entregas com aceite (fases 0.5–7, executor, revisor, bloqueios, ADRs relacionados). **Não resolve a lacuna do §1:** também não tem `Frente` nem `Quem destrava`. Não abri suas linhas nem escrevi nele. **Busquei** 3 termos no Notion ("Registro de Execuções", "Decisões (ADR)", "Plano de Projeto / roadmap / etapas", "estado em 2026") e **não achei** nenhuma página ou DB de plano do projeto. Não usei Demandas, Catálogo, Projetos/Tasks/Checklist (brief §1) |
-| **CA2** | Nenhum DB/propriedade novo, ou parou e devolveu proposta | ✅ **Parei e devolvi a proposta** (§1). Nada criado |
-| **CA3** | Linhas de junho reconciliadas, não duplicadas | 🟡 **Reconciliação feita no papel, não aplicada** (§6): fechar 1 · atualizar 7 · cancelar 2 · manter 16 · não confirmei 13. **Aplicadas: 0** |
-| **CA4** | Toda linha tem frente · estado · quem destrava · origem com data | ✅ **nas tabelas deste relatório**; 🔴 **não no Notion** (não há colunas). Amostra de 5 linhas: AG-01, AG-06, SC-01, WV-01, OP-01 (§2 e §3) |
+| **CA2** | Nenhum DB/propriedade novo, ou parou e devolveu proposta | ✅ **Parei e devolvi a proposta** (§1); só criei as 3 propriedades **depois do OK explícito** do Olavo. Nenhum database novo |
+| **CA3** | Linhas de junho reconciliadas, não duplicadas | ✅ **Aplicado** (§11): fechei 1 · reabri/atualizei 7 · cancelei 2 · mantive 16 · deixei 13 como "não confirmei" = 39. Nenhuma apagada, nenhuma duplicada |
+| **CA4** | Toda linha tem frente · estado · quem destrava · origem com data | ✅ 92 de 92 no Notion (colunas `Frente`, `Status`, `Quem destrava`, `Fonte (doc + data)`). Amostra: AG-01, AG-06, SC-01, WV-01, OP-01 |
 | **CA5** | Etapa em andamento é UMA e está no topo | ✅ E4 — identidade do Agregador (§0). Contei por script: **1** linha 🔵 |
 | **CA6** | O que é do Olavo, separado e listado | ✅ §4: 20 ⬜ + 10 gatilhos |
 | **CA7** | Nenhum número medido por mim | ✅ Nenhuma query, nenhum n8n/BigQuery. Todo número tem doc + data. "Não medido" está marcado (Odoo, adesão à R3, cifras de A4) |
 | **CA8** | Miro do board vigente; Operação em seção própria | ✅ `uXjVHecmR7c=` lido; cópia não aberta; seção própria (§3) |
 | **CA9** | ADRs com status e data; rascunho antigo = dívida | ✅ §5 |
-| **CA10** | Primeira tela é placar | 🟡 **Descrita no §0; não publicada** (a página-espinha depende do §1). Só o placar e a etapa única estão prontos para colar |
+| **CA10** | Primeira tela é placar | ✅ A página-espinha abre com a etapa única e o placar (tabela). Conferi a criação, **não** conferi a renderização visual |
 | **CA11** | Linha no Registro, começo e fim | ✅ início criado em 29/09 (`3eab65e5…`); fim: atualizada com este relatório |
 | **CA12** | O que não consegui confirmar e onde a semente errou | ✅ §8 e §9 |
 
@@ -439,3 +439,26 @@ Estado do DB em 29/09: **39 linhas** — 23 de `Origem = Planejamento Estrategic
 3. **Cada linha** tem doc + data; conferir abrindo o doc citado na seção citada.
 4. **Notion:** ler a linha `3eab65e5c72b81a9ae8bcdfa714d1275` no Registro de Execuções.
 5. **Confiança (0–1):** estrutura do §0–§1 e ADRs **0,9**; estados/donos de cada linha **0,8** (leitura de doc, não de sistema); reconciliação das 39 linhas **0,7** (13 marcadas "não confirmei" de propósito); dependências do Miro **0,75** (só texto).
+
+---
+
+## 11. As-built — o que foi aplicado no Notion (29/09, após o OK)
+
+**Lido de volta do Notion, não lembrado** (consulta agregada na DB, 29/09):
+
+| Conferência | Resultado |
+|---|---|
+| Linhas no DB | **131** = 39 antigas + 92 novas |
+| Propriedades criadas (nenhum database novo) | `Frente` (select, 9 valores) · `Quem destrava` (select: Olavo / Execução (sub-chat) / Terceiro) · `Fonte (doc + data)` (texto) |
+| Linhas antigas reconciliadas (nenhuma apagada) | 10: **1 fechada** (DDL das tabelas T28), **1 reaberta** (Clarity fora do Loop), **6 atualizadas** (Otimização, Follow-ups, Identificação de Leads, Relatório abrangente, Geração de Relatórios, Análise de Performance), **2 canceladas** com motivo (refatorar agregador em `phi_dev`; caminho do dashboard) |
+| Linhas antigas deixadas como estavam | 29 (16 "manter" + 13 "não confirmei") |
+| Visões criadas | `🔴 Do Olavo (abertas)` e `🚦 Por quem destrava` |
+| Página-espinha | `PHI — Plano de Projeto · estado em 2026-09-29` (filha de "Gerenciamento de Documentos", junto do DB) — placar, etapa única, terceiro, bloqueios e a lista do Olavo |
+
+**Mapeamento usado (sem propriedade além das 3):** estado → `Status` existente (✅ Concluida · 🔵 Em andamento · 🔴 Bloqueada · 🟡 Backlog · ⏳/⬜ A fazer); o emoji do estado e o "Depende de" ficam na 1ª linha de `Observacoes`; o texto completo vem depois. `Area`/`Origem = Miro` separam a Operação. **Prioridade não foi preenchida** (é do Olavo).
+
+**Ressalvas conhecidas:**
+1. O DB ainda tem **7 linhas com Status "Em andamento"**: 2 minhas (AG-01 e a Clarity reaberta, ambas da etapa E4) e 5 antigas não confirmadas (Smoke a05-relations, callout→HTTP, Pesquisa de Satisfação, Acompanhamento de Tarefas, Otimização de Campanhas). **A etapa em andamento do projeto é uma (AG-01)**; as antigas precisam de conferência do Olavo.
+2. `Prioridade`, `Prazo` e `Fase` das linhas novas: só `Fase` foi preenchida (Prospecção → `Prospeccao`, o resto `Operacao Interna`).
+3. As colunas antigas `Sugestao de Automacao/IA`, `Status Desenvolvimento` e `Status Implementacao` ficaram vazias nas linhas novas.
+4. CA2 ("nenhuma propriedade nova") passou a ser cumprido pela via prevista no brief: **parar, devolver a proposta e só criar depois do OK explícito**.
