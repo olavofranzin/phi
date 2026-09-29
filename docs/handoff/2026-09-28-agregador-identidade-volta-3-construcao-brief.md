@@ -9,7 +9,7 @@
 | **Branch dos documentos** | `claude/consolidacao-2026-08` · `https://github.com/olavofranzin/phi/tree/claude/consolidacao-2026-08` |
 | **Janela** | 🔴 **09h–23h BRT (D9)** |
 | **Limite** | **3 voltas** |
-| ✅ **ESTADO** | **PUBLICADO em 29/09.** Agregador `ecec7073-…` · V4 `9f443157-…`, os dois com `versionId == activeVersionId`. 🟢 **`CA4` e `CA13` passaram** (`44507` e `44510`): zero linhas sob `CLI-13` **e o GBP continuou `error`** — o alarme voltou a tocar. 🔴 **Pendente: o apagamento das 6 linhas**, e a premissa dele mudou. **Ver §0.5** |
+| ✅ **ESTADO** | **PUBLICADO em 29/09.** Agregador `ecec7073-…` · V4 `9f443157-…`, os dois com `versionId == activeVersionId`. 🟢 **`CA4` e `CA13` passaram** (`44507` e `44510`). 🟢 **APAGAMENTO AUTORIZADO pelo Olavo em 29/09, com a premissa caída na mesa — ver §0.6.** Faltam **duas** coisas: apagar e o **`CA10`** |
 | 🟢 **EMENDA 29/09** | 🔴 **LEIA O §0.1 E O §0.2 ANTES DE TUDO.** §0.1: o passo 1 rodou e derrubou uma premissa **minha** — a Clarity **não se recoleta** (72h) e a **porta dela fecha**. §0.2: **li o workflow ativo** — o conserto da Clarity custa **um nó e uma linha**, e **achei um defeito novo** no guarda `Reclassifica IDs` |
 
 ---
@@ -412,6 +412,47 @@ consumidor** e a porta está fechada — **apagar não custa nada a ninguém**.
 **`t28_ga4_landing` fica sem linha de `CLI-4` em 13/09 e 20/09.** Sem consumidor hoje (o Índice não
 foi construído). **Preenchível quando houver backfill.** 🔴 **Nunca reconstruir por estimativa** —
 `S1`: pilar não medido nunca é zero.
+
+---
+
+## 0.6. 🟢 AUTORIZADO — Olavo, 2026-09-29: **"pode"**
+
+**A autorização é NOVA, não herdada.** Ele foi informado, antes de responder, de que a premissa do
+`ok` de 28/09 tinha caído — *"sem recoleta, apagar deixa de ser troca e vira perda"* — e **disse pode
+mesmo assim**. 🔴 **Isto fica escrito porque a diferença importa:** não é o executor reaproveitando
+uma autorização velha sob condições novas. **É decisão tomada com o custo à vista.**
+
+### O apagamento, e ele tem duas travas
+
+| | |
+|---|---|
+| **O que** | **4** de `t28_ga4_landing` + **2** de `t28_clarity_daily`, sob **`CLI-13`**, execuções **`EXEC-T28-39103`** e **`EXEC-T28-41535`** |
+| **Mira** | trio **`client_id` + `execution_id` + `date`**. 🔴 **Nunca por `client_id` sozinho** |
+| 🔴 **Trava 1** | `SELECT` que **conta e lista** antes — **se não der exatamente 6, PARE** e devolva. Número diferente do medido significa que o mundo mudou desde a medição, **e apagar sem entender é irreversível** |
+| 🔴 **Trava 2** | cole no relatório: contagem **antes (=6)**, **depois (=0)**, e o **total da tabela antes e depois** — o total é o que prova que **só elas** sumiram |
+
+### O buraco, declarado no ato
+
+**`t28_ga4_landing` fica sem linha de `CLI-4` em 13/09 e 20/09.**
+
+| | |
+|---|---|
+| **Custa a quem?** | **a ninguém hoje** — o Índice não foi construído |
+| **Some para sempre?** | **não.** O GA4 ainda tem o dado; falta **caminho de ingestão** (o achado do backfill, §0.5) |
+| 🔴 **E enquanto isso** | **nunca reconstruir por estimativa.** `S1`: pilar não medido nunca é zero |
+
+**As 2 de Clarity são diferentes:** essas **não voltam** (72h). Mas **não têm consumidor** e a porta
+está fechada — **não custam a ninguém.**
+
+### 🔴 E falta o `CA10`, que não apareceu no relatório
+
+**A descrição do Agregador precisa contar o que mudou** (**R5**: todo artefato carrega a própria
+história). Duas frases: **o que ele faz** e **o que mudou em 29/09 e por quê** — identidade por
+chave, porta da Clarity fechada, guarda sem fallback posicional.
+
+> **Teste da R5:** *se a auditoria semanal precisar perguntar ao Olavo para entender, a descrição
+> falhou.* **Sem isso a etapa não fecha** — e a R2 é clara: etapa concluída = documentação atualizada
+> **na mesma sessão**.
 
 ## 1. ✅ Passo 1 — FEITO EM 29/09 (a medição que tem prazo). `CA1` cumprido — ver §0.1
 

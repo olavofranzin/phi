@@ -675,6 +675,15 @@ remarcar exigiria afirmar que as linhas **são do `CLI-4`**, e provamos apenas q
 `CLI-13`** — *escrever inferência em tabela de fato foi como chegamos aqui*; (4) o conserto **já está
 no ar**, então apagar não deixa mais *"buraco E defeito"*.
 
+> 🟢 **AUTORIZADO — Olavo, 2026-09-29: *"pode"*.** E **a autorização é nova, não herdada**: ele foi
+> informado de que a premissa do `ok` de 28/09 tinha caído (*sem recoleta, apagar vira perda*) e
+> **autorizou com o custo à vista**. **Travas:** mira pelo trio `client_id` + `execution_id` + `date`;
+> **contagem ≠ 6 ⇒ PARE**; e o total da tabela antes/depois entra no relatório, porque é ele que prova
+> que **só elas** sumiram.
+>
+> **Buraco declarado:** `t28_ga4_landing` sem linha de `CLI-4` em **13/09 e 20/09** — sem consumidor
+> hoje, **preenchível quando houver backfill**, e 🔴 **nunca por estimativa** (`S1`).
+
 ### 🔴 E o passivo maior está ao lado, não medido
 
 A mesma volta encontrou **318 linhas de `t28_campaign`, 2 de `t28_ga4_landing` e 1 de
