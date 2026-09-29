@@ -85,7 +85,7 @@ volta a escrever para todos, **em silêncio**. É o modo de falha da casa.
 | **2** | as **2 linhas de Clarity** se **apagam e não se recoletam** | e **não há buraco a declarar**: não há consumidor |
 | **3** | reabrir é **por dado, não por código** | 🟢 **e o mecanismo JÁ EXISTE — li o workflow ativo em 29/09, ver §0.2.** O id mora no **cadastro do Notion** (`Get database clientes` → `Set dados`), **não** no `client_config`. 🔴 **Não crie campo nenhum agora** |
 
-**Aposentar a integração (R5) não é esta decisão.** Gatilho: o **item 7 do §7 do contrato de fontes**
+**Aposentar a integração (R5) não é esta decisão.** Gatilho: o **item 7 do §4 do contrato de fontes**
 — *verificar se o script da Clarity está instalado.* **Se não estiver, a ferramenta não serve nem ao
 novo papel**, e aí ela se aposenta com sticky e nome.
 

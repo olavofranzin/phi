@@ -471,7 +471,7 @@ para todos, em silêncio.** É o modo de falha da casa.
 Fechar a porta com `not_configured` já entrega o comportamento honesto sem mexer na topologia de um
 workflow ativo na mesma sessão do conserto de identidade.
 
-> **Gatilho da aposentadoria:** o **item 7 do §7 do contrato de fontes** — *"verificar se o script da
+> **Gatilho da aposentadoria:** o **item 7 do §4 do contrato de fontes** — *"verificar se o script da
 > Clarity está instalado"*. **Se não estiver, a ferramenta não serve nem ao novo papel**, e aí a
 > integração se aposenta pela R5, com sticky e nome. **Duas pontas soltas que são a mesma ponta.**
 

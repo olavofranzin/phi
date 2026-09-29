@@ -60,7 +60,7 @@ fonte do envelope: **declara-se o vazio.** (Desenho em `saude-digital/adr-rascun
 | **3** | 🔴 o nó usa **um projeto fixo** em toda passagem do `Loop` | **todo dado de Clarity no BigQuery é do mesmo projeto**, gravado sob o cliente da vez. Os zeros do §1.1 podem ser **de outro ativo**, não do cliente |
 | **4** | o payload não devolve `project_id` | não há como auditar de quem é o dado que já está gravado |
 
-> 🔴 **O item 3 muda o item 7 do §7.** A pendência estava escrita como *"verificar se o script da
+> 🔴 **O item 3 muda o item 7 do §4.** A pendência estava escrita como *"verificar se o script da
 > Clarity está instalado"* — **pressupondo que o número zerado era do cliente.** Com um projeto fixo
 > para todos, o zero pode ser do projeto errado. **A verificação continua valendo; a conclusão que se
 > pode tirar dela, não.** Verificar o script responde *"a ferramenta serve?"* — **não** responde

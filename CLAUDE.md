@@ -196,6 +196,24 @@ mexer em servidor, caçar bug.
 > apontava para outra — **e o ADR-41 passou a citar como base um documento que não existia na branch
 > dele.** Branch dita por engano custa merge, conflito e documento canônico que mente.
 
+> 🔴 **EMENDA 2026-09-29 — a regra acima NÃO funcionou, e aconteceu de novo, pelo mesmo motivo.**
+> O brief do plano de projeto dizia `claude/consolidacao-2026-08`; **a instrução da sessão do
+> sub-chat dizia outra branch, e a instrução da sessão venceu** — o relatório nasceu em
+> `claude/plano-projeto-notion-v20z3g` e o chat-mãe teve de ir buscar.
+>
+> **Declarar a branch no brief não resolve: o executor tem DUAS ordens e obedece a que está mais
+> perto dele.** O conserto não é repetir a branch com mais destaque — é **mandar reconciliar antes
+> de existir commit**:
+>
+> | Quando | O que o sub-chat faz |
+> |---|---|
+> | **antes do primeiro commit** | compara a branch do **brief** com a da **instrução da sessão** |
+> | **se forem iguais** | segue |
+> | 🔴 **se forem diferentes** | **PARA e avisa, antes de commitar.** Não escolhe sozinho, não commita "provisoriamente" |
+>
+> **Teste prático:** *"eu tenho duas ordens sobre onde commitar?"* Se sim, **a dúvida vem antes do
+> commit — depois vira mudança de histórico.**
+
 > **Motivo:** quando a execução mora aqui, o contexto lota de detalhe operacional e **o
 > planejamento — que é o que só este chat faz — se perde.**
 

@@ -71,7 +71,7 @@ database ou propriedade nova **não está autorizado**. Descreva o que falta e p
 | **4** | `MAPA-DE-DOCUMENTACAO.md` | navegação + os DBs do Notion | a §3 tem a lista de DBs |
 | **5** | `saude-digital/CLAUDE.md` e `prospeccao/CLAUDE.md` | o estado de cada frente pelos olhos dela | as "armadilhas" listadas viram avisos no plano |
 | **6** | `saude-digital-do-negocio/README.md` + `CONTRATO-DE-FONTES-v0.md` **§7** | 🎯 **o §7 é uma lista de pré-requisitos — ou seja, tarefas prontas** | o item 6 está marcado como *"o mais urgente do documento"* |
-| **7** | `saude-digital/PLANO-ENTREGA-FINAL-PHI.md` | os oito critérios **F1–F8** | 🔴 os **§1 e §2 são do Olavo** e estão em branco — **isso é uma pendência dele** |
+| **7** | `saude-digital/PLANO-ENTREGA-FINAL-PHI.md` | os oito critérios **F1–F8** | 🔴 **leia o CORPO, não o cabeçalho** — o §1 já foi respondido em 27/09 e o cabeçalho mentia sobre isso até 29/09 |
 | **8** | `saude-digital/adr-rascunhos/` (todos) | **status e data de cada ADR** | ver §3 abaixo — **é a parte mais valiosa** |
 | **9** | `docs/handoff/` (os de setembro) | o que está **em execução agora** | o mais recente de cada tema vence |
 | **10** | **Miro — `Board Agência`** | procedimentos da operação | ver §4 |
@@ -170,14 +170,14 @@ corrija o que estiver errado e complete o que falta** — e me diga o que eu err
 | 6 | **GBP — liberação da API** | ⏳ **Google** | resposta entre **08 e 13/10** |
 | 7 | **W4 do webview** volta 2 + dívida do lockfile/`npm ci` + casca `webview/` | execução | 🔵 em execução |
 | 8 | **3 campos na DB Clientes** do Notion: `Tipo`, `Fora do índice (motivo)`, **nível bronze/prata/ouro** | Olavo | ⬜ decisão |
-| 9 | **§1 e §2 do `PLANO-ENTREGA-FINAL-PHI`** (a lista de ambição) | 🔴 **Olavo** | ⬜ pendente |
+| 9 | 🔴 **CORRIGIDO 29/09: só o §2.** O **§1 foi respondido em 27/09** e o §2 está **parcialmente** respondido — o cabeçalho do plano é que estava defasado | 🔴 **Olavo** | ⬜ pendente |
 | 10 | **Dono de cada dimensão D1–D10** | 🔴 **Olavo** | ⬜ pendente |
 | 11 | **F8 — relatório semanal** (segundas, WhatsApp, reunião de 30min para elegível). **Construção nova** | execução | 🟡 planejado |
 | 12 | **Índice de Saúde Digital do Negócio** — ADR-41 e ADR-42 aceitos, **construção não começou** | execução | 🟡 planejado |
 | 13 | **T28 / ADR-28** — parado, com gatilho de reentrada declarado | Olavo (gatilho) | ⏸️ parado |
 | 14 | **Motor do score só calcula CPA**; `es/rs/os` são placeholder desde o ADR-004 | execução | 🔴 dívida antiga |
 | 15 | **Vigia de Frescor estendido às tabelas `t28`** — *"o item mais urgente do contrato de fontes"* | execução | 🟡 planejado |
-| 16 | **Verificar se o script da Clarity está instalado** (§7 item 7) | execução | 🟡 planejado |
+| 16 | **Verificar se o script da Clarity está instalado** (§4 item 7) | execução | 🟡 planejado |
 | 17 | **Aposentar a integração da Clarity pela R5** — gatilho: o item 16 | execução | 🟡 gatilho |
 | 18 | **`raw_ad_data` vazia** — o grão de anúncio (F4), *"quero o anúncio culpado"* | execução | 🟡 planejado |
 | 19 | **`ingestion_step` mente** no `WHEN MATCHED` — some com a Fase 2 do ADR-37 | execução | 🔴 conhecido |
@@ -228,3 +228,93 @@ corrija o que estiver errado e complete o que falta** — e me diga o que eu err
 
 > 🔴 **Regra que já se pagou quatro vezes esta semana:** *premissa que cai vale mais que etapa
 > entregue.* **Parar e devolver nunca foi erro aqui.**
+
+---
+
+## 10. 🟢 VOLTA 1 — respondida em 2026-09-29. Aprovado, com correções minhas
+
+**Ele parou onde devia e devolveu proposta em vez de criar. Certo.** E **achou dois erros no meu
+próprio brief** — os dois já corrigidos, e o segundo tinha uma raiz que valia mais que o erro.
+
+### 10.1. 🟢 APROVADO: as três propriedades
+
+**Crie as três no `PHI - Gestão de Projetos`.** Nenhum database novo.
+
+| Propriedade | Por quê |
+|---|---|
+| **`Frente`** | 92 linhas sem frente é um monte, não um plano |
+| **`Quem destrava`** (Olavo / Execução / Terceiro) | 🔴 **é a entrega.** Sem ela o Olavo não enxerga o que é dele |
+| **`Fonte (doc + data)`** | 🔴 **é a trava da R6 corolário 2.** Sem ela, *"sem fonte não entra"* não existe, e o plano vira pilha de afirmação sem dono — **exatamente a testemunha falsa que a próxima auditoria acredita** |
+
+> **Por que eu aprovo e não devolvo ao Olavo:** três propriedades num rastreador que já existe é
+> aditivo, reversível e **dentro do que ele já aprovou** ao pedir o plano. Ele fica sabendo; não fica
+> esperando.
+
+**Liberado também:** escrever as ~92 linhas e **aplicar a reconciliação** proposta (fechar 1,
+atualizar 7, cancelar 2, manter 16). 🔴 **As 13 não confirmadas NÃO se cancelam** — entram como
+**`⬜ não confirmado`**, com a dúvida escrita. **Rótulo herdado não é medição.**
+
+### 10.2. 🔴 Meus dois erros, corrigidos — e a raiz do segundo
+
+| Erro meu | Corrigido |
+|---|---|
+| citei *"§7 do contrato de fontes"* | ✅ **é o §4.** O documento tem 6 seções. Corrigido em **4 arquivos**, inclusive no ADR-33 e no próprio contrato |
+| disse que os **§1 e §2** do plano estão em branco | ✅ **o §1 foi respondido em 27/09** e o §2 está **parcialmente** respondido |
+
+> 🔴 **E a raiz do segundo é a lição, não o erro:** o **corpo** do `PLANO-ENTREGA-FINAL-PHI` dizia
+> *"§1 — RESPONDIDO em 27/09"*. O **cabeçalho** dizia *"os §1 e §2 estão em branco de propósito"*.
+> **Eu li o cabeçalho.**
+>
+> **É o incidente do ADR-38, inteiro, de novo:** *um documento pode estar completo no corpo e mentir
+> no cabeçalho — e o cabeçalho é o que se lê.* **O cabeçalho já foi corrigido.**
+
+### 10.3. O que eu respondo do seu "não confirmei"
+
+| Você não confirmou | Resposta |
+|---|---|
+| **se o V4 está no ar** | 🟢 **está.** Publicado em 29/09, versão `9f443157-8787-444a-9bf0-11d1fd3d7981`, `versionId == activeVersionId`, rollback `125b437b-…` |
+| **se o `es/rs/os` foi decidido depois de 02/07** | ⬜ **não foi.** Continua decisão do Olavo, e entra como tal |
+| **onde está o ADR-34** | ⬜ **eu também não sei.** Entra como linha: *"ADR-34 — localizar ou declarar inexistente"* |
+| **P-20, `BF`, `LO`** | ⬜ **sigla herdada de junho sem glossário.** 🔴 **Isso é evidência a favor de cancelar com motivo**, não de manter: *linha que ninguém consegue ler não é tarefa, é entulho* — mas cancela **declarando** que não foi entendida |
+| 🔴 **rotação de credenciais expostas** | **você está certíssimo em não cancelar.** É o item de maior risco da sua lista inteira. Entra como **`🔴 não confirmado — segurança`**, e **sobe para o topo da página-espinha**. Credencial que talvez não tenha sido rodada é pior que credencial que sabidamente não foi |
+
+### 10.4. ⛔ Um ponto onde eu NÃO aceito sua correção — e por quê
+
+**Seed #19, o `ingestion_step`.** Você escreveu que ele *"não mente no `WHEN MATCHED`"*.
+
+🔴 **O `CONTRATO-PHI.md` registra o contrário, como achado MEDIDO em 22/09:** *"o `WHEN MATCHED THEN
+UPDATE SET` do `sw metricas campanhas` não atualiza `ingestion_step` — quando os dois tocam a mesma
+linha, o carimbo fica com o primeiro e os números com o último."*
+
+**Você declarou que não mediu nada em n8n nem BigQuery** — e esta é uma afirmação que **só se
+resolve medindo**. Então:
+
+| | |
+|---|---|
+| **Não mude nada** | a linha fica como está, **com a data de 22/09** |
+| **Registre o conflito** | *"o chat-mãe e o executor divergem; nenhum dos dois mediu em 29/09"* |
+| **A resolução** | uma leitura do nó — **outra etapa**, não esta |
+
+> **Vale contra mim e vale contra você:** *este número eu medi, ou eu li?* **Nenhum de nós mediu.
+> Então nenhum de nós decide.**
+
+### 10.5. Sobre a branch — o problema não foi seu
+
+Você commitou em `claude/plano-projeto-notion-v20z3g` porque **a instrução da sua sessão mandava**, e
+o brief mandava outra. 🔴 **Isso é a segunda vez que acontece, pelo mesmo motivo** — e prova que a
+regra estava errada, não você.
+
+**Já busquei seu relatório e ele está na `claude/consolidacao-2026-08`.** Nada a fazer da sua parte.
+**A `R1` do `CLAUDE.md` foi emendada:** de agora em diante, **duas ordens sobre branch ⇒ pare e avise
+ANTES do primeiro commit.**
+
+### 10.6. O que eu quero na volta 2
+
+1. as **3 propriedades** criadas
+2. as **~92 linhas** escritas, cada uma com **frente · estado · quem destrava · fonte com data**
+3. a **reconciliação aplicada** — e as **13** como `não confirmado`, não canceladas
+4. a **página-espinha** com o placar, e **no topo dela**: a etapa em andamento (uma), **o que espera
+   o Olavo (30)**, e a **linha de segurança** do §10.3
+5. 🔴 o **Painel de Entregas** (`fad6713a…`) que você achou e eu não listei: **diga o que ele é** e se
+   ele conflita com este plano. **Dois painéis concorrentes é como este DB ficou com 39 linhas
+   ilegíveis de junho**

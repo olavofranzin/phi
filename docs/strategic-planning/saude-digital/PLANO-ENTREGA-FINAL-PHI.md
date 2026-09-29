@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | 🟡 **ESQUELETO** — 2026-09-20. **Os §1 e §2 são do Olavo e estão em branco de propósito** |
+| **Status** | 🟡 **EM CONSTRUÇÃO** — 🔴 **cabeçalho corrigido em 2026-09-29.** O §1 foi **RESPONDIDO pelo Olavo em 27/09** e o §2 está **parcialmente respondido** (ele disse primeiro o que o PHI **não** é). **Só falta fechar o §2.** ⚠️ Este cabeçalho dizia *"os §1 e §2 estão em branco"* por 2 dias depois de o corpo já dizer o contrário — **e um brief acreditou nele e escreveu uma tarefa errada.** É a **R2 regra 5**: o corpo não substitui o cabeçalho |
 | **Papel** | **Documento-base do planejamento da frente.** Trabalha junto com o `CLAUDE.md` e o `CONTRATO-PHI.md` |
 | **Método** | Desenhar o **ponto final** primeiro; depois **engenharia reversa** até o que existe hoje |
 | **Precedente** | `prospeccao/PLANO-ENTREGA-FINAL-PROSPECCAO.md` — a frente-piloto. Mesma forma, outra frente |
