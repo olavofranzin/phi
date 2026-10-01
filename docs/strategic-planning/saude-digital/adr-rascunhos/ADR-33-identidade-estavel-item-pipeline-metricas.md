@@ -720,3 +720,9 @@ B3 → B4), decisão de produto pendente (no-data ⇒ linha ou não) e plano de 
 *🟢 **Aceito em 2026-09-28 para o Agregador.** As quatro condições continuam valendo para os
 writers originais, cujo escopo NÃO foi liberado: (a) granularidade confirmada, (b) baseline salvo,
 (c) OK de budget do Olavo, (d) smoke em KIL antes de publicar.*
+
+### ✅ Fechamento de 2026-10-01 — passivo removido e CA10 cumprido
+
+O SELECT `45203` listou **6** linhas sob `CLI-13`: **4** em `t28_ga4_landing` e **2** em `t28_clarity_daily`. O DELETE transacional `45205` exigiu 6 no total, 4 no primeiro DELETE e 2 no segundo; a releitura `45206` confirmou **zero**. Totais: GA4 **38→34**; Clarity **17→15**.
+
+O **CA10** fechou: a descrição registra identidade por chave, Clarity fechada e guarda sem fallback posicional. Relatório: `docs/handoff/2026-10-01-agregador-identidade-volta-3-relatorio.md`.

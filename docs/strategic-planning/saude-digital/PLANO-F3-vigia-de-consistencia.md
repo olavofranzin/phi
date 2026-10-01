@@ -361,3 +361,7 @@ Herdada da **D10** do contrato (*"1 e 3"*):
 - **Não fecha o laço** (*"a orientação funcionou?"*) — isso é o **F7**, e o Olavo o pôs no fim da fila.
 - **Não cobre os 21 workflows sem `errorWorkflow`** — apontá-los é trabalho separado e mecânico.
 - **Não substitui o Score v2.** Vigiar consistência não é vigiar acerto.
+
+### ✅ Fechamento do passivo de identidade — 2026-10-01
+
+SELECT `45203`: **6** linhas exatas sob `CLI-13`; DELETE transacional `45205`; releitura `45206`: **0**. Totais: `t28_ga4_landing` **38→34** e `t28_clarity_daily` **17→15**. O buraco GA4 de 13/09 e 20/09 permanece declarado até existir backfill; nunca estimar (`S1`). Relatório: `docs/handoff/2026-10-01-agregador-identidade-volta-3-relatorio.md`.
