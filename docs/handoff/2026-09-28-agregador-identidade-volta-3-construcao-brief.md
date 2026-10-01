@@ -652,3 +652,37 @@ igual ao relatado.
 > ✅ **A `R12` ganhou uma quarta linha por causa disto**, de um tipo novo: *estado temporário não é só
 > configuração mudada — é também **rascunho deixado para trás**.* **Teste de fechamento:** *o que está
 > no ar é igual ao que está salvo?* Se não, **ou publica de propósito, ou descarta de propósito.**
+
+---
+
+## 0.8. 🔴 01/10 — a origem do draft, e a única coisa que falta é um clique
+
+**Medido:** criado em **29/09 17:06:32 BRT**, nome da versão **`ADR-33 Reclassifica IDs por
+client_id`**, autor **"Olavo Franzin (via MCP)"** — **dois minutos depois** de `ecec7073` ir ao ar.
+**Não veio do `CA10`.** 🔴 **E o histórico não diz qual chat fez.**
+
+> **Dois agentes no mesmo nó, quase ao mesmo tempo** — o nome da versão prova que era a **mesma
+> tarefa**.
+
+### 🔴 O buraco de governança que isso expõe
+
+**Toda chamada MCP ao n8n é "Olavo Franzin (via MCP)"** — o dono do token, não o autor. Com vários
+sub-chats em paralelo, **não dá para saber quem mexeu, nem perguntar.** Aqui custou um draft órfão;
+pode custar **dois agentes publicando por cima um do outro**.
+
+**🟢 Proposta (do Olavo, não de executor):** **o nome da versão já identificou este draft** — foi o
+único canal que funcionou. Convenção: `<frente> <data> <brief/ADR>` em toda versão salva. Custo zero.
+
+### O descarte — caminho A, e por que não é por MCP
+
+`restore_workflow_version` **cria um `versionId` novo**: o conteúdo ficaria igual e os **ids
+diferentes**, deixando `sameAsDraft: false` para sempre — **um falso alarme permanente** no teste da
+R13. **Trocar um problema por outro não é consertar.**
+
+| | |
+|---|---|
+| 🟢 **A** | **o Olavo clica "Descartar alterações"** no editor do Agregador — 30s, **nenhuma versão nova**, `versionId` volta a `ecec7073` |
+| 🟡 **B (reserva)** | restaurar o ativo e **publicar** — funciona sem o Olavo, mas **muda o `activeVersionId`** e envelhece toda a doc que cita `ecec7073` |
+
+**Depois do clique:** releia e cole **`versionId == activeVersionId == ecec7073-a8ef-4d98-9502-ba2fb8c08d67`**.
+**Aí a etapa fecha de verdade.**

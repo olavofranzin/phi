@@ -733,6 +733,55 @@ idênticas, e exatamente UM nó diferente** — `Reclassifica IDs (not_configure
 | **Não "guardar para depois"** | 🔴 **draft sem dono e sem teste num workflow ativo não é ideia — é armadilha.** Se a ideia valer, ela volta como etapa, com teste |
 | **Execução** | do sub-chat, não daqui — mexe em workflow ativo em produção |
 
+### 🔴 A origem do draft — e o buraco que ela mostra é maior que o draft
+
+**Medido em 01/10:**
+
+| | |
+|---|---|
+| **Criado** | **29/09/2026, 17:06:32 BRT** |
+| **Nome da versão** | `ADR-33 Reclassifica IDs por client_id` |
+| **Autor registrado** | *"Olavo Franzin (via MCP)"* |
+| **Distância do ativo** | **dois minutos** depois de `ecec7073` ser publicado |
+| 🔴 **Qual chat fez** | **o histórico não sabe dizer** |
+| **Veio do `CA10`?** | ❌ não — confirmado |
+
+**Dois minutos depois de publicarmos o conserto, alguém escreveu uma segunda versão do mesmo nó.**
+O nome da versão prova que era a **mesma tarefa**, não outra: *"ADR-33 Reclassifica IDs por
+client_id"*. **Foram dois agentes no mesmo nó, quase ao mesmo tempo.**
+
+#### 🔴 O buraco: o parque não sabe dizer QUEM mexeu
+
+**Toda chamada MCP ao n8n é registrada como *"Olavo Franzin (via MCP)"*** — é o dono do token, não o
+autor do trabalho. **Com vários sub-chats rodando em paralelo** (Agregador, webview, plano do
+Notion, e agentes fora deste chat), **a autoria não distingue nada.**
+
+| | |
+|---|---|
+| **O que isso custou aqui** | um draft órfão sobre o nó mais sensível do dia, **que ninguém conseguiu explicar** |
+| **O que pode custar** | **dois agentes publicando por cima um do outro**, e o último ganha sem ninguém saber que houve disputa |
+| 🔴 **E o pior** | não é possível **perguntar** ao autor, porque não há autor — há um token |
+
+**🟢 Proposta barata (não construída, registrada):** **o nome da versão é o único canal de autoria
+que já existe e já funciona** — este draft foi identificado **pelo nome**, não pelo autor.
+**Convenção:** toda versão salva ou publicada se chama `<frente> <data> <brief ou ADR>`. Custo:
+zero. **Vira decisão do Olavo, não extensão de executor.**
+
+#### Como descartar — e por que não dá por MCP
+
+O executor **não conseguiu descartar**: o MCP só oferece `restore_workflow_version`, que **cria um
+`versionId` novo**. Restaurar o conteúdo do ativo deixaria o conteúdo igual **e os ids diferentes** —
+`sameAsDraft` continuaria `false`, **um falso alarme permanente** no teste da R13. Trocaria um
+problema por outro.
+
+| Caminho | Custo | Efeito |
+|---|---|---|
+| 🟢 **A — o Olavo clica "Descartar alterações"** no editor do Agregador | **30 segundos** | draft some, `versionId` volta a **`ecec7073`**, **nenhuma versão nova**, docs intactos |
+| 🟡 **B — restaurar o ativo e PUBLICAR** | sem depender do Olavo | conteúdo idêntico no ar, mas **`activeVersionId` muda** e **toda a doc que cita `ecec7073` passa a estar velha** |
+| ⛔ **C — deixar** | zero | **a armadilha fica armada** |
+
+**A é a escolha.** B fica registrado como saída se A não acontecer.
+
 ### 🔴 E o passivo maior está ao lado, não medido
 
 A mesma volta encontrou **318 linhas de `t28_campaign`, 2 de `t28_ga4_landing` e 1 de
