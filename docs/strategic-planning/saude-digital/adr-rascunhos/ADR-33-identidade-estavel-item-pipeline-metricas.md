@@ -684,6 +684,55 @@ no ar**, então apagar não deixa mais *"buraco E defeito"*.
 > **Buraco declarado:** `t28_ga4_landing` sem linha de `CLI-4` em **13/09 e 20/09** — sem consumidor
 > hoje, **preenchível quando houver backfill**, e 🔴 **nunca por estimativa** (`S1`).
 
+### ✅ ETAPA FECHADA — 2026-10-01. E um draft ficou para trás, sobre o nó do conserto
+
+**O apagamento aconteceu, com as duas travas cumpridas.**
+
+| | Antes | Depois |
+|---|---:|---:|
+| alvo em `t28_ga4_landing` | 4 | **0** |
+| alvo em `t28_clarity_daily` | 2 | **0** |
+| **total** `t28_ga4_landing` | 38 | **34** |
+| **total** `t28_clarity_daily` | 17 | **15** |
+
+`SELECT` `45203` = **6** · `DELETE` transacional `45205` (`@@row_count` 4 e 2) · releitura independente
+`45206` = **0**. **O total caindo exatamente 6 é o que prova que só elas sumiram.** O
+`TMP - A6 BigQuery Audit` foi restaurado e segue inativo (**R12**).
+
+**`CA10` cumprido — e eu reli a descrição no ar, não o relatório** (**R13 regra 3**):
+
+> *"Agrega semanal e mensalmente métricas de Google Ads, GA4, GBP e Meta no T28, preservando cliente,
+> fonte e janela. Em 29/09/2026, adotou identidade por chave, fechou a Clarity sem ID/consumidor e
+> removeu do guarda o fallback posicional entre clientes."*
+
+#### 🔴 O achado do fechamento: um draft não publicado sobre `Reclassifica IDs`
+
+**Li o workflow no ar em 01/10:** `activeVersionId = ecec7073-…`, `versionId = 378f6b81-…`,
+**`sameAsDraft: false`**. Conferi o draft inteiro contra o ativo: **68 nós dos dois lados, conexões
+idênticas, e exatamente UM nó diferente** — `Reclassifica IDs (not_configured)`, o nó do conserto.
+
+**O draft NÃO é melhoria. É pior que o que está no ar, em dois pontos:**
+
+| # | No ar (`ecec7073`, **testado**) | No draft (`378f6b81`, **nunca testado**) |
+|---|---|---|
+| **1** | procura o cliente em **`j.ctx?.client_id ?? j.client_id`** | 🔴 **só `j.client_id ?? j.id_client`** — **perdeu o `ctx`**. Se o cliente morar no `ctx`, **nenhum item casa**, e aí **o guarda não reclassifica nada**: `not_configured` nunca é carimbado. **O guarda roda verde não fazendo nada** |
+| **2** | sinaliza em **`identity_errors[]`** com o código **`CLIENT_IDS_NOT_FOUND`** | 🔴 campo escalar `reclassifica_ids_status` — **perde o array** (não acumula), **perde o código combinado**, e quem lê `identity_errors` **para de ver** |
+| **3** | último vence em chave duplicada | primeiro vence (`!idsByClient.has(key)`) — **não é obviamente errado, é não testado** |
+
+> 🔴 **E o perigo não está no código: está em ele existir.** O workflow é **ATIVO**. Draft sobre
+> workflow ativo é **proposta carregada**: **a próxima pessoa que mudar qualquer coisa e publicar
+> embarca isto sem saber** — e desfaz, em silêncio, o conserto que esta etapa acabou de provar.
+>
+> **É a R13 na forma mais pura, e a ironia é exata:** o nó que existe para impedir falha disfarçada
+> de ausência tem, pendurado nele, **uma versão que o faria falhar em silêncio.**
+
+| | |
+|---|---|
+| 🟢 **DECISÃO** | **descartar o draft.** Repor o rascunho igual ao ativo, até `versionId == activeVersionId` |
+| **Não publicar** | ele **regride** dois pontos provados |
+| **Não "guardar para depois"** | 🔴 **draft sem dono e sem teste num workflow ativo não é ideia — é armadilha.** Se a ideia valer, ela volta como etapa, com teste |
+| **Execução** | do sub-chat, não daqui — mexe em workflow ativo em produção |
+
 ### 🔴 E o passivo maior está ao lado, não medido
 
 A mesma volta encontrou **318 linhas de `t28_campaign`, 2 de `t28_ga4_landing` e 1 de

@@ -435,6 +435,7 @@ usa **modelo forte**. Escolher o modelo é decisão de arquitetura, não detalhe
 | `modo: continuo` no `[P5] Config` | o backfill inteiro rodou **carimbado como contínuo** — o campo que existe para dizer que rodada foi aquela registrou o oposto |
 | vazão do P6 em **3**, baixada para a estreia | ficou em 3 depois de o motivo acabar; só não custou caro porque alguém reparou |
 | `[P5] Entrada` **desabilitado** durante o smoke de 16/09 | a porta pela qual o P4 chama o P5O ficou fechada — e a repontagem do M6 **nunca foi exercida** |
+| 🔴 **draft não publicado deixado para trás** no `Reclassifica IDs` do Agregador (01/10) | o workflow é **ativo**: o draft diferia do ar **só nesse nó**, e **regredia** o conserto que acabara de ser provado. **A próxima publicação de qualquer coisa o embarcaria sem ninguém saber** |
 
 **As duas regras:**
 1. **Antes de fechar a sessão, liste o que foi mudado para teste e releia o artefato confirmando que
@@ -442,6 +443,14 @@ usa **modelo forte**. Escolher o modelo é decisão de arquitetura, não detalhe
 2. **Ao desabilitar algo para testar, a nota ou o sticky diz quando religar.** Nó desabilitado não
    tem cor, não tem alarme e não aparece em lista nenhuma — **é a mudança mais silenciosa que existe
    no n8n.**
+3. 🔴 **Antes de fechar, confirme `versionId == activeVersionId`.** Estado temporário não é só
+   configuração mudada — **é também rascunho deixado para trás.** Um draft sobre workflow ativo não
+   tem cor, não tem alarme e **não aparece em lista nenhuma**, igual ao nó desabilitado; só que ele
+   **embarca na próxima publicação**, qualquer que seja o motivo dela.
+
+> **Teste prático do fechamento:** *"o que está no ar é igual ao que está salvo?"* Se não, **ou
+> publica de propósito, ou descarta de propósito.** Deixar diferente é escolher que outra pessoa
+> decida por você, sem saber que está decidindo.
 
 > ⚠️ **Ver também a R13:** o que a ferramenta devolve não é necessariamente o que está no ar.
 

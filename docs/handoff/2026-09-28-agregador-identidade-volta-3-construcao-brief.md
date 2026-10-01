@@ -9,7 +9,7 @@
 | **Branch dos documentos** | `claude/consolidacao-2026-08` · `https://github.com/olavofranzin/phi/tree/claude/consolidacao-2026-08` |
 | **Janela** | 🔴 **09h–23h BRT (D9)** |
 | **Limite** | **3 voltas** |
-| ✅ **ESTADO** | **PUBLICADO em 29/09.** Agregador `ecec7073-…` · V4 `9f443157-…`, os dois com `versionId == activeVersionId`. 🟢 **`CA4` e `CA13` passaram** (`44507` e `44510`). 🟢 **APAGAMENTO AUTORIZADO pelo Olavo em 29/09, com a premissa caída na mesa — ver §0.6.** Faltam **duas** coisas: apagar e o **`CA10`** |
+| ✅ **ESTADO** | **ETAPA FECHADA em 01/10.** 6 linhas apagadas com prova (`45203`→`45205`→`45206`; totais **38→34** e **17→15**) · **`CA10` cumprido e verificado no ar**. 🔴 **Sobrou UMA coisa, e é da R13: um draft não publicado (`378f6b81-…`) sobre o `Reclassifica IDs`, que REGRIDE o conserto. Ver §0.7 — descartar** |
 | 🟢 **EMENDA 29/09** | 🔴 **LEIA O §0.1 E O §0.2 ANTES DE TUDO.** §0.1: o passo 1 rodou e derrubou uma premissa **minha** — a Clarity **não se recoleta** (72h) e a **porta dela fecha**. §0.2: **li o workflow ativo** — o conserto da Clarity custa **um nó e uma linha**, e **achei um defeito novo** no guarda `Reclassifica IDs` |
 
 ---
@@ -595,3 +595,60 @@ Depois de publicar: **releia e confirme** `versionId == activeVersionId` (**R13*
 
 > 🔴 **Regra que já se pagou duas vezes nesta etapa:** *premissa que cai vale mais que etapa
 > entregue.* **Parar e devolver nunca foi erro aqui.**
+
+---
+
+## 0.7. 🔴 FECHAMENTO 01/10 — a etapa acabou, e sobrou um draft que precisa morrer
+
+### O apagamento, com as duas travas cumpridas
+
+| | Antes | Depois |
+|---|---:|---:|
+| alvo `t28_ga4_landing` | 4 | **0** |
+| alvo `t28_clarity_daily` | 2 | **0** |
+| **total** `t28_ga4_landing` | 38 | **34** |
+| **total** `t28_clarity_daily` | 17 | **15** |
+
+`SELECT 45203` = **6** · `DELETE` transacional `45205` (`@@row_count` 4 e 2) · releitura **independente**
+`45206` = **0**. 🟢 **O total caindo exatamente 6 é o que prova que só elas sumiram** — era para isso
+que a trava 2 existia. `TMP - A6 BigQuery Audit` restaurado e inativo (**R12**).
+
+**`CA10` cumprido — e eu reli a descrição NO AR, não o relatório** (**R13 regra 3**). Ela está lá,
+igual ao relatado.
+
+### 🔴 O que sobrou: `versionId != activeVersionId`
+
+**Li o workflow em 01/10.** `activeVersionId = ecec7073-…` · `versionId = 378f6b81-…` ·
+**`sameAsDraft: false`**.
+
+**Conferi o draft inteiro contra o ativo:** 68 nós dos dois lados, **conexões idênticas**, e
+**exatamente um nó diferente** — `Reclassifica IDs (not_configured)`, o nó do conserto.
+
+**E o draft é PIOR que o que está no ar:**
+
+| # | No ar (**testado**) | No draft (**nunca testado**) |
+|---|---|---|
+| **1** | busca em **`j.ctx?.client_id ?? j.client_id`** | 🔴 **perdeu o `ctx`.** Se o cliente morar lá, **nenhum item casa** e **o guarda não reclassifica nada** — roda verde **não fazendo nada** |
+| **2** | **`identity_errors[]`** + código **`CLIENT_IDS_NOT_FOUND`** | 🔴 escalar `reclassifica_ids_status` — **perde o array e o código**; quem lê `identity_errors` **para de ver** |
+| **3** | último vence em chave duplicada | primeiro vence — **não é errado, é não testado** |
+
+> 🔴 **O perigo não é o código: é ele existir.** O workflow é **ATIVO**. **A próxima pessoa que mudar
+> qualquer coisa e publicar embarca isto sem saber** — e desfaz em silêncio o conserto que esta etapa
+> acabou de provar.
+>
+> **E a ironia é exata:** o nó que existe para impedir *falha disfarçada de ausência* tem pendurado
+> nele **uma versão que o faria falhar em silêncio.**
+
+### 🟢 O último passo: descartar o draft
+
+| | |
+|---|---|
+| **O que fazer** | repor o rascunho **igual ao ativo** (`ecec7073-a8ef-4d98-9502-ba2fb8c08d67`), até **`versionId == activeVersionId`** |
+| **Prova** | reler e colar os dois ids iguais (**R13 regra 2**) |
+| ⛔ **Não publicar o draft** | ele **regride dois pontos provados** |
+| ⛔ **Não "guardar para depois"** | 🔴 **draft sem dono e sem teste em workflow ativo não é ideia, é armadilha.** Se a ideia valer, volta como etapa, com teste |
+| **E me diga** | **de onde ele veio.** Não foi do `CA10` — descrição não muda `versionId` (**R13 item 4**) |
+
+> ✅ **A `R12` ganhou uma quarta linha por causa disto**, de um tipo novo: *estado temporário não é só
+> configuração mudada — é também **rascunho deixado para trás**.* **Teste de fechamento:** *o que está
+> no ar é igual ao que está salvo?* Se não, **ou publica de propósito, ou descarta de propósito.**
