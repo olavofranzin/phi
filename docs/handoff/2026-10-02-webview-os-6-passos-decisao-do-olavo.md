@@ -395,3 +395,101 @@ coisas**:
 > 🔴 **Apontei dois e os dois caíram. Então eu não sei a que aquela linha se refere** — e *"não sei"* é
 > a resposta honesta, não *"então não é nada"*. **Ela precisa de investigação própria**, com quem a
 > escreveu, e **não deve ser cancelada por eliminação de candidatos meus.**
+
+---
+
+## 10. 🟢 MINHA RECOMENDAÇÃO — pedida pelo Olavo, 2026-10-02
+
+### 10.1. A pergunta que vem antes dos seis passos
+
+**Para que o webview serve hoje?** É a **vitrine** — ele mostra número, não produz número.
+
+| E os números que ele mostra | Estado |
+|---|---|
+| o score de mídia | 🔴 **só calcula `CPA`**; `es/rs/os` são **placeholder desde o ADR-004** |
+| o Índice de Saúde Digital | 🟡 **desenho aceito, construção não começou** |
+| o dossiê do cliente | **o melhor cliente tem 3 de 41 campos na fonte** |
+| o GBP | ⏳ **com o Google até 13/10** |
+
+> 🔴 **Logo: polir a vitrine de números em que ainda não confiamos é a ordem errada.** O gargalo do
+> projeto é o PHI **não estar "pronto"** — e isso se resolve na medição, não na tela.
+>
+> **Isso NÃO quer dizer "não faça nada no webview".** Quer dizer: **faça o que para a tela de mentir e
+> o que fecha porta — e pare aí.** Não entre num projeto de refatoração.
+
+### 10.2. 🟢 Faça agora: um lote curto e fechado (horas, não semanas)
+
+| # | O que | Por quê | Custo |
+|---|---|---|---|
+| **1** | 🔴 **autenticação no EasyPanel** | **a carteira de clientes está aberta hoje.** Zero linha de código | **minutos** |
+| **2** | **uma faxina só, numa publicação:** rotas órfãs + pasta `webview/` + todo o Supabase + `.env` no `.gitignore` | tudo já autorizado e já provado morto. **Juntar numa publicação é mais seguro que pingar** | baixo |
+| **3** | **honestidade da tela:** fechar `/sites` + banner de erro + validar cliente por item | **são a mesma doença em três lugares: a tela afirmando o que não tem** | baixo |
+| **4** | 🔴 **o join, com o teste** | **painel que atribui campanha ao cliente errado é pior que painel nenhum** — e é a função central | médio |
+
+**Depois do 4, pare o webview e volte ao caminho crítico.**
+
+### 10.3. 🟡 Não faça agora
+
+| # | O que | Por quê |
+|---|---|---|
+| **5** | **`strictNullChecks`** | **meça (conte os erros) e pare.** É refatoração cuja entrega é *evitar bug futuro* — num produto que não é o gargalo. O número fica guardado para quando for |
+| **6** | unificar `readProp`/`plain()` e os tipos inconsistentes | **só se sair barato junto do 4** (é o mesmo tipo de conserto). Sozinho, não vale a publicação |
+| **7** | **religar o gráfico Evolução do Score** | 🟢 **o Olavo já decidiu que volta, e é barato.** ⚠️ **Mas saiba o que vai aparecer:** ele mostra a série do `phi_score_history`, e o motor **só calcula `CPA`**. **Uma linha reta em 50 é resposta informativa** — vai tornar visível um problema que hoje está escondido. **Faça, sabendo disso** |
+
+---
+
+## 11. 🔴 As duas sugestões que valem mais que os seis passos
+
+### 11.1. Uma passada de **"prova de concluído"**
+
+**O achado mais sério desta semana não é de código: é que um item marcado CONCLUÍDO parou de existir e
+ninguém viu.** O `CHECKLIST` diz *"W5 — CONCLUÍDO, gráfico Evolução do Score ligado a
+`/api/phi-score-history`"*. **O gráfico não existe.**
+
+> 🔴 **A pergunta que isso abre não é sobre o webview: é sobre o projeto.** Há **131 linhas** no plano
+> do Notion, **9 marcadas como feitas**, e a casa tem **regra para documentação** (**R2**) — **mas não
+> tem regra para "concluído" exigir prova.**
+
+| | |
+|---|---|
+| **O que proponho** | para cada item **CONCLUÍDO**, uma coluna: **qual é a prova?** — um teste, uma query, uma resposta capturada, um `versionId` |
+| **E a regra que sai** | *"concluído" sem prova anexada é "acreditamos que foi concluído"* — e **as duas coisas se escrevem diferente** |
+| **Custo** | **é revisão, não construção.** E já temos o hábito: o W4 fechou com três capturas HTTP, o ADR-33 com três execuções |
+| **Por que agora** | porque **achamos um falso hoje, por acaso.** Não sabemos quantos mais existem — e **"não sabemos" é a resposta que justifica a passada** |
+
+### 11.2. Um invariante de **identidade**
+
+**Em uma semana, duas frentes independentes, a mesma doença:**
+
+| Frente | Como a identidade era casada |
+|---|---|
+| **Agregador** (fechado 01/10) | por **posição no array** — `nodeFirst()`, `sd[0]` |
+| **Webview** (aberto) | por **chave coagível** — `client_id` com zero à esquerda vira outro número |
+
+> 🔴 **Isso não é coincidência, é padrão da casa** — e padrão que se repete sem nome **volta**.
+>
+> **Proposta de invariante:** *identidade se casa por **chave declarada e não-coagível**. Posição em
+> array, ordem de chegada, e número que parece id **nunca** são identidade. Chave ausente **para** e
+> grita — nunca cai para "o primeiro" nem para "todos".*
+>
+> **Custo: escrever.** E ele passa a viajar em todo brief, como o M11 e a R11 viajam. **Dois
+> incidentes em uma semana já pagaram o preço de descobri-lo.**
+
+---
+
+## 12. A ordem que eu recomendo, no projeto inteiro
+
+```
+1. webview: autenticação + faxina + honestidade da tela + join   ← horas
+2. escrever o invariante de identidade                            ← minutos
+3. VOLTAR ao caminho crítico do PHI estar "pronto":
+      o motor do score (só calcula CPA, es/rs/os placeholder)
+      o Índice de Saúde Digital (desenho aceito, construção zero)
+      o F8 (relatório semanal — construção nova)
+4. a passada de "prova de concluído"   ← quando houver respiro, e antes de
+                                         declarar qualquer frente pronta
+5. strictNullChecks e as dívidas de dependência   ← quando o gargalo mudar
+```
+
+> 🔴 **E o item 4 tem um gatilho, não uma data:** *antes de declarar qualquer frente "pronta"*. Porque
+> é exatamente aí que um "concluído" sem prova custa caro — e foi exatamente aí que o W5 passou.
