@@ -340,3 +340,94 @@ isso no relatório**; não deixe o checklist mentir.
 > 🔴 **Se uma premissa deste brief cair, PARE e devolva.** Em 26/09 um sub-chat parou antes do
 > primeiro nó porque três das quatro premissas do brief eram falsas — **e isso foi o trabalho certo.**
 > Premissa desmentida vale mais que etapa entregue em cima de mentira.
+
+---
+
+## 🟢 AUTORIZAÇÃO DE PUBLICAÇÃO — Olavo, 2026-10-02: *"ok, pode publicar"*
+
+| | |
+|---|---|
+| **Repo** | `olavofranzin/phi-dashboard-webview`, branch **`webview`** |
+| **Commit do relatório** | `c37d0b0` — ⚠️ **de 28/09, quatro dias atrás** |
+| **Branch dos documentos** | `claude/consolidacao-2026-08` · `https://github.com/olavofranzin/phi/tree/claude/consolidacao-2026-08` |
+| **Checkout (docs)** | `git fetch origin claude/consolidacao-2026-08 && git checkout claude/consolidacao-2026-08` |
+| 🔴 **Arquivos** | **não podem mudar de lugar** — é o repo ligado ao deploy da VPS |
+
+### 🔴 Passo 0 — antes de publicar, confira o que vai publicar
+
+**O relatório é de 28/09. Hoje é 02/10.** E **o Lovable também escreve neste repositório.**
+
+| # | O que fazer |
+|---|---|
+| **1** | ler o **HEAD atual** da branch `webview` |
+| **2** | se for **`c37d0b0`** → siga |
+| **3** | 🔴 **se tiver mudado → PARE e devolva.** Alguém (provavelmente o Lovable) escreveu depois do relatório, e **publicar código que ninguém leu não é publicar: é apostar** |
+| **4** | **anote o que está NO AR hoje** (commit/versão em produção) — **é o rollback.** Sem ele, publicar é de mão única |
+
+> **Motivo:** é a **R6** na forma mais barata. *Este commit eu medi, ou eu li num relatório de quatro
+> dias atrás?*
+
+### 🔴 Duas coisas que o Olavo precisa saber, e ele já sabe — ficam registradas
+
+**1. A publicação vai mostrar um dossiê quase todo `N/D`. Isso está certo.**
+
+Medido na fonte em 28/09: **11 clientes, 41 chaves cada, e o melhor cliente tem 3/41 preenchidas.**
+**Nenhum** dos 11 tem conteúdo em Marca, Comunicação, Mercado, Comercial, Arquivos, Branding ou Metas.
+
+> 🟢 **Não é defeito do mapper — é vazio real da fonte**, e o `N/D` é o comportamento correto
+> (`S1`/`M4`: vazio nunca é zero). **A página publicada passa a ser a lista do que falta preencher no
+> Notion** — é mais útil assim do que escondida.
+
+**2. 🔴 `.env` da raiz continua versionado, e o `.gitignore` não o ignora.**
+
+| | |
+|---|---|
+| **Publicar piora?** | **Não.** O arquivo já está no git e no histórico — a exposição existe desde antes |
+| 🔴 **Mas some sozinho?** | **Também não.** Tirar do índice **não apaga do histórico** |
+| **E conecta com outra linha** | o plano do Notion tem *"rotação de credenciais expostas — não confirmado"*. **Pode ser a mesma coisa** |
+| 🔴 **Regra ao reportar** | **diga ONDE está, nunca cole o valor.** Nem em relatório, nem em commit, nem aqui |
+
+**Isto NÃO bloqueia a publicação.** Vira **etapa própria**, e das urgentes.
+
+### ⚠️ E o risco técnico real desta publicação: o que foi testado não é o que vai subir
+
+| Medido no relatório | Consequência |
+|---|---|
+| `package-lock.json` **não fecha** com `package.json` | — |
+| o `Dockerfile` usa **`npm install`**, não `npm ci` | 🔴 **o build da VPS resolve versões por conta própria** |
+| `npm audit --omit=dev` = **12 vulnerabilidades** (10 altas), inclusive React Router | dívida pré-existente, fora de escopo por decisão do Olavo |
+
+> 🔴 **Logo: *"buildou aqui"* não garante *"builda lá"*, e o que subir pode não ser o que foi
+> testado.** Não é motivo para não publicar — **é motivo para ter o rollback anotado antes** e para
+> **olhar o build**, não só o resultado.
+>
+> **Se o deploy falhar ou se comportar diferente, o lockfile é o primeiro suspeito.** Não saia
+> caçando outra coisa.
+
+### Publicar é o que FECHA o aceite — três CAs só existem depois dele
+
+| CA | Estado | Só fecha com |
+|---|---|---|
+| **CA1** | ⏸ | captura HTTP do KIL real no endpoint, colada |
+| **CA4** | 🟡 | `/api/clients` confirmando **6 de 11** telefones |
+| **CA10** | ⏸ | `/api/phi-snapshot` comparado **antes e depois** |
+
+**Os outros 7 já estão verdes.** Depois das três capturas: marcar o W4 concluído, atualizar o
+`CHECKLIST-webview.md` e o ledger (**R3**).
+
+### ⛔ O que esta autorização NÃO cobre
+
+| Fora | Por quê |
+|---|---|
+| **apagar a casca `webview/`** | 🔴 **decisão separada do Olavo.** Ele autorizou publicar, **não limpar** |
+| **lockfile / `npm ci` / `npm audit fix`** | etapa própria, já decidida como separada |
+| **W4b, escrita no Notion/BigQuery, score** | nunca estiveram no escopo |
+| `src/integrations/supabase/` e `supabase/functions/` | intocados, como estavam |
+
+### O relatório de volta
+
+1. o **HEAD** que você publicou e o **que estava no ar antes** (o rollback)
+2. as **três capturas** (CA1, CA4, CA10)
+3. **o build da VPS passou?** E resolveu as mesmas versões?
+4. **o que a medição desmentiu** — este brief já teve duas premissas minhas derrubadas; se houver
+   terceira, quero saber
