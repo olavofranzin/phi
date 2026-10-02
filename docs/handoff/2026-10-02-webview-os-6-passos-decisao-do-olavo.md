@@ -355,3 +355,43 @@ que eu tinha dado.
 > ⚠️ **E isto é candidato melhor para a linha *"rotação de credenciais expostas — não confirmado"* do
 > plano no Notion** do que o `.env` que eu apontei. **Candidato — não confirmado.** Os três passos
 > acima dizem.
+
+---
+
+## 9. ✅ 2026-10-02 — o Supabase FECHA. Olavo: *"o projeto no supabase não tem referência com o phi dashboard webview"*
+
+**Ele olhou na conta dele, que é o único lugar onde essa pergunta se responde.** Fecha, e fecha **duas
+coisas**:
+
+| # | O que fecha | Consequência |
+|---|---|---|
+| **1** | 🟢 **não há projeto vivo atrás da chave `anon`** | logo **as Edge Functions não podem estar publicadas**, e **não há `GCP_SA_KEY` em segredo nenhum**. O risco que eu levantei no §8 **não existe** |
+| **2** | 🟢 **e a autenticação volta a ser SUFICIENTE** | eu havia escrito que a autenticação no EasyPanel *"trancaria só uma das duas portas"*. **Não há segunda porta.** O passo 3 volta a resolver inteiro |
+
+### 🟢 E ganha-se uma simplificação concreta na limpeza
+
+**Todo o Supabase passa a ser código morto puro, sem pergunta nenhuma em aberto:**
+
+| Vai embora junto com a pasta `webview/` |
+|---|
+| `supabase/config.toml` |
+| `supabase/functions/` (as 2 funções + `_shared/bq.ts` e `_shared/columnMap.ts`) |
+| `src/integrations/supabase/client.ts` |
+| as 3 chaves `VITE_SUPABASE_*` dos dois `.env` |
+
+> **E a `R5` continua valendo para o que sobrar:** registre que foram apagadas **porque o
+> `server/index.js` as substituiu**, e que **a verificação de projeto vivo foi feita pelo Olavo em
+> 02/10**. Senão a próxima auditoria acha as funções no histórico e abre a mesma investigação.
+
+### 🔴 O que NÃO fecha: a linha do plano no Notion
+
+*"Rotação de credenciais expostas — não confirmado"* **continua de pé, e agora sem candidato.**
+
+| Candidato que eu apontei | Veredito |
+|---|---|
+| o `.env` versionado | ❌ **caiu** — chaves públicas por construção |
+| o `GCP_SA_KEY` nas Edge Functions | ❌ **caiu** — não há projeto |
+
+> 🔴 **Apontei dois e os dois caíram. Então eu não sei a que aquela linha se refere** — e *"não sei"* é
+> a resposta honesta, não *"então não é nada"*. **Ela precisa de investigação própria**, com quem a
+> escreveu, e **não deve ser cancelada por eliminação de candidatos meus.**

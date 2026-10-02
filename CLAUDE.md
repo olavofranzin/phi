@@ -308,6 +308,21 @@ que o plano já esteja **aceito** num ADR. Se o dado desmentir o plano:
 > foi consertado até 26/09 sem ninguém registrar** — e cinco briefs seguidos mandaram não tocar num
 > defeito que já não existia. **Defeito que some também se escreve** (é o Corolário 1, do outro lado).
 
+> 🔴 **E vale para GRAVIDADE, não só para número (2026-10-02 — duas vezes no mesmo dia, as duas
+> minhas).** Um relatório traz o **fato**; quem lê acrescenta a **urgência**. **A urgência também é
+> uma afirmação, e também se mede.**
+>
+> | O que o relatório disse (correto) | O que EU acrescentei | O que a medição mostrou |
+> |---|---|---|
+> | *"o `.env` está versionado e o `.gitignore` não o ignora"* | *"das urgentes"* · *"o único item que piora sozinho"* · *"pode ser credencial exposta"* | **três chaves `VITE_*`, públicas por construção, em repo privado, sem `NOTION_TOKEN`.** Nada a rotacionar |
+> | *"existe pasta `supabase/` intocada"* | *"confira se há dado atrás da chave pública"* | **zero migrations, zero chamadas, `client.ts` importado por ninguém.** Nada a checar |
+>
+> **Nos dois casos o custo de medir era dois comandos, e eu já tinha mandado trabalho para o Olavo.**
+>
+> **Teste prático:** *esta gravidade eu medi, ou eu herdei?* Se herdou, **meça antes de passar
+> adiante** — porque **alarme repassado ganha autoridade a cada repasse**, e quem recebe não vê que
+> a urgência foi inventada no caminho.
+
 ### R7 — Nada se cria sem plano pronto. E todo plano começa procurando o que já existe
 **Antes de construir qualquer coisa nova** — workflow, skill, agente, coluna, tabela, pasta — **tem de
 existir um plano escrito e aprovado pelo Olavo.**
