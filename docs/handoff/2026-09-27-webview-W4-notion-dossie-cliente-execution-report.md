@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Data** | 2026-09-28 |
-| **Estado** | 🟡 **IMPLEMENTAÇÃO LOCAL CONCLUÍDA; aceite real pendente de publicação** |
+| **Estado** | ✅ **PUBLICADO E ACEITO — 2026-10-02.** No ar em `https://app-app.1unqx7.easypanel.host/` · HEAD/rollback `c37d0b0c9dcd169609eff4060b04fa72a37de8be`. **Os 10 CAs fecharam** — ver o bloco de fechamento no fim deste relatório |
 | **Código** | `phi-dashboard-webview`, branch `webview`, commit local `c37d0b0` |
 | **Documentação** | `phi`, branch `claude/consolidacao-2026-08` |
 | **Build provado** | `npm run build` na raiz — 2.538 módulos; Docker indisponível no host |
@@ -222,3 +222,53 @@ A publicação da branch `webview` aciona o caminho ligado ao EasyPanel e exige 
 explícita. Depois da publicação: capturar `/api/clients`,
 confirmar **6/11 telefones**, colar o KIL real do endpoint, comparar `/api/phi-snapshot` e só então
 marcar W4 concluído e atualizar o ledger/checklist.
+
+
+---
+
+## ✅ FECHAMENTO — 2026-10-02 (escrito pelo chat-mãe)
+
+> ⚠️ **Por que não é o executor escrevendo:** ele publicou, colheu as três provas e **ficou sem cota
+> de uso antes de documentar**. A **R2** não espera — *etapa concluída = documentação atualizada na
+> mesma sessão.* O conteúdo abaixo é **o que ele reportou**, conferido contra a medição de 28/09
+> deste mesmo relatório.
+
+| | |
+|---|---|
+| **No ar** | `https://app-app.1unqx7.easypanel.host/` |
+| **HEAD publicado = rollback** | `c37d0b0c9dcd169609eff4060b04fa72a37de8be` — **igual ao commit medido em 28/09**, ou seja **o Lovable não escreveu no meio** (era o passo 0 da autorização) |
+
+### Os três CAs que só existiam depois de publicar
+
+| CA | Prova |
+|---|---|
+| **CA1** ✅ | `GET /api/clients` → KIL real: `site: https://kbbecker.com.br/` · `endereco: AV. PAULISTA, 648 …` · `telefone: N/D` · `clientId: CLI-4` · `niche: Negócio Local`. 🟢 **Casa com a medição de 28/09** (§1: o KIL tem Site e Endereço, e **0/5 em Contatos**) — o `N/D` do telefone é **a fonte**, não o mapper |
+| **CA4** ✅ | **6 de 11** com telefone: **CLI-2, CLI-3, CLI-5, CLI-7, CLI-8, CLI-13**. O alvo era **0 → 6**. 🟢 **Casa com o §1**, onde esses seis são exatamente os de `Contatos ≥ 1` com telefone — e o KIL **continua corretamente sem** |
+| **CA10** ✅ | `/api/phi-snapshot` antes (`14:21:30.448Z`) e depois (`14:22:31.922Z`): **2 campanhas, mesmos ids, scores, investimentos, tarefas, logs e alertas**. **Única diferença: `generatedAt`.** É a prova de não-regressão |
+
+**Com isso os 10 CAs estão verdes e o W4 está concluído.** `CHECKLIST-webview.md` atualizado — e
+**trazido** para a branch de consolidação, onde antes não existia.
+
+### 🔴 O risco do lockfile não foi verificado — e não dá para verificar
+
+| | |
+|---|---|
+| **O que eu avisei** | *"o que foi testado pode não ser o que sobe"* — lockfile não fecha + `Dockerfile` com `npm install` |
+| **O que se conseguiu** | 🟡 **os logs de build do EasyPanel não são públicos.** Não foi possível observar o `npm install` |
+| 🟢 **O que SE PROVOU** | o **comportamento publicado**, pelos três endpoints. E é o que os CAs cobravam |
+| 🔴 **O que segue sem resposta** | *a VPS resolveu as mesmas versões?* **Não se sabe, e não dá para saber assim** |
+
+> 🔴 **Isto não é "deu certo, então o risco não existia" — é "não mordeu desta vez".** Enquanto o
+> lockfile não fechar e o `Dockerfile` usar `npm install`, **o build não é observável nem
+> reproduzível**, e a prova possível será sempre **comportamental, nunca de procedência**.
+> **`npm ci` com lockfile correto é o que torna o build provável** — e é exatamente a tarefa que o
+> Olavo já separou.
+
+### Dívidas que seguem abertas, por decisão
+
+| # | Dívida | Dono |
+|---|---|---|
+| **1** | 🔴 **`.env` da raiz versionado** e fora do `.gitignore`. **Publicar não piorou** (já estava no histórico) **nem resolveu** — tirar do índice **não apaga do histórico**. Pode ser a mesma coisa que a linha *"rotação de credenciais expostas — não confirmado"* do plano do Notion | ⬜ **Olavo** — etapa própria, das urgentes |
+| **2** | lockfile / `npm ci` / 12 vulnerabilidades (10 altas, inclusive React Router) | ⬜ **Olavo** |
+| **3** | limpeza da pasta `webview/` (resíduo morto) | ⬜ **Olavo** — **ele autorizou publicar, não limpar** |
+| **4** | 🔴 **a linha do ledger (R3) não foi escrita** — o executor ficou sem cota. **O digest de amanhã 08:30 vai dizer "sem progresso" no dia de uma publicação** | ⬜ |
