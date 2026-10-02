@@ -470,6 +470,30 @@ Isso já escondeu um caminho de produção quebrado por **dois dias**.
 2. **Depois de alterar workflow ativo, releia e confirme que publicou.** *"Não deu erro"* não é
    *"está no ar"*.
 
+> 🔴 **EMENDA 2026-10-02 — a comparação de id é PENEIRA, não veredito. E a regra, como estava
+> escrita, fez um executor recusar a ação certa.**
+>
+> Medido no Agregador: **"Descartar alterações" no editor NÃO devolve o `versionId` do ativo — cria um
+> rascunho NOVO a partir do conteúdo do ativo.** Depois do descarte: `versionId 7aba9362` ·
+> `activeVersionId ecec7073` · **ids diferentes** · e **conteúdo idêntico** (68 nós, zero nós
+> diferentes, conexões iguais).
+>
+> **Consequência:** `versionId == activeVersionId` **não é um estado alcançável** depois de qualquer
+> rascunho ter existido — só publicando. **Exigir a igualdade de ids vira alarme que grita para
+> sempre**, e *alarme que sempre grita é alarme desligado.*
+>
+> | O teste | O que ele vale |
+> |---|---|
+> | `versionId != activeVersionId` | 🟡 **"olhe mais perto"** — não é *"existe mudança pendente"* |
+> | **conteúdo do draft vs conteúdo do ativo** | 🟢 **o veredito.** É o conteúdo que embarca numa publicação, não o id |
+>
+> **Custo de ter escrito a regra só com id:** o executor recusou `restore_workflow_version` **porque
+> ela criava id novo e "reprovaria a R13"** — e a ação era a certa. **A cautela dele foi correta; a
+> regra estava incompleta.**
+>
+> **Teste prático, corrigido:** *"o que embarca na próxima publicação é igual ao que está no ar?"*
+> Compare **nós e conexões**, não ids.
+
 > **Motivo:** em 16/09 o `[P5] CRM-out` do PROSP-04 foi repontado para o Odoo — **no rascunho**. O
 > que rodava continuou chamando o P5 do HubSpot, já aposentado, **com
 > `onError: continueRegularOutput`**: a próxima prospecção teria alimentado nada e seguido verde.

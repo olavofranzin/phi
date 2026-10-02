@@ -9,7 +9,7 @@
 | **Branch dos documentos** | `claude/consolidacao-2026-08` · `https://github.com/olavofranzin/phi/tree/claude/consolidacao-2026-08` |
 | **Janela** | 🔴 **09h–23h BRT (D9)** |
 | **Limite** | **3 voltas** |
-| ✅ **ESTADO** | **ETAPA FECHADA em 01/10.** 6 linhas apagadas com prova (`45203`→`45205`→`45206`; totais **38→34** e **17→15**) · **`CA10` cumprido e verificado no ar**. 🔴 **Sobrou UMA coisa, e é da R13: um draft não publicado (`378f6b81-…`) sobre o `Reclassifica IDs`, que REGRIDE o conserto. Ver §0.7 — descartar** |
+| ✅ **ESTADO** | 🟢 **ETAPA ENCERRADA em 02/10.** 6 linhas apagadas com prova · `CA10` verificado no ar · **draft órfão descartado e conferido POR CONTEÚDO**: 68 nós dos dois lados, **zero diferentes**. Os ids seguem diferentes porque *descartar cria rascunho novo* — **e isso emendou a R13** |
 | 🟢 **EMENDA 29/09** | 🔴 **LEIA O §0.1 E O §0.2 ANTES DE TUDO.** §0.1: o passo 1 rodou e derrubou uma premissa **minha** — a Clarity **não se recoleta** (72h) e a **porta dela fecha**. §0.2: **li o workflow ativo** — o conserto da Clarity custa **um nó e uma linha**, e **achei um defeito novo** no guarda `Reclassifica IDs` |
 
 ---
@@ -686,3 +686,30 @@ R13. **Trocar um problema por outro não é consertar.**
 
 **Depois do clique:** releia e cole **`versionId == activeVersionId == ecec7073-a8ef-4d98-9502-ba2fb8c08d67`**.
 **Aí a etapa fecha de verdade.**
+
+---
+
+## 0.9. ✅ 02/10 — ENCERRADA. O descarte funcionou, e emendou a R13
+
+**O Olavo descartou. Eu verifiquei lendo** (não acreditando), e o veredito é por **conteúdo**:
+
+| | |
+|---|---|
+| nós ativo / draft | **68 / 68** · nenhum exclusivo |
+| 🟢 **nós diferentes** | **ZERO** · conexões **idênticas** |
+| `Reclassifica IDs` | 🟢 `j.ctx?.client_id ?? j.client_id` e `identity_errors` + `CLIENT_IDS_NOT_FOUND` **de volta nos dois** |
+| 🟡 ids | `7aba9362-…` vs `ecec7073-…` — **diferentes, e está tudo bem** |
+
+🔴 **Por que está tudo bem — e por que a R13 mudou:** *"Descartar alterações"* **não devolve o id do
+ativo; cria um rascunho novo com o conteúdo do ativo.** Então **`versionId == activeVersionId` não é
+estado alcançável** depois de qualquer rascunho existir. **Exigir a igualdade de ids é instalar um
+alarme que grita para sempre.**
+
+| O teste | O que vale |
+|---|---|
+| ids diferentes | 🟡 **"olhe mais perto"** |
+| **conteúdo (nós + conexões)** | 🟢 **o veredito** — é o conteúdo que embarca numa publicação |
+
+> **E a regra incompleta já tinha custado uma decisão:** o executor recusou
+> `restore_workflow_version` **porque criava id novo e "reprovaria a R13"**. A ação era a certa. **A
+> cautela dele estava correta; a minha regra estava errada.** Emendada no `CLAUDE.md`.

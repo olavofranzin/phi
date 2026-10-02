@@ -782,6 +782,43 @@ problema por outro.
 
 **A é a escolha.** B fica registrado como saída se A não acontecer.
 
+### ✅ 2026-10-02 — DRAFT DESCARTADO, ETAPA FECHADA. E o descarte ensinou algo sobre a R13
+
+**O Olavo clicou "Descartar alterações". Eu verifiquei lendo, e o resultado foi melhor do que o
+esperado de um jeito e pior de outro.**
+
+| O que eu medi | Resultado |
+|---|---|
+| nós: ativo vs draft | **68 e 68** |
+| nós só num lado | **nenhum** |
+| 🟢 **nós com conteúdo diferente** | **NENHUM** |
+| conexões | **idênticas** |
+| `Reclassifica IDs` — a busca do cliente | 🟢 **`j.ctx?.client_id ?? j.client_id` de volta** nos dois |
+| `Reclassifica IDs` — o sinal | 🟢 **`identity_errors` + `CLIENT_IDS_NOT_FOUND`** nos dois |
+| 🟡 **ids** | `versionId 7aba9362-…` · `activeVersionId ecec7073-…` — **diferentes** |
+
+> 🟢 **A armadilha está desarmada:** não existe mais diferença de conteúdo, então **nenhuma
+> publicação futura embarca nada de surpresa.** Era isso que importava.
+
+#### 🔴 E a lição é sobre a R13, não sobre o Agregador
+
+**"Descartar alterações" não devolve o `versionId` do ativo — cria um rascunho novo com o conteúdo do
+ativo.** Logo, **`versionId == activeVersionId` não é estado alcançável** depois de qualquer rascunho
+ter existido. Exigir a igualdade de ids **vira alarme permanente**.
+
+| O teste | O que vale |
+|---|---|
+| ids diferentes | 🟡 **"olhe mais perto"** |
+| **conteúdo (nós + conexões)** | 🟢 **o veredito** — é o conteúdo que embarca |
+
+> **E isso custou uma decisão errada:** o executor recusou `restore_workflow_version` **porque criava
+> id novo e "reprovaria a R13"** — mas a ação era a certa, e o clique do editor faz exatamente a mesma
+> coisa. **A cautela dele estava certa; a minha regra estava incompleta.** A **R13 foi emendada**.
+
+**Estado final do ADR-33:** desenhado **09/08**, aceito **28/09**, construído, testado nos dois
+cenários, publicado **29/09** (`ecec7073`), passivo apagado com prova **01/10**, descrição fiel
+(**R5**), e rascunho órfão descartado e **verificado por conteúdo** em **02/10**.
+
 ### 🔴 E o passivo maior está ao lado, não medido
 
 A mesma volta encontrou **318 linhas de `t28_campaign`, 2 de `t28_ga4_landing` e 1 de
