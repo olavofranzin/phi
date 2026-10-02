@@ -268,7 +268,7 @@ marcar W4 concluído e atualizar o ledger/checklist.
 
 | # | Dívida | Dono |
 |---|---|---|
-| **1** | 🔴 **`.env` da raiz versionado** e fora do `.gitignore`. **Publicar não piorou** (já estava no histórico) **nem resolveu** — tirar do índice **não apaga do histórico**. Pode ser a mesma coisa que a linha *"rotação de credenciais expostas — não confirmado"* do plano do Notion | ⬜ **Olavo** — etapa própria, das urgentes |
+| **1** | ✅ **MEDIDO em 02/10 e MUITO menor do que eu disse.** O `.env` versionado tem **três chaves `VITE_SUPABASE_*`**, públicas por construção, em repo **privado/zero forks**, e **sem `NOTION_TOKEN`** — o token mora só na VPS. **Não há segredo exposto, nada a rotacionar, e NÃO é a mesma coisa** que a linha *"rotação de credenciais expostas"* do plano, que **segue de pé e não confirmada**. Sobra: **`.env` no `.gitignore`** (pelo que pode cair lá amanhã) e conferir se há **projeto Supabase vivo** | 🟢 baixo · ⬜ a checagem do Supabase é do Olavo |
 | **2** | lockfile / `npm ci` / 12 vulnerabilidades (10 altas, inclusive React Router) | ⬜ **Olavo** |
 | **3** | limpeza da pasta `webview/` (resíduo morto) | ⬜ **Olavo** — **ele autorizou publicar, não limpar** |
 | **4** | 🔴 **a linha do ledger (R3) não foi escrita** — o executor ficou sem cota. **O digest de amanhã 08:30 vai dizer "sem progresso" no dia de uma publicação** | ⬜ |

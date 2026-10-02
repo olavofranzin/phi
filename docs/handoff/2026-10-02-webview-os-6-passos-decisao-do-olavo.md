@@ -173,5 +173,104 @@ nenhuma**. O apagamento é limpeza; a porta aberta é exposição.
 | **2** | a **lista de vulnerabilidades** + o lockfile (`npm ci`) | ⬜ não feito |
 | **3** | apagar a pasta `webview/` | ⬜ não feito (autorizado) |
 
-> 🔴 **O item 1 é o único da casa inteira que piora sozinho com o tempo.** Os outros esperam sem
-> custo; uma credencial exposta não.
+> 🔴 **CORRIGIDO em 02/10 — ver §6.** Eu escrevi aqui que o `.env` era *"o único item da casa que
+> piora sozinho com o tempo"*. **Medi: não há segredo nele** — três chaves `VITE_SUPABASE_*`, que são
+> públicas por construção, em repo privado com zero forks, e **sem `NOTION_TOKEN`**. **Não é urgente e
+> não há o que rotacionar.** O que sobra é pôr `.env` no `.gitignore`, pelo risco do que pode cair lá
+> amanhã.
+
+---
+
+## 6. 🔴 CORREÇÃO DE 2026-10-02 — eu medi o `.env`, e exagerei a gravidade
+
+**O Olavo pediu o passo a passo para fazer ele mesmo. Duas das três perguntas eu respondi medindo
+daqui** — e o resultado **desinfla o que eu tinha escalado.**
+
+### O que o `.env` tem, de fato
+
+| Pergunta | Resposta medida |
+|---|---|
+| **público ou privado?** | 🟢 **PRIVADO**, `forks: 0`, criado em 23/09 |
+| **desde quando está no git?** | `01e1907` (23/08, pelo bot do Lovable) e `7a2f175` (23/09, *"Add Supabase configuration"*) |
+| 🟢 **quais chaves?** | **três, e só três:** `VITE_SUPABASE_PROJECT_ID` · `VITE_SUPABASE_PUBLISHABLE_KEY` · `VITE_SUPABASE_URL` — **idem no `webview/.env`** |
+| 🔴 **tem `NOTION_TOKEN`?** | **NÃO.** Ele aparece **só como NOME** em `.env.example`, `server/index.js` e `server/notion.js`. **O valor nunca entrou no git** |
+
+### 🔴 Por que isso muda o veredito
+
+**`VITE_*` é, por construção, embutido no pacote do navegador** — o Vite inlina essas variáveis no JS
+do cliente. **Quem abre a página já tem as três.** E `PUBLISHABLE_KEY` é a chave *anon* do Supabase:
+ela **existe para ser pública** e é protegida por RLS, não por sigilo.
+
+> 🟢 **Conclusão: não há segredo exposto neste `.env`.** O token do Notion — o único segredo de
+> verdade do webview — **mora só na VPS, exatamente como a regra da casa manda.** A regra estava sendo
+> cumprida.
+
+### O que eu errei, e como
+
+**O relatório do executor afirmou um fato correto:** *"`.env` da raiz continua versionado e o
+`.gitignore` não o ignora."* 🔴 **A gravidade fui eu que pus**: chamei de *"das urgentes"*, de *"o
+único item da casa que piora sozinho com o tempo"*, e levantei que podia ser **a mesma coisa** que a
+linha *"rotação de credenciais expostas — não confirmado"* do plano no Notion.
+
+| | |
+|---|---|
+| **Não é urgente** | não há segredo lá |
+| 🔴 **Não é a mesma coisa** que a linha do plano | aquela linha **continua de pé, sozinha e não confirmada** |
+| **Nada a rotacionar** | não existe credencial comprometida aqui |
+
+> **É a R6 virada contra mim, e é a mesma frase que eu uso nos outros:** *o que se mede vence o que
+> está escrito — inclusive o que está escrito por mim.* **Custo de medir: dois comandos. Preço de não
+> medir: eu teria mandado o Olavo rotacionar uma chave que existe para ser pública.**
+
+### 🟢 O que SOBRA, e vale fazer — é pequeno e não é rotação
+
+| # | O que | Por quê |
+|---|---|---|
+| **1** | 🔴 **pôr `.env` no `.gitignore`** | **o risco não é o que está lá — é o que pode cair lá amanhã.** Hoje, se alguém puser um segredo de verdade no `.env`, ele entra no git **sem resistência nenhuma** |
+| **2** | ⚠️ **e tem uma ironia:** o próprio `server/.env.example` diz *"NUNCA versione o `.env` preenchido (**o `.gitignore` já ignora**)"* | **é falso.** O exemplo afirma o estado certo e o artefato contradiz — **R13 regra 3**, agora dentro de um `.env.example` |
+| **3** | o `webview/.env` sai junto com a pasta | já está na fila |
+
+### ⬜ A única parte que precisa de você — e é no Supabase, não no git
+
+O Supabase é **resíduo do andaime do Lovable**: sobrou **um** arquivo que o referencia
+(`src/integrations/supabase/client.ts`), e o commit anterior ao publicado chama-se *"Removed supabase
+client req"*.
+
+**A chave ser pública não é o problema. A pergunta é se existe projeto vivo atrás dela:**
+
+| # | Passo (em `supabase.com`, com o seu login) |
+|---|---|
+| **1** | **existe um projeto** com esse `PROJECT_ID`? |
+| **2** | se existe, **tem dado dentro** — alguma tabela com linha? |
+| **3** | se tem dado, **o RLS está ligado** nas tabelas? |
+
+| Resultado | O que fazer |
+|---|---|
+| **não existe projeto**, ou existe e **está vazio** | 🟢 **nada a proteger.** O `src/integrations/supabase/` e o `supabase/functions/` **saem junto com a limpeza** |
+| **existe com dado** | ⚠️ aí sim é assunto: **ou liga RLS, ou apaga o projeto**. A chave pública dá acesso ao que o RLS permitir |
+
+---
+
+## 7. 🟢 As outras duas respostas do Olavo (2026-10-02)
+
+### 7.1. O gráfico "Evolução do Score" — **VOLTA** (decisão do Olavo)
+
+| | |
+|---|---|
+| ⛔ **`/api/phi-score-history` NÃO se apaga** | fica, e sai da lista de rotas órfãs **em definitivo** |
+| 🟢 **Vira tarefa de construção** | **religar** o gráfico de tendência real na tela de métricas, consumindo a rota que já existe |
+| 🔴 **E vira incidente, não só tarefa** | o `CHECKLIST` marcou o **W5 como CONCLUÍDO** com esse gráfico, e ele **parou de existir sem ninguém ver**. **É o M10 no nível de funcionalidade: declarado entregue, verde, ausente** |
+| **O que teria pego** | um teste que afirme que o gráfico renderiza. **Não existe.** Entra na lista de testes do passo 5 |
+
+### 7.2. `/api/health` — a API do EasyPanel não está ativada na versão dele
+
+**Então a pergunta não tem como ser respondida por fora.** 🟢 **Resolvo sem precisar do painel:**
+
+| | |
+|---|---|
+| 🟢 **A rota FICA** | são ~10 linhas, e **health endpoint é coisa legítima de um serviço ter**. Apagar arrisca loop de restart por um ganho de nada |
+| 🔴 **Mas o que ela CONTA muda** | hoje ela *"confirma de fora se o token do Notion está ativo"*. **Health diz "o serviço está de pé" — não diz se uma credencial é válida.** Tirar essa parte são duas linhas |
+| **Efeito** | a rota sobrevive para a plataforma, **e o vazamento de informação morre** |
+
+> **Nenhuma das duas precisava de decisão nova do Olavo** — precisavam de alguém escolher a opção que
+> resolve os dois lados.

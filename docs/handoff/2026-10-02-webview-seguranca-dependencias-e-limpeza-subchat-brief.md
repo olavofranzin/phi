@@ -1,3 +1,13 @@
+> 🔴 **EMENDA DE 2026-10-02, ANTES DE VOCÊ COMEÇAR: o TRABALHO 1 já foi medido pelo chat-mãe, e o
+> resultado desinfla o alarme.** O `.env` versionado tem **três chaves `VITE_SUPABASE_*`** — públicas
+> por construção (o Vite as inlina no pacote do navegador) — em repo **privado, zero forks**, e **sem
+> `NOTION_TOKEN`** (o token mora só na VPS, como a regra manda). **Não há segredo exposto e não há o
+> que rotacionar.** O §1 deste brief fica como HISTÓRICO. O que sobrou é pequeno e está no §6 do
+> `2026-10-02-webview-os-6-passos-decisao-do-olavo.md`: **pôr `.env` no `.gitignore`**, e **o Olavo
+> conferir no Supabase** se existe projeto vivo atrás da chave pública.
+
+---
+
 # Brief — webview: segurança do `.env`, lista de vulnerabilidades, e apagar a casca `webview/`
 
 | | |
