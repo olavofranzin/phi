@@ -184,3 +184,111 @@ Router de major é mudança que precisa de teste e de OK do Olavo.**
 4. o veredito do **CA12**
 5. o que a medição **desmentiu** — este brief foi escrito sem acesso ao repo de código; **se eu errei
    alguma premissa, quero saber**
+
+---
+
+## 7. 🟢 VOLTA 1 — respondida em 2026-10-02. Confirmei medindo, e dividi o passo 1
+
+### 7.1. O que eu conferi sozinho, no commit publicado
+
+**Não aceitei o *"sem consumidor"* no relatório — medi** com `git grep` em **`c37d0b0`** (o commit que
+está no ar), não no clone local.
+
+| Rota | Consumidor em `src/` | Veredito |
+|---|---|---|
+| `/api/phi-snapshot` | `usePhiData.ts` | 🟢 **vivo** |
+| `/api/clients` | `useClientData` + teste | 🟢 **vivo** |
+| `/api/notion-debug` | **0** | ✅ **confirmado órfão** |
+| `/api/campaign-detail` | **0** | ✅ **confirmado órfão** |
+| `/api/health` | **0** em `src/` · **e nenhum `HEALTHCHECK` em arquivo versionado** | 🟡 **pergunta aberta — ver 7.3** |
+| `/api/phi-score-history` | **0** | 🔴 **pergunta aberta, e é a mais séria — ver 7.2** |
+
+> ⚠️ **Correção minha, no caminho:** a primeira medição que fiz foi num **clone local atrasado** e me
+> fez pensar que a branch tinha andado depois da publicação. **Dei `fetch` e não tinha:** `origin/webview`
+> está em **`c37d0b0`**, o commit publicado, e `9e4ab45` é o **pai** dele. **Ninguém escreveu depois.**
+> É a **R13 na forma git**: *li o que estava no meu disco, não o que está no ar.*
+
+### 7.2. 🔴 `/api/phi-score-history` não é código morto — é funcionalidade que desapareceu
+
+**O `CHECKLIST-webview.md` diz, no W5 marcado CONCLUÍDO:**
+
+> *"status e **tendência real** (gráfico **Evolução do Score** ligado a `/api/phi-score-history` →
+> `phi_score_history`)"*
+
+**A medição diz: zero consumidores.** Então uma das duas é verdade:
+
+| | |
+|---|---|
+| **(a)** | o gráfico **existiu e sumiu** — e apagar a rota **torna a regressão permanente**, com nome de limpeza |
+| **(b)** | o checklist **sempre esteve errado**, e *"tendência real"* foi declarado entregue sem ter sido |
+
+> 🔴 **Nos dois casos, a resposta não é apagar.** É **o Olavo decidir se o gráfico volta** — *"tendência
+> real"* foi anunciado como entregue, e isso é escopo de produto, não faxina.
+>
+> **E é a R2 regra 5 outra vez:** o checklist (o lugar onde se procura) afirma uma coisa que o artefato
+> contradiz. **Esta é a terceira vez em uma semana.**
+
+### 7.3. 🟡 `/api/health` — o repo não pode responder isso
+
+Não há `HEALTHCHECK` em nenhum arquivo versionado. **Mas o healthcheck do EasyPanel mora no painel do
+EasyPanel, não no repositório** — e você mesmo escreveu que **a config do EasyPanel é uma das duas
+coisas que não deu para confirmar.**
+
+> 🔴 **Apagar o `/api/health` sem saber se a plataforma o sonda é como desabilitar nó no n8n:** não
+> tem cor, não tem alarme, **e aparece como loop de restart no deploy seguinte.** O Olavo olha no
+> painel em 20 segundos. **Até lá, não encoste.**
+
+### 7.4. 🟢 O passo 1, dividido — faça a parte sem pergunta
+
+| | |
+|---|---|
+| 🟢 **APAGUE AGORA** | `/api/notion-debug` · `/api/campaign-detail` · **e as linhas de `server/notion.js` que só eles usam** |
+| ⏸️ **NÃO ENCOSTE** | `/api/health` (espera o painel do EasyPanel) · `/api/phi-score-history` (espera decisão de produto do Olavo) |
+
+**Por que isso não enfraquece o ganho:** o **CRITICAL** era o `notion-debug` lendo qualquer base do
+Notion. **Ele morre hoje**, e a maior parte das ~240 linhas vai com ele. **O que ficou de fora são
+exatamente as duas com pergunta aberta** — e nenhuma delas é o buraco de segurança.
+
+🔴 **Regras do apagamento:** publique **sozinho** (sem nenhuma outra mudança), anote o rollback
+`c37d0b0…` antes, e **reconfirme os dois endpoints vivos depois** (`/api/clients` com 6 de 11
+telefones · `/api/phi-snapshot` igual). **E registre o porquê** (**R5**), senão alguém recria em três
+meses.
+
+### 7.5. 🔴 Os três trabalhos deste brief continuam sem fazer
+
+**A revisão é boa, mas não é o que estava pedido.** Nenhum dos três voltou:
+
+| # | Pedido | Estado |
+|---|---|---|
+| **1** | **os nomes das chaves do `.env`, desde quando está no git, repo público ou privado** | ⬜ **não feito — e é o que o Olavo chamou de urgente** |
+| **2** | **a lista de vulnerabilidades** (Dependabot ou `npm audit`), com as 4 colunas | ⬜ **não feito** |
+| **3** | apagar a pasta `webview/`, provada morta | ⬜ **não feito** |
+
+> **O item 1 é o que corre risco por esperar.** Os outros dois podem andar junto com o apagamento.
+
+### 7.6. ⛔ Os passos 2 a 6 do seu plano não estão autorizados
+
+**Eles são bons. E são escopo novo** — autenticação, banner de erro, conserto do join, `strictNullChecks`
+são **projeto**, não continuação de faxina. Você mesmo escreveu sobre o passo 6: *"espere trabalho:
+vai acusar bastante coisa de uma vez."*
+
+> 🔴 **R7: nada se constrói sem plano aprovado pelo Olavo.** Eu levo os seis a ele como **decisão**,
+> com o custo de cada um. **Não comece nenhum.**
+
+**Mas registro o que você achou, porque é valioso** — inclusive os três testes propostos, e
+especialmente o de `buildCampaigns`, que é *"toda a matemática que o produto exibe e está sem teste
+nenhum"*.
+
+### 7.7. 🔴 O join quebrado é a MESMA doença do Agregador
+
+**Vale dizer em voz alta:** o `CRITICAL` do join por `client_id` — que **dois agentes apontaram
+independentemente** — e o defeito que fechamos hoje no Agregador **são a mesma falha**: *identidade
+casada pela coisa errada.*
+
+| Frente | O que era |
+|---|---|
+| **Agregador** | casava por **posição no array** (`nodeFirst`, `sd[0]`) em vez de por `client_id` |
+| **Webview** | casa por `client_id` **que pode ser coagido** — você mesmo pôs *"`client_id` com zero à esquerda"* na tabela de teste |
+
+> **Dois times, duas semanas, duas frentes, a mesma doença.** 🔴 **Isso não é um bug: é um padrão da
+> casa**, e provavelmente merece invariante próprio. Levo ao Olavo.
