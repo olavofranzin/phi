@@ -274,3 +274,84 @@ client req"*.
 
 > **Nenhuma das duas precisava de decisão nova do Olavo** — precisavam de alguém escolher a opção que
 > resolve os dois lados.
+
+---
+
+## 8. 🔴 02/10 — *"por que a checagem do Supabase?"*. A minha razão estava errada; a verdadeira é pior
+
+**O Olavo perguntou, e a pergunta desmontou a minha justificativa.** Eu disse para checar *"se há
+dado atrás da chave pública"*. **Medi, e essa pergunta se responde sozinha — a resposta é NÃO:**
+
+| Medição | Resultado |
+|---|---|
+| `supabase/migrations/` | 🟢 **nenhuma.** **Nenhuma tabela jamais foi definida** |
+| `.insert` · `.upsert` · `.rpc` · `supabase.auth` em `src`/`server` | 🟢 **nenhuma** (os `.from(` são `Buffer.from` e `Array.from`) |
+| quem importa `integrations/supabase/client.ts` | 🟢 **ninguém** — a única referência é um `import` **comentado dentro do próprio arquivo** |
+
+> **Andaime morto. Não havia o que checar, e eu quase mandei o Olavo checar.** É a mesma falha do
+> `.env`, uma camada abaixo: **eu herdei um alarme e aumentei o volume em vez de medir.**
+
+### 🔴 Mas a pasta `supabase/functions/` não é andaime — é a ARQUITETURA ANTERIOR
+
+| Arquivo | O que é |
+|---|---|
+| `supabase/functions/phi-snapshot/index.ts` | **o mesmo nome** da rota viva `/api/phi-snapshot` |
+| `supabase/functions/phi-score-history/index.ts` | **o mesmo nome** de `/api/phi-score-history` |
+| `supabase/functions/_shared/bq.ts` | 🔴 **fala com o BigQuery** |
+| `supabase/config.toml` | `project_id = "mfnrldnhcxaftwfdolsk"` |
+
+**Antes do servidor Node, os dados vinham de Edge Functions do Supabase lendo o BigQuery.** O
+`server/index.js` as **substituiu** — e elas **ficaram para trás**, exatamente como o draft do
+`Reclassifica IDs` ficou.
+
+### 🔴 E o que `_shared/bq.ts` lê:
+
+```
+const saKey = Deno.env.get("GCP_SA_KEY");
+// "Missing secret GCP_SA_KEY. Add the full service-account JSON in Project Settings → Secrets."
+```
+
+> 🔴 **Ou seja: se essas funções foram publicadas, existe o JSON COMPLETO de uma service account do
+> Google — chave privada incluída — guardado nos segredos de um projeto Supabase que nada no
+> aplicativo usa mais.**
+
+**E tem a consequência que muda o passo da autenticação:**
+
+| | |
+|---|---|
+| **A chave `anon` é pública** (está no pacote do navegador) | e **ela é um JWT válido** para chamar Edge Function |
+| **As funções vivem em `*.supabase.co`** | 🔴 **FORA do domínio do EasyPanel** |
+| 🔴 **Logo** | a autenticação básica que eu recomendei **não cobre essa porta.** Seria **trancar uma das duas** |
+
+### O que é medido e o que NÃO é — para não repetir o erro
+
+| | |
+|---|---|
+| 🟢 **Medido** | o código existe no git · lê `GCP_SA_KEY` · projeto `mfnrldnhcxaftwfdolsk` · nada no app usa Supabase · zero migrations |
+| 🔴 **NÃO medido** | **se as funções estão publicadas** · **se o `GCP_SA_KEY` foi realmente preenchido** nos segredos daquele projeto · se aquela service account ainda é válida |
+
+**Os três só o Olavo resolve** — é a conta dele. **E é por isso que a checagem vale**, não pela razão
+que eu tinha dado.
+
+### ⬜ O passo a passo, corrigido (em `supabase.com`)
+
+| # | |
+|---|---|
+| **1** | o projeto **`mfnrldnhcxaftwfdolsk`** ainda existe? |
+| **2** | em **Edge Functions**: `phi-snapshot` e `phi-score-history` aparecem como **deployed**? |
+| **3** | em **Project Settings → Secrets**: existe um segredo chamado **`GCP_SA_KEY`**? 🔴 **(só se existe. Não abra, não copie)** |
+
+### 🟢 E a recomendação, se a resposta for sim — **apagar, não rotacionar**
+
+| Caminho | Avaliação |
+|---|---|
+| **rotacionar a service account** | 🔴 **perigoso:** o `.env.example` do próprio webview nomeia `phi-workflow-sa@phi-production-488720` — **é provavelmente a MESMA service account que o PHI inteiro usa.** Rotacionar mexe no n8n, no servidor do webview, em tudo |
+| 🟢 **apagar as Edge Functions (ou o projeto)** | **mesmo efeito, raio de explosão zero.** A porta fecha e nada que está vivo sente |
+
+> 🔴 **É o procedimento de aposentadoria da R5 aplicado a recurso de nuvem:** quando a função foi
+> substituída, **desligar o chamador não bastou — o serviço antigo continuou de pé, com credencial
+> dentro.** *Apagar o código não apaga o projeto.*
+
+> ⚠️ **E isto é candidato melhor para a linha *"rotação de credenciais expostas — não confirmado"* do
+> plano no Notion** do que o `.env` que eu apontei. **Candidato — não confirmado.** Os três passos
+> acima dizem.
