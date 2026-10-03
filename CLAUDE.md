@@ -82,7 +82,7 @@ mexer em servidor, caçar bug.
 
 > **Motivo:** em 29/09 aconteceu de novo — declarar a branch com mais destaque não resolveu; a trava é a R15 — história completa em [`BASE-04-INCIDENTES`](docs/base/BASE-04-INCIDENTES.md#7-D7-branch-ditada-por-engano).
 
-> **Motivo:** execução morando aqui lota o contexto e o planejamento se perde — história completa em [`BASE-04-INCIDENTES`](docs/base/BASE-04-INCIDENTES.md#9-D11-execucao-no-chat-mae).
+> **Motivo:** execução morando aqui lota o contexto e o planejamento se perde — história completa em [`BASE-04-INCIDENTES`](docs/base/BASE-04-INCIDENTES.md#11-D11-execucao-no-chat-mae).
 
 ### R2 — Etapa concluída = documentação atualizada NA MESMA SESSÃO
 **Nenhuma etapa é "concluída" enquanto a documentação não refletir isso.** Ao terminar uma entrega:
@@ -118,7 +118,7 @@ e **por que existe** — incluindo **o que ele substituiu e por quê**.
 - Ao criar ou alterar um artefato, **atualize a descrição na mesma sessão**.
 - **Descrição copiada de outro artefato é bug** (foi o caso de 3 workflows da Prospecção).
 
-> **Motivo:** em 08/09 a auditoria não descobriu por que o `Daily Entry` saiu do ar — história completa em [`BASE-04-INCIDENTES`](docs/base/BASE-04-INCIDENTES.md#11-D8-intencao-nao-escrita).
+> **Motivo:** em 08/09 a auditoria não descobriu por que o `Daily Entry` saiu do ar — história completa em [`BASE-04-INCIDENTES`](docs/base/BASE-04-INCIDENTES.md#8-D8-intencao-nao-escrita).
 
 **Procedimento canônico de aposentadoria** (precedente `[APOSENTADO 2026-07-21] PHI - Loop Alerta
 Fase 1` — o único workflow do parque que hoje passa no teste da R5):
@@ -146,7 +146,7 @@ E **em cada etapa do plano**, antes de propor construir, responder por escrito:
 2. **Existe workflow** que já faz? **Existe coluna** que já guarda?
 3. Se procurei e **não existe**, **registrar que procurei** — senão a próxima sessão procura de novo.
 
-> **Motivo:** o `1º Enriquecimento`, o `id_hubspot` e as 6 dimensões do score custaram semanas — história completa em [`BASE-04-INCIDENTES`](docs/base/BASE-04-INCIDENTES.md#12-D9-construir-o-que-ja-existia).
+> **Motivo:** o `1º Enriquecimento`, o `id_hubspot` e as 6 dimensões do score custaram semanas — história completa em [`BASE-04-INCIDENTES`](docs/base/BASE-04-INCIDENTES.md#9-D9-construir-o-que-ja-existia).
 
 ### R8 — Skill primeiro; subagente é a exceção
 **O padrão é a skill** — instrução determinística, versionada em pasta. **Orquestrar vários agentes é
@@ -161,7 +161,7 @@ exceção**, reservada a tarefa de alta volatilidade.
 > **Teste prático:** *"se eu escrevesse isso num checklist, outra pessoa executaria igual?"* Se sim, é
 > skill. Se a resposta depende de julgamento a cada caso, é agente.
 >
-> **Motivo:** o `phi-diagnostico` é o agente que virou skill e passou a ser testável sem token — história completa em [`BASE-04-INCIDENTES`](docs/base/BASE-04-INCIDENTES.md#10-D12-orquestracao-onde-skill-bastava).
+> **Motivo:** o `phi-diagnostico` é o agente que virou skill e passou a ser testável sem token — história completa em [`BASE-04-INCIDENTES`](docs/base/BASE-04-INCIDENTES.md#12-D12-orquestracao-onde-skill-bastava).
 
 ### R10 — Modelo caro só onde há julgamento (escada de modelos)
 Tarefa básica usa **modelo rápido e barato**; tarefa que exige **raciocínio e qualidade de entrega**
@@ -191,7 +191,7 @@ usa **modelo forte**. Escolher o modelo é decisão de arquitetura, não detalhe
 4. **Quem revisa não é quem executou**, e o critério de aceite é **escrito antes**. Reprovou, volta com
    relatório do defeito. **Limite de 3 voltas** — na terceira, o problema é o plano, não a execução.
 
-> **Motivo:** em 16/09 a entrevista chegou depois da construção — autópsia, não entrevista — história completa em [`BASE-04-INCIDENTES`](docs/base/BASE-04-INCIDENTES.md#8-D10-entrevista-atrasada).
+> **Motivo:** em 16/09 a entrevista chegou depois da construção — autópsia, não entrevista — história completa em [`BASE-04-INCIDENTES`](docs/base/BASE-04-INCIDENTES.md#10-D10-entrevista-atrasada).
 
 ### R11 — Sucesso silencioso é o modo de falha desta casa
 **Nó que roda verde fazendo o contrário do que o nome diz** já nos custou caro **cinco vezes**:

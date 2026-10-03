@@ -78,7 +78,7 @@ def git_show(commit, caminho):
 
 def ancora_por_bloco():
     """Mapeia bloco -> (indice da doenca, id da doenca), na MESMA ordem do BASE-04."""
-    doencas = sorted(M.DOENCAS, key=lambda d: (-d["ocorrencias"], d["id"]))
+    doencas = sorted(M.DOENCAS, key=lambda d: (-d["ocorrencias"], int(d["id"].split("-")[0][1:])))
     m = {}
     for i, d in enumerate(doencas, 1):
         for b in d["blocos"]:

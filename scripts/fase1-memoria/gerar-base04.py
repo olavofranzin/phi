@@ -192,7 +192,7 @@ def git_show(commit, caminho):
 
 def main():
     linhas = git_show(M.BASE_COMMIT, M.RAIZ).splitlines(keepends=True)
-    doencas = sorted(M.DOENCAS, key=lambda d: (-d["ocorrencias"], d["id"]))
+    doencas = sorted(M.DOENCAS, key=lambda d: (-d["ocorrencias"], int(d["id"].split("-")[0][1:])))
 
     out = []
     w = out.append

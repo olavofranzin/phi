@@ -29,11 +29,11 @@
 | 5 | [O rascunho confundido com o que está no ar](#5-D5-rascunho-confundido-com-o-ar) | **3** | `R13` |
 | 6 | [Identidade casada por posição no array ou por chave coagível](#6-D6-identidade-por-posicao) | **2** | `R14` |
 | 7 | [Branch ditada por engano — o executor tem duas ordens e obedece à mais perto](#7-D7-branch-ditada-por-engano) | **2** | `R15` |
-| 8 | [Entrevista de alinhamento pedida depois da construção](#8-D10-entrevista-atrasada) | **1** | `R9` |
-| 9 | [Execução morando no chat-mãe](#9-D11-execucao-no-chat-mae) | **1** | `R1` |
-| 10 | [Orquestrar agente onde uma skill bastava](#10-D12-orquestracao-onde-skill-bastava) | **1** | `R8` |
-| 11 | [A intenção só existia na cabeça do Olavo](#11-D8-intencao-nao-escrita) | **1** | `R5` |
-| 12 | [Construir o que já existia, ou o que não podia ser auditado depois](#12-D9-construir-o-que-ja-existia) | **1** | `R7` |
+| 8 | [A intenção só existia na cabeça do Olavo](#8-D8-intencao-nao-escrita) | **1** | `R5` |
+| 9 | [Construir o que já existia, ou o que não podia ser auditado depois](#9-D9-construir-o-que-ja-existia) | **1** | `R7` |
+| 10 | [Entrevista de alinhamento pedida depois da construção](#10-D10-entrevista-atrasada) | **1** | `R9` |
+| 11 | [Execução morando no chat-mãe](#11-D11-execucao-no-chat-mae) | **1** | `R1` |
+| 12 | [Orquestrar agente onde uma skill bastava](#12-D12-orquestracao-onde-skill-bastava) | **1** | `R8` |
 
 > **O que o placar mostra, e a ordem cronológica escondia:** as duas primeiras doenças respondem por **12 dos incidentes desta pasta**. Elas não são sete e cinco acidentes — são **duas doenças**, cada uma repetida. Quem for consertar causa-raiz nesta casa, começa por elas.
 
@@ -404,13 +404,67 @@
 
 ---
 
-## 8. Entrevista de alinhamento pedida depois da construção <a id="8-D10-entrevista-atrasada"></a>
+## 8. A intenção só existia na cabeça do Olavo <a id="8-D8-intencao-nao-escrita"></a>
+
+**Vezes que aconteceu:** 1 · **Regra que saiu:** `R5`
+
+> Inventário pega estrutura; intenção só existe se alguém escrever.
+
+### 14. 2026-09-08 — a auditoria não descobriu por que o `Daily Entry` foi desativado
+
+| | |
+|---|---|
+| **data** | 2026-09-08 |
+| **o que parecia** | a auditoria por inventário cobria o parque |
+| **o que era** | não descobriu que o `Daily Entry` tinha sido desativado **porque** o `sw metricas campanhas` entrou no lugar — isso só existia na cabeça do Olavo |
+| **o custo medido** | não declarado em horas no texto de origem. O custo nomeado é estrutural: “inventário pega estrutura; intenção só existe se alguém escrever” |
+| **a regra que saiu** | `R5` |
+| **link de volta** | [`CLAUDE.md` → R5](../../CLAUDE.md) · âncora `H-R5-DAILYENTRY` |
+
+**Como estava escrito no `CLAUDE.md`** (linhas 263–268 do commit `d543f16`, byte-idêntico):
+
+> **Motivo:** em 2026-09-08 a auditoria por inventário **não descobriu** que o `Daily Entry` tinha
+> sido desativado **porque** o `sw metricas campanhas` entrou no lugar. Isso só existia na cabeça do
+> Olavo. **Inventário pega estrutura; intenção só existe se alguém escrever.**
+>
+> Teste prático: **se a auditoria semanal precisa perguntar ao Olavo para entender, a descrição
+> falhou.** (Generaliza o invariante I10 do ADR-35 para o projeto inteiro.)
+
+---
+
+## 9. Construir o que já existia, ou o que não podia ser auditado depois <a id="9-D9-construir-o-que-ja-existia"></a>
+
+**Vezes que aconteceu:** 1 · **Regra que saiu:** `R7`
+
+> Corrigir um plano em texto custa minutos; corrigir uma construção custa semanas.
+
+### 15. O `1º Enriquecimento`, o `id_hubspot` e as 6 dimensões do score
+
+| | |
+|---|---|
+| **data** | não declarada no texto de origem (três casos nomeados) |
+| **o que parecia** | construir era o caminho |
+| **o que era** | já existia, ou o que se construiu não podia ser auditado depois |
+| **o custo medido** | semanas, no `1º Enriquecimento`, no `id_hubspot` e nas 6 dimensões do score |
+| **a regra que saiu** | `R7` |
+| **link de volta** | [`CLAUDE.md` → R7](../../CLAUDE.md) · âncora `H-R7-MOTIVO` |
+
+**Como estava escrito no `CLAUDE.md`** (linhas 337–340 do commit `d543f16`, byte-idêntico):
+
+> **Motivo:** é a **R2** e a **R6** aplicadas *antes* do fato, e não depois. Corrigir um plano em texto
+> custa minutos; corrigir uma construção custa semanas — foi o que aconteceu com o `1º Enriquecimento`,
+> com o `id_hubspot` e com as 6 dimensões do score. **O caro nunca foi construir: foi construir o que
+> já existia, ou o que não podia ser auditado depois.**
+
+---
+
+## 10. Entrevista de alinhamento pedida depois da construção <a id="10-D10-entrevista-atrasada"></a>
 
 **Vezes que aconteceu:** 1 · **Regra que saiu:** `R9`
 
 > Entrevista atrasada não é entrevista — é autópsia.
 
-### 14. 2026-09-16 — quatro das nove perguntas já tinham sido respondidas por incidente
+### 16. 2026-09-16 — quatro das nove perguntas já tinham sido respondidas por incidente
 
 | | |
 |---|---|
@@ -433,13 +487,13 @@
 
 ---
 
-## 9. Execução morando no chat-mãe <a id="9-D11-execucao-no-chat-mae"></a>
+## 11. Execução morando no chat-mãe <a id="11-D11-execucao-no-chat-mae"></a>
 
 **Vezes que aconteceu:** 1 · **Regra que saiu:** `R1`
 
 > Quando a execução mora no chat-mãe, o planejamento — que é o que só ele faz — se perde.
 
-### 15. O motivo da R1, como estava escrito
+### 17. O motivo da R1, como estava escrito
 
 | | |
 |---|---|
@@ -457,13 +511,13 @@
 
 ---
 
-## 10. Orquestrar agente onde uma skill bastava <a id="10-D12-orquestracao-onde-skill-bastava"></a>
+## 12. Orquestrar agente onde uma skill bastava <a id="12-D12-orquestracao-onde-skill-bastava"></a>
 
 **Vezes que aconteceu:** 1 · **Regra que saiu:** `R8`
 
 > O `phi-diagnostico` é o exemplo da casa: um agente que virou skill e passou a poder ser testado sem gastar token no n8n.
 
-### 16. O motivo da R8, como estava escrito
+### 18. O motivo da R8, como estava escrito
 
 | | |
 |---|---|
@@ -479,60 +533,6 @@
 > **Motivo:** skill tem carga de contexto baixa e saída previsível; orquestração tem o efeito oposto e
 > só se paga quando a tarefa realmente exige autonomia. O `phi-diagnostico` é o exemplo da casa: um
 > agente que virou skill e passou a poder ser testado sem gastar token no n8n.
-
----
-
-## 11. A intenção só existia na cabeça do Olavo <a id="11-D8-intencao-nao-escrita"></a>
-
-**Vezes que aconteceu:** 1 · **Regra que saiu:** `R5`
-
-> Inventário pega estrutura; intenção só existe se alguém escrever.
-
-### 17. 2026-09-08 — a auditoria não descobriu por que o `Daily Entry` foi desativado
-
-| | |
-|---|---|
-| **data** | 2026-09-08 |
-| **o que parecia** | a auditoria por inventário cobria o parque |
-| **o que era** | não descobriu que o `Daily Entry` tinha sido desativado **porque** o `sw metricas campanhas` entrou no lugar — isso só existia na cabeça do Olavo |
-| **o custo medido** | não declarado em horas no texto de origem. O custo nomeado é estrutural: “inventário pega estrutura; intenção só existe se alguém escrever” |
-| **a regra que saiu** | `R5` |
-| **link de volta** | [`CLAUDE.md` → R5](../../CLAUDE.md) · âncora `H-R5-DAILYENTRY` |
-
-**Como estava escrito no `CLAUDE.md`** (linhas 263–268 do commit `d543f16`, byte-idêntico):
-
-> **Motivo:** em 2026-09-08 a auditoria por inventário **não descobriu** que o `Daily Entry` tinha
-> sido desativado **porque** o `sw metricas campanhas` entrou no lugar. Isso só existia na cabeça do
-> Olavo. **Inventário pega estrutura; intenção só existe se alguém escrever.**
->
-> Teste prático: **se a auditoria semanal precisa perguntar ao Olavo para entender, a descrição
-> falhou.** (Generaliza o invariante I10 do ADR-35 para o projeto inteiro.)
-
----
-
-## 12. Construir o que já existia, ou o que não podia ser auditado depois <a id="12-D9-construir-o-que-ja-existia"></a>
-
-**Vezes que aconteceu:** 1 · **Regra que saiu:** `R7`
-
-> Corrigir um plano em texto custa minutos; corrigir uma construção custa semanas.
-
-### 18. O `1º Enriquecimento`, o `id_hubspot` e as 6 dimensões do score
-
-| | |
-|---|---|
-| **data** | não declarada no texto de origem (três casos nomeados) |
-| **o que parecia** | construir era o caminho |
-| **o que era** | já existia, ou o que se construiu não podia ser auditado depois |
-| **o custo medido** | semanas, no `1º Enriquecimento`, no `id_hubspot` e nas 6 dimensões do score |
-| **a regra que saiu** | `R7` |
-| **link de volta** | [`CLAUDE.md` → R7](../../CLAUDE.md) · âncora `H-R7-MOTIVO` |
-
-**Como estava escrito no `CLAUDE.md`** (linhas 337–340 do commit `d543f16`, byte-idêntico):
-
-> **Motivo:** é a **R2** e a **R6** aplicadas *antes* do fato, e não depois. Corrigir um plano em texto
-> custa minutos; corrigir uma construção custa semanas — foi o que aconteceu com o `1º Enriquecimento`,
-> com o `id_hubspot` e com as 6 dimensões do score. **O caro nunca foi construir: foi construir o que
-> já existia, ou o que não podia ser auditado depois.**
 
 ---
 
