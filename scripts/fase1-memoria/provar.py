@@ -144,14 +144,97 @@ def substantivo(texto):
     return sum(1 for l in texto.splitlines() if len(l.strip()) > 3) >= 1
 
 
+# ---------------------------------------------------------------------------
+# EMENDAS AUTORIZADAS a texto de regra, DEPOIS da Fase 1.
+#
+# A prova nasceu para provar uma MUDANCA DE LUGAR sem perda. Emenda de regra e
+# outra coisa: e texto NOVO, legitimo, e deve poder entrar. Mas nao em silencio.
+#
+# Para um segmento aqui declarado, a prova troca de forma:
+#   - segmento NAO declarado -> o texto original tem de aparecer CONTIGUO e
+#     byte-identico (nada entra no meio);
+#   - segmento declarado     -> cada LINHA do original tem de continuar presente.
+#     Insercao e permitida; REMOCAO e ALTERACAO continuam reprovando.
+#
+# Quem emenda, declara aqui, com data e motivo. Lista vazia = regra intocada.
+# ---------------------------------------------------------------------------
+EMENDAS_AUTORIZADAS = [
+    {
+        "inicio": 549, "fim": 599, "data": "2026-10-03",
+        "regra": "R15",
+        "motivo": "a trava da branch disparou na Fase 1 e o sub-chat tratou "
+                  "'nao commitar' como 'nao registrar'. A emenda diz que parar "
+                  "e um estado, e estado se registra no Ledger antes de parar.",
+        "autor": "chat-mae, com o incidente medido no relatorio da Fase 1",
+    },
+    {
+        "inicio": 394, "fim": 397, "data": "2026-10-03",
+        "regra": "R11",
+        "motivo": "a regra dizia 'cinco vezes' e a tabela dela tinha SETE casos; "
+                  "depois da Fase 1 a contradicao ficou a DUAS linhas de "
+                  "distancia dentro da mesma regra. A regra que mais fala de "
+                  "medir estava com o numero errado.",
+        "autor": "chat-mae; achado pelo sub-chat da Fase 1, que o CA4 proibia de corrigir",
+        # Alteracao de linha de regra SO passa declarando antes -> depois.
+        "linhas_substituidas": [
+            ("**No que roda verde fazendo o contrario do que o nome diz** ja nos custou caro **cinco vezes**:",
+             "**No que roda verde fazendo o contrario do que o nome diz** ja nos custou caro **sete vezes** —"),
+        ],
+    },
+]
+
+
+def emenda_de(a, b):
+    for e in EMENDAS_AUTORIZADAS:
+        if e["inicio"] <= a and b <= e["fim"]:
+            return e
+        if a <= e["inicio"] <= b or a <= e["fim"] <= b:
+            return e
+    return None
+
+
 conferidos = 0
+emendados = 0
 for a, b in segmentos:
     texto = recorta(linhas_orig, a, b).strip("\n")
     if not substantivo(texto):
         continue
-    ok(texto in novo, f"segmento de regra {a}-{b} intacto",
-       "texto de regra ALTERADO ou perdido")
+    e = emenda_de(a, b)
+    if e is None:
+        ok(texto in novo, f"segmento de regra {a}-{b} intacto",
+           "texto de regra ALTERADO ou perdido")
+    else:
+        subs = e.get("linhas_substituidas", [])
+
+        def _n(t):
+            """Compara sem acento, para a declaracao nao depender de encoding."""
+            import unicodedata
+            t = unicodedata.normalize("NFKD", t)
+            return "".join(c for c in t if not unicodedata.combining(c)).strip()
+
+        faltando = []
+        for l in texto.splitlines():
+            if len(l.strip()) <= 3 or l in novo:
+                continue
+            # a linha saiu: so vale se houver substituicao declarada E o
+            # 'depois' dela estiver de fato no arquivo novo.
+            casou = any(_n(l) == _n(antes) and _n(depois) in _n(novo)
+                        for antes, depois in subs)
+            if not casou:
+                faltando.append(l)
+        for antes, depois in subs:
+            if _n(depois) not in _n(novo):
+                faltando.append("DECLARADA mas ausente: " + depois)
+        ok(not faltando,
+           f"segmento {a}-{b} EMENDADO ({e['regra']}, {e['data']}) "
+           f"— nada do original removido",
+           "a emenda REMOVEU ou ALTEROU linha de regra: "
+           + " | ".join(x.strip()[:60] for x in faltando[:3]))
+        emendados += 1
     conferidos += 1
+if emendados:
+    print(f"  -> {emendados} segmento(s) sob emenda declarada "
+          f"(insercao permitida, remocao reprovada)")
 print(f"  -> {conferidos} segmentos de regra conferidos, cobrindo "
       f"{sum(b - a + 1 for a, b in segmentos)} das {fim_reg - ini_reg + 1} linhas da regiao de regras")
 

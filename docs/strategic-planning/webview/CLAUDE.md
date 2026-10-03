@@ -22,19 +22,31 @@
 | **URL** | `https://app-app.1unqx7.easypanel.host/` |
 | **HEAD / rollback** | `c37d0b0c9dcd169609eff4060b04fa72a37de8be` |
 | **Deploy** | **EasyPanel**, com o `Dockerfile` **da raiz** e contexto `/` |
-| 🔴 **O arquivo vivo** | **`server/notion.js` na RAIZ** — **não** `webview/server/notion.js`. A pasta `webview/` é **resíduo morto** |
+| 🔴 **Repositório do código** | **`olavofranzin/phi-dashboard-webview`**, branch `webview` — ⚠️ **NÃO é este repo.** Este guarda o `CHECKLIST`, os ADRs e os briefs |
+| 🔴 **O arquivo vivo** | **`server/notion.js` na RAIZ daquele repo** — **não** `webview/server/notion.js`. A pasta `webview/` é **resíduo morto** |
 | **Fonte do dado** | BigQuery (`phi_score_current`, `raw_campaign_data`) + Notion (DB `Clientes`) |
 
-> 🔴 **E aqui está um achado desta fase, que nenhum documento registrava.** O `CHECKLIST` afirma que
-> o arquivo vivo é `server/notion.js` **na raiz** — e **não existe pasta `server/` na raiz de
-> nenhuma branch deste repositório.** Medido em 03/10 com `git ls-tree` em
-> `claude/consolidacao-2026-08`, `main` e `claude/webview-metricas-clientes-lxps0l`: a única cópia
-> em git é **`webview/server/`**, na branch do webview — justamente a pasta que o `CHECKLIST` chama
-> de morta.
+> 🟢 **Um achado desta fase que se desfez no mesmo dia — e por isso fica escrito.** O sub-chat da
+> Fase 1 mediu com `git ls-tree` que **não existe `server/` na raiz de nenhuma branch de
+> `olavofranzin/phi`** (conferiu três) e concluiu que *“o código que está no ar não está em git”*,
+> classificando-o como **`R13` no nível do repositório**.
 >
-> **Conclusão honesta: o código que está no ar não está em git, ou está num lugar que eu não achei.**
-> ⬜ **a perguntar ao Olavo.** Não deduzo — e **isto é mais grave que uma dívida de limpeza:** é
-> `R13` no nível do repositório. *O que está no ar não é o que está na tela.*
+> **O chat-mãe mediu no repositório certo, em 03/10, e o alarme caiu:**
+>
+> | | |
+> |---|---|
+> | **Repositório do código vivo** | 🟢 **`olavofranzin/phi-dashboard-webview`** — branch `webview` |
+> | **`server/` na raiz dele** | 🟢 **existe**: `index.js` · `notion.js` · `package.json` · `package-lock.json` |
+> | **o rollback `c37d0b0…`** | 🟢 **é commit de verdade lá** |
+> | **quem já nomeava o repo** | 🟢 **o `BASE-02` §4**, no arquivo que o próprio sub-chat estava editando |
+>
+> 🔴 **A lição é a R6 no lado da GRAVIDADE:** o **fato** estava medido; a **conclusão** e a
+> **urgência** foram acrescentadas. **O rollback é acionável, e revisar este código é revisar o que
+> está em produção.**
+>
+> ⚠️ **O que sobra de dívida real:** são **dois repositórios** — o código num, o `CHECKLIST` e os ADRs
+> no outro — e **nenhuma das duas pontas declara a outra no lugar onde se trabalha.** É isso que
+> precisa de conserto, não o código "perdido".
 
 ---
 

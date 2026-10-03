@@ -194,7 +194,8 @@ usa **modelo forte**. Escolher o modelo é decisão de arquitetura, não detalhe
 > **Motivo:** em 16/09 a entrevista chegou depois da construção — autópsia, não entrevista — história completa em [`BASE-04-INCIDENTES`](docs/base/BASE-04-INCIDENTES.md#10-D10-entrevista-atrasada).
 
 ### R11 — Sucesso silencioso é o modo de falha desta casa
-**Nó que roda verde fazendo o contrário do que o nome diz** já nos custou caro **cinco vezes**:
+**Nó que roda verde fazendo o contrário do que o nome diz** já nos custou caro **sete vezes** —
+**e as sete estão na tabela do `BASE-04`, contadas**:
 
 > **Motivo:** sete nós verdes fazendo o contrário do nome, de 09 a 10/2026 — história completa em [`BASE-04-INCIDENTES`](docs/base/BASE-04-INCIDENTES.md#1-D1-vazio-vira-outra-coisa).
 
@@ -335,6 +336,21 @@ e esta casa já pagou por cada uma delas.
 >
 > **Teste prático:** *"eu tenho duas ordens sobre onde commitar?"* Se sim, **a dúvida vem antes do
 > commit — depois vira mudança de histórico.**
+
+> 🔴 **EMENDA 2026-10-03 — a trava disparou, funcionou, e abriu um buraco na R3.** O sub-chat da
+> Fase 1 **parou certo** (as duas branches divergiam) — e **não registrou nada no Ledger**, porque
+> tratou *"não commitar"* como *"não registrar"*. **São duas decisões diferentes, e ele as misturou.**
+>
+> **Resultado:** um sub-chat **parado esperando o Olavo** foi exatamente o que o digest das 08:30
+> **deveria** ter mostrado, e mostrou *"sem progresso"*.
+>
+> **A regra:** **parar é um estado, e estado se registra.** Quem para pela trava **escreve a linha de
+> abertura no Ledger ANTES de parar**, com estado **`bloqueado`** e o *próximo passo* = *"aguarda o
+> Olavo decidir a branch"*. **A trava barra o commit; ela nunca barra o registro.**
+>
+> ⚠️ **E o corolário honesto:** linha de abertura **não se cria depois**. Criada no fim, ela afirma
+> que alguém sabia do bloqueio no dia em que ninguém soube — é **testemunha falsa** (**R13** regra 3).
+> **Perdeu a abertura, registre a perda; não a invente.**
 
 **Motivo, as três medidas:** (1) **duas vezes** um sub-chat commitou na branch errada porque a
 instrução da sessão dele vencia o brief — e **declarar a branch com mais destaque não resolveu**;

@@ -128,7 +128,11 @@ curá-la — **não para virar a terceira.**
 > ⚠️ **E um aviso de teto, medido:** esta pasta tem hoje **5 `BASE-*` + o `PLANO-MEMORIA-COMPARTILHADA`
 > = 6 documentos.** O **`BASE-05`** da Fase 3 fará **7**, e **o teto estoura**. Decisão a tomar quando
 > a Fase 3 fechar: **o `PLANO` sai de `docs/base/`** (o plano cumprido é histórico, e o histórico tem
-> outro lugar), ou o teto sobe de propósito. **Não resolvi isso sozinho.**
+> outro lugar), ou o teto sobe de propósito.
+>
+> 🟢 **DECIDIDO pelo chat-mãe em 2026-10-03: o `PLANO` sai**, para `docs/handoff/`, com banner de
+> **HISTÓRICO** (**R2** regra 3). **O teto NÃO sobe** — ele existe para doer, e teto que cede na
+> primeira pressão não é teto. **Plano cumprido é história, e história tem outro lugar.**
 
 > ⚠️ **O `BASE-03` é ÍNDICE, não cópia.** Os invariantes moram onde já moram — **M1–M12** no
 > `CONTRATO-PHI.md`, **R1–R15** no `CLAUDE.md`, **I1–I11** na Prospecção. **O 03 aponta; não repete.**

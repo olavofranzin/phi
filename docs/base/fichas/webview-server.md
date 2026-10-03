@@ -61,30 +61,45 @@ fonte. ⬜ a perguntar ao Olavo. Não deduzo.**
 | **validação do W3** | KIL `GADS-21149189736`, **score 59/WARNING confere** com o BigQuery |
 | **dívidas, medidas** | **12 vulnerabilidades** (10 altas) · lockfile não fecha e o Dockerfile usa `npm install` · **3 chaves `VITE_*` no `.env` versionado, públicas por construção, nada a rotacionar** |
 
-## 🔴 O achado: o código que está no ar não está em git (ou está onde eu não achei)
-O `CHECKLIST-webview` afirma, em maiúsculas, que **o arquivo vivo é `server/notion.js` na RAIZ**, não
-`webview/server/notion.js`, e que a pasta `webview/` é resíduo morto.
+## 🟢 O achado que se desfez no mesmo dia: o código ESTÁ em git — em OUTRO repositório
+O `CHECKLIST-webview` afirma, em maiúsculas, que **o arquivo vivo é `server/notion.js` na RAIZ**, e
+que a pasta `webview/` é resíduo morto. **O `CHECKLIST` está certo — e a raiz de que ele fala é a de
+outro repositório.**
 
-**Medido em 03/10 com `git ls-tree`:**
+**Medido pelo sub-chat da Fase 1 em 03/10, com `git ls-tree` — correto, e insuficiente:**
 
-| Branch | Existe `server/` na raiz? |
+| Branch de `olavofranzin/phi` | Existe `server/` na raiz? |
 |---|---|
-| `claude/consolidacao-2026-08` | 🔴 **não** |
-| `main` | 🔴 **não** |
-| `claude/webview-metricas-clientes-lxps0l` | 🔴 **não** — só **`webview/server/`**, a pasta que o `CHECKLIST` chama de morta |
+| `claude/consolidacao-2026-08` · `main` · `claude/webview-metricas-clientes-lxps0l` | **não** — só `webview/server/`, na última |
 
-> 🔴 **Conclusão honesta: não achei, em nenhuma branch deste repositório, o arquivo que está no ar.**
-> **⬜ a perguntar ao Olavo.** Pode ser outro repositório, pode ser deploy direto no EasyPanel, pode
-> ser commit que não subiu. **Não deduzo qual.**
+**Medido pelo chat-mãe em 03/10, no repositório certo:**
+
+| | |
+|---|---|
+| **Repositório** | 🟢 **`olavofranzin/phi-dashboard-webview`** — o que o **`BASE-02` §4 já nomeava**, com branch `webview` e HEAD `c37d0b0` |
+| **`server/` na raiz** | 🟢 **existe**: `index.js` · `notion.js` · `package.json` · `package-lock.json` |
+| **o rollback `c37d0b0…`** | 🟢 **é commit de verdade lá** — `feat: load client dossiers from Notion` |
+
+> 🔴 **O alarme caiu — e a lição é a R6 no lado da GRAVIDADE, terceira vez, a primeira por um
+> executor.** O **fato** estava medido e certo. A **conclusão** (*“o código que está no ar não está em
+> git”*) e a **gravidade** (*“mais grave que dívida de limpeza”* · *“o rollback pode não ser
+> acionável”* · *“nenhuma revisão do webview é revisão do que está em produção”*) **não foram
+> medidas: foram acrescentadas no caminho.**
 >
-> **E isto é mais grave que dívida de limpeza: é a `R13` no nível do repositório.** *“Leia o que está
-> no ar, não o que está na tela”* — e aqui **nem a tela tem o código.** Enquanto isso valer, **o
-> rollback citado (`c37d0b0…`) pode não ser acionável a partir deste repositório**, e **nenhuma
-> revisão de código do webview pode ser considerada revisão do que está em produção.**
+> E o detalhe que mais ensina: **ele escreveu a hipótese certa** — *“pode ser outro repositório”* —
+> **e não a fechou**, tendo o nome do repositório **no arquivo que estava editando na mesma sessão.**
+>
+> **Teste prático, reforçado:** *antes de escalar uma pergunta ao Olavo, eu fechei as hipóteses que
+> estão ao meu alcance?* **Pergunta escalada custa atenção humana; um `ls` não custa nada.**
+>
+> ⚠️ **O que sobra de verdadeiro, e é dívida real:** o `phi` guarda uma **cópia morta** em
+> `webview/server/` numa branch antiga, e o `CHECKLIST` que aponta para o arquivo vivo mora **num
+> repositório diferente do código.** **Dois repositórios, um sem o outro declarado em cada ponta** é
+> o que fez a confusão — não a ausência do código.
 
 ## ⬜ O que falta perguntar
 | # | |
 |---|---|
-| **1** | 🔴 **Onde mora o código que está no ar?** É a pergunta de maior consequência das 7 fichas |
+| **1** | 🟢 **RESPONDIDA em 03/10, pelo chat-mãe, sem precisar do Olavo** — `olavofranzin/phi-dashboard-webview`. Ver a seção acima. **Ficou no lugar da pergunta porque hipótese refutada também se registra** (**R6** corolário 1) |
 | **2** | **Por que a arquitetura saiu do Supabase para Node/EasyPanel?** |
 | **3** | 🔴 **A linha *“Rotação de credenciais expostas — não confirmado”*** do plano no Notion: o chat-mãe apontou dois candidatos e **os dois caíram**. *“Então eu não sei a que aquela linha se refere”* — **e não deve ser cancelada por eliminação de candidatos** |

@@ -260,6 +260,86 @@ o webview casa por **chave coagível**.
 > **regra e ponteiro**. Se o teto de 180 for requisito real, **a decisão seguinte é sobre as regras,
 > não sobre a história** — e é do Olavo.
 
+> ---
+>
+> ## 🟢 2026-10-03 — **AS TRÊS DECISÕES DEVOLVIDAS, RESPONDIDAS** (chat-mãe, medindo)
+>
+> ### 1. A meta de 150–180 linhas **morre aqui. O número era meu e eu nunca o medi**
+>
+> 🔴 **É a R6 corolário 2 aplicada a mim:** *"este número eu medi, ou eu li?"* — eu **inventei**. E o
+> brief se contradizia sozinho (**§3 pedia ~300, o CA13 pedia 150–180**), o que é a assinatura de um
+> número que nunca passou por medição.
+>
+> **A aritmética, medida em 03/10 no arquivo entregue:**
+>
+> | | |
+> |---|---|
+> | total | **372 linhas** |
+> | bloco **R1–R15** | **310 linhas — 83% do arquivo** |
+> | tudo o que NÃO é regra (navegação + ponteiro) | **62 linhas** |
+> | para chegar a 180, teriam de sair | **192 linhas** |
+>
+> **Conclusão: apagando TODA a navegação e TODO o resto, sobram 310 — ainda 130 acima da meta.** A
+> meta era **aritmeticamente inalcançável** sem apagar regra, independentemente de quem executasse.
+> **O sub-chat não falhou na meta: a meta estava errada, e ele parou no lugar certo e devolveu.**
+>
+> 🔴 **O teto passa a ser de FORMA, não de tamanho** — e é assim que fica:
+>
+> > **O `CLAUDE.md` da raiz contém apenas REGRA e PONTEIRO. Zero fato de que ele não é dono.**
+> > **Teste:** varra o arquivo e pergunte de cada bloco *"a raiz é dona disto?"*. Nenhum "não".
+>
+> **Por que isto é melhor que um número:** contagem de linhas cai quando se apaga regra — ou seja,
+> **premia exatamente o estrago que queremos evitar.** A forma não tem esse defeito. (É a mesma lição
+> da **R10**: *"a regra é do degrau, não da marca"* — não grave no número o que pertence à forma.)
+>
+> ### 2. *"Onde mora o código do webview?"* — 🟢 **RESPONDIDA pelo chat-mãe, sem o Olavo**
+>
+> **`olavofranzin/phi-dashboard-webview`**, branch `webview` — `server/index.js`, `server/notion.js`,
+> `package.json`, `package-lock.json` **na raiz dele**; e o rollback **`c37d0b0` é commit de verdade
+> lá** (*"feat: load client dossiers from Notion"*).
+>
+> 🔴 **O alarme cai inteiro:** o rollback **é acionável**, e revisar aquele código **é** revisar o que
+> está em produção. **A medição do sub-chat estava certa; a conclusão e a gravidade, não** — e ele
+> tinha escrito a hipótese correta (*"pode ser outro repositório"*) **sem fechá-la**, com o nome do
+> repo no `BASE-02` §4, arquivo que ele estava editando na mesma sessão. **R6-gravidade, 3ª vez, 1ª
+> por executor.** Corrigido em `webview/CLAUDE.md` e `fichas/webview-server.md`, **com a hipótese
+> refutada registrada** (R6 corolário 1).
+>
+> **Teste que entra na casa:** *antes de escalar uma pergunta ao Olavo, fechei as hipóteses que estão
+> ao meu alcance?* **Pergunta escalada custa atenção humana; um `ls` não custa nada.**
+>
+> ### 3. *"Por que o `Pipeline_v2` existe?"* — ⬜ **continua do Olavo, e o git está esgotado**
+>
+> **O sub-chat acertou em se recusar a transformar o nome em resposta.** O chat-mãe fechou uma
+> hipótese: buscado em **todo commit de todas as branches** (`git log --all -S`) e em **todo `.md` da
+> árvore**, nas formas `Pipeline_v1` · `pipeline v1` · `pipeline antigo` · `substituiu o pipeline` ·
+> `primeiro pipeline` → **zero ocorrências.** **O porquê não está em git, em nenhuma versão.**
+> **Registrado na ficha para a próxima sessão não procurar de novo** (**R7** regra 3).
+>
+> ---
+>
+> ### 🟢 E duas coisas que a própria entrega revelou, decididas aqui
+>
+> **(a) O teto de 6 documentos ESTOURA na Fase 3 — e o `provar.py` avisou sozinho.** Hoje:
+> 5 `BASE-*` + o `PLANO` = **6**. O `BASE-05` fará **7**.
+> 🔴 **Decidido:** quando a Fase 3 fechar, **este `PLANO` sai de `docs/base/`** para `docs/handoff/`,
+> com banner de **HISTÓRICO** (**R2** regra 3). **Plano cumprido é história, e história tem outro
+> lugar.** O teto **não sobe** — ele existe justamente para doer.
+>
+> **(b) A R15 ganhou emenda, porque a trava dela abriu um buraco na R3.** O sub-chat **parou certo** e
+> **não registrou o bloqueio** — tratou *"não commitar"* como *"não registrar"*. **Parar é um estado,
+> e estado se registra.** Emenda escrita na R15; e **a linha de abertura NÃO foi criada depois**,
+> porque criada no fim ela afirmaria que alguém sabia do bloqueio no dia em que ninguém soube —
+> **testemunha falsa** (**R13** regra 3). **A perda fica registrada; não foi inventada.**
+>
+> **(c) A prova aprendeu a diferença entre MUDAR DE LUGAR e EMENDAR.** Ao escrever a emenda da R15, o
+> `provar.py` **reprovou a minha própria mudança** — fez o que existe para fazer. Mas, como estava,
+> ele **reprovaria toda emenda futura de regra**, e *alarme que sempre grita é alarme desligado*
+> (**R13**). Agora há uma lista `EMENDAS_AUTORIZADAS` com **data, regra e motivo**: para segmento
+> declarado, **inserção passa; remoção e alteração continuam reprovando**, linha a linha.
+> 🔴 **E a salvaguarda levou o próprio smoke** (**R11**): apaguei de propósito uma linha de regra do
+> segmento emendado — **reprovou e nomeou a linha.** Restaurado, prova verde.
+
 ### A ordem original
 
 

@@ -19,6 +19,14 @@ Notion e roda a **Fase 3** (Fechamento → Escalada → Abertura, ordem imutáve
 | ADR | 🔴 **não existe ADR do Pipeline_v2.** O **ADR-003** diz que *o score é fato* — isso é **autoridade** do score, **não o porquê deste workflow existir** |
 | `ESTADO-DO-PROJETO` | dá **o que faz** e o histórico de consertos, **não a ideia geradora** |
 
+> 🟢 **O chat-mãe fechou uma das hipóteses em 03/10, para a próxima sessão não procurar de novo**
+> (**R7** regra 3). Buscado em **todo commit de todas as branches** — `git log --all -S` — e em **todo
+> `.md` da árvore: `Pipeline_v1` · `pipeline v1` · `pipeline antigo` · `substituiu o pipeline` ·
+> `primeiro pipeline` → **zero ocorrências, em todas as formas.**
+>
+> **Consequência:** o porquê **não está em git, em nenhuma versão.** ⬜ **Resta memória do Olavo ou a
+> descrição no n8n** (que o padrão dos snapshots mostra como `null`). **Não procure no git outra vez.**
+>
 > 🔴 **E há uma pista que eu me recuso a transformar em resposta:** o nome diz **`_v2`**, o que implica
 > um **v1**. ⬜ **Não achei o v1, não achei por que ele foi substituído, e não vou deduzir.** O nome é
 > indício, não fonte. *(É exatamente a `R6`: este porquê eu li, ou eu inventei?)*
