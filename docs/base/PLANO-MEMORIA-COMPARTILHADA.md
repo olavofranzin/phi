@@ -238,6 +238,32 @@ o webview casa por **chave coagível**.
 
 ## 7. A ordem — e cada fase tem teste de pronto
 
+> ## 🟢 2026-10-03 — **FASE 1 CONCLUÍDA**, com a prova
+>
+> | | |
+> |---|---|
+> | **Executada por** | sub-chat da Fase 1 (camada forte, **R10**), branch `claude/consolidacao-2026-08` |
+> | **Teste de pronto do plano** | *“o `CLAUDE.md` cabe numa leitura e **nenhuma história se perdeu**”* |
+> | 🔴 **Os 4 números** | **linhas 634 → 371** (−263, **41,5% menor**) · **bytes 38.570 → 25.766** (−12.804, **33,2% menor**) |
+> | 🔴 **A prova de não-perda é MECÂNICA** | `python3 scripts/fase1-memoria/provar.py` — **APROVADA**: 18 blocos de história **byte-idênticos** no `BASE-04`, 10 blocos de fato nos destinos, **14 segmentos de regra intactos cobrindo 276 das 428 linhas** da região de regras, as 15 regras na raiz |
+> | **O que nasceu** | `BASE-01-PRINCIPIOS` · `BASE-03-INVARIANTES` · `BASE-04-INCIDENTES` · `fichas/` (7 + README) · 3 `CLAUDE.md` de frente novos (`otimizacao-campanhas`, `webview`, `saude-digital-do-negocio`) · `saude-digital/REGRAS-CRITICAS-IMPLEMENTACAO.md` · `docs/ferramentas/rtk.md` |
+>
+> ### ⚠️ A meta de linhas do §9.1 do brief NÃO foi atingida, e por um motivo que é a própria regra
+>
+> O brief pedia **150–180 linhas** (e o §3 do mesmo brief pedia **~300** — ele se contradiz).
+> **Entregou 371.** Medido: **o texto imperativo das regras R1–R15, sozinho, ocupa ~320 linhas.**
+> Chegar a 180 exigiria **apagar texto de regra**, que é a linha que o próprio brief diz não se
+> cruzar. **Então parei na meta e devolvi**, como o §3 manda: *“se não der sem apagar história, PARE
+> e devolva — o teto não vale mais que a memória”*.
+>
+> 🔴 **O que FOI atingido:** a raiz não tem mais **nenhum** fato de que não é dona. O que sobrou é
+> **regra e ponteiro**. Se o teto de 180 for requisito real, **a decisão seguinte é sobre as regras,
+> não sobre a história** — e é do Olavo.
+
+### A ordem original
+
+
+
 ```
 FASE 0 — o alicerce (barata, e destrava o resto)
    BASE-00-PORTA  ·  BASE-02-SUPERFICIES  ·  o invariante de identidade

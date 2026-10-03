@@ -1,8 +1,15 @@
 # Saúde Digital / PHI·Mídia — contexto da frente
 
+> Leia **PRIMEIRO** o [`CLAUDE.md` da raiz](../../../CLAUDE.md) — as regras **R1–R15** valem aqui também.
+> Esta frente é dona de: **o score `phi_value` e o parque de workflows do PHI·Mídia** · a matriz de
+> donos por destino e os invariantes **M1–M12** (`CONTRATO-PHI.md`) · as **tabelas do `phi_prod`** ·
+> as **14 regras críticas de implementação** e o **cliente de teste**
+> (`REGRAS-CRITICAS-IMPLEMENTACAO.md`) · os **ADR-37/38/39/40**.
+> Verificado em **2026-10-03**, pelo **sub-chat da Fase 1 da memória compartilhada**, contra a árvore
+> do repositório e o `CLAUDE.md` da raiz no commit `d543f16`.
+>
 > Leia este arquivo ao trabalhar em **qualquer coisa do parque PHI**: métrica, score, Notion,
 > vigilância, T28. Ele complementa o `CLAUDE.md` da raiz, não o substitui.
-> **Regras R1–R13 da raiz valem aqui integralmente.**
 
 ## O que é esta frente
 Coletar métrica de campanha das plataformas, calcular diariamente um **score de saúde (0–100)**,

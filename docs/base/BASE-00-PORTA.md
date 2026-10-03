@@ -4,7 +4,7 @@
 |---|---|
 | **O que este documento é** | 🔴 **a porta da memória compartilhada.** Se você não sabe onde procurar, **comece aqui** |
 | **Escrito em** | 2026-10-03 |
-| **Verificado em** | 2026-10-03, pelo chat-mãe, **contra a árvore do repositório e os artefatos citados** |
+| **Verificado em** | 2026-10-03, pelo chat-mãe, **contra a árvore do repositório e os artefatos citados**. 🟢 **Atualizado em 2026-10-03 pelo sub-chat da Fase 1:** a §4 saiu de ⬜ para ✅ nos documentos 01/03/04, e `R1–R13` virou `R1–R15` (a R14 e a R15 nasceram na Fase 0) |
 | **Dono de qual fato** | **quem é dono de cada fato** · as três regras da memória · onde se procura o quê |
 | **Aprovado por** | Olavo, 2026-10-03 (`PLANO-MEMORIA-COMPARTILHADA.md`) |
 
@@ -27,7 +27,7 @@ isto nos custou quatro vezes (ver `BASE-04-INCIDENTES`).
 | **o que existe e onde achar** | `strategic-planning/MAPA-DE-DOCUMENTACAO.md` |
 | **onde o PHI vive, e se está no ar** | `BASE-02-SUPERFICIES.md` |
 | **por que o PHI existe** e o que ele não é | `BASE-01-PRINCIPIOS.md` |
-| **as regras de trabalho** (R1–R13) | `CLAUDE.md` (raiz) |
+| **as regras de trabalho** (R1–R15) | `CLAUDE.md` (raiz) |
 | **as histórias** que justificam as regras | `BASE-04-INCIDENTES.md` |
 | **quanto falta para acabar** | `strategic-planning/DEFINICAO-DE-PRONTO-PHI-V1.md` |
 | **procedimento da agência** (quem faz o quê) | **Miro — `Board Agência`** ⚠️ **não a `Cópia`** |
@@ -115,12 +115,21 @@ curá-la — **não para virar a terceira.**
 | # | | Estado |
 |---|---|---|
 | **00** | **`BASE-00-PORTA.md`** — este | ✅ |
-| **01** | `BASE-01-PRINCIPIOS.md` — por que o PHI existe | ⬜ Fase 1 |
+| **01** | `BASE-01-PRINCIPIOS.md` — por que o PHI existe | ✅ **2026-10-03, Fase 1** |
 | **02** | `BASE-02-SUPERFICIES.md` — onde o PHI vive | ✅ |
-| **03** | `BASE-03-INVARIANTES.md` — **índice** dos invariantes (não cópia) | ⬜ Fase 1 |
-| **04** | `BASE-04-INCIDENTES.md` — as histórias | ⬜ Fase 1 |
+| **03** | `BASE-03-INVARIANTES.md` — **índice** dos invariantes (não cópia) | ✅ **2026-10-03, Fase 1** |
+| **04** | `BASE-04-INCIDENTES.md` — as histórias | ✅ **2026-10-03, Fase 1** — ordenadas por **frequência da doença** |
 | **05** | `BASE-05-HANDOFF-CHAT-MAE.md` | ⬜ Fase 3 |
 
+> 🟢 **2026-10-03 — a Fase 1 fechou, e a `fichas/` nasceu.** `docs/base/fichas/` tem as **7 sementes**
+> + um `README.md` que explica a regra do campo *“por que existe”*. **A partir daqui, ficha nasce
+> quando o artefato é tocado** (**R5**) — ⛔ **nunca em lote**.
+>
+> ⚠️ **E um aviso de teto, medido:** esta pasta tem hoje **5 `BASE-*` + o `PLANO-MEMORIA-COMPARTILHADA`
+> = 6 documentos.** O **`BASE-05`** da Fase 3 fará **7**, e **o teto estoura**. Decisão a tomar quando
+> a Fase 3 fechar: **o `PLANO` sai de `docs/base/`** (o plano cumprido é histórico, e o histórico tem
+> outro lugar), ou o teto sobe de propósito. **Não resolvi isso sozinho.**
+
 > ⚠️ **O `BASE-03` é ÍNDICE, não cópia.** Os invariantes moram onde já moram — **M1–M12** no
-> `CONTRATO-PHI.md`, **R1–R13** no `CLAUDE.md`, **I1–I11** na Prospecção. **O 03 aponta; não repete.**
+> `CONTRATO-PHI.md`, **R1–R15** no `CLAUDE.md`, **I1–I11** na Prospecção. **O 03 aponta; não repete.**
 > É a regra 1.1 aplicada à própria pasta.

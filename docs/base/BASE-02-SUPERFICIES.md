@@ -82,13 +82,68 @@
 | **`PHI - Gestão de Projetos`** | `774518d2128a4b10aede511718737058` | 🎯 **o plano. 131 linhas** (39 antigas + 92 novas) | 🟢 **29/09, sub-chat** |
 | **`PHI — Registro de Execuções (Sub-chats)`** | `8d8eb685-f662-49c7-ba4f-298d744feec3` · ds `c884f9df-4daf-4142-a3df-e2bc89642484` | o ledger que o digest lê (**R3**/ADR-32) | 🟢 **02/10, chat-mãe** |
 | `Clientes` | `19fb65e5-c72b-8147-8aa3-c63aa273d205` | cadastro — **fonte do dossiê e dos ids por fonte** | 🟢 **28/09** |
-| `Campanhas` · `Tasks` · `Checklist` · `Log de Otimizações` · `Projetos` · `Observações Diárias` | ver `CLAUDE.md` | operação do PHI | ⬜ **não verificado** |
+| `Campanhas` · `Tasks` · `Checklist` · `Log de Otimizações` · `Projetos` · `Observações Diárias` | 🔴 **ids na §3.1 abaixo** — vieram da raiz em 03/10 | operação do PHI | ⬜ **não verificado** |
 | **`PHI - SOPs`** | `7ebc98e0ebdc480c8c6abc18f65e2ed5` | 🔴 **a ler na Fase 4** — pode conter os checklists desenhados no início | ⬜ **não verificado** |
 | `PHI - Catálogo de Artefatos Operacionais` | `bd8df5b982ad4f00a8ae56d687db819e` | índice vivo de artefatos | ⬜ **não verificado** |
 | `Painel de Entregas` | `fad6713a…` | 🔴 **papel DESCONHECIDO** — achado em 29/09, só o schema foi lido. **Risco de 2º painel** | ⬜ **não verificado** |
 | `PHI - ANÁLISES` | `38fb65e5-c72b-80db-a425-e5939fc35c7a` | entrega do T28 | ⬜ **não verificado** |
 | `PHI - Demandas` · `Eventos` · `Snapshots` · `Mudanças de Escopo` · `Onboarding` | ver `MAPA` §3 | — | ⬜ **não verificado** |
 | **Credencial** | `NOTION_TOKEN` — **mora só no `.env` da VPS**, nunca no git | 🟢 **02/10, chat-mãe** |
+
+### 3.1. 🔴 As DBs da operação — os ids, que até 03/10 moravam no `CLAUDE.md` da raiz
+
+> **Por que isto mudou de lugar:** a §3 acima dizia *“ver `CLAUDE.md`”* — **este documento apontava
+> para a raiz, e a raiz guardava o fato.** Na Fase 1 a raiz passou a guardar **só regra**, então o
+> fato veio para o dono. **Ele está byte-idêntico ao que estava lá** (commit `d543f16`).
+>
+> ⚠️ **O brief da Fase 1 (§9.1) mandava APAGAR este bloco da raiz, afirmando que este documento já
+> era dono.** Ele não era: tinha o ponteiro, não os ids. **Apagar teria perdido 6 ids.** Medido e
+> corrigido em 03/10.
+
+## Notion — IDs dos Databases
+
+| Database | ID |
+|----------|-----|
+| Campanhas | `19fb65e5-c72b-8043-a82d-f47ede397928` |
+| Tasks | `19fb65e5-c72b-812d-a734-de9a4d5b980f` |
+| Checklist | `19fb65e5-c72b-81cd-b006-fe0ffa97a35d` |
+| Log de Otimizações | `19fb65e5c72b81068e76f1e684197316` |
+| Projetos | `19fb65e5-c72b-81ae-847c-e0b6b2888b6b` |
+| Clientes | `19fb65e5-c72b-8147-8aa3-c63aa273d205` |
+| Observações Diárias | `19fb65e5-c72b-8192-8f73-ff7f500a0972` |
+
+| Verificado | |
+|---|---|
+| **em** | 2026-10-03, pelo **sub-chat da Fase 1**, **contra o `CLAUDE.md` da raiz no commit `d543f16`** |
+| ⬜ **o que NÃO foi verificado** | **que cada id abra de fato a DB que o nome diz.** O recorte é fiel à raiz; **a raiz é que nunca foi conferida contra o Notion** |
+
+---
+
+## 3.2. 🔴 Repositório e branch — e a contradição que foi consertada em 03/10
+
+| | |
+|---|---|
+| **Repo** | `olavofranzin/phi` |
+| 🔴 **Branch de trabalho** | **`claude/consolidacao-2026-08`** · `https://github.com/olavofranzin/phi/tree/claude/consolidacao-2026-08` |
+| **Branch principal** | `main` — ⚠️ **medido em 03/10: a `main` está 744 commits atrás da branch de trabalho**, e não tem a `docs/base/` nem as R14/R15 |
+| **Pasta de análises** | `relatorios_api/google_ads/` |
+| **Branches no remoto** | **32**, medidas em 03/10 (`git ls-remote --heads`). Inventário com data do último commit no relatório da Fase 1 |
+| **Verificado em** | 2026-10-03, pelo **sub-chat da Fase 1**, **contra `git ls-remote --heads origin` e `git log`** |
+
+> 🔴 **O que estava errado, e é a razão de este bloco existir aqui.** Até 03/10 o `CLAUDE.md` da raiz
+> **contradizia a si mesmo sobre a branch**, e era lido no início de toda sessão:
+>
+> | Onde | O que dizia |
+> |---|---|
+> | seção *“Repositório GitHub”* | *“Branch de desenvolvimento: `claude/create-phi-folder-n2RXF`”* — **medido: último commit em 2026-04-14** |
+> | **R1**, no mesmo arquivo | `claude/consolidacao-2026-08` |
+>
+> **A branch de trabalho é a `claude/consolidacao-2026-08`, e é a R1 que manda.** A declaração
+> obsoleta saiu da raiz. **E a exigência de declarar a branch agora é da R15** — quem diz qual é a
+> branch é **o brief**, não este documento e não o `CLAUDE.md`.
+>
+> **Esta casa teve dois incidentes de branch** justamente por haver duas ordens sobre onde commitar:
+> [`BASE-04-INCIDENTES.md`](BASE-04-INCIDENTES.md#7-D7-branch-ditada-por-engano).
 
 ---
 

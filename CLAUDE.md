@@ -1,83 +1,48 @@
-# PHI™ — Contexto para Claude Code
+# PHI™ — as REGRAS. Leia este arquivo antes de qualquer implementação
 
-> Leia este arquivo antes de qualquer implementação. É a fonte de contexto mínimo para agir corretamente neste repositório.
-> Para documentação completa, consulte o Notion (links ao final).
+| | |
+|---|---|
+| 🔴 **A linha que não se cruza** | **A RAIZ guarda REGRA. As FRENTES guardam FATO.** *Regra não lida causa estrago; fato não lido causa pergunta* — e pergunta o ponteiro resolve |
+| **O que este arquivo é** | as **regras de trabalho R1–R15**, e só elas. É lido no início de **toda** sessão, inclusive nas que nunca tocarão numa frente |
+| **O que ele NÃO é** | não é stack, não é id de Notion, não é tabela, não é história. Cada um desses tem dono, e os donos estão na tabela de ponteiros abaixo |
+| **Verificado em** | 2026-10-03, pelo **sub-chat da Fase 1 da memória compartilhada**, **contra o próprio `CLAUDE.md` no commit `d543f16`** — o texto das regras foi **recortado** por script, não redigitado |
+| **A porta da memória** | 🔴 [`docs/base/BASE-00-PORTA.md`](docs/base/BASE-00-PORTA.md) — **se você não sabe onde procurar, comece ali** |
 
 ---
 
 ## O que é o PHI
 
-Sistema automatizado de monitoramento e gestão de campanhas de tráfego pago (Google Ads e Meta Ads). Calcula diariamente um score de saúde por campanha (0–100), classifica em EXCELLENT / GOOD / WARNING / CRITICAL e aciona tarefas operacionais com checklists no Notion.
+Monitoramento e gestão de campanhas de tráfego pago. Calcula um score de saúde diário por campanha e **orienta o gestor — nunca executa otimizações.**
 
-**Princípio central:** O PHI detecta desvios e orienta o gestor — nunca executa otimizações automaticamente.
-
----
-
-## Frente estratégica ativa: Otimização (cérebro de análise — "Módulo 28" / T28)
-
-> Camada de **análise cognitiva** sobre o score: o "cérebro" (Maestro + especialistas)
-> que traduz o PHI·Mídia Score em **diagnóstico + decisão recomendada** — o humano dá o
-> "play". Design canônico em **Git** (`docs/strategic-planning/`); estado operacional em
-> **Notion**. Complementa o contexto de pipeline abaixo.
-
-- **Ler primeiro (git):** `docs/strategic-planning/ESTADO-DO-PROJETO.md` (doc mestre,
-  snapshots datados) · `docs/strategic-planning/MAPA-DE-DOCUMENTACAO.md` (navegação) ·
-  `docs/strategic-planning/roster-de-agentes.md` (agentes, staging E0→E3) ·
-  `docs/modulo-28-analise-cognitiva.md` (os 7 prompts: Maestro + 6 especialistas) ·
-  `docs/strategic-planning/saude-digital/adr-rascunhos/` (ADRs de design).
-- **Workflow n8n:** `WF-T28-Analise-Campaign` (`fhYmJH0o9BW1IO4i`). Diagnóstico (Agente 3)
-  **vive**; **Maestro (E1) no rascunho**, não ativado — ver **ADR-28**.
-- **DB de entrega:** `PHI - ANÁLISES` (`38fb65e5-c72b-80db-a425-e5939fc35c7a`).
-- **Credencial LLM:** `Anthropic account` (`YifaYCQuGWjdd1Oh`) — existe; confirmar binding
-  nos nós + smoke antes de ativar.
-- **Guardrails de dado (BLOCO COMUM, regras 8/9):** `conversions=0 ⇒ CPA/ROAS indefinidos`
-  (nunca "cpa 0 = ótimo"); `source_status error/missing ⇒ N/D` (não 0).
-- **Autoridade do score (ADR-003):** não recalcular `phi_value`/flags/severidade — são fato.
-- **Memória de Decisão:** design → ADR (git); execução → Ledger "PHI — Registro de
-  Execuções" (Notion, ADR-32).
-- **Disciplina de token:** validar prompts pela skill `phi-diagnostico` (`.claude/skills/`,
-  byte-idêntica ao nó vivo) com payload real no chat **antes** de gastar token no n8n; não
-  ativar/executar workflow sem OK de budget do Olavo.
+🔴 **O porquê, o que o PHI não é, e as decisões-mãe:** [`docs/base/BASE-01-PRINCIPIOS.md`](docs/base/BASE-01-PRINCIPIOS.md). Este arquivo **não é dono** desse fato.
 
 ---
 
-## Stack
+## Por onde começar, por assunto
 
-| Camada | Tecnologia |
-|--------|-----------|
-| Data Warehouse | BigQuery — projeto `project-0e7c58d4-656f-49e8-807`, dataset `phi_prod` |
-| Orquestração | n8n self-hosted v2.15.0 — `https://n8n-n8n-editor.1unqx7.easypanel.host` |
-| Interface Operacional | Notion |
-| Fonte de Dados | Google Ads API v23, Meta Ads API |
-| Service Account | `phi-workflow-sa@phi-production-488720.iam.gserviceaccount.com` |
+> **Nenhuma linha desta tabela afirma um fato — todas apontam para o dono dele.** É a regra 1.1 do `BASE-00` aplicada a este arquivo.
 
----
+| Se a conversa é sobre… | Leia (o dono do fato) |
+|---|---|
+| 🔴 **Não sei onde procurar / quem é dono deste fato** | [`docs/base/BASE-00-PORTA.md`](docs/base/BASE-00-PORTA.md) |
+| **Por que o PHI existe, e o que ele não é** | [`docs/base/BASE-01-PRINCIPIOS.md`](docs/base/BASE-01-PRINCIPIOS.md) |
+| **Stack, credencial, id de Notion, onde cada coisa vive e se está no ar** | [`docs/base/BASE-02-SUPERFICIES.md`](docs/base/BASE-02-SUPERFICIES.md) |
+| **Qual invariante existe, e se já foi violado** | [`docs/base/BASE-03-INVARIANTES.md`](docs/base/BASE-03-INVARIANTES.md) |
+| 🔴 **Já tentamos isso e deu errado? Quanto custou?** | [`docs/base/BASE-04-INCIDENTES.md`](docs/base/BASE-04-INCIDENTES.md) |
+| **Por que este workflow/tabela existe** | [`docs/base/fichas/`](docs/base/fichas/) + a descrição do próprio artefato (**R5**) |
+| **Onde o projeto está · quanto falta · achar qualquer doc** | `docs/strategic-planning/ESTADO-DO-PROJETO.md` (§0 PAINEL) · `DEFINICAO-DE-PRONTO-PHI-V1.md` · `MAPA-DE-DOCUMENTACAO.md` |
+| **Score de mídia / parque PHI** (métricas, BigQuery, Notion, vigias) | `docs/strategic-planning/saude-digital/CLAUDE.md` |
+| 🔴 **Regras críticas de n8n / BigQuery / Google Ads, e o cliente de teste** | `docs/strategic-planning/saude-digital/REGRAS-CRITICAS-IMPLEMENTACAO.md` |
+| **Otimização / cérebro de análise (“Módulo 28” / T28)** | `docs/strategic-planning/otimizacao-campanhas/CLAUDE.md` |
+| **Webview** (o que está no ar, e as dívidas declaradas) | `docs/strategic-planning/webview/CLAUDE.md` |
+| **Saúde Digital do Negócio** (o pilar não medido) | `docs/strategic-planning/saude-digital-do-negocio/CLAUDE.md` |
+| **Prospecção** (leads, GBP, planilha, CRM) | `docs/strategic-planning/prospeccao/CLAUDE.md` |
+| **CRM Odoo** | skills `phi-odoo-crm` e `odoo-19-dev` |
+| **RTK** (o proxy de token) | `docs/ferramentas/rtk.md` |
+| **Procedimentos da agência** (quem faz o quê) | **Miro — `Board Agência`** · `https://miro.com/app/board/uXjVHecmR7c=/` ⚠️ **não a `Cópia`** |
+| **Tarefa, estado, quem destrava** | **Notion — `PHI - Gestão de Projetos`** (`774518d2128a4b10aede511718737058`) |
 
-## Notion — IDs dos Databases
-
-| Database | ID |
-|----------|-----|
-| Campanhas | `19fb65e5-c72b-8043-a82d-f47ede397928` |
-| Tasks | `19fb65e5-c72b-812d-a734-de9a4d5b980f` |
-| Checklist | `19fb65e5-c72b-81cd-b006-fe0ffa97a35d` |
-| Log de Otimizações | `19fb65e5c72b81068e76f1e684197316` |
-| Projetos | `19fb65e5-c72b-81ae-847c-e0b6b2888b6b` |
-| Clientes | `19fb65e5-c72b-8147-8aa3-c63aa273d205` |
-| Observações Diárias | `19fb65e5-c72b-8192-8f73-ff7f500a0972` |
-
----
-
-## BigQuery — Tabelas Principais (`phi_prod`)
-
-| Tabela | Papel |
-|--------|-------|
-| `raw_campaign_data` | Dados brutos diários por campanha (partição por `date`) |
-| `phi_score_history` | Histórico de scores calculados (MERGE obrigatório) |
-| `phi_score_current` | VIEW — score mais recente por campanha |
-| `client_config` | Configuração por cliente |
-| `model_config` | Pesos e limiares por modelo de negócio |
-| `client_goal_history` | Histórico de metas por cliente |
-| `workflow_execution_log` | Log de execuções por fase |
+> ⚠️ **Dois scores diferentes, não confundir:** `phi_value` (saúde da **campanha**) e `potencial_comercial` (qualidade do **lead**). Frentes, donos e ADRs distintos.
 
 ---
 
@@ -85,89 +50,8 @@ Sistema automatizado de monitoramento e gestão de campanhas de tráfego pago (G
 Antes de finalizar QUALQUER tarefa:
 1. Descreva como você vai verificar se o resultado está correto.
 
----
-
-## Regras Críticas de Implementação
-
-1. **BigQuery:** SEMPRE usar `dataset.table` sem project ID entre backticks — ex: `phi_prod.raw_campaign_data`
-2. **Nodes INSERT/MERGE:** `Always Output Data = true` obrigatório
-3. **`primary_metric_goal`** = FLOAT64 (valor numérico ex: `5.20`). **`primary_metric_type`** = STRING (ex: `'CPA'`)
-4. **`client_id`** = `CLI-4` (identificador). **`client_slug`** = `KIL` (sigla 3 letras). São campos diferentes
-5. **splitInBatches v3:** branch 0 = done (dispara uma vez, ao fim), branch 1 = loop (dispara a cada item). O último node do corpo do loop DEVE reconectar ao splitInBatches, senão só o 1º item é processado. (Confirmado no SDK n8n: `.onDone` = saída 0, `.onEachBatch` = saída 1.)
-6. **IF nodes:** branch 0 = TRUE, branch 1 = FALSE
-7. **Conexões no JSON n8n:** usar NOMES dos nodes como chaves, não UUIDs
-8. **Queries dinâmicas:** montar SQL no Code node, nunca usar `{{ }}` dentro da query BigQuery
-9. **`phi_score` e `Score Diário`** no Notion: escritos pelo PHI após Fase 2 — nunca pelo Daily Entry
-10. **PHI não executa otimizações** — detecta, classifica e orienta
-11. **Ordem da Fase 3 é imutável:** Fechamento → Escalada → Abertura
-12. **Google Ads API:** `developer-token` deve estar no header — NÃO é injetado automaticamente pelo `googleAdsOAuth2Api`
-13. **Google Ads API v23:** `metrics.cost_per_conversion` é incompatível com `segments.conversion_action_name/category`
-14. **Token Hardcoded no n8n:** o n8n self-hosted não permite que o token seja inserido uma credencial ou variável
 
 ---
-
-## Cliente de Referência para Testes
-
-| Campo | Valor |
-|-------|-------|
-| Cliente | KIL |
-| `client_id` | `CLI-4` |
-| `client_slug` | `KIL` |
-| Campanha Barbearia | `GADS-21149189736` |
-| Campanha Salão | `GADS-21116045403` |
-
----
-
-## Repositório GitHub
-
-- **Repo:** `olavofranzin/phi`
-- **Branch de desenvolvimento:** `claude/create-phi-folder-n2RXF`
-- **Branch principal:** `main`
-- **Pasta de análises:** `relatorios_api/google_ads/`
-
----
-
-## Documentação Completa no Notion
-
-| Documento | ID Notion |
-|-----------|-----------|
-| Documentação Técnica v1.4 | `328b65e5-c72b-8103-9ad0-d2fb81dd8055` |
-| Arquitetura de IA & Análise de Dados | `342b65e5-c72b-81f8-a05e-dfe05e564105` |
-| Google Ads Insights Semanal — Spec Técnica | `342b65e5-c72b-8177-9982-c5f012c8f006` |
-| Sessão Handoff 08/04/2026 | `33db65e5-c72b-81e0-87c2-f63523db3906` |
-| Sessão Handoff 06/04/2026 | `33ab65e5-c72b-8117-b67e-d29f4ca88fb6` |
-| SQL de Validação v1.4 | `335b65e5-c72b-814f-95e2-d57a18d96458` |
-| SOP, Glossário e Definições | `328b65e5-c72b-81d8-a25b-c83921610282` |
-
----
-
-## Por onde começar, por assunto
-
-| Se a conversa é sobre… | Leia primeiro |
-|---|---|
-| 🔴 **Não sei onde procurar / quem é dono deste fato** | **`docs/base/BASE-00-PORTA.md`** — a porta da memória compartilhada |
-| **Esta integração está no ar? Que credencial ela guarda?** | **`docs/base/BASE-02-SUPERFICIES.md`** |
-| **Onde o projeto está** | `docs/strategic-planning/ESTADO-DO-PROJETO.md` (§0 PAINEL) |
-| **Quanto falta para acabar** | `docs/strategic-planning/DEFINICAO-DE-PRONTO-PHI-V1.md` |
-| **Achar qualquer documento** | `docs/strategic-planning/MAPA-DE-DOCUMENTACAO.md` |
-| **Prospecção** (leads, GBP, planilha, CRM) | `docs/strategic-planning/prospeccao/CLAUDE.md` |
-| **Score de mídia / parque PHI** (métricas, BigQuery, Notion, vigias) | `docs/strategic-planning/saude-digital/CLAUDE.md` → `CONTRATO-PHI.md` (M1–M12) + `panorama-workflows-phi.md` |
-| **CRM Odoo** | skills `phi-odoo-crm` e `odoo-19-dev` |
-| **Procedimentos da agência** (quem faz o quê, entrega, atendimento) | **Miro — `Board Agência`** · `https://miro.com/app/board/uXjVHecmR7c=/` |
-
-> **O `Board Agência` é o mapa da OPERAÇÃO, não do software.** *"Planejamento Estratégico Para Criação
-> De Procedimentos Em Áreas De Uma Agência"* — mapa mental com ~250 blocos, organizado por **área**
-> (Comercial, Operações, Atendimento) e seus **procedimentos**: *Passagem de Bastão entre Comercial e
-> Operações · Planejamento de Entregas · Pontos de Contato · Plantão de Dúvidas · Monitorar a Adoção ·
-> Responsáveis*. ⚠️ Existe uma `Cópia de Board Agência` — **não é a vigente**.
->
-> **São dois eixos, não confundir:** frente de **software** mora em `docs/strategic-planning/<frente>/`;
-> **área da agência** é o board (e, quando for para o git, `docs/operacao/<area>/`).
-> **Consulte-o antes de planejar qualquer coisa que envolva o depois da venda** — em 2026-09-15
-> descobrimos que ele já previa a passagem de bastão que o plano da Prospecção tinha deixado sem dono.
-
-> ⚠️ **Dois scores diferentes, não confundir:** `phi_value` (saúde da **campanha**) e
-> `potencial_comercial` (qualidade do **lead**). Frentes, donos e ADRs distintos.
 
 ## Regras que você deve seguir
 
@@ -190,34 +74,15 @@ mexer em servidor, caçar bug.
 - **Fica no chat-mãe:** decisão, ADR, priorização, roadmap, leitura de estado, revisão de plano,
   desenho de arquitetura e escrita de brief.
 
-> 🔴 **Todo brief e toda mensagem de execução dizem a BRANCH, com a URL completa** (pedido do Olavo,
-> 2026-09-27): `claude/consolidacao-2026-08` ·
-> `https://github.com/olavofranzin/phi/tree/claude/consolidacao-2026-08`, mais o comando de checkout.
+> 🔴 **A branch de trabalho é declarada no brief, não aqui** — a exigência e o seu formato são da
+> **R15**, e as duas histórias de branch estão em
+> [`docs/base/BASE-04-INCIDENTES.md`](docs/base/BASE-04-INCIDENTES.md#7-D7-branch-ditada-por-engano).
 >
-> **Motivo:** em 26/09 um sub-chat commitou numa branch diferente porque a instrução da sessão dele
-> apontava para outra — **e o ADR-41 passou a citar como base um documento que não existia na branch
-> dele.** Branch dita por engano custa merge, conflito e documento canônico que mente.
+> **Motivo:** em 26/09 a instrução da sessão venceu o brief e o ADR-41 citou documento inexistente — história completa em [`BASE-04-INCIDENTES`](docs/base/BASE-04-INCIDENTES.md#7-D7-branch-ditada-por-engano).
 
-> 🔴 **EMENDA 2026-09-29 — a regra acima NÃO funcionou, e aconteceu de novo, pelo mesmo motivo.**
-> O brief do plano de projeto dizia `claude/consolidacao-2026-08`; **a instrução da sessão do
-> sub-chat dizia outra branch, e a instrução da sessão venceu** — o relatório nasceu em
-> `claude/plano-projeto-notion-v20z3g` e o chat-mãe teve de ir buscar.
->
-> **Declarar a branch no brief não resolve: o executor tem DUAS ordens e obedece a que está mais
-> perto dele.** O conserto não é repetir a branch com mais destaque — é **mandar reconciliar antes
-> de existir commit**:
->
-> | Quando | O que o sub-chat faz |
-> |---|---|
-> | **antes do primeiro commit** | compara a branch do **brief** com a da **instrução da sessão** |
-> | **se forem iguais** | segue |
-> | 🔴 **se forem diferentes** | **PARA e avisa, antes de commitar.** Não escolhe sozinho, não commita "provisoriamente" |
->
-> **Teste prático:** *"eu tenho duas ordens sobre onde commitar?"* Se sim, **a dúvida vem antes do
-> commit — depois vira mudança de histórico.**
+> **Motivo:** em 29/09 aconteceu de novo — declarar a branch com mais destaque não resolveu; a trava é a R15 — história completa em [`BASE-04-INCIDENTES`](docs/base/BASE-04-INCIDENTES.md#7-D7-branch-ditada-por-engano).
 
-> **Motivo:** quando a execução mora aqui, o contexto lota de detalhe operacional e **o
-> planejamento — que é o que só este chat faz — se perde.**
+> **Motivo:** execução morando aqui lota o contexto e o planejamento se perde — história completa em [`BASE-04-INCIDENTES`](docs/base/BASE-04-INCIDENTES.md#9-D11-execucao-no-chat-mae).
 
 ### R2 — Etapa concluída = documentação atualizada NA MESMA SESSÃO
 **Nenhuma etapa é "concluída" enquanto a documentação não refletir isso.** Ao terminar uma entrega:
@@ -226,20 +91,13 @@ mexer em servidor, caçar bug.
 3. Pôr **banner de HISTÓRICO** no topo de todo doc que virou retrato de um momento passado.
 4. **Commit no git.**
 
-> **Motivo:** em 2026-09-08 descobrimos que a doc da Prospecção descrevia workflows que já não
-> existiam havia semanas — e por isso não sabíamos que a frente estava praticamente pronta.
-> **Doc desatualizada custa mais caro que doc inexistente: ela faz decidir errado.**
-> Regra curta: **se não está escrito, não aconteceu.**
+> **Motivo:** em 08/09 a doc da Prospecção descrevia workflows mortos havia semanas — história completa em [`BASE-04-INCIDENTES`](docs/base/BASE-04-INCIDENTES.md#2-D2-documento-que-mente).
 
 > 🔴 **5. Marque ONDE SE PROCURA, não só onde se narra.** Tabela do topo, checklist, placar. **O
 > corpo do documento não substitui o cabeçalho** — ninguém lê §14 a §19 para saber se uma etapa
 > aconteceu; lê a primeira tabela.
 >
-> **Motivo:** em 2026-09-18 descobrimos que o **ADR-38 estava executado desde 09/09** — as 7 etapas,
-> inclusive a destrutiva. O corpo do ADR narrava tudo. Mas o **cabeçalho** ainda dizia *"Data efetiva
-> do corte: ⬜ ainda não ocorreu"* e o **checklist do brief** estava todo em branco, **nove dias
-> depois**. Custou: uma frente parada como "bloqueada" sem estar, uma rotina agendada, e uma sessão
-> inteira de conferência.
+> **Motivo:** em 18/09 o ADR-38 estava executado havia 9 dias e o cabeçalho dizia que não — história completa em [`BASE-04-INCIDENTES`](docs/base/BASE-04-INCIDENTES.md#2-D2-documento-que-mente).
 >
 > **Um documento pode estar completo no corpo e mentir no cabeçalho — e o cabeçalho é o que se lê.**
 
@@ -260,12 +118,7 @@ e **por que existe** — incluindo **o que ele substituiu e por quê**.
 - Ao criar ou alterar um artefato, **atualize a descrição na mesma sessão**.
 - **Descrição copiada de outro artefato é bug** (foi o caso de 3 workflows da Prospecção).
 
-> **Motivo:** em 2026-09-08 a auditoria por inventário **não descobriu** que o `Daily Entry` tinha
-> sido desativado **porque** o `sw metricas campanhas` entrou no lugar. Isso só existia na cabeça do
-> Olavo. **Inventário pega estrutura; intenção só existe se alguém escrever.**
->
-> Teste prático: **se a auditoria semanal precisa perguntar ao Olavo para entender, a descrição
-> falhou.** (Generaliza o invariante I10 do ADR-35 para o projeto inteiro.)
+> **Motivo:** em 08/09 a auditoria não descobriu por que o `Daily Entry` saiu do ar — história completa em [`BASE-04-INCIDENTES`](docs/base/BASE-04-INCIDENTES.md#11-D8-intencao-nao-escrita).
 
 **Procedimento canônico de aposentadoria** (precedente `[APOSENTADO 2026-07-21] PHI - Loop Alerta
 Fase 1` — o único workflow do parque que hoje passa no teste da R5):
@@ -278,52 +131,11 @@ Antes de uma ação **irreversível ou em produção**, **verifique a premissa q
 que o plano já esteja **aceito** num ADR. Se o dado desmentir o plano:
 **pare, não execute, corrija o ADR e registre o porquê.**
 
-> **Motivo:** em 2026-09-08 a **Fase 0.2 do ADR-37 foi cancelada na hora de executar**. O inventário
-> tinha visto "dois workflows escrevem o mesmo campo" e chamado de conflito; a leitura do fluxo,
-> feita antes de desabilitar qualquer nó, mostrou **três transições distintas** — e que executar o
-> plano teria **quebrado a Fase 3** (Regra Crítica nº 11: a ordem é imutável). Nada foi desabilitado.
->
-> **Executar um plano aceito que o dado já desmentiu é o pior dos dois mundos** — tem a autoridade do
-> ADR e a consequência do erro.
->
-> **Corolário 1:** **hipótese desmentida também se registra.** Se a refutação não for escrita, a
-> próxima auditoria levanta o mesmo alarme e o trabalho se repete.
+> **Motivo:** em 08/09 a Fase 0.2 do ADR-37 foi cancelada na hora de executar, e salvou a Fase 3 — história completa em [`BASE-04-INCIDENTES`](docs/base/BASE-04-INCIDENTES.md#4-D4-numero-e-gravidade-herdados).
 
-> 🔴 **Corolário 2 (2026-09-26) — número herdado de documento não vira critério de aceite sem ser
-> medido de novo.**
->
-> **Um documento registra o que era verdade no dia em que foi escrito. Um critério de aceite afirma o
-> que é verdade agora.** São coisas diferentes.
->
-> **Motivo:** em 26/09 o brief do F3 escreveu dois critérios de aceite em cima de *"defeitos vivos"*
-> copiados de um relatório do dia anterior — **o score 3× e o `t28_ga4_landing` morto há 19 dias.**
-> Nenhum dos dois estava acontecendo. O executor mediu antes de construir, **três das quatro
-> premissas caíram, e a etapa parou antes do primeiro nó.** Um dos achados errados tinha inclusive
-> sido apresentado como *"mais urgente que construir o índice"*.
->
-> **Custo de obedecer: uma query. Preço pago por não obedecer: uma etapa inteira.**
->
-> **Teste prático:** *este número eu medi, ou eu li?* Se leu, e ele vai virar critério, **meça.** E
-> **o que se mede vence o que está escrito** — inclusive o que está escrito por mim.
->
-> ⚠️ **Vale também para o contrário:** a mesma sessão descobriu que **o score 3× era real em 19/09 e
-> foi consertado até 26/09 sem ninguém registrar** — e cinco briefs seguidos mandaram não tocar num
-> defeito que já não existia. **Defeito que some também se escreve** (é o Corolário 1, do outro lado).
+> **Motivo:** em 26/09 dois critérios de aceite nasceram de defeitos que já não existiam — história completa em [`BASE-04-INCIDENTES`](docs/base/BASE-04-INCIDENTES.md#4-D4-numero-e-gravidade-herdados).
 
-> 🔴 **E vale para GRAVIDADE, não só para número (2026-10-02 — duas vezes no mesmo dia, as duas
-> minhas).** Um relatório traz o **fato**; quem lê acrescenta a **urgência**. **A urgência também é
-> uma afirmação, e também se mede.**
->
-> | O que o relatório disse (correto) | O que EU acrescentei | O que a medição mostrou |
-> |---|---|---|
-> | *"o `.env` está versionado e o `.gitignore` não o ignora"* | *"das urgentes"* · *"o único item que piora sozinho"* · *"pode ser credencial exposta"* | **três chaves `VITE_*`, públicas por construção, em repo privado, sem `NOTION_TOKEN`.** Nada a rotacionar |
-> | *"existe pasta `supabase/` intocada"* | *"confira se há dado atrás da chave pública"* | **zero migrations, zero chamadas, `client.ts` importado por ninguém.** Nada a checar |
->
-> **Nos dois casos o custo de medir era dois comandos, e eu já tinha mandado trabalho para o Olavo.**
->
-> **Teste prático:** *esta gravidade eu medi, ou eu herdei?* Se herdou, **meça antes de passar
-> adiante** — porque **alarme repassado ganha autoridade a cada repasse**, e quem recebe não vê que
-> a urgência foi inventada no caminho.
+> **Motivo:** em 02/10 o chat-mãe inflou gravidade duas vezes no mesmo dia — história completa em [`BASE-04-INCIDENTES`](docs/base/BASE-04-INCIDENTES.md#4-D4-numero-e-gravidade-herdados).
 
 ### R7 — Nada se cria sem plano pronto. E todo plano começa procurando o que já existe
 **Antes de construir qualquer coisa nova** — workflow, skill, agente, coluna, tabela, pasta — **tem de
@@ -334,10 +146,7 @@ E **em cada etapa do plano**, antes de propor construir, responder por escrito:
 2. **Existe workflow** que já faz? **Existe coluna** que já guarda?
 3. Se procurei e **não existe**, **registrar que procurei** — senão a próxima sessão procura de novo.
 
-> **Motivo:** é a **R2** e a **R6** aplicadas *antes* do fato, e não depois. Corrigir um plano em texto
-> custa minutos; corrigir uma construção custa semanas — foi o que aconteceu com o `1º Enriquecimento`,
-> com o `id_hubspot` e com as 6 dimensões do score. **O caro nunca foi construir: foi construir o que
-> já existia, ou o que não podia ser auditado depois.**
+> **Motivo:** o `1º Enriquecimento`, o `id_hubspot` e as 6 dimensões do score custaram semanas — história completa em [`BASE-04-INCIDENTES`](docs/base/BASE-04-INCIDENTES.md#12-D9-construir-o-que-ja-existia).
 
 ### R8 — Skill primeiro; subagente é a exceção
 **O padrão é a skill** — instrução determinística, versionada em pasta. **Orquestrar vários agentes é
@@ -352,9 +161,7 @@ exceção**, reservada a tarefa de alta volatilidade.
 > **Teste prático:** *"se eu escrevesse isso num checklist, outra pessoa executaria igual?"* Se sim, é
 > skill. Se a resposta depende de julgamento a cada caso, é agente.
 >
-> **Motivo:** skill tem carga de contexto baixa e saída previsível; orquestração tem o efeito oposto e
-> só se paga quando a tarefa realmente exige autonomia. O `phi-diagnostico` é o exemplo da casa: um
-> agente que virou skill e passou a poder ser testado sem gastar token no n8n.
+> **Motivo:** o `phi-diagnostico` é o agente que virou skill e passou a ser testável sem token — história completa em [`BASE-04-INCIDENTES`](docs/base/BASE-04-INCIDENTES.md#10-D12-orquestracao-onde-skill-bastava).
 
 ### R10 — Modelo caro só onde há julgamento (escada de modelos)
 Tarefa básica usa **modelo rápido e barato**; tarefa que exige **raciocínio e qualidade de entrega**
@@ -384,26 +191,12 @@ usa **modelo forte**. Escolher o modelo é decisão de arquitetura, não detalhe
 4. **Quem revisa não é quem executou**, e o critério de aceite é **escrito antes**. Reprovou, volta com
    relatório do defeito. **Limite de 3 voltas** — na terceira, o problema é o plano, não a execução.
 
-> ✅ **Praticado pela 1ª vez em 2026-09-16** (PROSP-05/06): 11 critérios de aceite escritos antes de
-> construir.
->
-> ⚠️ **E a lição de quem escreve o brief — minha:** a entrevista de alinhamento **viaja junto com o
-> brief de construção**, nunca depois. Em 16/09 pedi a entrevista a um sub-chat que construía desde
-> 13/09; quando ela chegou, quatro das nove perguntas **já tinham sido respondidas por incidente**.
-> **Entrevista atrasada não é entrevista — é autópsia.**
+> **Motivo:** em 16/09 a entrevista chegou depois da construção — autópsia, não entrevista — história completa em [`BASE-04-INCIDENTES`](docs/base/BASE-04-INCIDENTES.md#8-D10-entrevista-atrasada).
 
 ### R11 — Sucesso silencioso é o modo de falha desta casa
 **Nó que roda verde fazendo o contrário do que o nome diz** já nos custou caro **cinco vezes**:
 
-| Caso | O que parecia | O que era |
-|---|---|---|
-| `onError: continueRegularOutput` no P5/P6 | tudo certo | **duas semanas** escrevendo em coluna inexistente após o `id_hubspot` → `id_crm` |
-| `Filter` do TMP com operador `notEmpty` e o `60` ao lado | "corta em 60" | **não cortava nada** — entraram leads abaixo do corte |
-| `lookupValue` vazio no Google Sheets | "busca 1 lead" | **devolveu a planilha inteira** → smoke de 1 virou escrita em 20 |
-| `INNER JOIN` com `client_config` no score | score rodando | **descartava 100%** das linhas de um writer |
-| `Loop Over Items` posto para conter a cota no P6 | "agora vai de pouco em pouco" | **o que custava ficou dentro do loop** — mesmas ~100 leituras, agora com espera no meio |
-| `Checar unicidade do score` posto para a duplicata gritar | "checagem instalada" | **zero linhas no caso saudável = zero itens = fim do ramo.** Matou o `Sync Scores to Notion` e **a Fase 3 inteira por 8 dias**, verde todo dia |
-| `Série Diária` com `WHERE campaign_id = 'GADS-'+id` | "sem histórico" | **query agregada sempre devolve linha** — "não achei" saiu como **`n_dias = 0`** em campanhas com **250 dias de série** |
+> **Motivo:** sete nós verdes fazendo o contrário do nome, de 09 a 10/2026 — história completa em [`BASE-04-INCIDENTES`](docs/base/BASE-04-INCIDENTES.md#1-D1-vazio-vira-outra-coisa).
 
 **As cinco regras que saem daí:**
 1. 🔴 **A falta de critério nunca pode significar "todos".** Filtro sem valor, busca sem chave, lote
@@ -447,12 +240,7 @@ usa **modelo forte**. Escolher o modelo é decisão de arquitetura, não detalhe
 ### R12 — Configuração mudada para teste volta na mesma sessão
 **Estado temporário sem prazo vira estado permanente invisível.** Já nos custou **três vezes**:
 
-| O que foi mudado para testar | O que aconteceu por não voltar |
-|---|---|
-| `modo: continuo` no `[P5] Config` | o backfill inteiro rodou **carimbado como contínuo** — o campo que existe para dizer que rodada foi aquela registrou o oposto |
-| vazão do P6 em **3**, baixada para a estreia | ficou em 3 depois de o motivo acabar; só não custou caro porque alguém reparou |
-| `[P5] Entrada` **desabilitado** durante o smoke de 16/09 | a porta pela qual o P4 chama o P5O ficou fechada — e a repontagem do M6 **nunca foi exercida** |
-| 🔴 **draft não publicado deixado para trás** no `Reclassifica IDs` do Agregador (01/10) | o workflow é **ativo**: o draft diferia do ar **só nesse nó**, e **regredia** o conserto que acabara de ser provado. **A próxima publicação de qualquer coisa o embarcaria sem ninguém saber** |
+> **Motivo:** quatro estados temporários que não voltaram, de 16/09 a 01/10 — história completa em [`BASE-04-INCIDENTES`](docs/base/BASE-04-INCIDENTES.md#3-D3-estado-temporario-que-nao-volta).
 
 **As duas regras:**
 1. **Antes de fechar a sessão, liste o que foi mudado para teste e releia o artefato confirmando que
@@ -487,46 +275,14 @@ Isso já escondeu um caminho de produção quebrado por **dois dias**.
 2. **Depois de alterar workflow ativo, releia e confirme que publicou.** *"Não deu erro"* não é
    *"está no ar"*.
 
-> 🔴 **EMENDA 2026-10-02 — a comparação de id é PENEIRA, não veredito. E a regra, como estava
-> escrita, fez um executor recusar a ação certa.**
->
-> Medido no Agregador: **"Descartar alterações" no editor NÃO devolve o `versionId` do ativo — cria um
-> rascunho NOVO a partir do conteúdo do ativo.** Depois do descarte: `versionId 7aba9362` ·
-> `activeVersionId ecec7073` · **ids diferentes** · e **conteúdo idêntico** (68 nós, zero nós
-> diferentes, conexões iguais).
->
-> **Consequência:** `versionId == activeVersionId` **não é um estado alcançável** depois de qualquer
-> rascunho ter existido — só publicando. **Exigir a igualdade de ids vira alarme que grita para
-> sempre**, e *alarme que sempre grita é alarme desligado.*
->
-> | O teste | O que ele vale |
-> |---|---|
-> | `versionId != activeVersionId` | 🟡 **"olhe mais perto"** — não é *"existe mudança pendente"* |
-> | **conteúdo do draft vs conteúdo do ativo** | 🟢 **o veredito.** É o conteúdo que embarca numa publicação, não o id |
->
-> **Custo de ter escrito a regra só com id:** o executor recusou `restore_workflow_version` **porque
-> ela criava id novo e "reprovaria a R13"** — e a ação era a certa. **A cautela dele foi correta; a
-> regra estava incompleta.**
->
-> **Teste prático, corrigido:** *"o que embarca na próxima publicação é igual ao que está no ar?"*
-> Compare **nós e conexões**, não ids.
+> **Motivo:** em 02/10 a igualdade de ids revelou-se inalcançável, e fez recusar a ação certa — história completa em [`BASE-04-INCIDENTES`](docs/base/BASE-04-INCIDENTES.md#5-D5-rascunho-confundido-com-o-ar).
 
-> **Motivo:** em 16/09 o `[P5] CRM-out` do PROSP-04 foi repontado para o Odoo — **no rascunho**. O
-> que rodava continuou chamando o P5 do HubSpot, já aposentado, **com
-> `onError: continueRegularOutput`**: a próxima prospecção teria alimentado nada e seguido verde.
-> Duas leituras do workflow não pegaram, porque as duas leram o rascunho — **e o campo `sameAsDraft:
-> false` estava na tela, sem ninguém olhar.**
->
-> **Teste prático:** *"eu li o que roda, ou li o que alguém propôs?"*
+> **Motivo:** em 16/09 duas leituras do workflow leram o rascunho e esconderam produção quebrada por 2 dias — história completa em [`BASE-04-INCIDENTES`](docs/base/BASE-04-INCIDENTES.md#5-D5-rascunho-confundido-com-o-ar).
 
 **3. Documentação de configuração se escreve DEPOIS de reler o artefato.** Em uma semana, **três**
 documentos afirmaram um fato que o artefato contradizia:
 
-| Documento | Afirmava | Era |
-|---|---|---|
-| descrição do `PROSP-05O` | *"religado ao P4 em 16/09"* | a religação estava **no rascunho** |
-| cabeçalho do **ADR-38** | *"corte ainda não ocorreu"* | tinha ocorrido **9 dias antes** |
-| **ADR-38 §17.2** | *"`alwaysOutputData` ligado"* | o campo estava **nulo** |
+> **Motivo:** três documentos, numa semana, afirmaram o que o artefato contradizia — história completa em [`BASE-04-INCIDENTES`](docs/base/BASE-04-INCIDENTES.md#2-D2-documento-que-mente).
 
 > **Escreva o que você leu de volta, não o que você mandou fazer.** Documentar a intenção no lugar do
 > artefato é pior que não documentar: cria uma testemunha falsa que a próxima auditoria acredita.
@@ -542,10 +298,7 @@ documentos afirmaram um fato que o artefato contradizia:
 ### R14 — Identidade se casa por chave declarada e não-coagível
 **Em uma semana, duas frentes independentes, a mesma doença:**
 
-| Frente | Como a identidade era casada | O estrago |
-|---|---|---|
-| **Agregador** (consertado 29/09) | **posição no array** — `nodeFirst()`, `.first()`, `$('Set dados').all()[0]` | dado do KIL gravado sob o `CLI-13`; e o guarda convertendo `error` em `not_configured` |
-| **Webview** (aberto) | **chave coagível** — `client_id` com zero à esquerda deixa de casar | campanha atribuída ao cliente errado na tela, que é a função central do produto |
+> **Motivo:** duas frentes independentes, na mesma semana, casando identidade por posição e por chave coagível — história completa em [`BASE-04-INCIDENTES`](docs/base/BASE-04-INCIDENTES.md#6-D6-identidade-por-posicao).
 
 **As três regras:**
 1. 🔴 **Posição em array, ordem de chegada e número que parece id NUNCA são identidade.** `[0]`,
@@ -597,38 +350,22 @@ brief não dizia **qual** documento fechava a etapa. *Histórias completas em
 > *"Onde estamos, quanto falta, e o que eu atualizei para provar isso?"*
 Se não souber responder, a etapa não acabou.
 
+
 ---
 
-# RTK - Rust Token Killer
+## O que saiu deste arquivo na Fase 1, e para onde
 
-**Usage**: Token-optimized CLI proxy (60-90% savings on dev operations)
+| O que saiu | Para onde | Por quê |
+|---|---|---|
+| **as histórias** dos motivos das regras | `docs/base/BASE-04-INCIDENTES.md` | ordenadas por **frequência da doença**, que a ordem cronológica escondia |
+| **Stack** · **ids do Notion** | `docs/base/BASE-02-SUPERFICIES.md` | **já era dono** — duas cópias divergirem é questão de tempo |
+| **tabelas do BigQuery** | `saude-digital/CONTRATO-PHI.md` | já era dono |
+| **as 14 Regras Críticas** · **o cliente de teste** | `saude-digital/REGRAS-CRITICAS-IMPLEMENTACAO.md` | é fato de frente, não regra de raiz |
+| **o bloco T28** | `otimizacao-campanhas/CLAUDE.md` | idem |
+| **Documentação no Notion** | `MAPA-DE-DOCUMENTACAO.md` | já era dono |
+| **RTK** | `docs/ferramentas/rtk.md` | é ferramenta, não regra |
+| **o repositório e a branch** | `docs/base/BASE-02-SUPERFICIES.md` §3.2 | 🔴 e a **contradição foi consertada**: este arquivo declarava **uma branch obsoleta** (último commit em abril/2026) numa seção, e a branch certa na R1. **Qual é a branch, quem diz é o brief — R15** |
 
-## Meta Commands (always use rtk directly)
+> 🔴 **A prova de que nada se perdeu é mecânica:** `python3 scripts/fase1-memoria/provar.py`. Ela recorta cada bloco do commit `d543f16` e falha se qualquer história, qualquer fato ou qualquer palavra de regra não estiver onde deveria.
 
-```bash
-rtk gain              # Show token savings analytics
-rtk gain --history    # Show command usage history with savings
-rtk discover          # Analyze Claude Code history for missed opportunities
-rtk proxy <cmd>       # Execute raw command without filtering (for debugging)
-```
-
-## Installation Verification
-
-```bash
-rtk --version         # Should show: rtk X.Y.Z
-rtk gain              # Should work (not "command not found")
-which rtk             # Verify correct binary
-```
-
-⚠️ **Name collision**: If `rtk gain` fails, you may have reachingforthejack/rtk (Rust Type Kit) installed instead.
-
-## Hook-Based Usage
-
-All other commands are automatically rewritten by the Claude Code hook.
-Example: `git status` → `rtk git status` (transparent, 0 tokens overhead)
-
-Refer to CLAUDE.md for full command reference.
-   
----
-
-*PHI™ v1.5 — Atualizado em 27/07/2026. Adendo 2026-07-31: frente Otimização/T28 (cérebro de análise) — ver `ESTADO-DO-PROJETO.md` (snapshot 2026-07-31) + ADR-28.*
+*PHI™ — regras R1–R15. Enxugado na Fase 1 da memória compartilhada, 2026-10-03.*

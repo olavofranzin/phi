@@ -234,3 +234,32 @@ Não liste docs aqui — registre-os no Catálogo. Assim esta página não envel
 > aqui até hoje), e o parque ganhou **um workflow de vigilância** (§7.3), que é porta de entrada de
 > *"como eu sei que parou?"*. **O sintoma de que faltava:** dava para ler este mapa do começo ao fim
 > e não descobrir que existe um índice de saúde digital do negócio sendo desenhado há duas semanas.
+
+---
+
+## 🔴 Documentação completa no Notion — os ids, que até 03/10 moravam no `CLAUDE.md` da raiz
+
+> **Por que isto mudou de lugar:** na Fase 1 da memória compartilhada a raiz passou a guardar **só
+> regra**. *“O que existe e onde achar”* é fato **deste** documento (`BASE-00-PORTA` §1.1), então o
+> bloco veio para cá, **byte-idêntico** ao que estava na raiz (commit `d543f16`).
+>
+> ⚠️ **O brief da Fase 1 (§9.1) mandava APAGAR este bloco, afirmando que este documento já era dono
+> dos 7 ids.** Medido em 03/10: **tinha 3 dos 7.** Apagar teria perdido 4. Corrigido — movido, não
+> apagado.
+
+## Documentação Completa no Notion
+
+| Documento | ID Notion |
+|-----------|-----------|
+| Documentação Técnica v1.4 | `328b65e5-c72b-8103-9ad0-d2fb81dd8055` |
+| Arquitetura de IA & Análise de Dados | `342b65e5-c72b-81f8-a05e-dfe05e564105` |
+| Google Ads Insights Semanal — Spec Técnica | `342b65e5-c72b-8177-9982-c5f012c8f006` |
+| Sessão Handoff 08/04/2026 | `33db65e5-c72b-81e0-87c2-f63523db3906` |
+| Sessão Handoff 06/04/2026 | `33ab65e5-c72b-8117-b67e-d29f4ca88fb6` |
+| SQL de Validação v1.4 | `335b65e5-c72b-814f-95e2-d57a18d96458` |
+| SOP, Glossário e Definições | `328b65e5-c72b-81d8-a25b-c83921610282` |
+
+| Verificado | |
+|---|---|
+| **em** | 2026-10-03, pelo **sub-chat da Fase 1**, **contra o `CLAUDE.md` da raiz no commit `d543f16`** |
+| ⬜ **o que NÃO foi verificado** | **que cada página do Notion ainda exista e ainda se chame assim.** O recorte é fiel à raiz; a raiz não foi conferida contra o Notion. Três dos títulos são *“Sessão Handoff”* de **abril de 2026** — candidatos a banner de HISTÓRICO (**R2 regra 3**) |

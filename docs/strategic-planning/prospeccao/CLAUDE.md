@@ -1,7 +1,14 @@
 # Prospecção — contexto da frente
 
+> Leia **PRIMEIRO** o [`CLAUDE.md` da raiz](../../../CLAUDE.md) — as regras **R1–R15** valem aqui também.
+> Esta frente é dona de: **o `potencial_comercial`** (o score do lead — ⚠️ **não** o `phi_value`) · o
+> contrato de colunas e os invariantes **I1–I11** (`CONTRATO-PROSPECCAO.md`) · os workflows
+> `PROSP-01..08` · o **ADR-35**.
+> Verificado em **2026-10-03**, pelo **sub-chat da Fase 1 da memória compartilhada**, contra a árvore
+> do repositório e o `CLAUDE.md` da raiz no commit `d543f16`.
+>
 > Leia este arquivo ao trabalhar em qualquer coisa de Prospecção. Ele complementa o `CLAUDE.md` da
-> raiz, não o substitui. **Regras R1–R9 da raiz valem aqui integralmente.**
+> raiz, não o substitui.
 
 ## O que é esta frente
 Descobrir negócios locais no Google Maps, pontuar o potencial comercial de cada um, enriquecer com

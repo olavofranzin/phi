@@ -389,3 +389,32 @@ no §7 do relatório da Lista A; aqui ficam as duas que mudam plano aceito:
    diagnóstico era outro.
 
 > É a **R6** funcionando: *executar um plano aceito que o dado já desmentiu é o pior dos dois mundos.*
+
+---
+
+## 🔴 Anexo — as tabelas principais do `phi_prod`, como estavam no `CLAUDE.md` da raiz
+
+> **Por que este anexo existe:** na Fase 1 da memória compartilhada a raiz passou a guardar **só
+> regra**, e *“quem escreve e quem lê cada tabela”* é fato **deste** contrato (`BASE-00-PORTA` §1.1).
+> O bloco abaixo veio da raiz **byte-idêntico** (commit `d543f16`).
+>
+> ⚠️ **Este anexo é o resumo que a raiz carregava, não a matriz.** A **matriz de donos por destino**
+> continua sendo a §4 deste documento, e **ela é que manda.** Se as duas divergirem, **a matriz
+> vence** — e a divergência se escreve, não se apaga (**R2**).
+
+## BigQuery — Tabelas Principais (`phi_prod`)
+
+| Tabela | Papel |
+|--------|-------|
+| `raw_campaign_data` | Dados brutos diários por campanha (partição por `date`) |
+| `phi_score_history` | Histórico de scores calculados (MERGE obrigatório) |
+| `phi_score_current` | VIEW — score mais recente por campanha |
+| `client_config` | Configuração por cliente |
+| `model_config` | Pesos e limiares por modelo de negócio |
+| `client_goal_history` | Histórico de metas por cliente |
+| `workflow_execution_log` | Log de execuções por fase |
+
+| Verificado | |
+|---|---|
+| **em** | 2026-10-03, pelo **sub-chat da Fase 1**, **contra o `CLAUDE.md` da raiz no commit `d543f16`** |
+| ⬜ **o que NÃO foi verificado** | **que estas 7 sejam as tabelas do `phi_prod` hoje.** Esta fase não abriu o BigQuery (brief §7). O recorte é fiel à raiz, e **a raiz é uma hipótese até alguém medir** (`BASE-00` §1.2) |
