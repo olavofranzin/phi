@@ -145,6 +145,8 @@ Antes de finalizar QUALQUER tarefa:
 
 | Se a conversa é sobre… | Leia primeiro |
 |---|---|
+| 🔴 **Não sei onde procurar / quem é dono deste fato** | **`docs/base/BASE-00-PORTA.md`** — a porta da memória compartilhada |
+| **Esta integração está no ar? Que credencial ela guarda?** | **`docs/base/BASE-02-SUPERFICIES.md`** |
 | **Onde o projeto está** | `docs/strategic-planning/ESTADO-DO-PROJETO.md` (§0 PAINEL) |
 | **Quanto falta para acabar** | `docs/strategic-planning/DEFINICAO-DE-PRONTO-PHI-V1.md` |
 | **Achar qualquer documento** | `docs/strategic-planning/MAPA-DE-DOCUMENTACAO.md` |
@@ -536,6 +538,30 @@ documentos afirmaram um fato que o artefato contradizia:
 > Consequências práticas, medidas em 19/09: trocar a descrição **não muda o `versionId`**; e um
 > `errorWorkflow` configurado **já protege** um workflow cujo rascunho nunca subiu. O inverso da
 > armadilha acima — aqui o que você salvou está valendo, mesmo sem publicar.
+
+### R14 — Identidade se casa por chave declarada e não-coagível
+**Em uma semana, duas frentes independentes, a mesma doença:**
+
+| Frente | Como a identidade era casada | O estrago |
+|---|---|---|
+| **Agregador** (consertado 29/09) | **posição no array** — `nodeFirst()`, `.first()`, `$('Set dados').all()[0]` | dado do KIL gravado sob o `CLI-13`; e o guarda convertendo `error` em `not_configured` |
+| **Webview** (aberto) | **chave coagível** — `client_id` com zero à esquerda deixa de casar | campanha atribuída ao cliente errado na tela, que é a função central do produto |
+
+**As três regras:**
+1. 🔴 **Posição em array, ordem de chegada e número que parece id NUNCA são identidade.** `[0]`,
+   `.first()`, "o primeiro item" e "o que chegou agora" são **acidentes de execução**, não chaves.
+2. **A chave viaja com o dado, carimbada no envelope** — `client_id` + `source` + `source_id` +
+   janela. Quem consome **casa por chave**, nunca por índice.
+3. 🔴 **Chave ausente ou em conflito PARA e grita, com nome.** Nunca cai para "o primeiro", nunca
+   para "todos" (é a **R11 regra 1**). O sinal tem código próprio — `CLIENT_IDS_NOT_FOUND` é o
+   precedente da casa.
+
+> **Teste prático:** *se duas linhas trocassem de ordem na entrada, o resultado mudaria?* Se sim,
+> **você está usando posição como identidade.**
+>
+> **E o corolário de tipo:** *id não é número.* `'007'` e `7` são o mesmo valor para o JavaScript e
+> **clientes diferentes** para o negócio. **Compare como texto, normalize uma vez, e declare onde.**
+> (É a mesma lição do `client_id` × `client_slug` da regra crítica 4, e do `campaign_id` sem prefixo.)
 
 ### R4 — Uma pergunta que todo chat responde antes de fechar
 > *"Onde estamos, quanto falta, e o que eu atualizei para provar isso?"*
