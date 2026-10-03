@@ -3,11 +3,22 @@
 | | |
 |---|---|
 | **Plano aprovado** | `docs/base/PLANO-MEMORIA-COMPARTILHADA.md` — 🟢 **Olavo, 2026-10-03: "Ok concordo"** |
-| **Fase 0 (feita pelo chat-mãe)** | `BASE-00-PORTA.md` · `BASE-02-SUPERFICIES.md` · **R14** no `CLAUDE.md` |
-| **Branch** | `claude/consolidacao-2026-08` · `https://github.com/olavofranzin/phi/tree/claude/consolidacao-2026-08` |
-| **Checkout** | `git fetch origin claude/consolidacao-2026-08 && git checkout claude/consolidacao-2026-08` |
-| 🔴 **Antes do 1º commit** | **compare esta branch com a da instrução da sua sessão. Divergindo, PARE e avise** (**R1**, emenda — já falhou duas vezes) |
+| **Fase 0 (feita pelo chat-mãe)** | `BASE-00-PORTA.md` · `BASE-02-SUPERFICIES.md` · **R14** e **R15** no `CLAUDE.md` |
+| **Camada de modelo** | 🔴 **FORTE** (**R10**) — ver §11 |
 | **Limite** | **3 voltas** |
+
+### 🔴 O cabeçalho da R15 — as três perguntas
+
+| | |
+|---|---|
+| **1. ONDE COMMITO** | **`claude/consolidacao-2026-08`** · `https://github.com/olavofranzin/phi/tree/claude/consolidacao-2026-08` · `git fetch origin claude/consolidacao-2026-08 && git checkout claude/consolidacao-2026-08` |
+| 🔴 **Antes do 1º commit** | **compare esta branch com a da instrução da sua sessão. Divergindo, PARE e avise** (**R15**) |
+| **2. ONDE LEIO** | 🔴 **`docs/base/BASE-00-PORTA.md`** — esta frente é **governança/memória**, e a porta é o doc dela. Mais o **`CLAUDE.md` da raiz** (as regras) |
+| **3. ONDE REGISTRO** | **(a)** `docs/base/PLANO-MEMORIA-COMPARTILHADA.md` — marcar a **Fase 1 concluída, com a prova** (os 4 números do `CLAUDE.md`) · **(b)** 🔴 **`BASE-00-PORTA.md` §4** — a tabela de estado dos 6 documentos **tem de sair de ⬜ para ✅** · **(c)** a linha no **Registro de Execuções** (**R3**) |
+
+> ⚠️ **Este cabeçalho foi consertado em 03/10.** O brief original **não cumpria a R15** — ela nasceu
+> depois dele. **O item (b) é o que a R15 existe para impedir de esquecer:** o `BASE-00` §4 é *onde
+> se procura* se os documentos existem, e ele mentiria no dia seguinte (**R2 regra 5**).
 
 > 🔴 **Leia o `BASE-00-PORTA.md` primeiro.** Este trabalho **é a aplicação das três regras dele.** Se
 > você escrever um documento sem `verificado em`, ou repetir um fato de que ele não é dono, **falhou
@@ -72,6 +83,10 @@ regra de branch** · o **W5 "concluído"** com gráfico inexistente.
 ---
 
 ## 3. 🔴 Enxugar o `CLAUDE.md` — a tarefa de risco
+
+> 🔴 **ESTA SEÇÃO FOI AMPLIADA PELO §9. LEIA O §9 ANTES DE EXECUTAR ESTA.** O corte deixou de ser um
+> (história → incidentes) e passou a ser **dois** (fato → frente, **e** história → incidentes), por
+> decisão do Olavo em 03/10. **O que está abaixo é o corte B; o corte A está no §9.**
 
 | Passo | |
 |---|---|
@@ -277,3 +292,31 @@ executor (relatório do W4, o `CHECKLIST-webview` e o as-built do ADR-33) **porq
 qual documento fechava.**
 
 | 🆕 **CA19** | A **R15** está na raiz, e a exigência de branch **não ficou duplicada** entre R1 e R15 | o diff |
+
+
+---
+
+## 11. 🔴 Camada de modelo para executar este brief (R10)
+
+**Camada FORTE.** Hoje isso é **Opus**. ⛔ **Não execute em camada rápida.**
+
+**O teste da R10 é *"duas pessoas competentes responderiam diferente?"* — e aqui a resposta é sim em
+quatro lugares:**
+
+| # | Onde há julgamento | Por que camada rápida falha |
+|---|---|---|
+| **1** | **o que é REGRA e o que é HISTÓRIA** no `CLAUDE.md` | a fronteira não está marcada no arquivo. Errar para o lado da história **apaga regra** |
+| **2** | **o que é PRINCÍPIO** e o que é só decisão | o `BASE-01` é o doc mais fácil de encher de frase bonita sem dono |
+| **3** | 🔴 **o campo "por que existe" das fichas** | **é o risco central.** O brief manda escrever `⬜ a perguntar ao Olavo` quando não achar — e **modelo mais fraco preenche a lacuna com texto plausível** em vez de admitir que não achou. **Ficha com porquê inventado é o pior resultado possível desta fase** |
+| **4** | **a ordem do `BASE-04` por frequência da doença** | exige ver que *"vazio vira todos"* e *"identidade por posição"* são **o mesmo padrão** repetido, e não sete casos soltos |
+
+> 🔴 **A regra é do degrau, não da marca (R10).** Se amanhã houver outro nome no degrau forte, é
+> esse. **O que não muda: esta tarefa reescreve a constituição do projeto e inventa nada.**
+
+### E o que mais importa na escolha da sessão
+
+| | |
+|---|---|
+| **Ferramentas** | **só arquivo e git.** ⛔ **Esta fase não toca em n8n, BigQuery nem Notion** — exceto a linha do ledger (**R3**) |
+| **Sessão dedicada** | 🔴 **uma sessão só para isto.** Ela lê o `CLAUDE.md` inteiro (634 linhas), extrai, reescreve e **prova que nada se perdeu** — não divida atenção com outra frente |
+| **Modo rápido** | 🟢 **o modo rápido do Claude Code usa Opus com saída mais rápida — não rebaixa o modelo.** Pode usar |
