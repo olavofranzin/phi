@@ -85,10 +85,19 @@ app.get("/api/notion-debug", async (req, res) => {
 | **confere** | 🔴 **nada** — sem login, sem lista de bases permitidas |
 | **usa** | o **`NOTION_TOKEN` do servidor**, logo alcança **tudo** que aquele token alcança |
 
-> ⬜ **O que o chat-mãe NÃO mediu, e você também não precisa medir para executar:** se a URL de
-> produção responde sem credencial de fora (a política de rede da sessão bloqueou o host). **Isso
-> governa a URGÊNCIA, não a correção** — apagar rota com zero consumidores está certo de qualquer
-> forma. **Não invente a gravidade que não mediu** (**R6**, lado da gravidade).
+> 🔴 **RESPONDIDO pelo Olavo em 2026-10-03, e o ⬜ virou fato: a URL ABRE SEM SENHA hoje.** O
+> chat-mãe não conseguiu medir (a política de rede da sessão bloqueia o host) e **perguntou em vez de
+> presumir**; quem mediu foi o Olavo, abrindo.
+>
+> **Consequência:** quem souber a URL lê **qualquer base do Notion que o `NOTION_TOKEN` alcança** —
+> Clientes, Projetos, o próprio Ledger. **A urgência deixou de ser hipótese.**
+>
+> ⚠️ **Mas isto NÃO muda o que esta tarefa faz, e não a transforma em tarefa de segurança.** Ver o
+> §3.0: **a senha é a proteção, e ela não é desta tarefa.** Rota sem consumidor não deve existir,
+> **com senha ou sem** — é por isso que a tarefa continua a mesma e o escopo não cresce.
+>
+> *(Registrado também porque hipótese que se confirma se escreve, igual à que se refuta — **R6**
+> corolário 1.)*
 
 ### 1.3 As funções que ficam órfãs, em `server/notion.js`
 
@@ -125,6 +134,28 @@ const { getNameMaps, getClients, clientNum, debugDatabase, getCampaignDetail } =
 >
 > **Motivo:** é a **R5** aplicada a rota. **"Zero consumidores" é exatamente o critério desta
 > tarefa** — sem o comentário, a próxima faxina apaga as duas com toda a razão aparente.
+
+---
+
+## 3.0 🔴 ANTES de tudo: a senha é do Olavo, e vem primeiro
+
+**Autorizado por ele em 03/10** (*"se a pergunta for se quero que coloque senha para acessar = pode
+colocar"*). **Não é tarefa deste sub-chat** — é **um clique no EasyPanel**, na configuração do
+domínio, e **não toca na imagem Docker.**
+
+| Por que primeiro | |
+|---|---|
+| **protege na hora** | é configuração de proxy, não precisa de build nem de deploy |
+| **protege tudo** | inclusive as rotas que ninguém auditou ainda, não só estas duas |
+| **não atrapalha** | apagar rota sem consumidor segue certo depois, e o CA2 segue provável |
+
+> ⚠️ **Ao começar, CONFIRME com o Olavo se a senha já está no ar, e anote no Ledger.** Se ainda não
+> estiver, **isso não bloqueia esta tarefa** — ela não depende da senha. **Só não anuncie como
+> "fechado" o que a senha fecha e o seu commit não.**
+>
+> 🔴 **E a R11 vale para a senha também:** ela é **salvaguarda**, logo é mudança em produção e **pede
+> o mesmo cuidado da mudança que protege.** O teste não é *"a senha pede senha?"* — é **"a aplicação
+> continua abrindo para quem deve?"**
 
 ---
 

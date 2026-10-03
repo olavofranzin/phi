@@ -34,10 +34,19 @@
 
 ## As 7 sementes
 
+> 🟢 **2026-10-03 — a primeira ficha ⬜ foi respondida, e a resposta desmentiu o nome do artefato.**
+> O `Pipeline_v2` **foi o primeiro**, não o segundo. A busca exaustiva em git não tinha achado o `v1`
+> **porque ele nunca existiu** — e a dedução *“`_v2` logo houve um `v1`”* teria inventado um
+> antecessor e, pior, um motivo de substituição.
+>
+> 🔴 **É a prova de que a regra desta pasta se paga:** o campo ficou `⬜` por um dia, **e a pergunta
+> custou uma frase.** Preenchido por dedução, estaria **errado para sempre** — e com a aparência de
+> registro legítimo. **Ficha com porquê deduzido é pior que ficha vazia.**
+
 | # | Ficha | Porquê |
 |---|---|---|
 | 1 | [`sw-metricas-campanhas.md`](sw-metricas-campanhas.md) | 🟡 parcial |
-| 2 | [`phi-pipeline-v2.md`](phi-pipeline-v2.md) | ⬜ **a perguntar** |
+| 2 | [`phi-pipeline-v2.md`](phi-pipeline-v2.md) | 🟢 **Olavo, 03/10** — *o 1º workflow criado para medir o PHI*. ⚠️ **não substituiu nada: o `_v2` do nome não marca sucessão** |
 | 3 | [`agregador-metricas-multi-fonte.md`](agregador-metricas-multi-fonte.md) | 🟢 ADR-23 |
 | 4 | [`operador-unico-metricas.md`](operador-unico-metricas.md) | 🟡 parcial |
 | 5 | [`wf-t28-analise-campaign.md`](wf-t28-analise-campaign.md) | 🟢 ADR-28 |

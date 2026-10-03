@@ -10,32 +10,48 @@
 🔴 **É o coração do PHI.** Calcula e persiste `phi_score_history`, checa unicidade, sincroniza o
 Notion e roda a **Fase 3** (Fechamento → Escalada → Abertura, ordem imutável).
 
-## 🔴 Por que existe
-⬜ **A PERGUNTAR AO OLAVO.** **Procurei nos três lugares e não achei a ideia geradora.**
+## 🟢 Por que existe — RESPONDIDO pelo Olavo em 2026-10-03
 
-| Lugar | O que achei |
+> **“Ele foi o 1º workflow criado para medir o PHI.”** — Olavo, 03/10/2026
+
+| | |
 |---|---|
-| descrição no n8n | ⬜ não lida (fase não abre n8n); e o padrão medido nos snapshots é `description: null` |
-| ADR | 🔴 **não existe ADR do Pipeline_v2.** O **ADR-003** diz que *o score é fato* — isso é **autoridade** do score, **não o porquê deste workflow existir** |
-| `ESTADO-DO-PROJETO` | dá **o que faz** e o histórico de consertos, **não a ideia geradora** |
+| **a ideia geradora** | **medir o PHI.** Este workflow **é** a primeira materialização da ideia do produto: antes dele, o score não era calculado por máquina nenhuma |
+| **o que substituiu** | 🔴 **NADA. Ele foi o primeiro.** Não há antecessor |
+| **fonte** | **memória do Olavo**, perguntada e respondida. **Não é dedução, não é inferência de nome** |
+| **o que falta** (**R5**) | ⬜ a **descrição no n8n** continua sem isto. Enquanto não carregar, **a próxima auditoria pergunta de novo** — e a resposta estará só aqui, não no artefato |
 
-> 🟢 **O chat-mãe fechou uma das hipóteses em 03/10, para a próxima sessão não procurar de novo**
-> (**R7** regra 3). Buscado em **todo commit de todas as branches** — `git log --all -S` — e em **todo
-> `.md` da árvore: `Pipeline_v1` · `pipeline v1` · `pipeline antigo` · `substituiu o pipeline` ·
-> `primeiro pipeline` → **zero ocorrências, em todas as formas.**
+### 🔴 E o nome MENTE: o `_v2` não marca sucessão de nada
+
+**Esta é a lição que a resposta do Olavo entrega, e ela é maior que a ficha.**
+
+| | |
+|---|---|
+| **o que o nome sugere** | que existiu um `Pipeline_v1`, substituído por este |
+| **o que é** | **este é o primeiro.** O `_v2` **não se refere a um workflow anterior** |
+| **o que a dedução teria feito** | **inventado um antecessor que nunca existiu** — e, pior, inventado *“por que ele foi substituído”*, porque a pergunta seguinte já viria pronta |
+
+🟢 **A busca exaustiva de 03/10 estava certa, e agora se sabe por quê:** `git log --all -S` em todo
+commit de todas as branches e em todo `.md` deu **zero ocorrências** de `Pipeline_v1` e de toda forma
+de *“pipeline antigo”*. **Não era lacuna de registro. Era ausência de fato.**
+
+> 🔴 **A regra que sai daqui — é a R14, corolário de tipo, na forma de NOME DE ARTEFATO:**
+> *não grave no nome o que pertence a outro campo.* Um sufixo de versão **afirma uma história**, e
+> **esta afirmou uma história falsa por tempo indeterminado** — a ponto de o chat-mãe gastar uma
+> busca exaustiva atrás de um antecessor inexistente, e de a ficha quase registrar
+> *“presumivelmente substituiu um v1”*.
 >
-> **Consequência:** o porquê **não está em git, em nenhuma versão.** ⬜ **Resta memória do Olavo ou a
-> descrição no n8n** (que o padrão dos snapshots mostra como `null`). **Não procure no git outra vez.**
+> **Teste prático:** *o nome deste artefato afirma algum fato?* Se afirma, **ou o fato está provado,
+> ou o nome está mentindo** — e **nome é a coisa mais lida e menos auditada que existe.**
 >
-> 🔴 **E há uma pista que eu me recuso a transformar em resposta:** o nome diz **`_v2`**, o que implica
-> um **v1**. ⬜ **Não achei o v1, não achei por que ele foi substituído, e não vou deduzir.** O nome é
-> indício, não fonte. *(É exatamente a `R6`: este porquê eu li, ou eu inventei?)*
+> ⚠️ **Custo já pago:** uma busca exaustiva. **Custo evitado:** a ficha teria registrado um
+> antecessor fictício, e a próxima auditoria acreditaria nela (**R13** regra 3 — a testemunha falsa).
 
 ## O que substituiu, e por quê
 | | |
 |---|---|
-| **substituiu** | ⬜ **a perguntar** — presumivelmente um *“Pipeline”* v1, **não confirmado** |
-| **por quê** | ⬜ **a perguntar ao Olavo** |
+| **substituiu** | 🟢 **NADA — foi o primeiro** (Olavo, 03/10). ⚠️ **A linha anterior desta ficha dizia *“presumivelmente um Pipeline v1”*: era dedução a partir do nome, e estava ERRADA.** Fica registrada para mostrar como o nome engana |
+| **por quê** | 🟢 **não houve substituição.** A ideia geradora é **medir o PHI** |
 
 ## Quem escreve / quem lê
 | | |
@@ -68,5 +84,5 @@ Notion e roda a **Fase 3** (Fechamento → Escalada → Abertura, ordem imutáve
 ## ⬜ O que falta perguntar
 | # | |
 |---|---|
-| **1** | 🔴 **Por que o Pipeline_v2 existe, e o que era o v1?** É o porquê mais importante que falta nesta pasta — **é o coração do produto e é o único dos 7 sem nenhuma fonte de porquê** |
+| **1** | 🟢 **RESPONDIDA pelo Olavo em 03/10:** foi o primeiro workflow criado para medir o PHI, e **não substituiu nada — o `_v2` do nome não marca sucessão.** ⬜ **O que resta:** levar isto para a **descrição no n8n** (**R5**), porque hoje o porquê existe só nesta ficha |
 | **2** | **O motor multi-métrica** é obrigatório (ADR-40), com gatilho *“o primeiro cliente não-CPA”*. **O `CLI-13` já é CPL e já é real** — então o gatilho já aconteceu? |
