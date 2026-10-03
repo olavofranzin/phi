@@ -255,3 +255,25 @@ lido no início de toda sessão, e tivemos dois incidentes de branch.**
 | **CA16** | **Zero fato duplicado**: Stack, ids do Notion e Docs no Notion **saíram da raiz** porque já têm dono | — |
 | **CA17** | Todo `CLAUDE.md` de frente tem o **cabeçalho do §9.5**, com link de volta | — |
 | **CA18** | 🔴 **Nada se perdeu:** todo fato que saiu da raiz **existe no destino** | comparação automática, colada |
+
+
+---
+
+## 10. ⚠️ EMENDA 2026-10-03 (2) — a **R15** nasceu. Isso muda o seu corte na R1
+
+**O Olavo pediu que *"todo brief diz a branch e o doc da frente"* virasse regra. Virou a R15**, e ela
+**consolida** a exigência de branch que hoje mora **dentro da R1, em bloco de citação**.
+
+| Ao enxugar a **R1** | |
+|---|---|
+| 🟢 **a exigência de branch sai dela** | **o dono agora é a R15** |
+| 🟢 **a R1 fica** com o papel: chat-mãe × sub-chat, e quando parar e escrever brief | |
+| **as duas histórias de branch** (26/09 e 29/09) | vão para o `BASE-04`, e a **R15** linka |
+| ⛔ **não duplique a exigência** nas duas | é a regra 1.1 do `BASE-00` aplicada às próprias regras |
+
+**E a R15 trouxe uma terceira exigência que ainda não existia:** 🔴 **todo brief diz o DOC CANÔNICO
+que fecha a etapa.** Motivo medido: em 02/10 o chat-mãe escreveu **três** fechamentos no lugar do
+executor (relatório do W4, o `CHECKLIST-webview` e o as-built do ADR-33) **porque o brief não dizia
+qual documento fechava.**
+
+| 🆕 **CA19** | A **R15** está na raiz, e a exigência de branch **não ficou duplicada** entre R1 e R15 | o diff |

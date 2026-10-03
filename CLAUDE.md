@@ -563,6 +563,36 @@ documentos afirmaram um fato que o artefato contradizia:
 > **clientes diferentes** para o negócio. **Compare como texto, normalize uma vez, e declare onde.**
 > (É a mesma lição do `client_id` × `client_slug` da regra crítica 4, e do `campaign_id` sem prefixo.)
 
+### R15 — Todo brief responde três perguntas: onde commito, onde leio, onde registro
+**Executor nenhum deveria ter de adivinhar nenhuma das três.** Quando ele adivinha, acerta às vezes —
+e esta casa já pagou por cada uma delas.
+
+**O cabeçalho obrigatório de todo brief e de toda mensagem de execução:**
+
+| # | O que o brief diz | Formato |
+|---|---|---|
+| **1** | 🔴 **ONDE COMMITO** — a branch | nome + **URL completa** + o comando de `checkout` |
+| **2** | 🔴 **ONDE LEIO** — o `CLAUDE.md` da frente | caminho, **com o mesmo destaque da branch** |
+| **3** | 🔴 **ONDE REGISTRO** — o doc canônico que fecha a etapa | o arquivo onde o as-built será escrito (**R2**) |
+
+**E a trava que faz a 1 funcionar:**
+
+> 🔴 **Antes do PRIMEIRO commit, o sub-chat compara a branch do brief com a da instrução da sua
+> sessão. Se divergirem, PARA e avisa.** Não escolhe sozinho, não commita *"provisoriamente"*.
+>
+> **Teste prático:** *"eu tenho duas ordens sobre onde commitar?"* Se sim, **a dúvida vem antes do
+> commit — depois vira mudança de histórico.**
+
+**Motivo, as três medidas:** (1) **duas vezes** um sub-chat commitou na branch errada porque a
+instrução da sessão dele vencia o brief — e **declarar a branch com mais destaque não resolveu**;
+(2) a raiz deste arquivo **só aponta** o caminho das frentes, então **quem não recebe o ponteiro não
+lê a frente**; (3) em 02/10 o chat-mãe escreveu **três** fechamentos no lugar do executor, porque o
+brief não dizia **qual** documento fechava a etapa. *Histórias completas em
+`docs/base/BASE-04-INCIDENTES.md`.*
+
+> ⚠️ **A exigência da branch já vivia dentro da R1, em bloco de citação.** A **R15 é o lugar dela
+> agora** — a R1 fica com o papel (chat-mãe × sub-chat) e o enxugamento a deixa só com o ponteiro.
+
 ### R4 — Uma pergunta que todo chat responde antes de fechar
 > *"Onde estamos, quanto falta, e o que eu atualizei para provar isso?"*
 Se não souber responder, a etapa não acabou.
