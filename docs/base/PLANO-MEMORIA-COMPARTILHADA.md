@@ -284,3 +284,83 @@ FASE 4 — a frente escondida (PRODUTO, caminho crítico)
 > 🔴 **A Fase 4 é a que move o "pronto".** As fases 0 a 3 são o que torna **seguro** mexer nela: sem
 > ler o `PHI - SOPs` primeiro, a gente reconstrói o que você desenhou no início. **A doc vem antes
 > porque ela protege a Fase 4 — não porque ela vale mais.**
+
+---
+
+## 8. 🟢 2026-10-03 — proposta do Olavo ADOTADA, e ela é melhor que a minha
+
+**Ele propôs:** *"o `CLAUDE.md` fica com as regras principais e para o restante aponta o caminho — o
+chat vai tratar do T28, o `CLAUDE.md` aponta para o doc da frente, com as regras e os docs daquele
+item."*
+
+> 🟢 **Adotada.** E o motivo pelo qual é melhor que a minha é um que eu não tinha visto: **o
+> `CLAUDE.md` da raiz é lido no início de TODA sessão — inclusive de sessões que nunca vão tocar no
+> T28, no score ou no webview.** Uma sessão que conserta o módulo do Odoo hoje paga o custo de ler o
+> bloco inteiro do T28 e as 14 regras de `splitInBatches`.
+>
+> **O critério certo não é "regra ou história". É: *toda* sessão precisa disto, ou só *algumas*?**
+
+### 8.1. 🟢 As duas propostas são complementares — medido
+
+**Dois cortes, em eixos diferentes. Medido em 03/10 (605 linhas):**
+
+| Corte | O que sai | Linhas |
+|---|---|---|
+| **o do Olavo** — *fato → frente* | T28 (28) · Stack (12) · IDs do Notion (14) · tabelas BigQuery (14) · 14 Regras Críticas (19) · Cliente de teste (12) · Repositório (9) · Docs no Notion (14) · RTK (34) | **≈156** |
+| **o meu** — *história → incidentes* | o grosso de **R13 (68) · R6 (52) · R11 (52) · R1 (43) · R12 (27)** | **≈180** |
+
+> 🟢 **Juntos: 605 → ~150–180 linhas, sem perder uma regra nem uma história.** Separados, nenhum dos
+> dois chega lá.
+
+### 8.2. 🔴 A linha que eu desenho — e ela responde o risco da sua proposta
+
+**O risco de só apontar:** *sessão que não segue o ponteiro perde a regra.* Hoje a regra está na cara
+de quem quer e de quem não quer.
+
+> 🟢 **A linha: a RAIZ guarda REGRA; as FRENTES guardam FATO.**
+>
+> **Porque regra não lida causa ESTRAGO; fato não lido causa PERGUNTA.** Pergunta é barata — o
+> ponteiro resolve. Estrago não.
+
+| Fica na raiz, sempre | Vai para a frente |
+|---|---|
+| as regras **R1–R14** (curtas) e a Comunicação | **ids, tabelas, nomes de nó, credenciais, stack** |
+| a **PORTA** (a tabela "se a conversa é sobre X, leia Y") | o **como se faz** de cada ferramenta |
+| os dois avisos de confusão (dois eixos · dois scores) | o estado e o histórico daquela frente |
+| **R4** | — |
+
+### 8.3. 🔴 E a mitigação operacional: o brief passa a dizer o DOC DA FRENTE
+
+**Ponteiro na raiz não garante leitura** — a R1 já provou isso duas vezes com a branch.
+
+> **Então: todo brief diz a BRANCH *e* o DOC DA FRENTE**, do mesmo jeito e com o mesmo destaque.
+> Não é o executor que descobre qual frente ele está tocando — **é o brief que diz.**
+
+### 8.4. 🔴 Dois defeitos que a medição achou, e um é meu
+
+| # | Defeito | Gravidade |
+|---|---|---|
+| **1** | 🔴 **O `CLAUDE.md` contradiz a si mesmo sobre a branch.** A seção *"Repositório GitHub"* declara **`claude/create-phi-folder-n2RXF`** como *"branch de desenvolvimento"*; a **R1**, no mesmo arquivo, manda usar **`claude/consolidacao-2026-08`**. **A branch declarada EXISTE no remoto** (confirmado), e há **32 branches** lá | 🔴 **Isto é lido no início de toda sessão. E tivemos DOIS incidentes de branch.** Pode não ser a causa, mas **é combustível** — e não custa nada apagar |
+| **2** | ⚠️ **Os ids do Notion estão em TRÊS lugares:** `CLAUDE.md`, `MAPA-DE-DOCUMENTACAO.md` e **`BASE-02-SUPERFICIES.md`** | 🔴 **a terceira cópia fui EU que criei — ontem, no dia seguinte a escrever a regra que proíbe.** Boa intenção não resolve duplicação; **só a estrutura resolve.** É o argumento da sua proposta, dado por mim contra mim |
+
+### 8.5. O desenho final
+
+```
+CLAUDE.md (raiz, ~150 linhas)
+   o que é o PHI · A PORTA · Comunicação · R1–R14 curtas · 2 avisos · R4
+
+docs/base/                         ← a memória compartilhada (teto 6)
+   BASE-00-PORTA  BASE-01-PRINCIPIOS  BASE-02-SUPERFICIES
+   BASE-03-INVARIANTES (índice)  BASE-04-INCIDENTES  BASE-05-HANDOFF
+   fichas/
+
+docs/strategic-planning/<frente>/CLAUDE.md     ← o CLAUDE.md da frente
+   saude-digital/        (existe)
+   prospeccao/           (existe)
+   otimizacao-campanhas/ 🆕  ← recebe o bloco do T28
+   webview/              🆕
+   saude-digital-do-negocio/ 🆕
+```
+
+> **Cada `CLAUDE.md` de frente começa com três linhas:** *"leia a raiz primeiro"* + link + **o que
+> esta frente é dona**. **Ponteiro nos dois sentidos**, senão a frente vira ilha.

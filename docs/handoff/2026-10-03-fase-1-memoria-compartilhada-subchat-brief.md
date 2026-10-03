@@ -174,3 +174,84 @@ quem escreve / quem lê · **o que acontece quando a fonte falta** · **a prova*
 4. 🔴 **a lista de perguntas do Olavo** que saiu das fichas — este é o entregável que mais vale
 5. **onde este brief errou** — ele foi escrito pelo chat-mãe, que esta semana inflou gravidade **duas
    vezes**. **Se eu errei premissa, quero saber**
+
+
+---
+
+## 9. 🟢 EMENDA 2026-10-03 — a reestruturação do Olavo entra na Fase 1 (e substitui a tarefa 3)
+
+**O Olavo propôs, e eu adotei:** o `CLAUDE.md` da raiz fica **só com as regras**; o resto **aponta**
+para o `CLAUDE.md` da frente. **Ver `PLANO-MEMORIA-COMPARTILHADA.md` §8.** É melhor que a minha
+proposta, porque **a raiz é lida em TODA sessão, inclusive nas que nunca tocarão naquela frente.**
+
+### 9.1. A tarefa 3 passa a ter DOIS cortes, não um
+
+| Corte | O que sai da raiz | Para onde | Medido |
+|---|---|---|---|
+| **A — fato** | bloco **T28** | 🆕 `strategic-planning/otimizacao-campanhas/CLAUDE.md` | 28 linhas |
+| | **Stack** · **ids do Notion** | ⛔ **apagar: `BASE-02-SUPERFICIES` já é dono** | 26 |
+| | **tabelas BigQuery** | `saude-digital/CONTRATO-PHI.md` (já é dono) | 14 |
+| | **14 Regras Críticas de Implementação** | doc técnico da frente que usa n8n/BQ/Google Ads | 19 |
+| | **Cliente de Referência** | a frente que testa | 12 |
+| | **Documentação no Notion** | ⛔ **apagar: o `MAPA` já é dono** | 14 |
+| | **RTK** | doc de ferramentas | 34 |
+| | 🔴 **Repositório GitHub** | **CORRIGIR e levar** — ver §9.3 | 9 |
+| **B — história** | o grosso de **R13, R6, R11, R1, R12** | `BASE-04-INCIDENTES.md` | ≈180 |
+
+**Meta: 605 → ~150–180 linhas.** ⚠️ **Sem perder uma regra nem uma história.**
+
+### 9.2. 🔴 A linha que não se cruza, agora com nome
+
+> **A RAIZ guarda REGRA. As FRENTES guardam FATO.**
+> **Regra não lida causa estrago; fato não lido causa pergunta** — e pergunta o ponteiro resolve.
+
+**Logo: as R1–R14 FICAM na raiz**, curtas, com uma linha de motivo + link. ⛔ **Nenhuma regra migra
+para frente nenhuma.**
+
+### 9.3. 🔴 CONSERTO OBRIGATÓRIO achado na medição
+
+**O `CLAUDE.md` contradiz a si mesmo sobre a branch:**
+
+| Onde | O que diz |
+|---|---|
+| seção *"Repositório GitHub"* | *"Branch de desenvolvimento: `claude/create-phi-folder-n2RXF`"* |
+| **R1**, no mesmo arquivo | *"`claude/consolidacao-2026-08`"* |
+
+🔴 **A branch declarada EXISTE no remoto** (confirmado em 03/10), e **há 32 branches lá**. **Isto é
+lido no início de toda sessão, e tivemos dois incidentes de branch.**
+
+| | |
+|---|---|
+| **Conserte** | a branch de trabalho é **`claude/consolidacao-2026-08`**, e é a **R1** que manda |
+| 🔴 **E pergunte ao Olavo** | **as 32 branches** — quantas estão vivas? **Não apague nenhuma.** Só **liste** e devolva, com data do último commit. É material para ele decidir |
+
+### 9.4. Os `CLAUDE.md` de frente
+
+| Criar | Recebe |
+|---|---|
+| 🆕 `otimizacao-campanhas/CLAUDE.md` | o bloco **T28** inteiro |
+| 🆕 `webview/CLAUDE.md` | 🔴 **tudo o que aprendemos em 02/10** — deploy pela raiz, 6 rotas e 2 usadas, sem autenticação, lockfile não reproduzível, Supabase morto, o join quebrado |
+| 🆕 `saude-digital-do-negocio/CLAUDE.md` | o índice, o contrato de fontes, ADR-41/42 |
+| atualizar `saude-digital/CLAUDE.md` e `prospeccao/CLAUDE.md` | o cabeçalho do §9.5 |
+
+### 9.5. 🔴 Cabeçalho obrigatório de todo `CLAUDE.md` de frente
+
+```
+> Leia PRIMEIRO o CLAUDE.md da raiz — as regras R1–R14 valem aqui também.
+> Esta frente é dona de: <lista curta de fatos>
+> Verificado em <data>, por <quem>, contra <o quê>
+```
+
+**Ponteiro nos dois sentidos.** Frente sem link de volta vira ilha — e ilha é onde o
+`CHECKLIST-webview` passou três semanas.
+
+### 9.6. Critérios de aceite ADICIONAIS
+
+| # | Critério | Prova |
+|---|---|---|
+| **CA13** | `CLAUDE.md` em **~150–180 linhas**, e **nenhuma regra R1–R14 saiu da raiz** | os 4 números + `git diff` |
+| **CA14** | 🔴 **A contradição da branch foi consertada** | o diff |
+| **CA15** | **Lista das 32 branches** com data do último commit — **nenhuma apagada** | a tabela |
+| **CA16** | **Zero fato duplicado**: Stack, ids do Notion e Docs no Notion **saíram da raiz** porque já têm dono | — |
+| **CA17** | Todo `CLAUDE.md` de frente tem o **cabeçalho do §9.5**, com link de volta | — |
+| **CA18** | 🔴 **Nada se perdeu:** todo fato que saiu da raiz **existe no destino** | comparação automática, colada |
