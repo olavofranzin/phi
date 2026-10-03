@@ -1,0 +1,5 @@
+{
+  "//": "TEMPLATE — NÃO commitar valores reais. Rode `hs project profile add` na sua máquina; o CLI cria/preenche o hsprofile.dev.json (accountId da sua Developer Test Account).",
+  "accountId": 0,
+  "variables": {}
+}

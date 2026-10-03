@@ -1,5 +1,14 @@
 # Gestão de Tráfego Pago, Métricas e Benchmarks (2026)
 
+> **[GOVERNANÇA — Camada de Conhecimento, 2026-07-05]** Papel: autoridade
+> COMPLEMENTAR (GA4, keywords/negativas, padrões por vertical §6). Em conflito
+> numérico, `docs/pesquisa-trafego-pago.md` VENCE. Números absolutos citáveis
+> vivem em `docs/conhecimento/benchmarks-canonicos.yaml` (citar por `[BM-*]`).
+> Arbitragens vigentes (ARB-CVR-01, ARB-ROAS-01, ARB-LTVCAC-01, ARB-KEYWORD-01):
+> ver o YAML — em especial, as faixas de CVR deste doc são de **CVR de SITE**,
+> não de plataforma; e "LTV:CAC >5:1 = subinvestimento" foi arbitrado para
+> "avaliar headroom de escala antes de concluir".
+
 ## Executive summary
 
 Este relatório consolida práticas atuais de gestão de tráfego pago com foco em métricas, tomada de decisão, GA4, Google Ads e benchmarks por segmento, utilizando fontes como Google, WordStream, HubSpot, Databox, Triple Whale, Nielsen e outros players especializados em mídia e analytics.[^1][^2][^3][^4][^5]

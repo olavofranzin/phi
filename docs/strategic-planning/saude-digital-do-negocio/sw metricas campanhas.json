@@ -1,0 +1,1520 @@
+{
+  "name": "sw metricas campanhas",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "execution_id",
+              "type": "any"
+            },
+            {
+              "name": "client_id",
+              "type": "any"
+            },
+            {
+              "name": "source_execution_id",
+              "type": "any"
+            }
+          ]
+        }
+      },
+      "id": "014cd6f5-b24b-419d-b272-46211a74700f",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        128,
+        -608
+      ],
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        576,
+        -608
+      ],
+      "id": "b69d8233-d3a5-43ec-b2f2-614197753903",
+      "name": "Loop Over Items",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "d62317fb-c06f-4c4c-b2d4-3905dca228b4",
+              "leftValue": "={{ $json.has_data }}",
+              "rightValue": "True",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1808,
+        -80
+      ],
+      "id": "e060587f-83f1-4aa3-8be9-53bb770088fb",
+      "name": "If D-2 exist1",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "databaseId": {
+          "__rl": true,
+          "value": "19fb65e5-c72b-8192-8f73-ff7f500a0972",
+          "mode": "list",
+          "cachedResultName": "Observações Diárias",
+          "cachedResultUrl": "https://www.notion.so/19fb65e5c72b81928f73ff7f500a0972"
+        },
+        "title": "=📊 Daily Entry {{ DateTime.fromISO($today).toFormat('dd/MM/yyyy') }}",
+        "simple": false,
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Análise de Performance|rich_text",
+              "textContent": "={{ $('Code classificar status').item.json.final_status }} {{ $json.properties['Análise de Performance'].rich_text[0].text.content }}"
+            },
+            {
+              "key": "Campanha|relation",
+              "relationValue": [
+                "={{ $('Code prepara contexto para observação').item.json.raw_notion_data.clean_notion_id_camp }}"
+              ]
+            },
+            {
+              "key": "Observação Diária|title",
+              "title": "=📊 Daily Entry {{ DateTime.fromISO($today).toFormat('dd/MM/yyyy') }}"
+            },
+            {
+              "key": "Valor Métrica-Mãe 1D|number",
+              "numberValue": "={{ $if($('Code Unificar Períodos (D1, 3D, 7D)').isExecuted, $('Code Unificar Períodos (D1, 3D, 7D)').item.json.v_d1, 0) }}"
+            },
+            {
+              "key": "Valor Métrica-Mãe 7D|number",
+              "numberValue": "={{ $('Code Preparar Payload de Observação').item.json.properties['Desvio 7D'].number }}"
+            },
+            {
+              "key": "Emoji Status|rich_text",
+              "textContent": "={{ $('Code classificar status').item.json.status_emoji }}"
+            },
+            {
+              "key": "Fonte dos Dados|rich_text",
+              "textContent": "={{ $if($('Code Valida Dados').isExecuted, $('Code Valida Dados').item.json.data_source, $if($('Code Valida Dados Meta').isExecuted, $('Code Valida Dados Meta').item.json.data_source, '')) }}"
+            },
+            {
+              "key": "id_google_camp|number",
+              "numberValue": "={{ $('If Plataforma').item.json.google_ads_id }}"
+            },
+            {
+              "key": "id_google_account|number",
+              "numberValue": "={{ $('Code prepara contexto para observação').item.json.raw_notion_data.clean_id_customer_google }}"
+            },
+            {
+              "key": "id_meta_account|number",
+              "numberValue": "={{ $('If Plataforma').item.json.raw_notion_data.clean_id_meta_account }}"
+            },
+            {
+              "key": "id_meta_ads|number",
+              "numberValue": "={{ $('If Plataforma').item.json.raw_notion_data.clean_id_meta_ads }}"
+            },
+            {
+              "key": "Métrica Principal|select",
+              "selectValue": "={{ $('Code classificar status').item.json.sop_config.metric_principal }}"
+            },
+            {
+              "key": "Optimization Score|number",
+              "numberValue": "={{ $if($('Code Valida Dados').isExecuted, $('Code Valida Dados').item.json.opt_score, 0) }}"
+            },
+            {
+              "key": "Classificação PHI|rich_text",
+              "textContent": "={{ $('Code classificar status').item.json.classe_score }}"
+            },
+            {
+              "key": "Tendência 3Dvs7D|rich_text",
+              "textContent": "={{ $if($('Code Unificar Períodos (D1, 3D, 7D)').isExecuted, $('Code Unificar Períodos (D1, 3D, 7D)').item.json.txt_tendencia_3d, '') }}"
+            },
+            {
+              "key": "Data Execução|date",
+              "date": "={{ $('Code prepara contexto para observação').item.json.execution_timestamp }}",
+              "timezone": "America/Sao_Paulo"
+            },
+            {
+              "key": "id_workflow|rich_text",
+              "textContent": "={{ $workflow.id }}"
+            },
+            {
+              "key": "Tendência 1Dvs7D|rich_text",
+              "textContent": "={{ $if($('Code Unificar Períodos (D1, 3D, 7D)').isExecuted, $('Code Unificar Períodos (D1, 3D, 7D)').item.json.txt_tendencia_1d, '') }}"
+            },
+            {
+              "key": "Criado Por|select",
+              "selectValue": "automation"
+            },
+            {
+              "key": "PHI Score|number",
+              "numberValue": "={{ $('Code classificar status').item.json.final_score }}"
+            },
+            {
+              "key": "Status da Métrica-Mãe|rich_text",
+              "textContent": "={{ $('Code classificar status').item.json.status_meta }}"
+            },
+            {
+              "key": "Valor Métrica-Mãe 3D|number",
+              "numberValue": "={{ $('Code classificar status').item.json.v_3d }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        3040,
+        -544
+      ],
+      "id": "2e929585-52a3-4614-9aaa-f6303440af5f",
+      "name": "Create a database page Create Observation",
+      "retryOnFail": true,
+      "credentials": {
+        "notionApi": {
+          "id": "KpPCTsYPAvGXGfp2",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2112,
+        -192
+      ],
+      "id": "51e76d83-da74-491e-9ec5-672e370a41d0",
+      "name": "Merge Meta Ads",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "6c7a3673-d53c-4902-858b-4c02b78beab1",
+              "leftValue": "={{ $json.platform }}",
+              "rightValue": "Google Ads",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        912,
+        -448
+      ],
+      "id": "f80fdf70-8b4d-4289-a022-abfb13970748",
+      "name": "If Plataforma"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ?? Este fluxo N�O executa otimiza��es - apenas valida dados\n\n// ?? Este fluxo valida se a API do Google Ads retornou dados reais para a campanha\n\nconst items = $input.all();\n\n// 1. Verificar se houve resposta da requisi��o HTTP\nif (!items || items.length === 0 || !items[0].json) {\n  return {\n    json: {\n      has_data: false,\n      data_source: 'google_ads_api',\n      validation_status: 'no_request_response',\n      reason: 'A requisição ao Google Ads falhou ou retornou vazio'\n    }\n  };\n}\n\nconst data = items[0].json;\n\n// 2. Tentar acessar o primeiro resultado do Google Ads\n// O Google retorna um array 'results'. Se estiver vazio, n�o houve atividade no dia.\nconst googleData = data.results && data.results.length > 0 ? data.results[0] : null;\n\nif (!googleData) {\n  return {\n    json: {\n      ...data,\n      has_data: false,\n      validation_status: 'no_results',\n      data_source: 'google_ads_api',\n      reason: 'O Google Ads retornou 0 resultados para este ID de campanha nesta data'\n    }\n  };\n}\n\n// 3. Validar Campos Obrigat�rios dentro da estrutura da API\n// No Google Ads v22, os nomes s�o camelCase (ex: costMicros)\nconst metrics = googleData.metrics || {};\nconst requiredFields = ['impressions', 'clicks', 'costMicros'];\nconst missingFields = requiredFields.filter(field => \n  metrics[field] === null || metrics[field] === undefined\n);\n\nif (missingFields.length > 0) {\n  return {\n    json: {\n      ...data,\n      has_data: false,\n      validation_status: 'incomplete',\n      data_source: 'google_ads_api',\n      missing_fields: missingFields,\n      reason: `Campos de métricas ausentes no retorno da API: ${missingFields.join(', ')}`\n    }\n  };\n}\n\n// 4. Dados v�lidos e prontos para o c�lculo\nreturn {\n  json: {\n    ...data,\n    has_data: true,\n    validation_status: 'valid',\n    // Usamos a data que foi tentada no fluxo (D-1 ou D-2)\n    date_used: data.attempted_date || data.date_d1, \n    data_source: 'google_ads_api',\n    fallback_used: !!data.fallback_active\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1792,
+        -704
+      ],
+      "id": "69900a78-aa36-4c8c-8c1f-6b7521b28fe3",
+      "name": "Code Valida Dados"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Nome: \"Valida Dados - Meta\"\nconst items = $input.all();\n\nif (!items || items.length === 0 || !items[0].json.data || items[0].json.data.length === 0) {\n  return {\n    json: {\n      ...items[0]?.json,\n      has_data: false,\n      data_source: 'meta_ads_api',\n      validation_status: 'no_results',\n      reason: 'O Meta Ads retornou 0 resultados para esta data'\n    }\n  };\n}\n\n// Se chegou aqui, existe dado no array 'data'\nreturn {\n  json: {\n    ...items[0].json,\n    has_data: true,\n    validation_status: 'valid',\n    data_source: 'meta_ads_api',\n    date_used: items[0].json.date_d1 // ou date_d2 se for fallback\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1280,
+        -80
+      ],
+      "id": "a853deb1-659f-48f1-beb7-c0ee239af448",
+      "name": "Code Valida Dados Meta",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "d62317fb-c06f-4c4c-b2d4-3905dca228b4",
+              "leftValue": "={{ $json.has_data }}",
+              "rightValue": "True",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1472,
+        -256
+      ],
+      "id": "2b097ad8-1f3e-407d-8ee4-4cd186e94ae3",
+      "name": "If D-1 Exist Meta Ads",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "url": "=https://graph.facebook.com/v25.0/act_{{ $json.raw_notion_data.clean_id_meta_account }}/insights",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "facebookGraphApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "fields",
+              "value": "campaign_id,campaign_name,spend,impressions,clicks,actions,action_values,objective"
+            },
+            {
+              "name": "time_range",
+              "value": "={\"since\":\"{{ $json.raw_notion_data.clean_data_inicio }}\",\"until\":\"{{ $json.raw_notion_data.clean_data_conclusao }}\"}"
+            },
+            {
+              "name": "level",
+              "value": "campaign"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1280,
+        -272
+      ],
+      "id": "f7b5deef-afa4-4895-8f93-d7a9454a9543",
+      "name": "HTTP Request Meta Ads",
+      "retryOnFail": true,
+      "credentials": {
+        "facebookGraphApi": {
+          "id": "jRLBlTy4dwFjiuOS",
+          "name": "Facebook Graph account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Este fluxo NÃO executa otimizações - apenas valida dados\n\nconst item = $input.first();\nconst inputJson = item?.json ?? {};\nconst rows = Array.isArray(inputJson.data) ? inputJson.data : [];\n\nif (rows.length === 0) {\n  return {\n    json: {\n      ...inputJson,\n      has_data: false,\n      data_source: 'meta_ads_api',\n      validation_status: 'no_results',\n      reason: 'O Meta Ads retornou 0 resultados para D-2'\n    }\n  };\n}\n\nreturn {\n  json: {\n    ...inputJson,\n    has_data: true,\n    validation_status: 'valid',\n    data_source: 'meta_ads_api',\n    date_used: inputJson.date_d2,\n    fallback_used: true\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1664,
+        -80
+      ],
+      "id": "8531b65a-d8fd-44c8-b8cf-91c1db196a7b",
+      "name": "Code Valida Dados D-2 Meta"
+    },
+    {
+      "parameters": {
+        "url": "=https://graph.facebook.com/v21.0/{{ $json.raw_notion_data.clean_id_meta_account }}/insights",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "facebookGraphApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "fields",
+              "value": "campaign_id,campaign_name,spend,impressions,clicks,actions,action_values,objective"
+            },
+            {
+              "name": "time_range",
+              "value": "={\"since\":\"{{ $json.date_d2 }}\",\"until\":\"{{ $json.date_d2 }}\"}"
+            },
+            {
+              "name": "level",
+              "value": "campaign"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1472,
+        -80
+      ],
+      "id": "ebcb7234-bde6-4dcb-9c53-4f9e5d4487fd",
+      "name": "HTTP Request Meta Ads D-2",
+      "retryOnFail": true,
+      "credentials": {
+        "facebookGraphApi": {
+          "id": "jRLBlTy4dwFjiuOS",
+          "name": "Facebook Graph account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Este fluxo NÃO executa otimizações - apenas calcula desvio para classificação.\n// CONVENÇÃO: desvio POSITIVO = PIOR que a meta (vale para qualquer métrica).\n// [2026-08-08 fase4] desvio INDEFINIDO (null) != desvio 0 (regra 8 do BLOCO COMUM).\n// v_d1/v_3d/v_7d saem do ITEM corrente; o .first() foi removido (vazava o 1o item do lote).\nconst items = $input.all();\nconst returnData = [];\n\nconst MARGEM_PADRAO = {\n  'E-commerce': 0.30, 'Ecommerce': 0.30,\n  'SaaS': 0.80,\n  'Infoproduto': 0.85, 'Infoprodutos': 0.85,\n  'Serviços': 0.50, 'Servicos': 0.50, 'Serviço Local': 0.50,\n  'B2B': 0.50, 'Lead': 0.50, 'Geração de Leads': 0.50\n};\nconst MARGEM_FALLBACK = 0.30;\nconst MAIOR_MELHOR = ['ROAS', 'CTR', 'Taxa de Conversão', 'Taxa de Conversao'];\n\n// metrica-mae -> [chave em metricas_calculadas.d7, campo plano do item]\nconst METRIC_KEYS = {\n  'CPA': ['cpa', 'cpa_7d'],\n  'CPL': ['cpl', 'cpl_7d'],\n  'CPC': ['cpc', 'cpc_7d'],\n  'CPM': ['cpm', 'cpm_7d'],\n  'ROAS': ['roas', 'roas_7d'],\n  'CTR': ['ctr', 'ctr_7d'],\n  'Taxa de Conversão': ['cvr', 'taxa_conversao_7d'],\n  'Taxa de Conversao': ['cvr', 'taxa_conversao_7d']\n};\n\n// 0 / vazio / NaN significam \"nao sei\" aqui, nao \"zero\".\nconst numOrNull = (v) => {\n  if (v === null || v === undefined || v === '') return null;\n  const n = Number(v);\n  return Number.isFinite(n) && n !== 0 ? n : null;\n};\n\nfor (const item of items) {\n  const data = item.json;\n  const config = data.sop_config || {};\n  const tipo = config.metric_principal || data.tipo_metrica || 'CPA';\n  const isMaiorMelhor = MAIOR_MELHOR.includes(tipo);\n  const keys = METRIC_KEYS[tipo] || METRIC_KEYS['CPA'];\n\n  // --- valores do PROPRIO item (sem cross-node) ---\n  const calcCtx = data.calc_context || {};\n  const d7src = (data.metricas_calculadas && data.metricas_calculadas.d7) || {};\n\n  let v_7d = numOrNull(data.v_7d !== undefined ? data.v_7d : calcCtx.v_7d);\n  if (v_7d === null) v_7d = numOrNull(d7src[keys[0]]);\n  if (v_7d === null) v_7d = numOrNull(data[keys[1]]);\n  if (v_7d === null) v_7d = numOrNull(data.valor_real);\n\n  // D1/D3 so existem se o item os trouxer. Sem fallback cross-node: sem valor => INDEFINIDO.\n  const v_d1 = numOrNull(data.v_d1 !== undefined ? data.v_d1 : calcCtx.v_d1);\n  const v_3d = numOrNull(data.v_3d !== undefined ? data.v_3d : calcCtx.v_3d);\n\n  const margem = Number(\n    data.clean_margem_contribuicao ||\n    MARGEM_PADRAO[data.clean_modelo_negocio] ||\n    MARGEM_PADRAO[data.clean_objetivo] ||\n    MARGEM_FALLBACK\n  );\n  const break_even_roas = margem > 0 ? parseFloat((1 / margem).toFixed(2)) : null;\n\n  let meta = Number(config.meta_valor || data.meta_valor || 0);\n  if (tipo === 'ROAS' && (!meta || meta <= 0) && break_even_roas) {\n    meta = break_even_roas;\n  }\n\n  if ((!meta || meta === 0) && v_d1 === null && v_3d === null && v_7d === null) {\n    returnData.push({ json: { ...data, v_d1, v_3d, v_7d, analise_desvios: { error: \"Meta não definida ou dados não encontrados\" }, deviation_status: 'missing_data_for_calculation' } });\n    continue;\n  }\n\n  const calcDesvio = (valor) => {\n    if (!meta || meta === 0) return { valor, desvio: null, desvio_motivo: 'sem_meta' };\n    if (valor === null) return { valor, desvio: null, desvio_motivo: 'sem_valor' };\n    const d = isMaiorMelhor ? ((meta - valor) / meta) * 100 : ((valor - meta) / meta) * 100;\n    return { valor, desvio: parseFloat(d.toFixed(2)), desvio_motivo: 'ok' };\n  };\n  const calcTendencia = (v3, v7) => {\n    if (v3 === null || v7 === null) return null;\n    return parseFloat((isMaiorMelhor ? ((v7 - v3) / v7) * 100 : ((v3 - v7) / v7) * 100).toFixed(2));\n  };\n\n  const d1_res = calcDesvio(v_d1);\n  const d3_res = calcDesvio(v_3d);\n  const d7_res = calcDesvio(v_7d);\n  const tend_proxy = calcTendencia(v_3d, v_7d);\n\n  const tendReal = (data.tendencia_real !== undefined && data.tendencia_real !== null) ? Number(data.tendencia_real) : null;\n  const tendenciaFinal = tendReal !== null ? tendReal : tend_proxy;\n  const tendenciaFonte = tendReal !== null\n    ? (data.tendencia_metodo || 'bigquery')\n    : (tend_proxy === null ? 'indisponivel' : 'janela_api');\n\n  returnData.push({\n    json: {\n      ...data,\n      v_d1, v_3d, v_7d,\n      analise_desvios: {\n        meta_aplicada: meta,\n        tipo_metric: tipo,\n        direcao: isMaiorMelhor ? 'maior_melhor' : 'menor_melhor',\n        margem_contribuicao: margem,\n        break_even_roas,\n        d1: d1_res,\n        d3: d3_res,\n        d7: d7_res,\n        tendencia_3d_vs_7d: tendenciaFinal,\n        tendencia_proxy_api: tend_proxy,\n        tendencia_fonte: tendenciaFonte,\n        tendencia_n_dias: data.tendencia_n_dias ?? null\n      },\n      deviation_status: 'calculated_success'\n    }\n  });\n}\n\nreturn returnData;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2592,
+        -544
+      ],
+      "id": "4778298b-6e7e-458f-b549-42679922a392",
+      "name": "Code calculo desvio meta"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Classificação informativa (NÃO executa otimizações). Convenção: desvio positivo = pior.\n// [2026-08-08 fase5] Portada a ESCADA DE EVIDENCIA do fluxo de anuncios (era gate binario\n// fixo 100cl/10conv em 7d, que barrava campanhas de baixo volume como a barbearia).\n// O volume passa a decidir a CONFIANCA (pleno/parcial), nao SE existe leitura.\n// .first() de volume (HTTP D7) REMOVIDO: os raw_*_7d do proprio item sao autoritativos.\nconst items = $input.all();\nconst output = [];\n\n// PLENO -> certeza; PARCIAL -> hipotese; NENHUM -> so aqui deixa de classificar. Avalia 7d E 30d.\nconst MIN_CLICKS_PLENO = 100;\nconst MIN_CONV_PLENO = 10;\nconst MIN_CLICKS_PARCIAL = 30;\nconst MIN_CONV_PARCIAL = 3;\n// So vale se o ITEM trouxer a data de inicio da campanha; senao NAO se inventa \"nova\".\nconst DIAS_APRENDIZADO = 14;\n\n// Limite de desvio (%) para virar \"Crítico\", por objetivo. Fallback = 'default' (preserva 15).\nconst LIMITE_CRITICO = {\n  'default': 15,\n  'Conversão': 12, 'Conversões': 12, 'Vendas': 12,\n  'Leads': 20, 'Geração de Leads': 20,\n  'Tráfego': 30, 'Trafego': 30,\n  'Reconhecimento': 40, 'Alcance': 40\n};\n\nfor (const item of items) {\n  const data = item.json;\n  const analise = data.analise_desvios;\n  const config = data.sop_config || {};\n\n  const numv = (v) => { const n = Number(v); return Number.isFinite(n) ? n : 0; };\n\n  // --- Idade da CAMPANHA: usa 'Data de Inicio' do Notion (via no Get, pareado) SE existir.\n  // Se nao houver data no item, NAO inventa: campanhaNova = false -> sem evidencia cai em\n  // \"Sem Dados\" (nunca \"Em aprendizado\"). [adaptacao campanha != anuncio]\n  let diasDesdeInicio = null;\n  try {\n    const di = $('Get many database Campanhas').item.json.properties?.['Data de Inicio']?.date?.start;\n    if (di) diasDesdeInicio = Math.floor((Date.now() - new Date(di).getTime()) / 86400000);\n  } catch (e) {}\n  const campanhaNova = diasDesdeInicio !== null && diasDesdeInicio < DIAS_APRENDIZADO;\n\n  // --- Volume por janela (do proprio item; sem .first() cross-node) ---\n  const clicks7d = numv(data.raw_clicks_7d ?? data.clicks_7d);\n  const conv7d = numv(data.raw_conversions_7d ?? data.conversions_7d);\n  const clicks30d = numv(data.raw_clicks_30d ?? data.clicks_30d);\n  const conv30d = numv(data.raw_conversions_30d ?? data.conversions_30d);\n\n  const tipo = (analise && analise.tipo_metric) || config.metric_principal || 'CPA';\n  const dependeConversao = ['CPA', 'CPL', 'ROAS', 'Taxa de Conversão', 'Taxa de Conversao'].includes(tipo);\n\n  const atinge = (cl, cv, minCl, minCv) => cl >= minCl && (!dependeConversao || cv >= minCv);\n  const janelas = [\n    { nome: '7d', clicks: clicks7d, conv: conv7d },\n    { nome: '30d', clicks: clicks30d, conv: conv30d }\n  ];\n\n  let nivel = 'nenhum', janelaEvidencia = null, confianca = 'sem_base';\n  const pleno = janelas.find((j) => atinge(j.clicks, j.conv, MIN_CLICKS_PLENO, MIN_CONV_PLENO));\n  if (pleno) {\n    nivel = 'pleno'; janelaEvidencia = pleno.nome; confianca = 'certeza';\n  } else {\n    const parciais = janelas.filter((j) => atinge(j.clicks, j.conv, MIN_CLICKS_PARCIAL, MIN_CONV_PARCIAL));\n    if (parciais.length) {\n      nivel = 'parcial'; janelaEvidencia = parciais[parciais.length - 1].nome; confianca = 'hipotese';\n    }\n  }\n\n  // desvio INDEFINIDO (null) tratado ANTES de comparar (armadilha `null <= 0` === true).\n  const rawD7 = analise && analise.d7 ? analise.d7.desvio : null;\n  const rawD1 = analise && analise.d1 ? analise.d1.desvio : null;\n  const d7 = Number.isFinite(Number(rawD7)) && rawD7 !== null ? Number(rawD7) : null;\n  const d1 = Number.isFinite(Number(rawD1)) && rawD1 !== null ? Number(rawD1) : null;\n  const tRaw = analise ? analise.tendencia_3d_vs_7d : null;\n  const tendencia = Number.isFinite(Number(tRaw)) && tRaw !== null ? Number(tRaw) : null;\n\n  const desvioIndefinido = d7 === null;\n  const desvioMotivo = (analise && analise.d7 && analise.d7.desvio_motivo) || (analise && analise.error ? 'sem_dados' : 'sem_valor');\n\n  const significancia = {\n    nivel, janela_evidencia: janelaEvidencia, confianca,\n    desvio_indefinido: desvioIndefinido,\n    desvio_motivo: desvioIndefinido ? desvioMotivo : 'ok',\n    clicks_7d: clicks7d, conversions_7d: conv7d,\n    clicks_30d: clicks30d, conversions_30d: conv30d,\n    min_pleno: { clicks: MIN_CLICKS_PLENO, conversoes: MIN_CONV_PLENO },\n    min_parcial: { clicks: MIN_CLICKS_PARCIAL, conversoes: MIN_CONV_PARCIAL },\n    dias_desde_inicio: diasDesdeInicio,\n    campanha_nova: campanhaNova,\n    suficiente: nivel === 'pleno'\n  };\n\n  // Casos em que nao se classifica desempenho (sem evidencia ou desvio indefinido).\n  // final_score = null (nunca o 50 magico). \"Em aprendizado\" so com data real de inicio.\n  if (!analise || !analise.d7 || nivel === 'nenhum' || desvioIndefinido) {\n    output.push({\n      json: {\n        ...data,\n        final_status: campanhaNova ? \"Em aprendizado\" : \"Sem Dados\",\n        final_score: null,\n        classe_score: \"N/A\",\n        status_emoji: campanhaNova ? \"🌱\" : \"⏳\",\n        significancia\n      }\n    });\n    continue;\n  }\n\n  const objetivo = data.clean_objetivo || data.objetivo || 'default';\n  const limiteCritico = LIMITE_CRITICO[objetivo] || LIMITE_CRITICO['default'];\n\n  // --- Classificação base por desvio 7D (positivo = pior) ---\n  let status;\n  if (d7 <= 0) status = \"OK\";\n  else if (d7 <= limiteCritico) status = \"Atenção\";\n  else status = \"Crítico\";\n\n  // Ajuste por tendência (positivo = piorou). null = indefinido, nao ajusta.\n  if (status === \"OK\" && tendencia !== null && tendencia > 10) status = \"Atenção\";\n  // Ajuste por pico D-1. null = indefinido, nao ajusta.\n  if (status === \"OK\" && d1 !== null && d1 > 30) status = \"Atenção\";\n\n  // --- Score 0-100 ---\n  let score = 100;\n  score -= Math.min(Math.max(d7, 0) * 2, 40);\n  if (tendencia !== null && tendencia > 0) score -= Math.min(tendencia, 30);\n  if (d1 !== null && d1 > 20) score -= 10;\n  score = Math.max(Math.round(score), 0);\n\n  let classeScore = \"Crítico\";\n  if (score >= 80) classeScore = \"Estável\";\n  else if (score >= 60) classeScore = \"Atenção\";\n  else if (score >= 40) classeScore = \"Instável\";\n\n  const emojiMap = { \"OK\": \"✅\", \"Atenção\": \"⚠️\", \"Crítico\": \"🚨\", \"Sem Dados\": \"⏳\", \"Em aprendizado\": \"🌱\" };\n\n  output.push({\n    json: {\n      ...data,\n      final_status: status,\n      final_score: score,\n      classe_score: classeScore,\n      status_emoji: emojiMap[status] || \"❓\",\n      significancia\n    }\n  });\n}\n\nreturn output;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2592,
+        -384
+      ],
+      "id": "b2f761ae-c18b-41c2-b573-afdeee8951aa",
+      "name": "Code classificar status"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Nome: \"Debug Notion Fields\"\n// ?? Foco em validar a estrutura de 3 camadas (D-1, 3D, 7D)\n\nconst data = $input.first().json;\n\nconsole.log('=== ?? INICIANDO DEBUG DO NOVO SOP ===');\n\n// 1. Campos que agora s�o essenciais para o novo c�lculo\nconst testFields = {\n  // Identifica��o e Fonte\n  page_id: data.notion_page_id || data.id,\n  platform_detected: data.data_source_detected,\n  \n  // Metas e Contexto (Vindo do Notion)\n  meta_ancora: data.sop_config?.meta_valor,\n  tipo_metrica: data.sop_config?.metric_principal,\n  \n  // Resultados da Análise de Desvio\n  desvio_7d: data.analise_desvios?.d7?.desvio,\n  desvio_d1: data.analise_desvios?.d1?.desvio,\n  tendencia_3d_7d: data.analise_desvios?.tendencia_3d_vs_7d,\n  \n  // Classificação Final\n  final_status: data.final_status,\n  final_score: data.final_score,\n  classe_score: data.classe_score,\n  \n  // Novas Métricas (Exemplo de amostragem)\n  mensagens: data.calc_context?.novasMetricas?.mensagens,\n  seguidores: data.calc_context?.novasMetricas?.seguidores\n};\n\nconsole.log('=== ANALYSIS BY PROPERTY ===');\n\nfor (const [key, value] of Object.entries(testFields)) {\n  const isOk = value !== undefined && value !== null;\n  const statusIcon = isOk ? '✅' : '✅';\n  \n  console.log(`${statusIcon} ${key.padEnd(20)}: ${value} (Type: ${typeof value})`);\n  \n  if (!isOk) {\n    console.error(`❌ ERRO: O campo ${key} está vazio! Verifique o n� de c�lculo anterior.`);\n  }\n}\n\n// 2. Log do Objeto Completo (Para inspeção profunda no console do n8n)\nconsole.log('=== FULL JSON OBJECT FOR INSPECTION ===');\nconsole.log(JSON.stringify(data, null, 2));\nconsole.log('=======================================');\n\nreturn { json: data };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2816,
+        -384
+      ],
+      "id": "8e40b5ea-87bf-4e30-a361-a3a5c34ab8ce",
+      "name": "Code Debug"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Obter os dados de entrada do n� anterior\nconst items = $input.all();\n\n// 2. Criar um array para armazenar os resultados limpos\nconst outputItems = [];\n\n// --- Fun��es Auxiliares ---\n\n// Fun��o para extrair texto simples de Rich Text (para Text e Rich Text)\nconst extractRichText = (richTextArray) => {\n    if (!richTextArray || richTextArray.length === 0) {\n        return '';\n    }\n    const textSegments = richTextArray.map(segment => segment.plain_text);\n    return textSegments.join('');\n};\n\n// Fun��o para extrair nomes de Multi-Select\nconst extractMultiSelectNames = (multiSelectArray) => {\n    if (!multiSelectArray || multiSelectArray.length === 0) {\n        return '';\n    }\n    const names = multiSelectArray.map(option => option.name);\n    return names.join(', '); // Retorna os nomes separados por v�rgula\n};\n\nfor (const item of items) {\n    const properties = item.json.properties;\n\n    // --- 1. Extra��o de F�rmulas (Retornam String ou Number) ---\n    const idCampanha = properties['id_campanha']?.formula?.string || '';\n    const nomeCampanha = properties['Nome Campanha']?.formula?.string || '';\n    const notionIdCamp = properties['notion_id_camp']?.formula?.string || '';\n    const tskItensChkList = properties['tsk_itens_chkList']?.formula?.number || 0; // Novo\n\n    // --- 2. Extra��o de N�meros Simples ---\n    const orcamentoDiario = properties['Orçamento Diário']?.number || 0;\n    const cpaAlvo = properties['CPA Alvo']?.number || 0;\n    const cpaCampanha = properties['CPA da Campanha']?.number || 0;\n    const ctrCampanha = properties['CTR da Campanha']?.number || 0;\n    const cpcCampanha = properties['CPC da Campanha']?.number || 0; // Novo\n    const impressoes = properties['Impressões']?.number || 0; // Novo\n    const resultadoAtual = properties['Resultado Atual (Métrica-mãe)']?.number || 0; // Novo\n    const taxaConversao = properties['Taxa de Conversão']?.number || 0; // Novo\n    // Nota: Removi a duplicata de metaNumerica que existia no seu c�digo anterior\n    const metaNumerica = properties['Meta da Métrica-mãe']?.number || 0;\n    const idGoogle = properties['id_google_camp']?.number || 0;\n    const idClientGoogle = properties['id_google_account']?.number || 0;\n    const idMetaAccount = properties['id_meta_account']?.number || 0;\n    const idMetaCampaign = properties['id_meta_camp']?.number || 0;\n    const idMetaAds = properties['ID Meta Ads']?.number || 0;\n\n    // --- 3. Extra��o de Rollups (Campos Calculados/Agregados) ---\n    // O Notion retorna Rollups de formas diferentes (Number, Array, etc.)\n    const totalInvestidoCampanha = properties['Total Investido Campanha']?.rollup?.number || 0;\n    \n    // Rollup que retorna array de f�rmulas (tsk_itens_conclu�dos) - pega o primeiro item\n    let tskItensConcluidos = '0';\n    if (properties['tsk_itens_concluídos']?.rollup?.array?.[0]?.formula?.string) {\n        tskItensConcluidos = properties['tsk_itens_concluídos'].rollup.array[0].formula.string;\n    }\n\n    // --- 4. Extra��o de Select e Status (Sele��o �nica) ---\n    const estrategia = properties['Estratégia']?.select?.name || '';\n    const objetivo = properties['Objetivo']?.select?.name || '';\n    const estagioFunil = properties['Estágio do Funil']?.select?.name || '';\n    const modeloNegocio = properties['Modelo de Negócio']?.select?.name || ''; // Novo\n    const statusAprendizagem = properties['Status Aprendizagem']?.select?.name || ''; // Novo\n    // Campo Status � diferente de Select no objeto JSON\n    const status = properties['Status']?.status?.name || ''; // Novo\n\n    // --- 5. Extra��o de Multi-Select (Sele��o M�ltipla) ---\n    const plataforma = extractMultiSelectNames(properties['Fonte']?.multi_select);\n    const metricaPrimaria = extractMultiSelectNames(properties['Métrica-Mãe']?.multi_select);\n    const metricaSecundaria = extractMultiSelectNames(properties['Métrica Secundária']?.multi_select);\n    const canais = extractMultiSelectNames(properties['Canais']?.multi_select);\n    // Aten��o: No seu JSON o campo chama \"Tipo de campanha\" (c min�sculo) ou \"Tipo de Campanha\"? \n    // Ajustei para o que veio no JSON: \"Tipo de campanha\"\n    const tipoCampanha = extractMultiSelectNames(properties['Tipo de campanha']?.multi_select); \n    const publicoAlvo = extractMultiSelectNames(properties['Públicos-alvo']?.multi_select);\n\n    // --- 6. Extra��o de Texto (Rich Text) ---\n    const produtoServico = extractRichText(properties['Produto/Serviço']?.rich_text);\n    const geografia = extractRichText(properties['Geografia']?.rich_text);\n    const objetivoCampanha = extractRichText(properties['Objetivo da Campanha']?.rich_text);\n    const siglaCliente = extractRichText(properties['client_slug']?.rich_text); // Novo\n    const periodoVersao = extractRichText(properties['Período/Versão']?.rich_text); // Novo\n\n    // --- 7. Extra��o de Checkbox (Booleanos) ---\n    const periodoOtimizacaoAberto = properties['Otimização Ativa?']?.checkbox || false; // Novo\n    const metaDentroEstabelecido = properties['Meta dentro do Estabelecido']?.checkbox || false; // Novo\n\n    // --- 8. Extra��o de Datas ---\n    const dataInicio = properties['Data de Inicio']?.date?.start || '';\n    const dataConclusao = properties['Data de conclusão']?.date?.start || '';\n    const ultimaOtimizacao = properties['última Otimização']?.date?.start || '';\n\n    // --- 9. Extra��o de Unique ID ---\n    // Tratamento seguro para evitar erro de undefined\n    const prefix = properties['id_camp_padrao']?.unique_id?.prefix || '';\n    const number = properties['id_camp_padrao']?.unique_id?.number || '';\n    const idCampPadrao = prefix && number ? `${prefix}-${number}` : (prefix + number);\n\n    // --- 10. Cria��o do novo objeto com as propriedades limpas ---\n    const newItem = {\n        json: {\n            // IDs e Identificadores\n            clean_id_campanha: idCampanha,\n            clean_notion_id_camp: notionIdCamp,\n            clean_id_camp_padrao: idCampPadrao,\n            clean_id_google: idGoogle,\n            clean_id_customer_google: idClientGoogle,\n            clean_id_meta_account: idMetaAccount,\n            clean_id_meta_campaign: idMetaCampaign,\n            clean_id_meta_ads: idMetaAds,\n            clean_client_slug: siglaCliente,\n                      \n            // Informa��es da Campanha\n            clean_nome_campanha: nomeCampanha,\n            clean_status: status,\n            clean_plataforma: plataforma, // Fonte\n            clean_tipo_campanha: tipoCampanha,\n            clean_estrategia: estrategia,\n            clean_objetivo: objetivo,\n            clean_objetivo_campanha: objetivoCampanha,\n            clean_produto_servico: produtoServico,\n            clean_geografia: geografia,\n            clean_canais: canais,\n            clean_modelo_negocio: modeloNegocio,\n            clean_estagio_funil: estagioFunil,\n            clean_status_aprendizagem: statusAprendizagem,\n            clean_periodo_versao: periodoVersao,\n\n            // M�tricas Financeiras\n            clean_orcamento_diario: orcamentoDiario,\n            clean_total_investido: totalInvestidoCampanha,\n            clean_cpa_alvo: cpaAlvo,\n            clean_cpa_campanha: cpaCampanha,\n            clean_cpc_campanha: cpcCampanha,\n            \n            // M�tricas de Performance\n            clean_impressoes: impressoes,\n            clean_ctr_campanha: ctrCampanha,\n            clean_taxa_conversao: taxaConversao,\n            clean_resultado_metrica_mae: resultadoAtual,\n            clean_meta_metrica_mae: metaNumerica,\n            clean_metrica_mae: metricaPrimaria,\n            clean_meta_secundaria: metricaSecundaria,\n            \n            // Checkboxes e Tarefas\n            clean_periodo_otimizacao_aberto: periodoOtimizacaoAberto,\n            clean_meta_dentro_estabelecido: metaDentroEstabelecido,\n            clean_tsk_itens_chkList: tskItensChkList,\n            clean_tsk_itens_concluidos: tskItensConcluidos,\n            clean_publico_alvo: publicoAlvo,\n\n            // Datas\n            clean_data_inicio: dataInicio,\n            clean_data_conclusao: dataConclusao,\n            clean_ultima_otimizacao: ultimaOtimizacao,\n        },\n        binary: item.binary,\n    };\n    outputItems.push(newItem);\n}\n\nreturn outputItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        576,
+        -432
+      ],
+      "id": "5670c431-f087-45e9-ad2a-f012bab3a26b",
+      "name": "Code Clean Campanhas",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://googleads.googleapis.com/v22/customers/{{ $('Code prepara contexto para observação').item.json.raw_notion_data.clean_id_customer_google }}/googleAds:search",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleAdsOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "developer-token",
+              "value": "o0hGRr2vcX3jGF6aI3a_0w"
+            },
+            {
+              "name": "login-customer-id",
+              "value": "7595536100"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"query\": \"SELECT campaign.id, campaign.name, campaign.status, campaign.serving_status, campaign.bidding_strategy_system_status, campaign_budget.amount_micros, campaign.optimization_score, metrics.cost_micros, metrics.conversions, metrics.conversions_value, metrics.clicks, metrics.impressions FROM campaign WHERE campaign.id = '{{ $('Code prepara contexto para observação').item.json.raw_notion_data.clean_id_google }}' AND segments.date DURING YESTERDAY\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1536,
+        -864
+      ],
+      "id": "5a4ed885-0369-4681-a790-338d84ecb404",
+      "name": "HTTP Request Google Ontem (D1)",
+      "retryOnFail": true,
+      "credentials": {
+        "googleAdsOAuth2Api": {
+          "id": "78Fta7kyLfG3QHUT",
+          "name": "Google Ads account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://googleads.googleapis.com/v23/customers/{{ $('Code prepara contexto para observação').item.json.raw_notion_data.clean_id_customer_google }}/googleAds:search",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleAdsOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "developer-token",
+              "value": "o0hGRr2vcX3jGF6aI3a_0w"
+            },
+            {
+              "name": "login-customer-id",
+              "value": "7595536100"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"query\": \"SELECT campaign.id, campaign.name, campaign.status, campaign.serving_status, campaign.bidding_strategy_system_status, campaign_budget.amount_micros, campaign.optimization_score, metrics.cost_micros, metrics.conversions, metrics.conversions_value, metrics.clicks, metrics.impressions FROM campaign WHERE campaign.id = '{{ $('Code prepara contexto para observação').item.json.google_ads_id }}' AND segments.date DURING LAST_7_DAYS\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1536,
+        -544
+      ],
+      "id": "9f2629af-aefb-466c-ad48-635a63b10da3",
+      "name": "HTTP Request Google Ontem (D7)",
+      "retryOnFail": true,
+      "credentials": {
+        "googleAdsOAuth2Api": {
+          "id": "78Fta7kyLfG3QHUT",
+          "name": "Google Ads account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://googleads.googleapis.com/v22/customers/{{ $('Code Clean Campanhas').item.json.clean_id_customer_google }}/googleAds:search",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleAdsOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "developer-token",
+              "value": "o0hGRr2vcX3jGF6aI3a_0w"
+            },
+            {
+              "name": "login-customer-id",
+              "value": "7595536100"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"query\": \"SELECT campaign.id, campaign.name, campaign.status, campaign.serving_status, campaign.bidding_strategy_system_status, campaign_budget.amount_micros, campaign.optimization_score, metrics.cost_micros, metrics.conversions, metrics.conversions_value, metrics.clicks, metrics.impressions FROM campaign WHERE campaign.id = '{{ $('Code prepara contexto para observação').item.json.google_ads_id }}' AND segments.date BETWEEN '{{ $now.minus({ days: 3 }).toFormat('yyyy-MM-dd') }}' AND '{{ $now.minus({ days: 1 }).toFormat('yyyy-MM-dd') }}'\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1536,
+        -704
+      ],
+      "id": "0b3b5997-3c75-4c25-9cdd-e057582eadad",
+      "name": "HTTP Request Google Ontem (D3)",
+      "retryOnFail": true,
+      "credentials": {
+        "googleAdsOAuth2Api": {
+          "id": "78Fta7kyLfG3QHUT",
+          "name": "Google Ads account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7cf637c2-5e0e-4ab5-81cc-41aa9fa6fb82",
+              "name": "meta_valor",
+              "value": "={{ $('Code prepara contexto para observação').item.json.meta_valor }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1792,
+        -544
+      ],
+      "id": "3d4721be-43f6-4131-9700-211e19a06922",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "value": "19fb65e5-c72b-8043-a82d-f47ede397928",
+          "mode": "list",
+          "cachedResultName": "Campanhas",
+          "cachedResultUrl": "https://www.notion.so/19fb65e5c72b8043a82df47ede397928"
+        },
+        "returnAll": true,
+        "simple": false,
+        "filterType": "manual",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "key": "Status|status",
+              "condition": "equals",
+              "statusValue": "Em execução"
+            },
+            {
+              "key": "Fonte|multi_select",
+              "condition": "is_not_empty"
+            },
+            {
+              "key": "Métrica-Mãe|multi_select",
+              "condition": "is_not_empty"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        352,
+        -608
+      ],
+      "id": "9f90e777-0a22-4b3e-9148-baa0d9bc86e0",
+      "name": "Get many database Campanhas",
+      "retryOnFail": true,
+      "credentials": {
+        "notionApi": {
+          "id": "KpPCTsYPAvGXGfp2",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\n\nconst num = (value) => {\n  const n = Number(value ?? 0);\n  return Number.isFinite(n) ? n : 0;\n};\n\nconst intNum = (value) => Math.round(num(value));\n// ADR-37 D3 / ADR-38: `conversions` e FRACIONARIA (o Google Ads reporta 27,98).\n// Arredondar aqui foi o que produziu o subcount da serie historica. Use num(), nunca intNum().\n// clicks e impressions seguem inteiros de verdade.\n\nconst sqlString = (value) => String(value ?? '').replace(/'/g, \"''\");\n\nconst firstResultMetrics = (nodeName) => {\n  try {\n    return $(nodeName).item.json.results?.[0]?.metrics || {};\n  } catch (e) {\n    return {};\n  }\n};\n\n// ADR-38 Fase B.1: firstResultMetrics devolve {} TANTO quando nao houve resultado\n// QUANTO quando o resultado veio sem a metrica — e as duas coisas nao sao a mesma\n// (R11 regra 5: o vazio tem tres caras). Para `revenue` a diferenca decide entre\n// gravar NULL e gravar 0, entao precisamos perguntar pelo resultado, nao pela metrica.\nconst hasFirstResult = (nodeName) => {\n  try {\n    return !!$(nodeName).item.json.results?.[0];\n  } catch (e) {\n    return false;\n  }\n};\n\nconst getNodeJson = (nodeName) => {\n  try {\n    return $(nodeName).item.json || {};\n  } catch (e) {\n    return {};\n  }\n};\n\nconst context = getNodeJson('Code prepara contexto para observação');\n// ADR-38: le o client_id direto da pagina do Notion. A cadeia clean_/context nao o propaga\n// (o normalizador so extrai client_slug) — ver ADR-38 §9.1.\nconst notionProps = getNodeJson('Loop Over Items').properties || {};\nconst unified = getNodeJson('Code Unificar Períodos (D1, 3D, 7D)');\nconst calculated = getNodeJson('Code Cálcula Métricas');\nconst validation = getNodeJson('Code Valida Dados');\n\nconst mD1 = firstResultMetrics('HTTP Request Google Ontem (D1)');\nconst mD3 = firstResultMetrics('HTTP Request Google Ontem (D3)');\nconst mD7 = firstResultMetrics('HTTP Request Google Ontem (D7)');\n\nconst executionId = context.source_execution_id || context.execution_id || `EXEC-DE-${new Date().toISOString().replace(/[-:TZ.]/g, '').slice(0, 14)}`;\nconst clientId = notionProps.client_id?.rich_text?.[0]?.plain_text?.trim()\n  || calculated.client_id || input.client_id || '';\nconst googleId = context.google_ads_id || context.raw_notion_data?.clean_id_google || calculated.google_ads_id || input.properties?.id_google_camp?.number || '';\n// ADR-38: campaign_id = ID NATIVO da plataforma, sem prefixo. A coluna `platform` diz a origem.\nconst metaId = context.meta_campaign_id || calculated.meta_campaign_id || input.properties?.id_meta_camp?.number || '';\nconst nativeId = googleId || metaId || '';\nconst campaignId = nativeId ? String(nativeId) : '';\n\nconst cost = num(unified.raw_cost_d1 ?? calculated.raw_cost_d1 ?? calculated.cost_d1 ?? (num(mD1.costMicros) / 1000000));\nconst conversions = num(unified.raw_conversions_d1 ?? calculated.raw_conversions_d1 ?? mD1.conversions);\nconst clicks = intNum(unified.raw_clicks_d1 ?? calculated.raw_clicks_d1 ?? mD1.clicks);\nconst impressions = intNum(unified.raw_impressions_d1 ?? calculated.raw_impressions_d1 ?? mD1.impressions);\n\nconst cost3d = num(unified.raw_cost_3d ?? calculated.raw_cost_3d ?? calculated.cost_3d ?? (num(mD3.costMicros) / 1000000));\nconst conversions3d = num(unified.raw_conversions_3d ?? calculated.raw_conversions_3d ?? mD3.conversions);\nconst cost7d = num(calculated.raw_cost_7d ?? unified.raw_cost_7d ?? calculated.cost_7d ?? (num(mD7.costMicros) / 1000000));\nconst conversions7d = num(calculated.raw_conversions_7d ?? unified.raw_conversions_7d ?? mD7.conversions);\n\n// ADR-40 (21/09): a Metrica-Mae e da CAMPANHA e viaja com ela ate raw_campaign_data.\n// clean_metrica_mae vem do Code Clean Campanhas como STRING separada por virgula\n// (extractMultiSelectNames faz names.join(', ')), entao pegamos a primeira.\n// Vazio grava NULL, nunca um valor inventado (M4 / REQ-1 do ADR-40). Este workflow ja\n// filtra 'Metrica-Mae is_not_empty' no Get many database Campanhas, entao o NULL aqui\n// e cinto de seguranca, nao caminho esperado.\nconst primaryMetricTypeRaw = String(context.raw_notion_data?.clean_metrica_mae ?? '').split(',')[0].trim();\nconst primaryMetricTypeSql = primaryMetricTypeRaw ? `'${sqlString(primaryMetricTypeRaw)}'` : 'NULL';\n\nconst primaryMetricGoal = num(calculated.meta_estabelecida ?? context.meta_valor ?? context.raw_notion_data?.clean_meta_metrica_mae);\nconst dataSource = validation.data_source || calculated.data_source || 'google_ads_api';\nconst platform = context.platform === 'Google Ads' ? 'google_ads' : String(context.platform || calculated.platform || 'google_ads').toLowerCase().replace(/\\s+/g, '_');\n\n// ADR-38 Fase B.1 (etapa 8): `revenue` deixa de ser coluna exclusiva do\n// PHI - Subworkflow Campanhas. Era a UNICA coisa que se perderia ao aposenta-lo\n// (Fase A, 24/09) — e o Agregador a le como conv_value e a leva para o T28.\n// Vem de metrics.conversions_value da MESMA GAQL que o writer 2 usa: mesmos campos,\n// mesmo WHERE, mesmo DURING YESTERDAY. Isso e de proposito — para que aposentar o\n// writer 2 nao mude o numero.\n// M4: sem resultado da API, grava NULL, NUNCA 0. Zero e \"vendeu zero\", nao \"nao sei\".\n// O Google OMITE metrica de valor zero no JSON, entao dentro de um resultado que\n// EXISTE a ausencia do campo significa zero de verdade — por isso o `|| 0` do num()\n// so vale depois de hasFirstResult() dizer que houve linha.\n// Meta fica de fora: o writer 2 nunca cobriu Meta (\"Meta Ads - em breve\" e um noOp),\n// entao aqui nao ha de onde tirar o valor. NULL, e nao 0.\nconst temResultadoD1 = hasFirstResult('HTTP Request Google Ontem (D1)');\nconst revenueSql = (platform === 'google_ads' && temResultadoD1)\n  ? `CAST(${num(mD1.conversionsValue)} AS FLOAT64)`\n  : 'CAST(NULL AS FLOAT64)';\n\nconst sql = `MERGE phi_prod.raw_campaign_data AS target\nUSING (\n  SELECT\n    '${sqlString(executionId)}' AS execution_id,\n    '${sqlString(clientId)}' AS client_id,\n    '${sqlString(campaignId)}' AS campaign_id,\n    DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 1 DAY) AS date,\n    CAST(${cost} AS FLOAT64) AS cost,\n    CAST(${conversions} AS FLOAT64) AS conversions,\n    ${revenueSql} AS revenue,\n    CAST(${clicks} AS INT64) AS clicks,\n    CAST(${impressions} AS INT64) AS impressions,\n    CAST(${cost3d} AS FLOAT64) AS cost_3d,\n    CAST(${conversions3d} AS FLOAT64) AS conversions_3d,\n    CAST(${cost7d} AS FLOAT64) AS cost_7d,\n    CAST(${conversions7d} AS FLOAT64) AS conversions_7d,\n    CAST(${primaryMetricGoal} AS FLOAT64) AS primary_metric_goal,\n    ${primaryMetricTypeSql} AS primary_metric_type,\n    '${sqlString(dataSource)}' AS data_source,\n    '${sqlString(platform)}' AS platform,\n    'SUCCESS' AS ingestion_status,\n    'DAILY_ENTRY' AS ingestion_step,\n    CURRENT_TIMESTAMP() AS ingested_at\n) AS source\nON  target.client_id = source.client_id\nAND target.platform = source.platform\nAND target.campaign_id = source.campaign_id\nAND target.date = source.date\nWHEN MATCHED THEN UPDATE SET\n  target.cost = source.cost,\n  target.conversions = source.conversions,\n  -- ADR-38 Fase B.1: COALESCE de proposito. Se a consulta do D1 nao voltou, source.revenue\n  -- e NULL e NULL aqui significa \"nao sei\" — nao pode APAGAR um valor ja gravado para a\n  -- mesma campanha e o mesmo dia. Ausencia nunca destroi conhecimento (M4).\n  target.revenue = COALESCE(source.revenue, target.revenue),\n  target.clicks = source.clicks,\n  target.impressions = source.impressions,\n  target.cost_3d = source.cost_3d,\n  target.conversions_3d = source.conversions_3d,\n  target.cost_7d = source.cost_7d,\n  target.conversions_7d = source.conversions_7d,\n  target.primary_metric_goal = source.primary_metric_goal,\n  target.primary_metric_type = source.primary_metric_type,\n  target.data_source = source.data_source,\n  target.platform = source.platform,\n  target.ingestion_status = source.ingestion_status,\n  target.ingested_at = source.ingested_at\nWHEN NOT MATCHED THEN INSERT (\n  execution_id, client_id, campaign_id, date,\n  cost, conversions, revenue, clicks, impressions,\n  cost_3d, conversions_3d, cost_7d, conversions_7d,\n  primary_metric_goal, primary_metric_type, data_source, platform,\n  ingestion_status, ingestion_step, ingested_at\n) VALUES (\n  source.execution_id, source.client_id, source.campaign_id, source.date,\n  source.cost, source.conversions, source.revenue, source.clicks, source.impressions,\n  source.cost_3d, source.conversions_3d, source.cost_7d, source.conversions_7d,\n  source.primary_metric_goal, source.primary_metric_type, source.data_source, source.platform,\n  source.ingestion_status, source.ingestion_step, source.ingested_at\n);`;\n\nreturn {\n  json: {\n    ...input,\n    _bq_sql: sql\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3264,
+        -384
+      ],
+      "id": "6159f381-af3a-4ccb-9d67-878d29575b68",
+      "name": "Code Montar SQL"
+    },
+    {
+      "parameters": {
+        "projectId": {
+          "__rl": true,
+          "value": "project-0e7c58d4-656f-49e8-807",
+          "mode": "list",
+          "cachedResultName": "phi-production",
+          "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=project-0e7c58d4-656f-49e8-807"
+        },
+        "sqlQuery": "{{ $json._bq_sql }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2.1,
+      "position": [
+        3280,
+        -80
+      ],
+      "id": "5bc0e175-538f-4d78-9ca7-b92ce8ee83b7",
+      "name": "Execute SQL inserir daily entry",
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "credentials": {
+        "googleBigQueryOAuth2Api": {
+          "id": "UhLRAanVarQeOpQy",
+          "name": "Google BigQuery account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://googleads.googleapis.com/v23/customers/{{ $json.raw_notion_data.clean_id_customer_google }}/googleAds:search",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleAdsOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "developer-token",
+              "value": "o0hGRr2vcX3jGF6aI3a_0w"
+            },
+            {
+              "name": "login-customer-id",
+              "value": "7595536100"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"query\": \"SELECT campaign.id, campaign.name, campaign.status, campaign.bidding_strategy_type, campaign.target_cpa.target_cpa_micros, campaign.target_roas.target_roas, metrics.impressions, metrics.active_view_impressions, metrics.clicks, metrics.ctr, metrics.average_cpc, metrics.average_cpm, metrics.cost_micros, metrics.conversions, metrics.cost_per_conversion, metrics.conversions_from_interactions_rate, metrics.phone_calls FROM campaign WHERE campaign.id = '{{ $('Code prepara contexto para observação').item.json.google_ads_id }}' AND segments.date DURING LAST_30_DAYS AND campaign.status = 'ENABLED'\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1280,
+        -864
+      ],
+      "id": "5648c9ae-2e74-4692-ab35-7b2b9ae5bff7",
+      "name": "v23 Bloco 1 Core",
+      "retryOnFail": true,
+      "credentials": {
+        "googleAdsOAuth2Api": {
+          "id": "78Fta7kyLfG3QHUT",
+          "name": "Google Ads account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://googleads.googleapis.com/v23/customers/{{ $('Code prepara contexto para observação').item.json.raw_notion_data.clean_id_customer_google }}/googleAds:search",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleAdsOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "developer-token",
+              "value": "o0hGRr2vcX3jGF6aI3a_0w"
+            },
+            {
+              "name": "login-customer-id",
+              "value": "7595536100"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"query\": \"SELECT campaign.id, search_term_view.search_term, metrics.impressions, metrics.clicks, metrics.conversions, metrics.cost_micros FROM search_term_view WHERE segments.date DURING LAST_30_DAYS ORDER BY metrics.clicks DESC LIMIT 50\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1280,
+        -704
+      ],
+      "id": "ddd9430c-a979-48e2-8a79-0c05e59df9ef",
+      "name": "v23 Bloco 2 Termos",
+      "retryOnFail": true,
+      "credentials": {
+        "googleAdsOAuth2Api": {
+          "id": "78Fta7kyLfG3QHUT",
+          "name": "Google Ads account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://googleads.googleapis.com/v23/customers/{{ $('Code prepara contexto para observação').item.json.raw_notion_data.clean_id_customer_google }}/googleAds:search",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleAdsOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "developer-token",
+              "value": "o0hGRr2vcX3jGF6aI3a_0w"
+            },
+            {
+              "name": "login-customer-id",
+              "value": "7595536100"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"query\": \"SELECT campaign.id, segments.ad_network_type, metrics.impressions, metrics.clicks, metrics.conversions, metrics.cost_micros FROM campaign WHERE segments.date DURING LAST_30_DAYS AND campaign.status = 'ENABLED'\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1280,
+        -544
+      ],
+      "id": "bef69b6e-7645-4f00-8c76-2a670dd045fe",
+      "name": "v23 Bloco 3 Canais",
+      "retryOnFail": true,
+      "credentials": {
+        "googleAdsOAuth2Api": {
+          "id": "78Fta7kyLfG3QHUT",
+          "name": "Google Ads account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\n\n// Fun��o auxiliar para n�meros\nconst toNum = (val) => {\n  const n = Number(val);\n  return isNaN(n) ? 0 : parseFloat(n.toFixed(2));\n};\n\nreturn {\n  json: {\n    // Usa o ID da p�gina que veio do Notion\n    page_id: data.notion_page_id || data.id, \n    \n    properties: {\n      // --- CLASSIFICA��O E STATUS ---\n      \"Status Atual\": {\n        \"select\": { \"name\": data.status_meta || \"Sem Dados\" }\n      },\n      \"Score Final\": {\n        \"number\": toNum(data.opt_score) // Usando o Optimization Score como Score Final\n      },\n      \"Análise de Performance\": {\n        \"rich_text\": [{ \n          \"text\": { \n            \"content\": `🎯 Meta: ${data.meta_estabelecida} | Real: ${data.valor_real} (${data.status_meta})` \n          } \n        }]\n      },\n\n      // --- M�TRICAS DE PERFORMANCE ---\n      \"Meta Métrica-mãe\": {\n        \"number\": toNum(data.meta_estabelecida)\n      },\n      \"Desvio 7D\": {\n        \"number\": toNum(data.valor_real) // Aqui voceê pode colocar o valor real atual\n      },\n      \"Tendência 3D vs 7D\": {\n        \"number\": toNum(data.v_3d) // Exemplo: Comparativo de tend�ncia\n      },\n\n      // --- DADOS DA CAMPANHA (EXTRAS) ---\n      \"Última Atualização\": {\n        \"date\": { \"start\": new Date().toISOString() }\n      },\n      \"Fonte do Dado\": {\n        \"select\": { \"name\": \"Google Ads\" }\n      }\n      \n      // Caso queira adicionar os campos de Mensagens, Rota, etc., \n      // eles precisam ser calculados no n� anterior primeiro.\n    }\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2816,
+        -544
+      ],
+      "id": "e4f6241b-3e52-4ab0-b3b1-9e4dbd50fa8a",
+      "name": "Code Preparar Payload de Observação"
+    },
+    {
+      "parameters": {
+        "jsCode": "\n// Captura o item que vem do loop/notion\nconst item = $input.first();\nconst data = item.json;\nconsole.log(\"Campos disponíveis:\", Object.keys(data));\n\n// 1. Extração Robusta da Métrica Principal\n// Ordem de prioridade: campo do contexto > campo do Notion > padrão\nlet metric_principal = \"CPA\";\nconst campoTipo = data[\"Tipo da Métrica\"] || (data.properties ? data.properties[\"Tipo da Métrica\"] : null);\n\nif (campoTipo) {\n  metric_principal = campoTipo.select ? campoTipo.select.name : (typeof campoTipo === 'string' ? campoTipo : \"CPA\");\n} else if (data.metric_principal) {\n  metric_principal = data.metric_principal;\n} else if (data.sop_config?.metric_principal) {\n  metric_principal = data.sop_config.metric_principal;\n}\n\n// 2. Extração do Valor da Meta\n// Para Google Ads: vem de Edit Fields (que lê do nó If Plataforma)\n// Para Meta Ads: vem diretamente do contexto preparado\nlet meta_valor = 0;\n\ntry {\n  // Tenta primeiro via Edit Fields (caminho Google)\n  meta_valor = $('Edit Fields').first().json.meta_valor || 0;\n} catch (e) {\n  // Fallback para Meta Ads: usa os valores já presentes no contexto\n  meta_valor = data.meta_valor ||\n               data.raw_notion_data?.clean_meta_metrica_mae ||\n               data.raw_notion_data?.clean_cpa_alvo ||\n               0;\n}\n\n// 3. Configuração dos Limiares do SOP\nconst sop_thresholds = {\n  'CPA': { ok_limit: 0, attention_limit: 15, critical_limit: 15, trend_alert: 10, d1_alert: 30 },\n  'ROAS': { ok_limit: 0, attention_limit: 15, critical_limit: 15, trend_alert: 10, d1_alert: 30 }\n};\n\nreturn {\n  json: {\n    ...data,\n    sop_config: {\n      metric_principal: metric_principal,\n      meta_valor: Number(meta_valor),\n      thresholds: sop_thresholds[metric_principal] || sop_thresholds['CPA']\n    }\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2368,
+        -384
+      ],
+      "id": "f7c02296-5257-40bb-8808-dde864de6b67",
+      "name": "Code Recupera Metas p Comparação"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst output = [];\n\nconst num = (value) => {\n  const n = Number(value ?? 0);\n  return Number.isFinite(n) ? n : 0;\n};\n\nconst round = (value, digits = 2) => {\n  const n = num(value);\n  return Number(n.toFixed(digits));\n};\n\nconst div = (numerator, denominator, multiplier = 1, digits = 2) => {\n  const den = num(denominator);\n  if (den <= 0) return 0;\n  return round((num(numerator) / den) * multiplier, digits);\n};\n\nconst emptyRaw = () => ({\n  cost: 0,\n  costMicros: 0,\n  clicks: 0,\n  impressions: 0,\n  conversions: 0,\n  conversionsValue: 0,\n  optScore: 0,\n  budget: 0,\n  status: 'ESTÁVEL'\n});\n\nconst addMetrics = (target, metrics = {}) => {\n  const costMicros = num(metrics.costMicros ?? metrics.cost_micros);\n  target.costMicros += costMicros;\n  target.cost += costMicros / 1000000;\n  target.clicks += num(metrics.clicks);\n  target.impressions += num(metrics.impressions);\n  target.conversions += num(metrics.conversions);\n  target.conversionsValue += num(metrics.conversionsValue ?? metrics.conversions_value);\n};\n\nconst aggregateGoogleResponse = (response, campaignId) => {\n  const raw = emptyRaw();\n  const rows = Array.isArray(response?.results) ? response.results : [];\n  const normalizedCampaignId = campaignId ? String(campaignId) : '';\n\n  for (const row of rows) {\n    const rowCampaignId = row?.campaign?.id ? String(row.campaign.id) : '';\n    if (normalizedCampaignId && rowCampaignId && rowCampaignId !== normalizedCampaignId) continue;\n\n    addMetrics(raw, row.metrics || {});\n\n    if (!raw.optScore && row.campaign?.optimizationScore !== undefined) {\n      raw.optScore = num(row.campaign.optimizationScore) * 100;\n    }\n    if (!raw.budget && row.campaignBudget?.amountMicros !== undefined) {\n      raw.budget = num(row.campaignBudget.amountMicros) / 1000000;\n    }\n    if (row.campaign?.biddingStrategySystemStatus) {\n      raw.status = row.campaign.biddingStrategySystemStatus;\n    }\n  }\n\n  return raw;\n};\n\nconst fillFromFallback = (raw, fallback = {}) => {\n  if (!raw.cost && fallback.cost !== undefined) raw.cost = num(fallback.cost);\n  if (!raw.costMicros && fallback.costMicros !== undefined) raw.costMicros = num(fallback.costMicros);\n  if (!raw.clicks && fallback.clicks !== undefined) raw.clicks = num(fallback.clicks);\n  if (!raw.impressions && fallback.impressions !== undefined) raw.impressions = num(fallback.impressions);\n  if (!raw.conversions && fallback.conversions !== undefined) raw.conversions = num(fallback.conversions);\n  if (!raw.conversionsValue && fallback.conversionsValue !== undefined) raw.conversionsValue = num(fallback.conversionsValue);\n  return raw;\n};\n\nconst calculatePaidMediaMetrics = (raw7, raw30) => ({\n  cost_7d: round(raw7.cost, 6),\n  cost_30d: round(raw30.cost, 6),\n  investimento_7d: round(raw7.cost, 2),\n  investimento_30d: round(raw30.cost, 2),\n\n  clicks_7d: raw7.clicks,\n  clicks_30d: raw30.clicks,\n  impressions_7d: raw7.impressions,\n  impressions_30d: raw30.impressions,\n  conversions_7d: round(raw7.conversions, 6),\n  conversions_30d: round(raw30.conversions, 6),\n  revenue_7d: round(raw7.conversionsValue, 6),\n  revenue_30d: round(raw30.conversionsValue, 6),\n\n  cpc_7d: div(raw7.cost, raw7.clicks),\n  cpc_30d: div(raw30.cost, raw30.clicks),\n  cpa_7d: div(raw7.cost, raw7.conversions),\n  cpa_30d: div(raw30.cost, raw30.conversions),\n  cpl_7d: div(raw7.cost, raw7.conversions),\n  cpl_30d: div(raw30.cost, raw30.conversions),\n  ctr_7d: div(raw7.clicks, raw7.impressions, 100),\n  ctr_30d: div(raw30.clicks, raw30.impressions, 100),\n  cpm_7d: div(raw7.cost, raw7.impressions, 1000),\n  cpm_30d: div(raw30.cost, raw30.impressions, 1000),\n  cvr_7d: div(raw7.conversions, raw7.clicks, 100),\n  cvr_30d: div(raw30.conversions, raw30.clicks, 100),\n  taxa_conversao_7d: div(raw7.conversions, raw7.clicks, 100),\n  taxa_conversao_30d: div(raw30.conversions, raw30.clicks, 100),\n  roas_7d: div(raw7.conversionsValue, raw7.cost),\n  roas_30d: div(raw30.conversionsValue, raw30.cost)\n});\n\nconst metricValue = (metrics, metricName) => {\n  const normalized = String(metricName || '').toLowerCase();\n  if (normalized === 'roas') return metrics.roas_7d;\n  if (normalized === 'cpc') return metrics.cpc_7d;\n  if (normalized === 'ctr') return metrics.ctr_7d;\n  if (normalized === 'cpm') return metrics.cpm_7d;\n  if (normalized === 'cpl') return metrics.cpl_7d;\n  if (normalized === 'taxa de conversão' || normalized === 'taxa de conversao' || normalized === 'cvr') return metrics.cvr_7d;\n  if (normalized === 'impressões' || normalized === 'impressoes' || normalized === 'impressions') return metrics.impressions_7d;\n  return metrics.cpa_7d;\n};\n\nconst lowerIsBetter = (metricName) => {\n  const normalized = String(metricName || '').toLowerCase();\n  return ['cpa', 'cpl', 'cpc', 'cpm', 'cac'].includes(normalized);\n};\n\nfor (const item of items) {\n  const data = item.json;\n  const metaValor = num(data.meta_valor ?? data.sop_config?.meta_valor);\n  const tipoMetrica = data.sop_config?.metric_principal || data.metric_principal || data.clean_meta_primaria || 'CPA';\n  const campaignId = data.google_ads_id || data.raw_notion_data?.clean_id_google || data.campaign?.id || data.campaign_id;\n\n  let d7Response = data;\n  let d30Response = {};\n\n  try {\n    d7Response = $('HTTP Request Google Ontem (D7)').item.json;\n  } catch (e) {}\n\n  try {\n    d30Response = $('v23 Bloco 1 Core').item.json;\n  } catch (e) {\n    try {\n      d30Response = $('HTTP Request Google (D30)').item.json;\n    } catch (e2) {}\n  }\n\n  let raw7 = aggregateGoogleResponse(d7Response, campaignId);\n  let raw30 = aggregateGoogleResponse(d30Response, campaignId);\n\n  raw7 = fillFromFallback(raw7, {\n    cost: data.raw_cost_7d ?? data.raw_cost_d7,\n    costMicros: data.raw_cost_micros_7d ?? data.raw_cost_micros_d7,\n    clicks: data.raw_clicks_7d,\n    impressions: data.raw_impressions_7d,\n    conversions: data.raw_conversions_7d,\n    conversionsValue: data.raw_conversions_value_7d\n  });\n\n  raw30 = fillFromFallback(raw30, {\n    cost: data.raw_cost_brl_d30 ?? data.raw_cost_30d,\n    costMicros: data.raw_cost_micros_d30 ?? data.raw_cost_micros_30d,\n    clicks: data.raw_clicks_d30 ?? data.raw_clicks_30d,\n    impressions: data.raw_impressions_d30 ?? data.raw_impressions_30d,\n    conversions: data.raw_conversions_d30 ?? data.raw_conversions_30d,\n    conversionsValue: data.raw_conversions_value_d30 ?? data.raw_conversions_value_30d\n  });\n\n  if (data.calculado && !raw7.cost && !raw7.clicks && !raw7.impressions) {\n    raw7 = fillFromFallback(raw7, {\n      cost: data.calculado.custo_real,\n      clicks: data.calculado.cliques,\n      impressions: data.calculado.impressoes,\n      conversions: data.calculado.conversoes,\n      conversionsValue: data.calculado.valor_conversao\n    });\n  }\n\n  const metrics = calculatePaidMediaMetrics(raw7, raw30);\n  const valorReal = metricValue(metrics, tipoMetrica);\n\n  let statusMeta = 'No Alvo ?';\n  if (metaValor > 0) {\n    const isLowerBetter = lowerIsBetter(tipoMetrica);\n    if (isLowerBetter) {\n      statusMeta = valorReal <= metaValor ? 'No Alvo ✅' : 'Acima da Meta 🚨';\n    } else {\n      statusMeta = valorReal >= metaValor ? 'No Alvo ✅' : 'Abaixo da Meta 📉';\n    }\n  }\n\n  output.push({\n    json: {\n      ...data,\n      valor_real: round(valorReal, 2),\n      meta_estabelecida: metaValor,\n      status_meta: statusMeta,\n      orcamento_diario: round(raw7.budget, 2),\n      aprendizado: String(raw7.status || 'ESTÁVEL').replace(/_/g, ' '),\n      opt_score: round(raw7.optScore, 2),\n\n      ...metrics,\n\n      raw_cost_7d: metrics.cost_7d,\n      raw_cost_30d: metrics.cost_30d,\n      raw_cost_micros_7d: round(raw7.costMicros, 0),\n      raw_cost_micros_30d: round(raw30.costMicros, 0),\n      raw_clicks_7d: raw7.clicks,\n      raw_clicks_30d: raw30.clicks,\n      raw_impressions_7d: raw7.impressions,\n      raw_impressions_30d: raw30.impressions,\n      raw_conversions_7d: metrics.conversions_7d,\n      raw_conversions_30d: metrics.conversions_30d,\n      raw_conversions_value_7d: metrics.revenue_7d,\n      raw_conversions_value_30d: metrics.revenue_30d,\n\n      metricas_calculadas: {\n        d7: {\n          custo: metrics.cost_7d,\n          cliques: metrics.clicks_7d,\n          impressoes: metrics.impressions_7d,\n          conversoes: metrics.conversions_7d,\n          receita: metrics.revenue_7d,\n          cpc: metrics.cpc_7d,\n          cpa: metrics.cpa_7d,\n          cpl: metrics.cpl_7d,\n          ctr: metrics.ctr_7d,\n          cpm: metrics.cpm_7d,\n          cvr: metrics.cvr_7d,\n          roas: metrics.roas_7d\n        },\n        d30: {\n          custo: metrics.cost_30d,\n          cliques: metrics.clicks_30d,\n          impressoes: metrics.impressions_30d,\n          conversoes: metrics.conversions_30d,\n          receita: metrics.revenue_30d,\n          cpc: metrics.cpc_30d,\n          cpa: metrics.cpa_30d,\n          cpl: metrics.cpl_30d,\n          ctr: metrics.ctr_30d,\n          cpm: metrics.cpm_30d,\n          cvr: metrics.cvr_30d,\n          roas: metrics.roas_30d\n        }\n      }\n    }\n  });\n}\n\nreturn output;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2368,
+        -544
+      ],
+      "id": "43939d76-ba1d-4e2c-8b05-5275b21e6f7c",
+      "name": "Code Cálcula Métricas"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Captura os dados dos nos da serie\nconst d1 = $(\"HTTP Request Google Ontem (D1)\").first().json;\nconst d3 = $(\"HTTP Request Google Ontem (D3)\").first().json;\nconst d7 = $(\"HTTP Request Google Ontem (D7)\").first().json;\n\nlet d30;\ntry {\n  d30 = $(\"HTTP Request Google (D30)\").first().json;\n} catch (e) {\n  d30 = $(\"v23 Bloco 1 Core\").first().json;\n}\n\n// Função para calcular CPA ou ROAS\nconst calcularValor = (data, tipo) => {\n  const metrics = data.results?.[0]?.metrics || {};\n  const cost = Number(metrics.costMicros || 0) / 1000000;\n  const conv = Number(metrics.conversions || 0);\n  const val = Number(metrics.conversionsValue || 0);\n\n  if (tipo === \"ROAS\") return cost > 0 ? val / cost : 0;\n  return conv > 0 ? cost / conv : 0;\n};\n\n// Item #7: extrai metricas brutas para BigQuery\nconst extractRaw = (data) => {\n  const m = data.results?.[0]?.metrics || {};\n  const costMicros = Number(m.costMicros || m.cost_micros || 0);\n  return {\n    cost: costMicros / 1_000_000,\n    costMicros,\n    clicks: Number(m.clicks || 0),\n    conversions: Number(m.conversions || 0),\n    conversionsValue: Number(m.conversionsValue || m.conversions_value || 0),\n    impressions: Number(m.impressions || 0),\n  };\n};\nconst raw_d1 = extractRaw(d1);\nconst raw_d3 = extractRaw(d3);\nconst raw_d7 = extractRaw(d7);\nconst raw_d30 = extractRaw(d30);\n\n// 2. Configuracoes\nconst config = d7.sop_config || {};\nconst tipo = config.metric_principal || \"CPA\";\n\n// 3. Extrai os valores reais\nconst v_d1 = calcularValor(d1, tipo);\nconst v_3d = calcularValor(d3, tipo);\nconst v_7d = calcularValor(d7, tipo);\nconst v_30d = calcularValor(d30, tipo);\n\n// 4. Funcao magica de formatacao: XX% (YY)\nconst formatarTendencia = (valorAtual, valorBase) => {\n  if (!valorAtual || !valorBase || valorBase === 0) return \"0.00% (R$0.00)\";\n  const diffAbsoluta = valorAtual - valorBase;\n  const diffPercentual = (diffAbsoluta / valorBase) * 100;\n  return `${diffPercentual.toFixed(2)}% (R$ ${diffAbsoluta.toFixed(2)})`;\n};\n\nconst txt_tendencia_3d = formatarTendencia(v_3d, v_7d);\nconst txt_tendencia_1d = formatarTendencia(v_d1, v_7d);\nconst txt_tendencia_30d = formatarTendencia(v_7d, v_30d);\n\n// 5. Optimization Score\nconst optScoreRaw = d7.results?.[0]?.campaign?.optimizationScore || 0;\nconst optScoreFormatted = parseFloat((optScoreRaw * 100).toFixed(2));\n\n// 6. Retorno final\nreturn {\n  json: {\n    ...d7,\n    v_d1: parseFloat(v_d1.toFixed(2)),\n    v_3d: parseFloat(v_3d.toFixed(2)),\n    v_7d: parseFloat(v_7d.toFixed(2)),\n    v_30d: parseFloat(v_30d.toFixed(2)),\n\n    txt_tendencia_3d,\n    txt_tendencia_1d,\n    txt_tendencia_30d,\n\n    val_tendencia_3d: parseFloat(((v_3d - v_7d) / (v_7d || 1) * 100).toFixed(2)),\n\n    opt_score: optScoreFormatted,\n\n    calc_context: {\n      v_d1, v_3d, v_7d, v_30d,\n      txt_tendencia_3d,\n      txt_tendencia_1d,\n      txt_tendencia_30d,\n    },\n\n    // M�tricas brutas para BigQuery (Item #7 corrigido)\n    raw_cost_d1: parseFloat(raw_d1.cost.toFixed(6)),\n    raw_clicks_d1: raw_d1.clicks,\n    raw_impressions_d1: raw_d1.impressions,\n    raw_cost_3d: parseFloat(raw_d3.cost.toFixed(6)),\n    raw_cost_7d: parseFloat(raw_d7.cost.toFixed(6)),\n    raw_clicks_d30: raw_d30.clicks,\n    raw_conversions_value_d30: parseFloat(raw_d30.conversionsValue.toFixed(6)),\n    raw_conversions_d30: raw_d30.conversions,\n    raw_cost_micros_d30: raw_d30.costMicros,\n    raw_cost_brl_d30: parseFloat(raw_d30.cost.toFixed(6)),\n    raw_impressions_d30: raw_d30.impressions,\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1792,
+        -864
+      ],
+      "id": "fa8aef2c-5d7c-4b8b-88f1-ff4c8f5855a4",
+      "name": "Code Unificar Períodos (D1, 3D, 7D)",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Este fluxo NÃO executa otimizações - apenas prepara contexto para observação\n\nconst timezone = 'America/Sao_Paulo';\nconst now = new Date();\n\n// ===== CALCULAR DATAS =====\nconst d1 = new Date(now);\nd1.setDate(d1.getDate() - 1);\nd1.setHours(0, 0, 0, 0);\n\nconst d2 = new Date(now);\nd2.setDate(d2.getDate() - 2);\nd2.setHours(0, 0, 0, 0);\n\nfunction formatDate(date) {\n  const year = date.getFullYear();\n  const month = String(date.getMonth() + 1).padStart(2, '0');\n  const day = String(date.getDate()).padStart(2, '0');\n  return `${year}-${month}-${day}`;\n}\n\n// ===== EXTRAIR DADOS LIMPOS =====\nconst item = $input.first();\nconst data = item.json;\n\n// ===== PREPARAR CONTEXTO COMPLETO =====\nreturn {\n  json: {\n    // --- IDENTIFICAÇÃO ---\n    campaign_id: data.clean_id_campanha,\n    campaign_name: data.clean_nome_campanha,\n    notion_page_id: data.clean_notion_id_camp,\n    google_ads_id: data.clean_id_google,\n    campaign_unique_id: data.clean_id_camp_padrao,\n\n    // --- CLASSIFICAÇÃO ---\n    platform: data.clean_plataforma,\n    sigla_cliente: data.clean_sigla_cliente,\n    estrategia: data.clean_estrategia,\n    objetivo: data.clean_objetivo,\n    produto_servico: data.clean_produto_servico,\n\n    // --- METAS E MÉTRICAS (SOP) ---\n    metric_principal: data.clean_meta_primaria,\n    meta_valor: data.clean_meta_metrica_mae,\n\n    // --- CONTEXTO OPERACIONAL ---\n    orcamento_diario: data.clean_orcamento_diario,\n    status: data.clean_status,\n    periodo_otimizacao_aberto: data.clean_periodo_otimizacao_aberto,\n\n    // --- DATAS ---\n    date_d1: formatDate(d1),\n    date_d2: formatDate(d2),\n    date_d1_iso: d1.toISOString(),\n    date_d2_iso: d2.toISOString(),\n    timezone,\n\n    // --- CONTROLE ---\n    fallback_active: false,\n    execution_timestamp: now.toISOString(),\n\n    // --- DADOS BRUTOS (para auditoria, se necessário) ---\n    raw_notion_data: data\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        576,
+        -272
+      ],
+      "id": "e509b7f5-ad7c-40c6-b73f-184ec5b1af58",
+      "name": "Code prepara contexto para observação"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Serie diaria (BigQuery): o SQL e montado AQUI, nao dentro do node BigQuery (CLAUDE.md regra 8).\n// Modo runOnceForEachItem: 1 item entra -> 1 item sai. 'Code Tendencia Real' pareia por INDICE.\nconst data = $json;\nconst num = (v) => { const n = Number(v || 0); return Number.isFinite(n) ? n : 0; };\nconst esc = (v) => String(v == null ? '' : v).replace(/'/g, \"''\");\n\n// NESTE workflow (campanhas) `clean_id_google` JA E o id da CAMPANHA: vem de\n// properties['id_google_camp'] em 'Code Clean Campanhas'. (No sw metricas anuncios o\n// alias homonimo e o id do ANUNCIO - por isso la usamos clean_id_google_camp.)\nlet clean = null;\nlet motivo = 'ok';\ntry {\n  clean = $('Code Clean Campanhas').item.json;\n} catch (e) {\n  motivo = 'pareamento_indisponivel';\n}\n\nlet campaign_id = '';\nif (clean) {\n  // ADR-38 P-27: ID NATIVO, SEM PREFIXO. Este valor entra no WHERE campaign_id do\n  // _bq_sql_serie logo abaixo, contra phi_prod.raw_campaign_data. Com 'GADS-'/'META-'\n  // o WHERE casava ZERO linhas desde o corte de 09/09 e a tendencia saia sempre\n  // tendencia_metodo='sem_historico' em TODAS as campanhas. A coluna `platform` diz a\n  // origem. NUNCA voltar o prefixo aqui.\n  // Usa o valor CRU e nao o numerico: id de Meta passa de 2^53 e Number() o corrompe (P-15).\n  const rawG = clean.clean_id_google_camp || clean.clean_id_google;\n  const rawM = clean.clean_id_meta_campaign;\n  if (num(rawG) > 0) campaign_id = String(rawG).trim();\n  else if (num(rawM) > 0) campaign_id = String(rawM).trim();\n  else motivo = 'sem_id_campanha';\n}\n\n// Nunca emitir SQL vazio (o node BigQuery quebraria). Sem id -> query valida que retorna 0 linhas.\nconst idSql = esc(campaign_id || 'SEM-ID');\nconst TZ = \"CURRENT_DATE('America/Sao_Paulo')\";\nconst J3 = 'date >= DATE_SUB(' + TZ + ', INTERVAL 3 DAY)';\nconst JP3 = 'date < DATE_SUB(' + TZ + ', INTERVAL 3 DAY) AND date >= DATE_SUB(' + TZ + ', INTERVAL 6 DAY)';\nconst s3 = (col, alias) => 'SUM(IF(' + J3 + ', ' + col + ', 0)) AS ' + alias;\nconst sp3 = (col, alias) => 'SUM(IF(' + JP3 + ', ' + col + ', 0)) AS ' + alias;\n\nconst _bq_sql_serie = [\n  'SELECT COUNT(*) AS n_dias',\n  s3('cost', 'cost_3'),\n  s3('conversions', 'conv_3'),\n  s3('clicks', 'clicks_3'),\n  s3('impressions', 'impr_3'),\n  '0 AS rev_3',\n  sp3('cost', 'cost_prev3'),\n  sp3('conversions', 'conv_prev3'),\n  sp3('clicks', 'clicks_prev3'),\n  sp3('impressions', 'impr_prev3'),\n  '0 AS rev_prev3'\n].join(', ')\n  + ' FROM `project-0e7c58d4-656f-49e8-807.phi_prod.raw_campaign_data`'\n  + \" WHERE campaign_id = '\" + idSql + \"'\"\n  + ' AND date >= DATE_SUB(' + TZ + ', INTERVAL 21 DAY)';\n\nreturn { json: { ...data, bq_campaign_id: campaign_id, _bq_sql_serie, _serie_motivo: motivo } };\n"
+      },
+      "id": "a1da9005-70ce-402c-8b31-1f6222645ec2",
+      "name": "Code Prep Tendência",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2368,
+        -192
+      ]
+    },
+    {
+      "parameters": {
+        "projectId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "project-0e7c58d4-656f-49e8-807",
+          "cachedResultName": "phi-production"
+        },
+        "sqlQuery": "{{ $json._bq_sql_serie }}",
+        "options": {}
+      },
+      "id": "73dd50b1-4fa5-4408-85f1-1ed09559f3fc",
+      "name": "BigQuery Série Diária",
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2.1,
+      "position": [
+        2592,
+        -192
+      ],
+      "retryOnFail": true,
+      "credentials": {
+        "googleBigQueryOAuth2Api": {
+          "id": "UhLRAanVarQeOpQy",
+          "name": "Google BigQuery account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Tendência real do histórico diário (BigQuery): métrica dos últimos 3 dias vs 3 dias anteriores.\n// Pareado por índice com o nó de prep. Suporta ROAS via coluna conversions_value. Fallback < 4 dias.\nconst prep = $('Code Prep Tendência').all();\nconst rows = $input.all();\nconst num = (x) => Number(x || 0);\nconst out = [];\n\nfor (let i = 0; i < prep.length; i++) {\n  const ctx = prep[i].json;\n  const r = (rows[i] && rows[i].json) || {};\n  const tipo = ctx.sop_config?.metric_principal || 'CPA';\n\n  const metricaJanela = (cost, conv, clicks, impr, rev) => {\n    if (tipo === 'ROAS') return cost > 0 ? rev / cost : null;\n    if (tipo === 'CPC') return clicks > 0 ? cost / clicks : null;\n    if (tipo === 'CTR') return impr > 0 ? (clicks / impr) * 100 : null;\n    if (tipo === 'Taxa de Conversão') return clicks > 0 ? (conv / clicks) * 100 : null;\n    return conv > 0 ? cost / conv : null;        // CPA / CPL\n  };\n\n  const nDias = num(r.n_dias);\n  let tendencia_real = null;\n  let metodo = 'sem_historico';\n\n  if (nDias >= 4) {\n    const recente = metricaJanela(num(r.cost_3), num(r.conv_3), num(r.clicks_3), num(r.impr_3), num(r.rev_3));\n    const anterior = metricaJanela(num(r.cost_prev3), num(r.conv_prev3), num(r.clicks_prev3), num(r.impr_prev3), num(r.rev_prev3));\n    if (recente != null && anterior != null && anterior > 0) {\n      const MAIOR_MELHOR = ['CTR', 'Taxa de Conversão', 'ROAS'];\n      const bruto = ((recente - anterior) / anterior) * 100; // positivo = subiu\n      // padroniza: positivo = PIOROU\n      tendencia_real = MAIOR_MELHOR.includes(tipo) ? parseFloat((-bruto).toFixed(2)) : parseFloat(bruto.toFixed(2));\n      metodo = 'bigquery_3d_vs_3d';\n    }\n  }\n\n  out.push({ json: { ...ctx, tendencia_real, tendencia_metodo: metodo, tendencia_n_dias: nDias } });\n}\n\nreturn out;"
+      },
+      "id": "eb416ac8-9af2-4b1c-8791-b206b675a7f8",
+      "name": "Code Tendência Real",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2816,
+        -192
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst output = [];\n\nfor (const item of items) {\n  const root = item.json;\n  // No Meta, os dados reais de m�tricas est�o em root.data[0]\n  const data = (root.data && root.data.length > 0) ? root.data[0] : null;\n\n  if (!data) {\n    output.push(item);\n    continue;\n  }\n  \n  // 1. Extra��o de M�tricas (Convertendo texto para n�mero)\n  const cost = Number(data.spend || 0);\n  const impressions = Number(data.impressions || 0);\n  const clicks = Number(data.clicks || 0);\n  \n  // 2. Tratamento de Convers�es (Array de Actions)\n  let conversions = 0;\n  if (data.actions && Array.isArray(data.actions)) {\n    // Procuramos pelo tipo de convers�o que voc� usa (ex: compra ou convers�o padr�o)\n    const convAction = data.actions.find(a => \n      a.action_type === 'offsite_conversion.fb_pixel_purchase' || \n      a.action_type === 'conversions' ||\n      a.action_type === 'purchase'\n    );\n    conversions = convAction ? Number(convAction.value) : 0;\n  }\n\n  // 3. C�lculos de Performance\n  const ctr = impressions > 0 ? (clicks / impressions) * 100 : 0;\n  const cpc = clicks > 0 ? cost / clicks : 0;\n  const cpa = conversions > 0 ? cost / conversions : 0;\n  const convRate = clicks > 0 ? (conversions / clicks) * 100 : 0;\n\n  output.push({\n    json: {\n      ...root, // Preserva IDs do Notion e contexto\n      calculado: {\n        custo_real: parseFloat(cost.toFixed(2)),\n        impressoes: impressions,\n        cliques: clicks,\n        conversoes: conversions,\n        todas_conversoes: conversions,\n        cpa_atual: parseFloat(cpa.toFixed(2)),\n        cpa_alvo_google: Number(root.meta_valor || 0), // Meta comparativa do Notion\n        taxa_conversao: parseFloat(convRate.toFixed(2)),\n        ctr: parseFloat(ctr.toFixed(2)),\n        cpc: parseFloat(cpc.toFixed(2)),\n        score_otimizacao: \"N/A\", \n        status_aprendizado: data.learning_stage_info?.status || 'N/A'\n      }\n    }\n  });\n}\n\nreturn output;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1808,
+        -272
+      ],
+      "id": "77e07dee-535a-4b0b-925d-d85a9bffb2d6",
+      "name": "Code Cálculo Dados Meta",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('Get many database Campanhas').item.json.id }}",
+          "mode": "id"
+        },
+        "simple": false,
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "CPA Campanha|rich_text",
+              "textContent": "=R$ {{ $('Code Cálcula Métricas').item.json.investimento_7d }} (R$ {{ $('Code Cálcula Métricas').item.json.investimento_30d }})"
+            },
+            {
+              "key": "CPA da Campanha|number",
+              "numberValue": "={{ $('Code Cálcula Métricas').item.json.investimento_7d }}"
+            },
+            {
+              "key": "CPC Campanha|rich_text",
+              "textContent": "=R$  {{ $('Code Cálcula Métricas').item.json.cpc_7d }} (R$ {{ $('Code Cálcula Métricas').item.json.cpc_30d }})"
+            },
+            {
+              "key": "CPL Campanha|rich_text",
+              "textContent": "=R$ {{ $('Code Cálcula Métricas').item.json.cpl_7d }} (R$ {{ $('Code Cálcula Métricas').item.json.cpl_30d }})"
+            },
+            {
+              "key": "CPM Campanha|rich_text",
+              "textContent": "=R$ {{ $('Code Cálcula Métricas').item.json.cpm_7d }} (R$ {{ $('Code Cálcula Métricas').item.json.cpm_30d }})"
+            },
+            {
+              "key": "CTR Campanha|rich_text",
+              "textContent": "={{ $('Code Cálcula Métricas').item.json.ctr_7d }}% ({{ $('Code Cálcula Métricas').item.json.ctr_30d }}%)"
+            },
+            {
+              "key": "Taxa de Conversão|rich_text",
+              "textContent": "={{ $('Code Cálcula Métricas').item.json.taxa_conversao_7d }}% ({{ $('Code Cálcula Métricas').item.json.taxa_conversao_30d }}%)"
+            },
+            {
+              "key": "Impressões|rich_text",
+              "textContent": "={{ $('Code Cálcula Métricas').item.json.impressions_7d }} ({{ $('Code Cálcula Métricas').item.json.impressions_30d }})"
+            },
+            {
+              "key": "Métrica-Mãe 1D|number",
+              "numberValue": "={{ $if($('Code Unificar Períodos (D1, 3D, 7D)').isExecuted, $('Code Unificar Períodos (D1, 3D, 7D)').item.json.v_d1, 0) }}"
+            },
+            {
+              "key": "Métrica-Mãe 3D|number",
+              "numberValue": "={{ $if($('Code Unificar Períodos (D1, 3D, 7D)').isExecuted, $('Code Unificar Períodos (D1, 3D, 7D)').item.json.v_3d, 0) }}"
+            },
+            {
+              "key": "Métrica-Mãe 7D|number",
+              "numberValue": "={{ $if($('Code Unificar Períodos (D1, 3D, 7D)').isExecuted, $('Code Unificar Períodos (D1, 3D, 7D)').item.json.v_7d, 0) }}"
+            },
+            {
+              "key": "Total Investido Campanha|number",
+              "numberValue": "={{ $('Code Cálcula Métricas').item.json.investimento_30d }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        3040,
+        -384
+      ],
+      "id": "40e20806-fb8e-4e53-a46e-777ef4280b6f",
+      "name": "Update a database page",
+      "retryOnFail": true,
+      "credentials": {
+        "notionApi": {
+          "id": "KpPCTsYPAvGXGfp2",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        128,
+        -416
+      ],
+      "id": "bea5fb7d-5b81-475c-829d-292433f87c03",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        128,
+        -800
+      ],
+      "id": "4a87f85b-1c82-4d41-81eb-87c9b78ba276",
+      "name": "Schedule Trigger1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get many database Campanhas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Code Clean Campanhas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If D-2 exist1": {
+      "main": [
+        [
+          {
+            "node": "Merge Meta Ads",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "Merge Meta Ads",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Meta Ads": {
+      "main": [
+        [
+          {
+            "node": "Code Cálcula Métricas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Plataforma": {
+      "main": [
+        [
+          {
+            "node": "v23 Bloco 1 Core",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request Meta Ads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a database page Create Observation": {
+      "main": [
+        [
+          {
+            "node": "Update a database page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Valida Dados": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Valida Dados Meta": {
+      "main": [
+        [
+          {
+            "node": "If D-1 Exist Meta Ads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If D-1 Exist Meta Ads": {
+      "main": [
+        [
+          {
+            "node": "Code Cálculo Dados Meta",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request Meta Ads D-2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request Meta Ads": {
+      "main": [
+        [
+          {
+            "node": "Code Valida Dados Meta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Valida Dados D-2 Meta": {
+      "main": [
+        [
+          {
+            "node": "If D-2 exist1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request Meta Ads D-2": {
+      "main": [
+        [
+          {
+            "node": "Code Valida Dados D-2 Meta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code calculo desvio meta": {
+      "main": [
+        [
+          {
+            "node": "Code classificar status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code classificar status": {
+      "main": [
+        [
+          {
+            "node": "Code Preparar Payload de Observação",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Debug": {
+      "main": [
+        [
+          {
+            "node": "Create a database page Create Observation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Clean Campanhas": {
+      "main": [
+        [
+          {
+            "node": "Code prepara contexto para observação",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request Google Ontem (D1)": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request Google Ontem (D3)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request Google Ontem (D7)": {
+      "main": [
+        [
+          {
+            "node": "Code Unificar Períodos (D1, 3D, 7D)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request Google Ontem (D3)": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request Google Ontem (D7)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Code Cálcula Métricas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many database Campanhas": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Montar SQL": {
+      "main": [
+        [
+          {
+            "node": "Execute SQL inserir daily entry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute SQL inserir daily entry": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Preparar Payload de Observação": {
+      "main": [
+        [
+          {
+            "node": "Code Debug",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Cálcula Métricas": {
+      "main": [
+        [
+          {
+            "node": "Code Recupera Metas p Comparação",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Unificar Períodos (D1, 3D, 7D)": {
+      "main": [
+        [
+          {
+            "node": "Code Valida Dados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code prepara contexto para observação": {
+      "main": [
+        [
+          {
+            "node": "If Plataforma",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "v23 Bloco 1 Core": {
+      "main": [
+        [
+          {
+            "node": "v23 Bloco 2 Termos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "v23 Bloco 2 Termos": {
+      "main": [
+        [
+          {
+            "node": "v23 Bloco 3 Canais",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "v23 Bloco 3 Canais": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request Google Ontem (D1)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Recupera Metas p Comparação": {
+      "main": [
+        [
+          {
+            "node": "Code Prep Tendência",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Prep Tendência": {
+      "main": [
+        [
+          {
+            "node": "BigQuery Série Diária",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "BigQuery Série Diária": {
+      "main": [
+        [
+          {
+            "node": "Code Tendência Real",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Tendência Real": {
+      "main": [
+        [
+          {
+            "node": "Code calculo desvio meta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Cálculo Dados Meta": {
+      "main": [
+        [
+          {
+            "node": "Merge Meta Ads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update a database page": {
+      "main": [
+        [
+          {
+            "node": "Code Montar SQL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get many database Campanhas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger1": {
+      "main": [
+        [
+          {
+            "node": "Get many database Campanhas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": true,
+    "errorWorkflow": "UZ7sIE5cWrrO8xea"
+  },
+  "versionId": "fa2bb6ef-d682-4137-87d8-31893b6a9cb5",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp",
+    "instanceId": "305397df9a0eb50aabb90fb3f0fff1d7d74e7d343769e5f986243e1588b26e7b"
+  },
+  "nodeGroups": [],
+  "id": "W571K320aqIHsdtH",
+  "tags": []
+}

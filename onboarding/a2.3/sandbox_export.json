@@ -1,0 +1,1303 @@
+{
+  "id": "fzHjTyMcPc6Rnlb1",
+  "name": "Onb - Classifica Briefing Resumo Operacional",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "id": "a23-webhook",
+      "name": "[Onb A2.3] Webhook Briefing",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        160
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "a2.3-classifica-briefing",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "a23-secret",
+      "name": "[Onb A2.3] Validar Secret",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        160
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const ONB_WEBHOOK_SECRET = '<ONB_WEBHOOK_SECRET_redacted>';\nconst out = [];\nfor (const item of $input.all()) {\n  const headers = item.json.headers || {};\n  const lowerHeaders = {};\n  for (const [key, value] of Object.entries(headers)) lowerHeaders[String(key).toLowerCase()] = value;\n  const provided = String(lowerHeaders['x-onb-secret'] || '').trim();\n  out.push({ json: { ...item.json, onb_secret_valid: provided === ONB_WEBHOOK_SECRET } });\n}\nreturn out;"
+      }
+    },
+    {
+      "id": "a23-if-secret",
+      "name": "[Onb A2.3] Secret Valido?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        480,
+        160
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.onb_secret_valid }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              },
+              "rightValue": true
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "a23-401",
+      "name": "[Onb A2.3] Responder 401",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        720,
+        360
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: false, error: \"unauthorized\" } }}",
+        "options": {
+          "responseCode": 401
+        }
+      }
+    },
+    {
+      "id": "a23-payload",
+      "name": "[Onb A2.3] Validar Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        80
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const out = [];\nfor (const item of $input.all()) {\n  const body = item.json.body && typeof item.json.body === 'object' ? item.json.body : item.json;\n  const briefing = body.briefing_payload;\n  const errors = [];\n  if (!body.cliente_page_id || typeof body.cliente_page_id !== 'string') errors.push('cliente_page_id ausente');\n  if (!briefing || typeof briefing !== 'object' || Array.isArray(briefing) || Object.keys(briefing).length === 0) errors.push('briefing_payload invalido');\n  out.push({ json: { ...item.json, cliente_page_id: body.cliente_page_id, briefing_payload: briefing, payload_valid: errors.length === 0, payload_errors: errors } });\n}\nreturn out;"
+      }
+    },
+    {
+      "id": "a23-if-payload",
+      "name": "[Onb A2.3] Payload Valido?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        960,
+        80
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.payload_valid }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              },
+              "rightValue": true
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "a23-400",
+      "name": "[Onb A2.3] Responder 400",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1200,
+        280
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: false, error: \"invalid_payload\", details: $json.payload_errors } }}",
+        "options": {
+          "responseCode": 400
+        }
+      }
+    },
+    {
+      "id": "a23-cliente",
+      "name": "[Onb A2.3] Buscar Cliente",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1200,
+        0
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ \"https://api.notion.com/v1/pages/\" + $json.cliente_page_id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "notionApi",
+        "sendHeaders": true,
+        "specifyHeaders": "keypair",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Notion-Version",
+              "value": "2022-06-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json",
+              "neverError": false
+            }
+          }
+        }
+      },
+      "credentials": {
+        "notionApi": {
+          "id": "<credential_id_redacted>",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "id": "a23-if-classificado",
+      "name": "[Onb A2.3] Ja Classificado?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1440,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.properties['Classifica\\u00e7\\u00e3o do briefing']?.select?.name || '' }}",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              },
+              "rightValue": ""
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "a23-idempotente",
+      "name": "[Onb A2.3] Responder Idempotente",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1680,
+        -160
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: true, ja_classificado: true, classificacao: $json.properties['Classifica\\u00e7\\u00e3o do briefing'].select.name } }}",
+        "options": {
+          "responseCode": 200
+        }
+      }
+    },
+    {
+      "id": "a23-etapas",
+      "name": "[Onb A2.3] Buscar Etapas do Cliente",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1680,
+        80
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.notion.com/v1/databases/6eb4565b4f1d498c8b2978e0c80880fd/query",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "notionApi",
+        "sendHeaders": true,
+        "specifyHeaders": "keypair",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Notion-Version",
+              "value": "2022-06-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json",
+              "neverError": false
+            }
+          }
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { filter: { property: 'Cliente', relation: { contains: $('[Onb A2.3] Validar Payload').item.json.cliente_page_id } }, page_size: 100 } }}"
+      },
+      "credentials": {
+        "notionApi": {
+          "id": "<credential_id_redacted>",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "id": "a23-seq",
+      "name": "[Onb A2.3] Localizar Seq 7 e Seq 8",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1920,
+        80
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const pickTitle = (page) => {\n  for (const prop of Object.values(page.properties || {})) {\n    if (prop?.type === 'title') return (prop.title || []).map((item) => item.plain_text || '').join('').trim();\n  }\n  return '';\n};\nconst pickSelect = (prop) => prop?.select?.name || prop?.status?.name || '';\nconst pickNumber = (prop) => prop?.number ?? prop?.rollup?.number ?? null;\nconst pickPlainText = (prop) => (prop?.rich_text || []).map((item) => item.plain_text || '').join('').trim();\nconst richText = (text) => [{ type: 'text', text: { content: String(text || '').slice(0, 1900) } }];\nconst brIso = () => new Date().toLocaleString('sv-SE', { timeZone: 'America/Sao_Paulo' }).replace(' ', 'T') + '-03:00';\nconst base = $('[Onb A2.3] Validar Payload').item.json;\nconst cliente = $('[Onb A2.3] Buscar Cliente').item.json;\nconst results = $json.results || [];\nlet seq7 = null;\nlet seq8 = null;\nfor (const page of results) {\n  const props = page.properties || {};\n  const seq = pickNumber(props['Sequ\\u00eancia']) ?? pickNumber(props.Sequencia);\n  const etapa = {\n    page_id: page.id,\n    nome: pickTitle(page),\n    status: pickSelect(props.Status),\n    observacoes: pickPlainText(props['Observa\\u00e7\\u00f5es']) || pickPlainText(props.Observacoes) || '',\n  };\n  if (Number(seq) === 7) seq7 = etapa;\n  if (Number(seq) === 8) seq8 = etapa;\n}\nif (!seq7 || !seq8) throw new Error('Seq 7 ou Seq 8 nao encontrada para cliente ' + base.cliente_page_id);\nreturn [{ json: { ...base, cliente_nome: pickTitle(cliente), seq7, seq8 } }];"
+      }
+    },
+    {
+      "id": "a23-gemini",
+      "name": "[Onb A2.3] Avaliar via Gemini Pro",
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        2280,
+        80
+      ],
+      "parameters": {
+        "resource": "text",
+        "operation": "message",
+        "modelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "models/gemini-2.5-pro"
+        },
+        "messages": {
+          "values": [
+            {
+              "role": "user",
+              "content": "={{ JSON.stringify({ cliente_nome: $json.cliente_nome, briefing_payload: $json.briefing_payload }) }}"
+            }
+          ]
+        },
+        "simplify": true,
+        "options": {
+          "includeMergedResponse": true,
+          "systemMessage": "Voce e analista comercial-operacional de uma agencia de trafego pago. Recebe respostas de briefing do cliente em JSON. Tarefa: 1) Classificar em UMA das 3 classes: Aprovado, Aprovado com lacunas, Insuficiente. 2) Se Aprovado ou Aprovado com lacunas: gerar resumo operacional de 1 pagina com 7 secoes: oferta, publico, objecoes, diferencial, concorrentes, metas, riscos. Criterios: Aprovado: campos mandatorios todos presentes e claros (contato, oferta principal, objetivo, orcamento, concorrentes, canais atuais, processo comercial). Aprovado com lacunas: mandatorios presentes mas com falta de info nao-critica (ex: detalhes incompletos em 1-2 campos secundarios). Lista as lacunas. Insuficiente: faltam campos mandatorios criticos ou informacao tao vaga que nao da pra operar. Lista as lacunas criticas. Resposta APENAS JSON valido, sem markdown, sem comentarios externos. Schema: { \"classificacao\": \"Aprovado\" | \"Aprovado com lacunas\" | \"Insuficiente\", \"justificativa\": \"<frase curta>\", \"lacunas\": [\"<descricao>\", ...], \"resumo_operacional\": { \"oferta\": \"...\", \"publico\": \"...\", \"objecoes\": \"...\", \"diferencial\": \"...\", \"concorrentes\": \"...\", \"metas\": \"...\", \"riscos\": \"...\" } }",
+          "temperature": 0.1,
+          "maxOutputTokens": 2048
+        }
+      },
+      "credentials": {
+        "googlePalmApi": {
+          "id": "<GEMINI_CREDENTIAL_ID_redacted>",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      },
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "waitBetweenTries": 2000
+    },
+    {
+      "id": "a23-normalizar",
+      "name": "[Onb A2.3] Normalizar Decisao",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2640,
+        80
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const pickText = (data) => {\n  if (typeof data.text === 'string' && data.text.trim()) return data.text;\n  if (typeof data.mergedResponse === 'string' && data.mergedResponse.trim()) return data.mergedResponse;\n  if (Array.isArray(data.content?.parts)) return data.content.parts.map((part) => part.text || '').join('');\n  if (typeof data.content === 'string') return data.content;\n  return '';\n};\nconst prev = $('[Onb A2.3] Localizar Seq 7 e Seq 8').item.json;\nconst raw = pickText($json).replace(new RegExp('\\\\x60{3}json|\\\\x60{3}', 'g'), '').replace(/\\*\\*/g, '').trim();\nlet parsed;\ntry { parsed = JSON.parse(raw); } catch (error) { parsed = null; }\nconst allowed = new Set(['Aprovado', 'Aprovado com lacunas', 'Insuficiente']);\nconst hasResumo = (obj) => obj && typeof obj === 'object' && ['oferta', 'publico', 'objecoes', 'diferencial', 'concorrentes', 'metas', 'riscos'].every((key) => typeof obj[key] === 'string');\nlet decisao = { classificacao: 'Insuficiente', justificativa: 'Avaliacao automatica falhou', lacunas: ['Erro tecnico'], resumo_operacional: null };\nif (parsed && allowed.has(parsed.classificacao)) {\n  const classificacao = parsed.classificacao;\n  const resumo = classificacao === 'Insuficiente' ? null : (hasResumo(parsed.resumo_operacional) ? parsed.resumo_operacional : null);\n  if (classificacao === 'Insuficiente' || resumo) {\n    decisao = {\n      classificacao,\n      justificativa: String(parsed.justificativa || ''),\n      lacunas: Array.isArray(parsed.lacunas) ? parsed.lacunas.map((x) => String(x)).filter(Boolean) : [],\n      resumo_operacional: resumo,\n    };\n  }\n}\nconst modo = decisao.classificacao === 'Aprovado' ? 'APROVADO' : decisao.classificacao === 'Aprovado com lacunas' ? 'LACUNAS' : 'INSUFICIENTE';\nreturn [{ json: { ...prev, decisao, modo } }];"
+      }
+    },
+    {
+      "id": "a23-switch-classe",
+      "name": "[Onb A2.3] Roteador por Classe",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        3000,
+        120
+      ],
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "outputKey": "APROVADO",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.modo }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "rightValue": "APROVADO"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "outputKey": "LACUNAS",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.modo }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "rightValue": "LACUNAS"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "outputKey": "INSUFICIENTE",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.modo }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "rightValue": "INSUFICIENTE"
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "none"
+        }
+      }
+    },
+    {
+      "id": "a23-prep-aprovado",
+      "name": "[Onb A2.3] Preparar Atualizacoes Aprovado",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3240,
+        -40
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const pickTitle = (page) => {\n  for (const prop of Object.values(page.properties || {})) {\n    if (prop?.type === 'title') return (prop.title || []).map((item) => item.plain_text || '').join('').trim();\n  }\n  return '';\n};\nconst pickSelect = (prop) => prop?.select?.name || prop?.status?.name || '';\nconst pickNumber = (prop) => prop?.number ?? prop?.rollup?.number ?? null;\nconst pickPlainText = (prop) => (prop?.rich_text || []).map((item) => item.plain_text || '').join('').trim();\nconst richText = (text) => [{ type: 'text', text: { content: String(text || '').slice(0, 1900) } }];\nconst brIso = () => new Date().toLocaleString('sv-SE', { timeZone: 'America/Sao_Paulo' }).replace(' ', 'T') + '-03:00';\nconst iso = brIso();\nconst classe = $json.decisao.classificacao;\nconst resumo = $json.decisao.resumo_operacional || {};\nconst lacunas = ($json.decisao.lacunas || []).join(', ');\nconst seq7Obs = ($json.seq7.observacoes || '') + '\\nA2.3 classificou em ' + classe + ' em ' + iso + '.';\nconst seq8Obs = ($json.seq8.observacoes || '') + '\\nResumo gerado por A2.3 em ' + iso + '. Sub-pagina anexada ao cliente.';\nconst blockParagraph = (text) => ({ object: 'block', type: 'paragraph', paragraph: { rich_text: richText(text) } });\nconst heading = (text) => ({ object: 'block', type: 'heading_2', heading_2: { rich_text: richText(text) } });\nconst resumoChildren = [\n  ['Oferta', resumo.oferta],\n  ['Publico', resumo.publico],\n  ['Objecoes', resumo.objecoes],\n  ['Diferencial', resumo.diferencial],\n  ['Concorrentes', resumo.concorrentes],\n  ['Metas', resumo.metas],\n  ['Riscos', resumo.riscos],\n].flatMap(([title, text]) => [heading(title), blockParagraph(text || '-')]);\nconst originalJson = JSON.stringify($json.briefing_payload, null, 2).slice(0, 1800);\nconst originalChildren = [\n  heading('Payload bruto'),\n  { object: 'block', type: 'code', code: { language: 'json', rich_text: richText(originalJson) } },\n];\nreturn [{ json: {\n  ...$json,\n  cliente_update_body: { properties: { 'Classifica\\u00e7\\u00e3o do briefing': { select: { name: classe } } } },\n  resumo_body: { parent: { page_id: $json.cliente_page_id }, properties: { title: { title: [{ text: { content: 'Resumo Operacional do Briefing' } }] } }, children: resumoChildren },\n  original_body: { parent: { page_id: $json.cliente_page_id }, properties: { title: { title: [{ text: { content: 'Briefing original (resposta do Form)' } }] } }, children: originalChildren },\n  seq7_update_body: { properties: { Status: { select: { name: 'Conclu\\u00eddo' } }, 'Observa\\u00e7\\u00f5es': { rich_text: richText(seq7Obs) } } },\n  seq8_update_body: { properties: { Status: { select: { name: 'Conclu\\u00eddo' } }, 'Observa\\u00e7\\u00f5es': { rich_text: richText(seq8Obs) } } },\n  text: classe === 'Aprovado'\n    ? '\\u2705 Cliente ' + $json.cliente_nome + ' aprovado: resumo no Notion.'\n    : '\\u26a0\\ufe0f Cliente ' + $json.cliente_nome + ' aprovado com lacunas: ' + (lacunas || 'lacunas nao especificadas') + '. Esclarecimento curto antes da call. Resumo no Notion.'\n} }];"
+      }
+    },
+    {
+      "id": "a23-set-cliente-aprovado",
+      "name": "[Onb A2.3] Setar Classificacao no Cliente",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        3480,
+        -40
+      ],
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ \"https://api.notion.com/v1/pages/\" + $json.cliente_page_id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "notionApi",
+        "sendHeaders": true,
+        "specifyHeaders": "keypair",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Notion-Version",
+              "value": "2022-06-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json",
+              "neverError": false
+            }
+          }
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.cliente_update_body }}"
+      },
+      "credentials": {
+        "notionApi": {
+          "id": "<credential_id_redacted>",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "id": "a23-criar-resumo",
+      "name": "[Onb A2.3] Criar Sub-pagina Resumo Operacional",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        3720,
+        -40
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.notion.com/v1/pages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "notionApi",
+        "sendHeaders": true,
+        "specifyHeaders": "keypair",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Notion-Version",
+              "value": "2022-06-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json",
+              "neverError": false
+            }
+          }
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ $('[Onb A2.3] Preparar Atualizacoes Aprovado').item.json.resumo_body }}"
+      },
+      "credentials": {
+        "notionApi": {
+          "id": "<credential_id_redacted>",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "id": "a23-criar-original",
+      "name": "[Onb A2.3] Criar Sub-pagina Briefing Original",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        3960,
+        -40
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.notion.com/v1/pages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "notionApi",
+        "sendHeaders": true,
+        "specifyHeaders": "keypair",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Notion-Version",
+              "value": "2022-06-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json",
+              "neverError": false
+            }
+          }
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ $('[Onb A2.3] Preparar Atualizacoes Aprovado').item.json.original_body }}"
+      },
+      "credentials": {
+        "notionApi": {
+          "id": "<credential_id_redacted>",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "id": "a23-update-seq7",
+      "name": "[Onb A2.3] Atualizar Seq 7",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        4200,
+        -40
+      ],
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ 'https://api.notion.com/v1/pages/' + $('[Onb A2.3] Preparar Atualizacoes Aprovado').item.json.seq7.page_id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "notionApi",
+        "sendHeaders": true,
+        "specifyHeaders": "keypair",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Notion-Version",
+              "value": "2022-06-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json",
+              "neverError": false
+            }
+          }
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ $('[Onb A2.3] Preparar Atualizacoes Aprovado').item.json.seq7_update_body }}"
+      },
+      "credentials": {
+        "notionApi": {
+          "id": "<credential_id_redacted>",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "id": "a23-update-seq8",
+      "name": "[Onb A2.3] Atualizar Seq 8",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        4440,
+        -40
+      ],
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ 'https://api.notion.com/v1/pages/' + $('[Onb A2.3] Preparar Atualizacoes Aprovado').item.json.seq8.page_id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "notionApi",
+        "sendHeaders": true,
+        "specifyHeaders": "keypair",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Notion-Version",
+              "value": "2022-06-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json",
+              "neverError": false
+            }
+          }
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ $('[Onb A2.3] Preparar Atualizacoes Aprovado').item.json.seq8_update_body }}"
+      },
+      "credentials": {
+        "notionApi": {
+          "id": "<credential_id_redacted>",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "id": "a23-msg-aprovado",
+      "name": "[Onb A2.3] Montar Telegram Aprovado",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4680,
+        -40
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const p = $('[Onb A2.3] Preparar Atualizacoes Aprovado').item.json;\nconst resumo = $('[Onb A2.3] Criar Sub-pagina Resumo Operacional').item.json;\nconst original = $('[Onb A2.3] Criar Sub-pagina Briefing Original').item.json;\nreturn [{ json: { ...p, resumo_page_id: resumo.id, original_page_id: original.id, sub_paginas: [resumo.id, original.id], text: p.text } }];"
+      }
+    },
+    {
+      "id": "a23-tg-aprovado",
+      "name": "[Onb A2.3] Telegram Aprovado/Lacunas",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        4920,
+        -40
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "<TELEGRAM_CHAT_ID_redacted>",
+        "text": "={{ String($json.text || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }}",
+        "additionalFields": {
+          "parse_mode": "HTML",
+          "appendAttribution": false
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "<TELEGRAM_CREDENTIAL_ID_redacted>",
+          "name": "Telegram account"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "id": "a23-200-aprovado",
+      "name": "[Onb A2.3] Responder 200 Aprovado",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        5160,
+        -40
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: true, classificacao: $('[Onb A2.3] Montar Telegram Aprovado').item.json.decisao.classificacao, cliente_page_id: $('[Onb A2.3] Montar Telegram Aprovado').item.json.cliente_page_id, sub_paginas: $('[Onb A2.3] Montar Telegram Aprovado').item.json.sub_paginas || [] } }}",
+        "options": {
+          "responseCode": 200
+        }
+      }
+    },
+    {
+      "id": "a23-prep-insuf",
+      "name": "[Onb A2.3] Preparar Atualizacoes Insuficiente",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3240,
+        320
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const pickTitle = (page) => {\n  for (const prop of Object.values(page.properties || {})) {\n    if (prop?.type === 'title') return (prop.title || []).map((item) => item.plain_text || '').join('').trim();\n  }\n  return '';\n};\nconst pickSelect = (prop) => prop?.select?.name || prop?.status?.name || '';\nconst pickNumber = (prop) => prop?.number ?? prop?.rollup?.number ?? null;\nconst pickPlainText = (prop) => (prop?.rich_text || []).map((item) => item.plain_text || '').join('').trim();\nconst richText = (text) => [{ type: 'text', text: { content: String(text || '').slice(0, 1900) } }];\nconst brIso = () => new Date().toLocaleString('sv-SE', { timeZone: 'America/Sao_Paulo' }).replace(' ', 'T') + '-03:00';\nconst iso = brIso();\nconst classe = $json.decisao.classificacao;\nconst lacunas = ($json.decisao.lacunas || []).join(', ') || 'lacunas criticas nao especificadas';\nconst seq7Obs = ($json.seq7.observacoes || '') + '\\nA2.3 classificou em ' + classe + ' em ' + iso + '.';\nconst originalJson = JSON.stringify($json.briefing_payload, null, 2).slice(0, 1800);\nconst originalChildren = [\n  { object: 'block', type: 'heading_2', heading_2: { rich_text: richText('Payload bruto') } },\n  { object: 'block', type: 'code', code: { language: 'json', rich_text: richText(originalJson) } },\n];\nreturn [{ json: {\n  ...$json,\n  cliente_update_body: { properties: { 'Classifica\\u00e7\\u00e3o do briefing': { select: { name: 'Insuficiente' } } } },\n  original_body: { parent: { page_id: $json.cliente_page_id }, properties: { title: { title: [{ text: { content: 'Briefing original (resposta do Form)' } }] } }, children: originalChildren },\n  seq7_update_body: { properties: { Status: { select: { name: 'Conclu\\u00eddo' } }, 'Observa\\u00e7\\u00f5es': { rich_text: richText(seq7Obs) } } },\n  text: '\\u274c Cliente ' + $json.cliente_nome + ' classificado Insuficiente: ' + lacunas + '. A2.4 (Lote 3) fara microcall quando estiver no ar.'\n} }];"
+      }
+    },
+    {
+      "id": "a23-set-insuf",
+      "name": "[Onb A2.3] Setar Classificacao Insuficiente",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        3480,
+        320
+      ],
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ \"https://api.notion.com/v1/pages/\" + $json.cliente_page_id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "notionApi",
+        "sendHeaders": true,
+        "specifyHeaders": "keypair",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Notion-Version",
+              "value": "2022-06-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json",
+              "neverError": false
+            }
+          }
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.cliente_update_body }}"
+      },
+      "credentials": {
+        "notionApi": {
+          "id": "<credential_id_redacted>",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "id": "a23-original-insuf",
+      "name": "[Onb A2.3] Criar Sub-pagina Briefing Original Insuf",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        3720,
+        320
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.notion.com/v1/pages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "notionApi",
+        "sendHeaders": true,
+        "specifyHeaders": "keypair",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Notion-Version",
+              "value": "2022-06-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json",
+              "neverError": false
+            }
+          }
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ $('[Onb A2.3] Preparar Atualizacoes Insuficiente').item.json.original_body }}"
+      },
+      "credentials": {
+        "notionApi": {
+          "id": "<credential_id_redacted>",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "id": "a23-update-seq7-insuf",
+      "name": "[Onb A2.3] Atualizar Seq 7 Insuf",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        3960,
+        320
+      ],
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ 'https://api.notion.com/v1/pages/' + $('[Onb A2.3] Preparar Atualizacoes Insuficiente').item.json.seq7.page_id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "notionApi",
+        "sendHeaders": true,
+        "specifyHeaders": "keypair",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Notion-Version",
+              "value": "2022-06-28"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json",
+              "neverError": false
+            }
+          }
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ $('[Onb A2.3] Preparar Atualizacoes Insuficiente').item.json.seq7_update_body }}"
+      },
+      "credentials": {
+        "notionApi": {
+          "id": "<credential_id_redacted>",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "id": "a23-msg-insuf",
+      "name": "[Onb A2.3] Montar Telegram Insuf",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4200,
+        320
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const p = $('[Onb A2.3] Preparar Atualizacoes Insuficiente').item.json;\nconst original = $('[Onb A2.3] Criar Sub-pagina Briefing Original Insuf').item.json;\nreturn [{ json: { ...p, original_page_id: original.id, sub_paginas: [original.id], text: p.text } }];"
+      }
+    },
+    {
+      "id": "a23-tg-insuf",
+      "name": "[Onb A2.3] Telegram Insuficiente",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        4440,
+        320
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "<TELEGRAM_CHAT_ID_redacted>",
+        "text": "={{ String($json.text || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }}",
+        "additionalFields": {
+          "parse_mode": "HTML",
+          "appendAttribution": false
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "<TELEGRAM_CREDENTIAL_ID_redacted>",
+          "name": "Telegram account"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "id": "a23-200-insuf",
+      "name": "[Onb A2.3] Responder 200 Insuficiente",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        4680,
+        320
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: true, classificacao: $('[Onb A2.3] Montar Telegram Insuf').item.json.decisao.classificacao, cliente_page_id: $('[Onb A2.3] Montar Telegram Insuf').item.json.cliente_page_id, sub_paginas: $('[Onb A2.3] Montar Telegram Insuf').item.json.sub_paginas || [] } }}",
+        "options": {
+          "responseCode": 200
+        }
+      }
+    }
+  ],
+  "connections": {
+    "[Onb A2.3] Webhook Briefing": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.3] Validar Secret",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.3] Validar Secret": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.3] Secret Valido?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.3] Secret Valido?": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.3] Validar Payload",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "[Onb A2.3] Responder 401",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.3] Validar Payload": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.3] Payload Valido?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.3] Payload Valido?": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.3] Buscar Cliente",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "[Onb A2.3] Responder 400",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.3] Buscar Cliente": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.3] Ja Classificado?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.3] Ja Classificado?": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.3] Responder Idempotente",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "[Onb A2.3] Buscar Etapas do Cliente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.3] Buscar Etapas do Cliente": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.3] Localizar Seq 7 e Seq 8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.3] Localizar Seq 7 e Seq 8": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.3] Avaliar via Gemini Pro",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.3] Avaliar via Gemini Pro": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.3] Normalizar Decisao",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.3] Normalizar Decisao": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.3] Roteador por Classe",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.3] Roteador por Classe": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.3] Preparar Atualizacoes Aprovado",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "[Onb A2.3] Preparar Atualizacoes Aprovado",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "[Onb A2.3] Preparar Atualizacoes Insuficiente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.3] Preparar Atualizacoes Aprovado": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.3] Setar Classificacao no Cliente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.3] Setar Classificacao no Cliente": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.3] Criar Sub-pagina Resumo Operacional",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.3] Criar Sub-pagina Resumo Operacional": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.3] Criar Sub-pagina Briefing Original",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.3] Criar Sub-pagina Briefing Original": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.3] Atualizar Seq 7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.3] Atualizar Seq 7": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.3] Atualizar Seq 8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.3] Atualizar Seq 8": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.3] Montar Telegram Aprovado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.3] Montar Telegram Aprovado": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.3] Telegram Aprovado/Lacunas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.3] Telegram Aprovado/Lacunas": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.3] Responder 200 Aprovado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.3] Preparar Atualizacoes Insuficiente": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.3] Setar Classificacao Insuficiente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.3] Setar Classificacao Insuficiente": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.3] Criar Sub-pagina Briefing Original Insuf",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.3] Criar Sub-pagina Briefing Original Insuf": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.3] Atualizar Seq 7 Insuf",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.3] Atualizar Seq 7 Insuf": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.3] Montar Telegram Insuf",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.3] Montar Telegram Insuf": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.3] Telegram Insuficiente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.3] Telegram Insuficiente": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.3] Responder 200 Insuficiente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true,
+    "timezone": "America/Sao_Paulo"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {}
+}

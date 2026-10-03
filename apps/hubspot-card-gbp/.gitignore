@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.hs-cache/
+
+# Config profiles carregam accountId (segredo por conta) — nunca commitar valores reais.
+# Commitar apenas o template hsprofile.dev.json.example. Rode `hs project profile add` local.
+src/hsprofile.*.json
+!src/hsprofile.*.json.example
+
+.env
+.env.*
+!.env.example

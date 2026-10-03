@@ -1,0 +1,624 @@
+{
+  "name": "sw metricas conjuntos",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "execution_id",
+              "type": "any"
+            },
+            {
+              "name": "client_id",
+              "type": "any"
+            },
+            {
+              "name": "source_execution_id",
+              "type": "any"
+            }
+          ]
+        }
+      },
+      "id": "53b3d58c-9a6a-40de-883c-a4eeeb7dc07d",
+      "name": "Start",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        288,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "19fb65e5-c72b-81e0-a3ad-c8017d4275e5",
+          "__regex": "^([0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12})"
+        },
+        "returnAll": true,
+        "simple": false,
+        "filterType": "manual",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "key": "Campanha|relation",
+              "condition": "is_not_empty"
+            },
+            {
+              "key": "Arquivar|checkbox",
+              "condition": "equals"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "9b7f4f3d-12e8-4c0c-8431-4fbd3976d1b2",
+      "name": "Get database Conjuntos",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        528,
+        304
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "notionApi": {
+          "id": "KpPCTsYPAvGXGfp2",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const execution_id = $(\"Start\").first().json.execution_id;\nconst source_execution_id = $(\"Start\").first().json.source_execution_id ?? null;\nconst client_id_filter = $(\"Start\").first().json.client_id ?? null;\n\nconst pickPlain = (prop) => {\n  if (!prop) return null;\n  if (prop.title?.length) return prop.title[0].plain_text?.trim() || null;\n  if (prop.rich_text?.length) return prop.rich_text[0].plain_text?.trim() || null;\n  return null;\n};\n\nconst pickNumber = (prop) => {\n  const value = prop?.number;\n  return value === null || value === undefined ? null : Number(value);\n};\n\nconst pickScalar = (prop) => {\n  if (!prop) return null;\n  if (prop.number !== undefined && prop.number !== null) return prop.number;\n  if (prop.rich_text?.length) return prop.rich_text[0].plain_text?.trim() || null;\n  if (prop.title?.length) return prop.title[0].plain_text?.trim() || null;\n  if (prop.rollup) {\n    if (prop.rollup.type === \"number\") return prop.rollup.number;\n    if (prop.rollup.type === \"date\") return prop.rollup.date?.start || null;\n    if (prop.rollup.type === \"array\") {\n      const first = prop.rollup.array?.[0];\n      if (!first) return null;\n      if (first.type === \"number\") return first.number;\n      if (first.type === \"rich_text\") return first.rich_text?.[0]?.plain_text?.trim() || null;\n      if (first.type === \"title\") return first.title?.[0]?.plain_text?.trim() || null;\n      if (first.type === \"formula\") {\n        if (first.formula?.type === \"number\") return first.formula.number;\n        if (first.formula?.type === \"string\") return first.formula.string?.trim() || null;\n      }\n    }\n  }\n  if (prop.formula) {\n    if (prop.formula.type === \"number\") return prop.formula.number;\n    if (prop.formula.type === \"string\") return prop.formula.string?.trim() || null;\n  }\n  return null;\n};\n\nconst pickIdString = (prop) => {\n  const value = pickScalar(prop);\n  if (value === null || value === undefined) return null;\n  const normalized = String(value).trim();\n  if (!normalized) return null;\n  return normalized.replace(/[^\\d]/g, \"\") || normalized;\n};\n\nreturn $input.all().flatMap((item) => {\n  const props = item.json.properties || {};\n\n  const adset_id_google = pickIdString(props[\"adset_id_google\"]);\n  const adset_id_meta = pickIdString(props[\"adset_id_meta\"]);\n  const customer_id_google = pickIdString(props[\"customer_id_google\"]);\n  const meta_account_id = pickIdString(props[\"meta_account_id\"]);\n  const client_slug = pickPlain(props[\"sigla_cliente\"]);\n\n  if (client_id_filter && client_slug && client_id_filter !== client_slug) {\n    return [];\n  }\n\n  const platform = adset_id_google ? \"google_ads\" : (adset_id_meta ? \"meta_ads\" : null);\n  if (!platform) return [];\n\n  return [{\n    json: {\n      execution_id,\n      source_execution_id,\n      entity_type: \"adset\",\n      notion_page_id: item.json.id,\n      nome: pickPlain(props[\"Nome\"]),\n      campaign_id: pickPlain(props[\"campaign_id\"]),\n      platform,\n      adset_id_google,\n      adset_id_meta,\n      customer_id_google,\n      meta_account_id\n    }\n  }];\n});"
+      },
+      "id": "503e5dea-583f-45ff-8406-8341185aab08",
+      "name": "Code Clean Conjuntos",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        768,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "c207d256-79c2-4118-ae74-4b35c0c36082",
+      "name": "Loop Conjuntos",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        992,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "operator": {
+                "operation": "equals",
+                "type": "string"
+              },
+              "rightValue": "google_ads",
+              "leftValue": "={{ $json.platform }}"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "2f192666-a3cb-4680-81d8-2c276eaeee65",
+      "name": "If Plataforma",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1200,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "operator": {
+                "operation": "true",
+                "type": "boolean"
+              },
+              "rightValue": true,
+              "leftValue": "={{ !!$json.customer_id_google }}",
+              "id": "56d8b853-5918-4827-94f1-bb06525e6538"
+            },
+            {
+              "operator": {
+                "operation": "true",
+                "type": "boolean"
+              },
+              "rightValue": true,
+              "leftValue": "={{ !!$json.adset_id_google }}",
+              "id": "4bdd5c2d-fbf8-4eb2-8909-b7afeb1d7fed"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "68fb04d6-ff9a-40d0-a677-7eb6bf9577ff",
+      "name": "If IDs Google",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1424,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "operator": {
+                "operation": "true",
+                "type": "boolean"
+              },
+              "rightValue": true,
+              "leftValue": "={{ !!$json.meta_account_id }}"
+            },
+            {
+              "operator": {
+                "operation": "true",
+                "type": "boolean"
+              },
+              "rightValue": true,
+              "leftValue": "={{ !!$json.adset_id_meta }}"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a57bc431-9d32-4f2c-913d-ee22611b3df7",
+      "name": "If IDs Meta",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1424,
+        496
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://googleads.googleapis.com/v23/customers/{{ $json.customer_id_google }}/googleAds:search",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleAdsOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "developer-token",
+              "value": "o0hGRr2vcX3jGF6aI3a_0w"
+            },
+            {
+              "name": "login-customer-id",
+              "value": "7595536100"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"query\": \"SELECT ad_group.id, ad_group.name, metrics.cost_micros, metrics.conversions, metrics.conversions_value, metrics.clicks, metrics.impressions FROM ad_group WHERE ad_group.id = '{{ $json.adset_id_google }}' AND segments.date DURING YESTERDAY\"\n}",
+        "options": {}
+      },
+      "id": "5f14d2d9-c424-49ec-8d2c-27e573fbd028",
+      "name": "HTTP Request Google Adset Metrics",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1648,
+        256
+      ],
+      "credentials": {
+        "googleAdsOAuth2Api": {
+          "id": "78Fta7kyLfG3QHUT",
+          "name": "Google Ads account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://graph.facebook.com/v21.0/{{ $json.meta_account_id }}/insights",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "facebookGraphApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "fields",
+              "value": "adset_id,adset_name,spend,impressions,clicks,actions,action_values,frequency"
+            },
+            {
+              "name": "level",
+              "value": "adset"
+            },
+            {
+              "name": "time_range",
+              "value": "={\"since\":\"{{ \\.minus({days: 1}).toFormat('yyyy-MM-dd') }}\",\"until\":\"{{ \\.minus({days: 1}).toFormat('yyyy-MM-dd') }}\"}"
+            },
+            {
+              "name": "filtering",
+              "value": "=[{\"field\":\"adset.id\",\"operator\":\"EQUAL\",\"value\":\"{{ $json.adset_id_meta }}\"}]"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "894c45bf-eff7-48af-b04b-0b8cc3966e9c",
+      "name": "HTTP Request Meta Adset Metrics",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1648,
+        496
+      ],
+      "credentials": {
+        "facebookGraphApi": {
+          "id": "jRLBlTy4dwFjiuOS",
+          "name": "Facebook Graph account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const source = $input.first().json;\nconst fromGoogle = source.results !== undefined || source.fieldMask !== undefined || source.queryResourceConsumption !== undefined;\n\nlet impressions = 0;\nlet clicks = 0;\nlet cost_brl = 0;\nlet conversions = 0;\nlet revenue = 0;\nlet frequency = null;\n\nif (fromGoogle) {\n  const payload = source;\n  const base = $(\"If IDs Google\").first().json;\n  const metrics = payload.results?.[0]?.metrics || {};\n  impressions = Number(metrics.impressions || 0);\n  clicks = Number(metrics.clicks || 0);\n  cost_brl = Number(metrics.costMicros || 0) / 1000000;\n  conversions = Number(metrics.conversions || 0);\n  revenue = Number(metrics.conversionsValue || 0);\n  return [{\n    json: {\n      ...base,\n      platform: \"google_ads\",\n      metrics: {}\n    }\n  }].map((item) => {\n    item.json.metrics = {\n      impressions,\n      clicks,\n      cost_brl: Number(cost_brl.toFixed(2)),\n      conversions,\n      revenue: Number(revenue.toFixed(2)),\n      ctr: impressions > 0 ? Number((clicks / impressions).toFixed(6)) : 0,\n      cpc: clicks > 0 ? Number((cost_brl / clicks).toFixed(2)) : 0,\n      cpm: impressions > 0 ? Number((cost_brl / impressions * 1000).toFixed(2)) : 0,\n      cpa: conversions > 0 ? Number((cost_brl / conversions).toFixed(2)) : 0,\n      roas: cost_brl > 0 ? Number((revenue / cost_brl).toFixed(4)) : 0,\n      conversion_rate: clicks > 0 ? Number((conversions / clicks).toFixed(6)) : 0,\n      frequency\n    };\n    return item;\n  });\n}\n\nconst payload = source.data?.[0] || {};\nconst base = $(\"If IDs Meta\").first().json;\nimpressions = Number(payload.impressions || 0);\nclicks = Number(payload.clicks || 0);\ncost_brl = Number(payload.spend || 0);\nfrequency = payload.frequency === undefined ? null : Number(payload.frequency || 0);\n\nconst actionMap = Object.fromEntries((payload.actions || []).map((entry) => [entry.action_type, Number(entry.value || 0)]));\nconst valueMap = Object.fromEntries((payload.action_values || []).map((entry) => [entry.action_type, Number(entry.value || 0)]));\nconversions = actionMap['offsite_conversion.fb_pixel_purchase'] || actionMap['purchase'] || actionMap['lead'] || actionMap['omni_purchase'] || 0;\nrevenue = valueMap['offsite_conversion.fb_pixel_purchase'] || valueMap['purchase'] || valueMap['omni_purchase'] || 0;\n\nreturn [{\n  json: {\n    ...base,\n    platform: \"meta_ads\",\n    metrics: {\n      impressions,\n      clicks,\n      cost_brl: Number(cost_brl.toFixed(2)),\n      conversions,\n      revenue: Number(revenue.toFixed(2)),\n      ctr: impressions > 0 ? Number((clicks / impressions).toFixed(6)) : 0,\n      cpc: clicks > 0 ? Number((cost_brl / clicks).toFixed(2)) : 0,\n      cpm: impressions > 0 ? Number((cost_brl / impressions * 1000).toFixed(2)) : 0,\n      cpa: conversions > 0 ? Number((cost_brl / conversions).toFixed(2)) : 0,\n      roas: cost_brl > 0 ? Number((revenue / cost_brl).toFixed(4)) : 0,\n      conversion_rate: clicks > 0 ? Number((conversions / clicks).toFixed(6)) : 0,\n      frequency\n    }\n  }\n}];"
+      },
+      "id": "d71be61d-6ace-41fa-9177-eea74e5043bd",
+      "name": "Code Normalizar Metricas Conjuntos",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1888,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $json.notion_page_id }}",
+          "mode": "id",
+          "__regex": "^([0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12})"
+        },
+        "simple": false,
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Impressões|number",
+              "numberValue": "={{ $json.metrics.impressions }}"
+            },
+            {
+              "key": "Cliques|number",
+              "numberValue": "={{ $json.metrics.clicks }}"
+            },
+            {
+              "key": "CTR|number",
+              "numberValue": "={{ $json.metrics.ctr }}"
+            },
+            {
+              "key": "CPC|number",
+              "numberValue": "={{ $json.metrics.cpc }}"
+            },
+            {
+              "key": "CPM|number",
+              "numberValue": "={{ $json.metrics.cpm }}"
+            },
+            {
+              "key": "Conversões|number",
+              "numberValue": "={{ $json.metrics.conversions }}"
+            },
+            {
+              "key": "CPA|number",
+              "numberValue": "={{ $json.metrics.cpa }}"
+            },
+            {
+              "key": "Receita|number",
+              "numberValue": "={{ $json.metrics.revenue }}"
+            },
+            {
+              "key": "ROAS|number",
+              "numberValue": "={{ $json.metrics.roas }}"
+            },
+            {
+              "key": "Taxa de Conversão|number",
+              "numberValue": "={{ $json.metrics.conversion_rate }}"
+            },
+            {
+              "key": "Valor Investido|number",
+              "numberValue": "={{ $json.metrics.cost_brl }}"
+            },
+            {
+              "key": "Frequência|number",
+              "numberValue": "={{ $json.metrics.frequency }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "7f8eb6a6-0374-4f42-a300-b09f73cab63c",
+      "name": "Update database page Conjuntos",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        2144,
+        400
+      ],
+      "credentials": {
+        "notionApi": {
+          "id": "KpPCTsYPAvGXGfp2",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { ...$json, status: \"missing_id\", message: \"IDs obrigatórios ausentes\" } }];"
+      },
+      "id": "315df520-b657-4318-9de3-9768042eeae5",
+      "name": "Code Missing ID Conjuntos",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1648,
+        688
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { execution_id: $json.execution_id, entity_type: \"adset\", notion_page_id: $json.notion_page_id, platform: $json.platform, status: $json.status || \"success\", message: $json.message || \"Conjunto atualizado com sucesso\", updated_fields_count: 12 } }];"
+      },
+      "id": "51613ce5-f7ee-484b-a4c9-a4105744de77",
+      "name": "Code Resultado Final Conjuntos",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2384,
+        400
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "8ad109d0-1d83-4597-a7ab-1f67263f6406",
+      "name": "Fim Subworkflow Conjuntos",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        2640,
+        736
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "If IDs Google": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request Google Adset Metrics",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code Missing ID Conjuntos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Get database Conjuntos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fim Subworkflow Conjuntos": {
+      "main": [
+        [
+          {
+            "node": "Loop Conjuntos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If IDs Meta": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request Meta Adset Metrics",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code Missing ID Conjuntos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get database Conjuntos": {
+      "main": [
+        [
+          {
+            "node": "Code Clean Conjuntos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request Meta Adset Metrics": {
+      "main": [
+        [
+          {
+            "node": "Code Normalizar Metricas Conjuntos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Conjuntos": {
+      "main": [
+        [],
+        [
+          {
+            "node": "If Plataforma",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Missing ID Conjuntos": {
+      "main": [
+        [
+          {
+            "node": "Fim Subworkflow Conjuntos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Resultado Final Conjuntos": {
+      "main": [
+        [
+          {
+            "node": "Fim Subworkflow Conjuntos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Plataforma": {
+      "main": [
+        [
+          {
+            "node": "If IDs Google",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If IDs Meta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Normalizar Metricas Conjuntos": {
+      "main": [
+        [
+          {
+            "node": "Update database page Conjuntos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update database page Conjuntos": {
+      "main": [
+        [
+          {
+            "node": "Code Resultado Final Conjuntos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request Google Adset Metrics": {
+      "main": [
+        [
+          {
+            "node": "Code Normalizar Metricas Conjuntos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Clean Conjuntos": {
+      "main": [
+        [
+          {
+            "node": "Loop Conjuntos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "versionId": "85eef220-0fe8-4f12-b87f-4fe801ba65a4",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp",
+    "instanceId": "305397df9a0eb50aabb90fb3f0fff1d7d74e7d343769e5f986243e1588b26e7b"
+  },
+  "nodeGroups": [],
+  "id": "t0DH5N5maws4egnG",
+  "tags": []
+}

@@ -1,0 +1,1763 @@
+{
+  "name": "sw metricas anuncios",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        192,
+        -608
+      ],
+      "id": "c8ccaaec-2def-429f-8630-c7e28fe2fddc",
+      "name": "Loop Over Items",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "d62317fb-c06f-4c4c-b2d4-3905dca228b4",
+              "leftValue": "={{ $json.has_data }}",
+              "rightValue": "True",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1664,
+        -144
+      ],
+      "id": "45394a03-c13b-4af0-91a8-bca85e75d483",
+      "name": "If D-2 exist1",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "databaseId": {
+          "__rl": true,
+          "value": "19fb65e5-c72b-8192-8f73-ff7f500a0972",
+          "mode": "list",
+          "cachedResultName": "Observações Diárias",
+          "cachedResultUrl": "https://www.notion.so/19fb65e5c72b81928f73ff7f500a0972"
+        },
+        "title": "=📊 Daily Entry Ads {{ DateTime.fromISO($today).toFormat('dd/MM/yyyy') }}",
+        "simple": false,
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Observação Diária|title",
+              "title": "=📊 Daily Entry Ads {{ DateTime.fromISO($today).toFormat('dd/MM/yyyy') }}"
+            },
+            {
+              "key": "Anúncio|relation",
+              "relationValue": [
+                "={{ $('Code clean propriedades').item.json.clean_notion_id_ads }}"
+              ]
+            },
+            {
+              "key": "Campanha|relation",
+              "relationValue": [
+                "={{ $('Code clean propriedades').item.json.clean_notion_id_camp }}"
+              ]
+            },
+            {
+              "key": "Análise de Performance|rich_text",
+              "textContent": "={{ $json.properties['Análise de Performance'].rich_text[0].text.content }}"
+            },
+            {
+              "key": "Classificação PHI|rich_text",
+              "textContent": "={{ $('Code classificar status').item.json.classe_score }}"
+            },
+            {
+              "key": "Criado Por|select",
+              "selectValue": "automation"
+            },
+            {
+              "key": "Data Execução|date",
+              "date": "={{ $json.properties['Última Atualização'].date.start }}"
+            },
+            {
+              "key": "Métrica Principal|select",
+              "selectValue": "={{ $('Code classificar status').item.json.sop_config.metric_principal }}"
+            },
+            {
+              "key": "Desvio vs Meta (7D)|number",
+              "numberValue": "={{ $json.properties['Desvio 7D'].number }}"
+            },
+            {
+              "key": "Valor Métrica-Mãe 1D|number",
+              "numberValue": "={{ $('Code classificar status').item.json.v_d1 }}"
+            },
+            {
+              "key": "Valor Métrica-Mãe 3D|number",
+              "numberValue": "={{ $('Code classificar status').item.json.v_3d }}"
+            },
+            {
+              "key": "Valor Métrica-Mãe 7D|number",
+              "numberValue": "={{ $('Code classificar status').item.json.v_7d }}"
+            },
+            {
+              "key": "Fonte dos Dados|rich_text",
+              "textContent": "={{ $json.properties['Fonte do Dado'].select.name }}"
+            },
+            {
+              "key": "id_google_account|number",
+              "numberValue": "={{ $('If Plataforma').item.json.clean_customer_id_google }}"
+            },
+            {
+              "key": "id_google_ads|number",
+              "numberValue": "={{ $('If Plataforma').item.json.clean_id_google_ad }}"
+            },
+            {
+              "key": "id_google_camp|number",
+              "numberValue": "={{ $('If Plataforma').item.json.clean_id_google_camp }}"
+            },
+            {
+              "key": "id_meta_account|number",
+              "numberValue": "={{ $('If Plataforma').item.json.clean_id_meta_account }}"
+            },
+            {
+              "key": "id_meta_ads|number",
+              "numberValue": "={{ $('If Plataforma').item.json.clean_id_meta_ads }}"
+            },
+            {
+              "key": "id_meta_camp|number",
+              "numberValue": "={{ $('If Plataforma').item.json.clean_id_meta_campaign }}"
+            },
+            {
+              "key": "id_workflow|rich_text",
+              "textContent": "={{ $workflow.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        2560,
+        -336
+      ],
+      "id": "a5e4c994-3aaf-46a3-9d7a-e3c683be8636",
+      "name": "Create a database page Create Observation",
+      "retryOnFail": true,
+      "credentials": {
+        "notionApi": {
+          "id": "KpPCTsYPAvGXGfp2",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1856,
+        -224
+      ],
+      "id": "a1123433-27df-407c-801b-e5a7b999aaa8",
+      "name": "Merge Meta Ads"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "6c7a3673-d53c-4902-858b-4c02b78beab1",
+              "leftValue": "={{ $json.platform }}",
+              "rightValue": "Google Ads",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        912,
+        -432
+      ],
+      "id": "ee5fbf97-8b11-4256-9748-614b9e027aad",
+      "name": "If Plataforma"
+    },
+    {
+      "parameters": {
+        "jsCode": "// PHI — valida dados Google + ELEVA IDENTIDADE ao topo (ADR-33, Item A)\n// Este fluxo NAO executa otimizacoes — apenas valida dados.\n// Regra ADR-33 / ADR-003: so ACRESCENTA identidade; nao altera agregados nem series.\n\nconst items = $input.all();\n\n// 1. Sem resposta da requisicao HTTP\nif (!items || items.length === 0 || !items[0].json) {\n  return {\n    json: {\n      has_data: false,\n      data_source: 'google_ads_api',\n      validation_status: 'no_request_response',\n      reason: 'A requisicao ao Google Ads falhou ou retornou vazio'\n    }\n  };\n}\n\nconst data = items[0].json;\n\n// 2. Primeiro resultado do Google (a serie diaria ja foi pre-agregada upstream;\n//    results[0] serve so para VALIDAR que veio dado)\nconst googleData = data.results && data.results.length > 0 ? data.results[0] : null;\n\n// Helper: extrai a identidade estavel da campanha (Contrato de Identidade, ADR-33)\nfunction extrairIdentidade(gd) {\n  const c = (gd && gd.campaign) || {};\n  const rn = c.resourceName || '';\n  const idFromRn = rn ? rn.split('/').pop() : null;\n  return {\n    platform: 'google',\n    entity_level: 'campaign',\n    entity_id: c.id || idFromRn || null,\n    entity_name: c.name || null,\n    entity_resource: rn || null\n  };\n}\n\nif (!googleData) {\n  return {\n    json: {\n      ...data,\n      has_data: false,\n      validation_status: 'no_results',\n      data_source: 'google_ads_api',\n      reason: 'O Google Ads retornou 0 resultados para este ID de campanha nesta data'\n    }\n  };\n}\n\n// Identidade elevada ao topo (a partir daqui todo item carrega quem ele e)\nconst ident = extrairIdentidade(googleData);\n\n// 3. Validar campos obrigatorios (camelCase v22+: costMicros)\nconst metrics = googleData.metrics || {};\nconst requiredFields = ['impressions', 'clicks', 'costMicros'];\nconst missingFields = requiredFields.filter(field =>\n  metrics[field] === null || metrics[field] === undefined\n);\n\nif (missingFields.length > 0) {\n  return {\n    json: {\n      ...data,\n      ...ident,\n      has_data: false,\n      validation_status: 'incomplete',\n      data_source: 'google_ads_api',\n      missing_fields: missingFields,\n      reason: `Campos de metricas ausentes no retorno da API: ${missingFields.join(', ')}`\n    }\n  };\n}\n\n// 4. Dados validos e prontos\nreturn {\n  json: {\n    ...data,\n    ...ident,\n    has_data: true,\n    validation_status: 'valid',\n    date_used: data.attempted_date || data.date_d1,\n    data_source: 'google_ads_api',\n    fallback_used: !!data.fallback_active\n  }\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1728,
+        -768
+      ],
+      "id": "f9133249-18df-4527-b506-d655fd8d26f6",
+      "name": "Code Valida Dados"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Nome: \"Valida Dados - Meta\"\n// ADR-33 B2: eleva a identidade Meta ao topo (o HTTP apaga a identidade do item);\n// fonte = Code clean propriedades. Nunca emitir item sem identidade (Opcao A).\nconst items = $input.all();\n\nconst cp = (($('Code clean propriedades').first() || {}).json) || {};\nconst identMeta = {\n  platform: 'meta',\n  entity_level: 'ad',\n  entity_id: cp.clean_id_meta_ads != null ? String(cp.clean_id_meta_ads) : null,\n  entity_name: cp.clean_nome_anuncio || cp.clean_nome_campanha || null,\n  page_id: cp.clean_notion_id_ads || null,\n  meta_campaign_id: cp.clean_id_meta_campaign != null ? String(cp.clean_id_meta_campaign) : null\n};\n\nif (!items || items.length === 0 || !items[0].json.data || items[0].json.data.length === 0) {\n  return {\n    json: {\n      ...(items[0]?.json || {}),\n      ...identMeta,\n      has_data: false,\n      data_source: 'meta_ads_api',\n      validation_status: 'no_results',\n      reason: 'O Meta Ads retornou 0 resultados para esta data'\n    }\n  };\n}\n\nreturn {\n  json: {\n    ...items[0].json,\n    ...identMeta,\n    has_data: true,\n    validation_status: 'valid',\n    data_source: 'meta_ads_api',\n    date_used: items[0].json.date_d1\n  }\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1232,
+        -144
+      ],
+      "id": "a1e11a91-a92e-45bd-a9a1-8b16bfce0fa7",
+      "name": "Code Valida Dados Meta",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "d62317fb-c06f-4c4c-b2d4-3905dca228b4",
+              "leftValue": "={{ $json.has_data }}",
+              "rightValue": "True",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1232,
+        16
+      ],
+      "id": "aafcd916-4c05-4254-9616-f38abdaddaf9",
+      "name": "If D-1 Exist Meta Ads",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "url": "=https://graph.facebook.com/v21.0/act_{{ $json.raw_notion_data.clean_id_meta_account }}/insights",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "facebookGraphApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "fields",
+              "value": "ad_id,ad_name,adset_id,campaign_id,campaign_name,spend,impressions,frequency,clicks,actions,action_values,objective,quality_ranking,engagement_rate_ranking,conversion_rate_ranking,video_play_actions,video_p50_watched_actions,video_p100_watched_actions"
+            },
+            {
+              "name": "time_range",
+              "value": "={\"since\":\"{{ $json.raw_notion_data.clean_data_inicio }}\",\"until\":\"{{ $json.raw_notion_data.clean_data_conclusao }}\"}"
+            },
+            {
+              "name": "level",
+              "value": "ad"
+            },
+            {
+              "name": "filtering",
+              "value": "=[{\"field\":\"ad.id\",\"operator\":\"IN\",\"value\":[{{ $json.raw_notion_data.clean_id_meta_ads }}]}]"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1216,
+        -304
+      ],
+      "id": "d23f5e25-3ae2-4f67-b30b-4ec3d1916b4e",
+      "name": "HTTP Request Meta Ads",
+      "retryOnFail": true,
+      "credentials": {
+        "facebookGraphApi": {
+          "id": "jRLBlTy4dwFjiuOS",
+          "name": "Facebook Graph account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Este fluxo NAO executa otimizacoes - apenas valida dados\n// ADR-33 B2: eleva a identidade Meta ao topo (fonte = Code clean propriedades).\nconst item = $input.first();\nconst inputJson = item?.json ?? {};\nconst rows = Array.isArray(inputJson.data) ? inputJson.data : [];\n\nconst cp = (($('Code clean propriedades').first() || {}).json) || {};\nconst identMeta = {\n  platform: 'meta',\n  entity_level: 'ad',\n  entity_id: cp.clean_id_meta_ads != null ? String(cp.clean_id_meta_ads) : null,\n  entity_name: cp.clean_nome_anuncio || cp.clean_nome_campanha || null,\n  page_id: cp.clean_notion_id_ads || null,\n  meta_campaign_id: cp.clean_id_meta_campaign != null ? String(cp.clean_id_meta_campaign) : null\n};\n\nif (rows.length === 0) {\n  return {\n    json: {\n      ...inputJson,\n      ...identMeta,\n      has_data: false,\n      data_source: 'meta_ads_api',\n      validation_status: 'no_results',\n      reason: 'O Meta Ads retornou 0 resultados para D-2'\n    }\n  };\n}\n\nreturn {\n  json: {\n    ...inputJson,\n    ...identMeta,\n    has_data: true,\n    validation_status: 'valid',\n    data_source: 'meta_ads_api',\n    date_used: inputJson.date_d2,\n    fallback_used: true\n  }\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1456,
+        16
+      ],
+      "id": "aa2ee68a-17e0-4b89-9464-c14da0b73973",
+      "name": "Code Valida Dados D-2 Meta"
+    },
+    {
+      "parameters": {
+        "url": "=https://graph.facebook.com/v21.0/act_{{ $('Code clean propriedades').item.json.raw_notion_data.clean_id_meta_account }}/insights",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "facebookGraphApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "fields",
+              "value": "ad_id,ad_name,adset_id,campaign_id,campaign_name,spend,impressions,frequency,clicks,actions,action_values,objective,quality_ranking,engagement_rate_ranking,conversion_rate_ranking,video_play_actions,video_p50_watched_actions,video_p100_watched_actions"
+            },
+            {
+              "name": "time_range",
+              "value": "={\"since\":\"{{ $('Code clean propriedades').item.json.date_d2 }}\",\"until\":\"{{ $('Code clean propriedades').item.json.date_d2 }}\"}"
+            },
+            {
+              "name": "level",
+              "value": "ad"
+            },
+            {
+              "name": "filtering",
+              "value": "=[{\"field\":\"ad.id\",\"operator\":\"IN\",\"value\":[{{ $('Code clean propriedades').item.json.raw_notion_data.clean_id_meta_ads }}]}]"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1456,
+        -144
+      ],
+      "id": "ee1aeaf1-699d-4b8e-a129-9877c1b80e8e",
+      "name": "HTTP Request Meta Ads D-2",
+      "retryOnFail": true,
+      "credentials": {
+        "facebookGraphApi": {
+          "id": "jRLBlTy4dwFjiuOS",
+          "name": "Facebook Graph account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Este fluxo NÃO executa otimizações - apenas calcula desvio para classificação.\n// CONVENÇÃO: desvio POSITIVO = PIOR que a meta (vale para qualquer métrica).\n// [2026-08-08] desvio INDEFINIDO (null) != desvio 0. Mesma familia da regra 8 do BLOCO COMUM\n// (conversions=0 => CPA/ROAS indefinidos): ausencia de informacao nunca vira valor neutro.\n// [2026-08-08] v_d1/v_3d/v_7d saem do ITEM corrente. O .first() foi removido: devolvia sempre\n// o 1o item do lote, vazando numeros de um anuncio para outro (visto na exec 26161, run 3).\nconst items = $input.all();\nconst returnData = [];\n\n// Margem de contribuição padrão por modelo de negócio (fallback sem campo no Notion). break-even = 1/margem.\nconst MARGEM_PADRAO = {\n  'E-commerce': 0.30, 'Ecommerce': 0.30,\n  'SaaS': 0.80,\n  'Infoproduto': 0.85, 'Infoprodutos': 0.85,\n  'Serviços': 0.50, 'Servicos': 0.50, 'Serviço Local': 0.50,\n  'B2B': 0.50, 'Lead': 0.50, 'Lead Gen': 0.50, 'Geração de Leads': 0.50\n};\nconst MARGEM_FALLBACK = 0.30;\nconst MAIOR_MELHOR = ['ROAS', 'CTR', 'Taxa de Conversão', 'Taxa de Conversao'];\n\n// metrica-mae -> [chave em metricas_calculadas.d7, campo plano do item]\nconst METRIC_KEYS = {\n  'CPA': ['cpa', 'cpa_7d'],\n  'CPL': ['cpl', 'cpl_7d'],\n  'CPC': ['cpc', 'cpc_7d'],\n  'CPM': ['cpm', 'cpm_7d'],\n  'ROAS': ['roas', 'roas_7d'],\n  'CTR': ['ctr', 'ctr_7d'],\n  'Taxa de Conversão': ['cvr', 'taxa_conversao_7d'],\n  'Taxa de Conversao': ['cvr', 'taxa_conversao_7d']\n};\n\n// 0 / vazio / NaN significam \"nao sei\" aqui, nao \"zero\".\nconst numOrNull = (v) => {\n  if (v === null || v === undefined || v === '') return null;\n  const n = Number(v);\n  return Number.isFinite(n) && n !== 0 ? n : null;\n};\n\nfor (const item of items) {\n  const data = item.json;\n  const config = data.sop_config || {};\n  const tipo = config.metric_principal || data.tipo_metrica || 'CPA';\n  const isMaiorMelhor = MAIOR_MELHOR.includes(tipo);\n  const keys = METRIC_KEYS[tipo] || METRIC_KEYS['CPA'];\n\n  // --- valores do PROPRIO item (sem cross-node) ---\n  const calcCtx = data.calc_context || {};\n  const d7src = (data.metricas_calculadas && data.metricas_calculadas.d7) || {};\n\n  let v_7d = numOrNull(data.v_7d !== undefined ? data.v_7d : calcCtx.v_7d);\n  if (v_7d === null) v_7d = numOrNull(d7src[keys[0]]);\n  if (v_7d === null) v_7d = numOrNull(data[keys[1]]);\n  if (v_7d === null) v_7d = numOrNull(data.valor_real);\n\n  // D1/D3 so existem se o item os trouxer. Sem fallback cross-node: sem valor => INDEFINIDO.\n  const v_d1 = numOrNull(data.v_d1 !== undefined ? data.v_d1 : calcCtx.v_d1);\n  const v_3d = numOrNull(data.v_3d !== undefined ? data.v_3d : calcCtx.v_3d);\n\n  const margem = Number(\n    data.clean_margem_contribuicao ||\n    MARGEM_PADRAO[data.clean_modelo_negocio] ||\n    MARGEM_PADRAO[data.clean_objetivo] ||\n    MARGEM_FALLBACK\n  );\n  const break_even_roas = margem > 0 ? parseFloat((1 / margem).toFixed(2)) : null;\n\n  let meta = Number(config.meta_valor || data.meta_valor || 0);\n  if (tipo === 'ROAS' && (!meta || meta <= 0) && break_even_roas) {\n    meta = break_even_roas;\n  }\n\n  if ((!meta || meta === 0) && v_d1 === null && v_3d === null && v_7d === null) {\n    returnData.push({ json: { ...data, v_d1, v_3d, v_7d, analise_desvios: { error: \"Meta não definida ou dados não encontrados\" }, deviation_status: 'missing_data_for_calculation' } });\n    continue;\n  }\n\n  // Devolve SEMPRE {valor, desvio, desvio_motivo}. desvio = null quando indefinido.\n  const calcDesvio = (valor) => {\n    if (!meta || meta === 0) return { valor, desvio: null, desvio_motivo: 'sem_meta' };\n    if (valor === null) return { valor, desvio: null, desvio_motivo: 'sem_valor' };\n    const d = isMaiorMelhor ? ((meta - valor) / meta) * 100 : ((valor - meta) / meta) * 100;\n    return { valor, desvio: parseFloat(d.toFixed(2)), desvio_motivo: 'ok' };\n  };\n  const calcTendencia = (v3, v7) => {\n    if (v3 === null || v7 === null) return null;\n    return parseFloat((isMaiorMelhor ? ((v7 - v3) / v7) * 100 : ((v3 - v7) / v7) * 100).toFixed(2));\n  };\n\n  const d1_res = calcDesvio(v_d1);\n  const d3_res = calcDesvio(v_3d);\n  const d7_res = calcDesvio(v_7d);\n  const tend_proxy = calcTendencia(v_3d, v_7d);\n\n  // Prefere a tendência REAL (série diária BigQuery) quando disponível; senão usa a janela da API.\n  const tendReal = (data.tendencia_real !== undefined && data.tendencia_real !== null) ? Number(data.tendencia_real) : null;\n  const tendenciaFinal = tendReal !== null ? tendReal : tend_proxy;\n  const tendenciaFonte = tendReal !== null\n    ? (data.tendencia_metodo || 'bigquery')\n    : (tend_proxy === null ? 'indisponivel' : 'janela_api');\n\n  returnData.push({\n    json: {\n      ...data,\n      v_d1, v_3d, v_7d,\n      analise_desvios: {\n        meta_aplicada: meta,\n        tipo_metric: tipo,\n        direcao: isMaiorMelhor ? 'maior_melhor' : 'menor_melhor',\n        margem_contribuicao: margem,\n        break_even_roas,\n        d1: d1_res,\n        d3: d3_res,\n        d7: d7_res,\n        tendencia_3d_vs_7d: tendenciaFinal,\n        tendencia_proxy_api: tend_proxy,\n        tendencia_fonte: tendenciaFonte,\n        tendencia_n_dias: data.tendencia_n_dias ?? null\n      },\n      deviation_status: 'calculated_success'\n    }\n  });\n}\n\nreturn returnData;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2336,
+        -336
+      ],
+      "id": "8cc08887-8736-4f4b-9762-43d7fb722458",
+      "name": "Code calculo desvio meta"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Classificação informativa (NÃO executa otimizações). Convenção: desvio positivo = pior.\n// Inclui gate de significância estatística e limiares por objetivo (doc §3, §5.7, §7).\nconst items = $input.all();\nconst output = [];\n\n// [2026-08-08] ESCADA DE EVIDENCIA (era: gate binario fixo em 7D).\n// O volume passa a decidir a CONFIANCA da leitura, nao SE existe leitura.\n// Motivo: um limiar absoluto de 7d travava permanentemente contas de baixo\n// orcamento (ex.: CLI-4/KIL exigiria ~3x o orcamento inteiro para abrir o gate),\n// congelando score=50 e status=\"Em aprendizado\" em anuncios com anos de veiculacao.\n// PLENO   -> afirma com certeza (limiar historico preservado).\n// PARCIAL -> afirma como hipotese, registrando a janela de evidencia usada.\n// NENHUM  -> so aqui deixa de classificar.\nconst MIN_CLICKS_PLENO = 100;\nconst MIN_CONV_PLENO = 10;\nconst MIN_CLICKS_PARCIAL = 30;\nconst MIN_CONV_PARCIAL = 3;\n// Abaixo disso o anuncio e genuinamente novo -> \"Em aprendizado\" e verdade.\nconst DIAS_APRENDIZADO = 14;\n\n// Limite de desvio (%) para virar \"Crítico\", por objetivo. Fallback = 'default' (preserva 15).\nconst LIMITE_CRITICO = {\n  'default': 15,\n  'Conversão': 12, 'Conversões': 12, 'Vendas': 12,\n  'Leads': 20, 'Geração de Leads': 20,\n  'Tráfego': 30, 'Trafego': 30,\n  'Reconhecimento': 40, 'Alcance': 40\n};\n\nfor (const item of items) {\n  const data = item.json;\n  const analise = data.analise_desvios;\n  const config = data.sop_config || {};\n\n  const numv = (v) => { const n = Number(v); return Number.isFinite(n) ? n : 0; };\n\n  // --- Idade do anuncio: separa \"novo de verdade\" de \"sem volume\" ---\n  let diasDesdeLancamento = null;\n  try {\n    const dl = $('Loop Over Items').item.json.properties?.['Data de Lançamento']?.date?.start;\n    if (dl) diasDesdeLancamento = Math.floor((Date.now() - new Date(dl).getTime()) / 86400000);\n  } catch (e) {}\n  const anuncioNovo = diasDesdeLancamento !== null && diasDesdeLancamento < DIAS_APRENDIZADO;\n\n  // --- Volume por janela (defensivo entre Google e Meta) ---\n  // [2026-08-08 fase4] .first() cross-node REMOVIDO. Este no roda 4x (todos os anuncios) mas\n  // 'HTTP Request Google Ontem (D7)' so 2x (Google): o .first() dava a resposta de um anuncio\n  // Google a outro anuncio. Alem disso o item aqui NAO carrega id estavel (clean_* ja\n  // espalhados por 'Code Valida Dados'), entao nao ha como casar por id nem por indice\n  // alinhado com seguranca. Os campos raw_*_7d do proprio item sao a fonte autoritativa;\n  // se forem 0/0 o anuncio genuinamente nao teve volume 7d -> cai no gate abaixo (correto).\n  const clicks7d = numv(data.raw_clicks_7d ?? data.clicks_7d);\n  const conv7d = numv(data.raw_conversions_7d ?? data.conversions_7d);\n  const clicks30d = numv(data.clicks_30d);\n  const conv30d = numv(data.conversions_30d);\n\n  const tipo = (analise && analise.tipo_metric) || config.metric_principal || 'CPA';\n  const dependeConversao = ['CPA', 'CPL', 'ROAS', 'Taxa de Conversão', 'Taxa de Conversao'].includes(tipo);\n\n  // ROAS sem receita rastreada nao e julgavel (valor de conversao placeholder).\n  const roasSemReceita = (tipo === 'ROAS') && (data.receita_placeholder_7d === true);\n\n  const atinge = (cl, cv, minCl, minCv) => cl >= minCl && (!dependeConversao || cv >= minCv);\n  const janelas = [\n    { nome: '7d', clicks: clicks7d, conv: conv7d },\n    { nome: '30d', clicks: clicks30d, conv: conv30d }\n  ];\n\n  let nivel = 'nenhum', janelaEvidencia = null, confianca = 'sem_base';\n  const pleno = janelas.find((j) => atinge(j.clicks, j.conv, MIN_CLICKS_PLENO, MIN_CONV_PLENO));\n  if (pleno) {\n    nivel = 'pleno'; janelaEvidencia = pleno.nome; confianca = 'certeza';\n  } else {\n    const parciais = janelas.filter((j) => atinge(j.clicks, j.conv, MIN_CLICKS_PARCIAL, MIN_CONV_PARCIAL));\n    if (parciais.length) {\n      nivel = 'parcial'; janelaEvidencia = parciais[parciais.length - 1].nome; confianca = 'hipotese';\n    }\n  }\n\n  // [2026-08-08] desvio INDEFINIDO (null) tem de ser tratado ANTES de qualquer comparacao.\n  // Em JS `null <= 0` e TRUE: sem esta guarda, `if (d7 <= 0) status = \"OK\"` classificaria\n  // \"nao sei\" como Bom, e `Math.max(null, 0)` daria score 100. E o bug que estamos matando.\n  const rawD7 = analise && analise.d7 ? analise.d7.desvio : null;\n  const rawD1 = analise && analise.d1 ? analise.d1.desvio : null;\n  const d7num = Number.isFinite(Number(rawD7)) && rawD7 !== null ? Number(rawD7) : null;\n  const d1num = Number.isFinite(Number(rawD1)) && rawD1 !== null ? Number(rawD1) : null;\n  const desvioIndefinido = d7num === null;\n  const desvioMotivo = (analise && analise.d7 && analise.d7.desvio_motivo) || (analise && analise.error ? 'sem_dados' : 'sem_valor');\n\n  const significancia = {\n    nivel, janela_evidencia: janelaEvidencia, confianca,\n    desvio_indefinido: desvioIndefinido,\n    desvio_motivo: desvioIndefinido ? desvioMotivo : 'ok',\n    clicks_7d: clicks7d, conversions_7d: conv7d,\n    clicks_30d: clicks30d, conversions_30d: conv30d,\n    min_pleno: { clicks: MIN_CLICKS_PLENO, conversoes: MIN_CONV_PLENO },\n    min_parcial: { clicks: MIN_CLICKS_PARCIAL, conversoes: MIN_CONV_PARCIAL },\n    dias_desde_lancamento: diasDesdeLancamento,\n    anuncio_novo: anuncioNovo,\n    roas_sem_receita: roasSemReceita,\n    suficiente: nivel === 'pleno'\n  };\n\n  // Casos em que nao se classifica desempenho (inclui desvio indefinido).\n  if (!analise || !analise.d7 || nivel === 'nenhum' || roasSemReceita || desvioIndefinido) {\n    output.push({\n      json: {\n        ...data,\n        final_status: anuncioNovo ? \"Em Aprendizado\" : \"Sem Dados\",\n        final_score: null,\n        classe_score: \"N/A\",\n        status_emoji: anuncioNovo ? \"🌱\" : \"⏳\",\n        significancia\n      }\n    });\n    continue;\n  }\n\n  // Aqui d7num e garantidamente finito (o ramo acima ja capturou o indefinido).\n  const d7 = d7num;\n  // [2026-08-08 fase4] REGRA MORTA: D1 nao e produzido neste fluxo. 'Code Cálcula Métricas'\n  // so gera janelas 7d e 30d; nunca ha valor D-1, entao d1 e SEMPRE null e o ajuste \"pico\n  // D-1\" (mais abaixo) e o desconto de score por d1 NUNCA disparam. Mantidos null-safe e\n  // dormentes de proposito: nao calcular D1/D3 agora (seria escopo novo, sem demanda). Se um\n  // dia o fluxo passar a coletar D-1 por anuncio, as regras voltam a valer sozinhas.\n  const d1 = d1num;                       // sempre null neste fluxo; guardas abaixo o respeitam\n  const tRaw = analise.tendencia_3d_vs_7d;\n  const tendencia = Number.isFinite(Number(tRaw)) && tRaw !== null ? Number(tRaw) : null;\n\n  const objetivo = data.clean_objetivo || data.objetivo || 'default';\n  const limiteCritico = LIMITE_CRITICO[objetivo] || LIMITE_CRITICO['default'];\n\n  // --- Classificação base por desvio 7D (positivo = pior) ---\n  let status;\n  if (d7 <= 0) status = \"OK\";\n  else if (d7 <= limiteCritico) status = \"Atenção\";\n  else status = \"Crítico\";\n\n  // Ajuste por tendência (positivo = piorou). null = indefinido, nao ajusta.\n  if (status === \"OK\" && tendencia !== null && tendencia > 10) status = \"Atenção\";\n  // Ajuste por pico D-1. null = indefinido, nao ajusta.\n  if (status === \"OK\" && d1 !== null && d1 > 30) status = \"Atenção\";\n\n  // --- Score 0-100 ---\n  let score = 100;\n  score -= Math.min(Math.max(d7, 0) * 2, 40);\n  if (tendencia !== null && tendencia > 0) score -= Math.min(tendencia, 30);\n  if (d1 !== null && d1 > 20) score -= 10;\n  score = Math.max(Math.round(score), 0);\n\n  let classeScore = \"Crítico\";\n  if (score >= 80) classeScore = \"Estável\";\n  else if (score >= 60) classeScore = \"Atenção\";\n  else if (score >= 40) classeScore = \"Instável\";\n\n  const emojiMap = { \"OK\": \"✅\", \"Atenção\": \"⚠️\", \"Crítico\": \"🚨\", \"Sem Dados\": \"⏳\", \"Dados Insuficientes\": \"🔍\" };\n\n  output.push({\n    json: {\n      ...data,\n      final_status: status,\n      final_score: score,\n      classe_score: classeScore,\n      status_emoji: emojiMap[status] || \"❓\",\n      significancia\n    }\n  });\n}\n\nreturn output;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2560,
+        -688
+      ],
+      "id": "8aa47798-e13f-4a13-8e4f-be2ddc626a7f",
+      "name": "Code classificar status"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://googleads.googleapis.com/v23/customers/{{ $('Code clean propriedades').item.json.clean_customer_id_google }}/googleAds:searchStream",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleAdsOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "developer-token",
+              "value": "o0hGRr2vcX3jGF6aI3a_0w"
+            },
+            {
+              "name": "login-customer-id",
+              "value": "7595536100"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ (() => { const c = $('Code clean propriedades').item.json; const metrics = 'metrics.cost_micros, metrics.clicks, metrics.impressions, metrics.conversions, metrics.conversions_value, metrics.ctr, metrics.average_cpc'; const day = c.date_d1; if (c.is_pmax) return { query: 'SELECT campaign.id, campaign.name, segments.date, ' + metrics + ' FROM campaign WHERE campaign.id = ' + c.clean_id_google_camp + \" AND segments.date = '\" + day + \"'\" }; return { query: 'SELECT campaign.id, campaign.name, ad_group.id, ad_group.name, ad_group_ad.ad.id, ad_group_ad.ad.name, ad_group_ad.status, segments.date, ' + metrics + ' FROM ad_group_ad WHERE ad_group_ad.ad.id = ' + c.clean_id_google_ad + \" AND segments.date = '\" + day + \"'\" }; })() }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1472,
+        -912
+      ],
+      "id": "8809c3f9-0d87-4109-828a-4b6d1085d25e",
+      "name": "HTTP Request Google Ontem (D1)",
+      "retryOnFail": true,
+      "credentials": {
+        "googleAdsOAuth2Api": {
+          "id": "78Fta7kyLfG3QHUT",
+          "name": "Google Ads account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://googleads.googleapis.com/v23/customers/{{ $('Code clean propriedades').item.json.clean_customer_id_google }}/googleAds:searchStream",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleAdsOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "developer-token",
+              "value": "o0hGRr2vcX3jGF6aI3a_0w"
+            },
+            {
+              "name": "login-customer-id",
+              "value": "7595536100"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ (() => { const c = $('Code clean propriedades').item.json; const metrics = 'metrics.cost_micros, metrics.clicks, metrics.impressions, metrics.conversions, metrics.conversions_value, metrics.ctr, metrics.average_cpc'; const range = \" AND segments.date BETWEEN '\" + c.date_d7_start + \"' AND '\" + c.date_d1 + \"'\"; if (c.is_pmax) return { query: 'SELECT campaign.id, campaign.name, segments.date, ' + metrics + ' FROM campaign WHERE campaign.id = ' + c.clean_id_google_camp + range }; return { query: 'SELECT campaign.id, campaign.name, ad_group.id, ad_group.name, ad_group_ad.ad.id, ad_group_ad.ad.name, ad_group_ad.status, segments.date, ' + metrics + ' FROM ad_group_ad WHERE ad_group_ad.ad.id = ' + c.clean_id_google_ad + range }; })() }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1472,
+        -608
+      ],
+      "id": "597ccee8-f6a6-436d-8517-626128edd8d4",
+      "name": "HTTP Request Google Ontem (D7)",
+      "retryOnFail": true,
+      "credentials": {
+        "googleAdsOAuth2Api": {
+          "id": "78Fta7kyLfG3QHUT",
+          "name": "Google Ads account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://googleads.googleapis.com/v23/customers/{{ $('Code clean propriedades').item.json.clean_customer_id_google }}/googleAds:searchStream",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleAdsOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "developer-token",
+              "value": "o0hGRr2vcX3jGF6aI3a_0w"
+            },
+            {
+              "name": "login-customer-id",
+              "value": "7595536100"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ (() => { const c = $('Code clean propriedades').item.json; const metrics = 'metrics.cost_micros, metrics.clicks, metrics.impressions, metrics.conversions, metrics.conversions_value, metrics.ctr, metrics.average_cpc'; const range = \" AND segments.date BETWEEN '\" + c.date_d3_start + \"' AND '\" + c.date_d1 + \"'\"; if (c.is_pmax) return { query: 'SELECT campaign.id, campaign.name, segments.date, ' + metrics + ' FROM campaign WHERE campaign.id = ' + c.clean_id_google_camp + range }; return { query: 'SELECT campaign.id, campaign.name, ad_group.id, ad_group.name, ad_group_ad.ad.id, ad_group_ad.ad.name, ad_group_ad.status, segments.date, ' + metrics + ' FROM ad_group_ad WHERE ad_group_ad.ad.id = ' + c.clean_id_google_ad + range }; })() }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1472,
+        -768
+      ],
+      "id": "ece59909-d677-4f4e-a322-b6309439d4a0",
+      "name": "HTTP Request Google Ontem (D3)",
+      "retryOnFail": true,
+      "credentials": {
+        "googleAdsOAuth2Api": {
+          "id": "78Fta7kyLfG3QHUT",
+          "name": "Google Ads account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7cf637c2-5e0e-4ab5-81cc-41aa9fa6fb82",
+              "name": "meta_valor",
+              "value": "={{ $('Get database anuncios').item.json.properties['Meta Métrica-Mãe'].number }}",
+              "type": "number"
+            },
+            {
+              "id": "adr33b1-entity-id",
+              "name": "entity_id",
+              "value": "={{ $json.entity_id }}",
+              "type": "string"
+            },
+            {
+              "id": "adr33b1-entity-name",
+              "name": "entity_name",
+              "value": "={{ $json.entity_name }}",
+              "type": "string"
+            },
+            {
+              "id": "adr33b1-platform",
+              "name": "platform",
+              "value": "={{ $json.platform }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1728,
+        -608
+      ],
+      "id": "f0dcfd46-14c4-42b7-af30-523aac9797a6",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\n\nconst num = (value) => {\n  const n = Number(value ?? 0);\n  return Number.isFinite(n) ? n : 0;\n};\n\nconst sqlString = (value) => String(value ?? '').replace(/'/g, \"''\");\n\nconst firstResult = (nodeName) => {\n  try {\n    return $(nodeName).item.json.results?.[0] || {};\n  } catch (e) {\n    return {};\n  }\n};\n\nconst getNodeJson = (nodeName) => {\n  try {\n    return $(nodeName).item.json || {};\n  } catch (e) {\n    return {};\n  }\n};\n\nconst metricsOf = (row) => row.metrics || {};\n\nconst clean = getNodeJson('Code clean propriedades');\nconst validation = getNodeJson('Code Valida Dados');\n\nconst rD1 = firstResult('HTTP Request Google Ontem (D1)');\nconst rD3 = firstResult('HTTP Request Google Ontem (D3)');\nconst rD7 = firstResult('HTTP Request Google Ontem (D7)');\nconst mD1 = metricsOf(rD1);\nconst mD3 = metricsOf(rD3);\nconst mD7 = metricsOf(rD7);\n\nconst googleCampaignId = rD1.campaign?.id || '';\nconst googleAdsetId = rD1.adGroup?.id || '';\nconst googleAdId = rD1.adGroupAd?.ad?.id || '';\n\nif (!googleCampaignId || !googleAdsetId || !googleAdId) {\n  return [{\n    json: {\n      ...input,\n      _bq_sql: '',\n      _skip_ingestion: true,\n      _skip_reason: !googleAdId ? 'sem_ad_id (PMAX ou GAQL vazia)' : (!googleCampaignId ? 'sem_campaign_id' : 'sem_adset_id')\n    }\n  }];\n}\n\nconst clientId = clean.clean_client_slug || input.client_id || '';\nconst campaignId = `GADS-${googleCampaignId}`;\nconst adsetId = String(googleAdsetId);\nconst adId = String(googleAdId);\nconst executionId = clean.source_execution_id || input.source_execution_id ||\n  `EXEC-DE-${new Date().toISOString().replace(/[-:TZ.]/g, '').slice(0, 14)}`;\nconst adName = rD1.adGroupAd?.ad?.name || clean.clean_nome_anuncio || '';\nconst adStatus = rD1.adGroupAd?.status || '';\n\nconst cost = num(mD1.costMicros) / 1000000;\nconst conversions = num(mD1.conversions);\nconst clicks = num(mD1.clicks);\nconst impressions = num(mD1.impressions);\nconst convValue = num(mD1.conversionsValue);\nconst cost3d = num(mD3.costMicros) / 1000000;\nconst conversions3d = num(mD3.conversions);\nconst convValue3d = num(mD3.conversionsValue);\nconst cost7d = num(mD7.costMicros) / 1000000;\nconst conversions7d = num(mD7.conversions);\nconst convValue7d = num(mD7.conversionsValue);\n\nconst dataSource = validation.data_source || 'google_ads_api';\nconst platform = clean.clean_plataforma === 'Google Ads'\n  ? 'google_ads'\n  : String(clean.clean_plataforma || 'google_ads').toLowerCase().replace(/\\s+/g, '_');\n\nconst sql = `MERGE phi_prod.raw_ad_data AS target\nUSING (\n  SELECT\n    '${sqlString(executionId)}' AS execution_id,\n    '${sqlString(clientId)}' AS client_id,\n    '${sqlString(campaignId)}' AS campaign_id,\n    '${sqlString(adsetId)}' AS adset_id,\n    '${sqlString(adId)}' AS ad_id,\n    DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 1 DAY) AS date,\n    '${sqlString(adName)}' AS ad_name,\n    '${sqlString(adStatus)}' AS ad_status,\n    CAST(${impressions} AS INT64) AS impressions,\n    CAST(${clicks} AS INT64) AS clicks,\n    CAST(${cost} AS FLOAT64) AS cost,\n    CAST(${conversions} AS FLOAT64) AS conversions,\n    CAST(${convValue} AS FLOAT64) AS conv_value,\n    CAST(${cost3d} AS FLOAT64) AS cost_3d,\n    CAST(${conversions3d} AS FLOAT64) AS conversions_3d,\n    CAST(${convValue3d} AS FLOAT64) AS conv_value_3d,\n    CAST(${cost7d} AS FLOAT64) AS cost_7d,\n    CAST(${conversions7d} AS FLOAT64) AS conversions_7d,\n    CAST(${convValue7d} AS FLOAT64) AS conv_value_7d,\n    '${sqlString(dataSource)}' AS data_source,\n    '${sqlString(platform)}' AS platform,\n    'SUCCESS' AS ingestion_status,\n    'DAILY_ENTRY' AS ingestion_step,\n    CURRENT_TIMESTAMP() AS ingested_at\n) AS source\nON  target.client_id   = source.client_id\nAND target.campaign_id = source.campaign_id\nAND target.adset_id    = source.adset_id\nAND target.ad_id       = source.ad_id\nAND target.date        = source.date\nWHEN MATCHED THEN UPDATE SET\n  target.ad_name = source.ad_name,\n  target.ad_status = source.ad_status,\n  target.impressions = source.impressions,\n  target.clicks = source.clicks,\n  target.cost = source.cost,\n  target.conversions = source.conversions,\n  target.conv_value = source.conv_value,\n  target.cost_3d = source.cost_3d,\n  target.conversions_3d = source.conversions_3d,\n  target.conv_value_3d = source.conv_value_3d,\n  target.cost_7d = source.cost_7d,\n  target.conversions_7d = source.conversions_7d,\n  target.conv_value_7d = source.conv_value_7d,\n  target.data_source = source.data_source,\n  target.platform = source.platform,\n  target.ingestion_status = source.ingestion_status,\n  target.ingested_at = source.ingested_at\nWHEN NOT MATCHED THEN INSERT (\n  execution_id, client_id, campaign_id, adset_id, ad_id, date,\n  ad_name, ad_status,\n  impressions, clicks, cost, conversions, conv_value,\n  cost_3d, conversions_3d, conv_value_3d,\n  cost_7d, conversions_7d, conv_value_7d,\n  data_source, platform, ingestion_status, ingestion_step, ingested_at\n) VALUES (\n  source.execution_id, source.client_id, source.campaign_id, source.adset_id, source.ad_id, source.date,\n  source.ad_name, source.ad_status,\n  source.impressions, source.clicks, source.cost, source.conversions, source.conv_value,\n  source.cost_3d, source.conversions_3d, source.conv_value_3d,\n  source.cost_7d, source.conversions_7d, source.conv_value_7d,\n  source.data_source, source.platform, source.ingestion_status, source.ingestion_step, source.ingested_at\n);`;\n\nreturn [{\n  json: {\n    ...input,\n    _bq_sql: sql,\n    _skip_ingestion: false\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2224,
+        -928
+      ],
+      "id": "090d4d9f-20c7-46ee-bb5a-e5d98c3f6927",
+      "name": "Code Montar SQL"
+    },
+    {
+      "parameters": {
+        "projectId": {
+          "__rl": true,
+          "value": "project-0e7c58d4-656f-49e8-807",
+          "mode": "list",
+          "cachedResultName": "phi-production",
+          "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=project-0e7c58d4-656f-49e8-807"
+        },
+        "sqlQuery": "{{ $json._bq_sql }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2.1,
+      "position": [
+        2544,
+        -1072
+      ],
+      "id": "6fb109c1-c063-4542-bca4-10e815c63f4c",
+      "name": "Execute SQL inserir daily entry",
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "credentials": {
+        "googleBigQueryOAuth2Api": {
+          "id": "UhLRAanVarQeOpQy",
+          "name": "Google BigQuery account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://googleads.googleapis.com/v23/customers/{{ $('Code clean propriedades').item.json.clean_customer_id_google }}/googleAds:searchStream",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleAdsOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "developer-token",
+              "value": "o0hGRr2vcX3jGF6aI3a_0w"
+            },
+            {
+              "name": "login-customer-id",
+              "value": "7595536100"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ (() => { const c = $('Code clean propriedades').item.json; const metrics = 'metrics.cost_micros, metrics.clicks, metrics.impressions, metrics.conversions, metrics.conversions_value, metrics.ctr, metrics.average_cpc'; const range = \" AND segments.date BETWEEN '\" + c.date_d30_start + \"' AND '\" + c.date_d1 + \"'\"; if (c.is_pmax) return { query: 'SELECT campaign.id, campaign.name, segments.date, ' + metrics + ' FROM campaign WHERE campaign.id = ' + c.clean_id_google_camp + range }; return { query: 'SELECT campaign.id, campaign.name, ad_group.id, ad_group.name, ad_group_ad.ad.id, ad_group_ad.ad.name, ad_group_ad.status, segments.date, ' + metrics + ' FROM ad_group_ad WHERE ad_group_ad.ad.id = ' + c.clean_id_google_ad + range }; })() }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1216,
+        -912
+      ],
+      "id": "d5649003-2641-46fb-9a92-1c9183eeaeac",
+      "name": "v23 Bloco 1 Core",
+      "retryOnFail": true,
+      "credentials": {
+        "googleAdsOAuth2Api": {
+          "id": "78Fta7kyLfG3QHUT",
+          "name": "Google Ads account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://googleads.googleapis.com/v23/customers/{{ $('Code clean propriedades').item.json.clean_customer_id_google }}/googleAds:searchStream",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleAdsOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "developer-token",
+              "value": "o0hGRr2vcX3jGF6aI3a_0w"
+            },
+            {
+              "name": "login-customer-id",
+              "value": "7595536100"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ (() => { const c = $('Code clean propriedades').item.json; if (c.is_pmax) { const metrics = 'metrics.cost_micros, metrics.clicks, metrics.impressions, metrics.conversions, metrics.conversions_value, metrics.ctr, metrics.average_cpc'; const range = \" AND segments.date BETWEEN '\" + c.date_d30_start + \"' AND '\" + c.date_d1 + \"'\"; return { query: 'SELECT campaign.id, campaign.name, segments.date, ' + metrics + ' FROM campaign WHERE campaign.id = ' + c.clean_id_google_camp + range }; } return { query: 'SELECT campaign.id, search_term_view.search_term, metrics.impressions, metrics.clicks, metrics.conversions, metrics.cost_micros FROM search_term_view WHERE segments.date DURING LAST_30_DAYS ORDER BY metrics.clicks DESC LIMIT 50' }; })() }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1216,
+        -768
+      ],
+      "id": "bb8d21ee-37ec-4a4e-86d7-b4cace5251c6",
+      "name": "v23 Bloco 2 Termos",
+      "retryOnFail": true,
+      "credentials": {
+        "googleAdsOAuth2Api": {
+          "id": "78Fta7kyLfG3QHUT",
+          "name": "Google Ads account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://googleads.googleapis.com/v23/customers/{{ $('Code clean propriedades').item.json.clean_customer_id_google }}/googleAds:searchStream",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleAdsOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "developer-token",
+              "value": "o0hGRr2vcX3jGF6aI3a_0w"
+            },
+            {
+              "name": "login-customer-id",
+              "value": "7595536100"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ (() => { const c = $('Code clean propriedades').item.json; if (c.is_pmax) { const metrics = 'metrics.cost_micros, metrics.clicks, metrics.impressions, metrics.conversions, metrics.conversions_value, metrics.ctr, metrics.average_cpc'; const range = \" AND segments.date BETWEEN '\" + c.date_d30_start + \"' AND '\" + c.date_d1 + \"'\"; return { query: 'SELECT campaign.id, campaign.name, segments.date, ' + metrics + ' FROM campaign WHERE campaign.id = ' + c.clean_id_google_camp + range }; } return { query: \"SELECT campaign.id, segments.ad_network_type, metrics.impressions, metrics.clicks, metrics.conversions, metrics.cost_micros FROM campaign WHERE segments.date DURING LAST_30_DAYS AND campaign.status = 'ENABLED'\" }; })() }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1216,
+        -608
+      ],
+      "id": "369b8d24-3d56-4fbd-b6be-0675990e5571",
+      "name": "v23 Bloco 3 Canais",
+      "retryOnFail": true,
+      "credentials": {
+        "googleAdsOAuth2Api": {
+          "id": "78Fta7kyLfG3QHUT",
+          "name": "Google Ads account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\n\n// Fun��o auxiliar para n�meros\nconst toNum = (val) => {\n  const n = Number(val);\n  return isNaN(n) ? 0 : parseFloat(n.toFixed(2));\n};\n\nreturn {\n  json: {\n    // Usa o ID da p�gina que veio do Notion\n    page_id: data.notion_page_id || data.id, \n    \n    properties: {\n      // --- CLASSIFICA��O E STATUS ---\n      \"Status Atual\": {\n        \"select\": { \"name\": data.status_meta || \"Sem Dados\" }\n      },\n      \"Score Final\": {\n        \"number\": toNum(data.opt_score) // Usando o Optimization Score como Score Final\n      },\n      \"Análise de Performance\": {\n        \"rich_text\": [{ \n          \"text\": { \n            \"content\": `🎯 Meta: ${data.meta_estabelecida} | Real: ${data.valor_real} (${data.status_meta})` \n          } \n        }]\n      },\n\n      // --- M�TRICAS DE PERFORMANCE ---\n      \"Meta Métrica-mãe\": {\n        \"number\": toNum(data.meta_estabelecida)\n      },\n      \"Desvio 7D\": {\n        \"number\": toNum(data.valor_real) // Aqui voceê pode colocar o valor real atual\n      },\n      \"Tendência 3D vs 7D\": {\n        \"number\": toNum(data.v_3d) // Exemplo: Comparativo de tend�ncia\n      },\n\n      // --- DADOS DA CAMPANHA (EXTRAS) ---\n      \"Última Atualização\": {\n        \"date\": { \"start\": new Date().toISOString() }\n      },\n      \"Fonte do Dado\": {\n        \"select\": { \"name\": \"Google Ads\" }\n      }\n      \n      // Caso queira adicionar os campos de Mensagens, Rota, etc., \n      // eles precisam ser calculados no n� anterior primeiro.\n    }\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2560,
+        -528
+      ],
+      "id": "2bef95a7-6be3-49df-b890-04efc1ffe051",
+      "name": "Code Preparar Payload de Observação"
+    },
+    {
+      "parameters": {
+        "jsCode": "\n// Captura o item que vem do loop/notion\nconst item = $input.first();\nconst data = item.json;\n// 1. Funcao de Extracao Robusta\nconst extrairValorNotion = (nomeCampo) => {\n  const campo = data[nomeCampo] || (data.properties ? data.properties[nomeCampo] : null);\n  if (!campo) return 0;\n  if (typeof campo === 'object' && campo.hasOwnProperty('number')) {\n    return Number(campo.number || 0);\n  }\n  return Number(campo || 0);\n};\n\n// Extrair o Tipo da Metrica (lidando com campos de Select do Notion)\nlet metric_principal = \"CPA\";\nconst campoTipo = data[\"Tipo da Métrica\"] || (data.properties ? data.properties[\"Tipo da Métrica\"] : null);\nif (campoTipo) {\n  metric_principal = campoTipo.select ? campoTipo.select.name : (typeof campoTipo === 'string' ? campoTipo : \"CPA\");\n}\n\n// [2026-08-08 fase4] META do ITEM corrente, sem .first() cross-node.\n// Antes: `$('Edit Fields').first().json.meta_valor` -> devolvia sempre o 1o item do lote.\n// Como este no roda 4x (todos os anuncios) mas Edit Fields so 2x (Google), os anuncios Meta\n// recebiam a meta de um anuncio Google. Aqui os campos clean_* de identidade JA foram\n// espalhados por 'Code Valida Dados' (o item nao tem clean_id_* para casar por id), mas a\n// meta ja RIDE no proprio item para os anuncios Google (Edit Fields -> includeOtherFields).\n// Para Meta ads a meta pode nao existir aqui -> fica 0 -> desvio INDEFINIDO a jusante\n// (null-safe desde a fase 3). Ver pendencia no execution log.\nlet meta_valor = Number(\n  data.meta_valor ??\n  data.sop_config?.meta_valor ??\n  data.clean_meta_metrica_mae ??\n  extrairValorNotion(\"Meta Métrica-Mãe\") ??\n  0\n) || 0;\n\n// 3. Configuracao dos Limiares do SOP\nconst sop_thresholds = {\n  'CPA': { ok_limit: 0, attention_limit: 15, critical_limit: 15, trend_alert: 10, d1_alert: 30 },\n  'ROAS': { ok_limit: 0, attention_limit: 15, critical_limit: 15, trend_alert: 10, d1_alert: 30 }\n};\n\nreturn {\n  json: {\n    ...data,\n    sop_config: {\n      metric_principal: metric_principal,\n      meta_valor: meta_valor,\n      thresholds: sop_thresholds[metric_principal] || sop_thresholds['CPA']\n    }\n  }\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2112,
+        -528
+      ],
+      "id": "73ff9177-ef6f-4177-b221-59a8f0f1ebb0",
+      "name": "Code Recupera Metas p Comparação"
+    },
+    {
+      "parameters": {
+        "jsCode": "// [2026-08-08 fase4] .first() cross-node trocado por CASAMENTO POR ID (campaign.id).\n// Indice posicional/.first() quebra quando as contagens de run divergem (passada duplicada\n// do Meta). O input deste no JA E a resposta D7 do anuncio corrente -> dela sai o id alvo,\n// e D1/D3/D30 sao escolhidos pela MESMA campaign.id via .all().find(), nunca .first().\nconst cur = $input.first().json;                 // resposta D7 do anuncio corrente (input direto)\nconst curId = String(cur.results?.[0]?.campaign?.id || '');\n\nconst pickById = (node) => {\n  let all = [];\n  try { all = $(node).all(); } catch (e) { return {}; }\n  if (curId) {\n    const m = all.find((x) => String(x.json?.results?.[0]?.campaign?.id || '') === curId);\n    if (m) return m.json;\n  }\n  // Sem id casavel: NAO pega item de outro anuncio (nunca .first(), nunca \"ultimo\").\n  // Retorna vazio -> a metrica daquela janela vira 0/indefinida (honesto), como quando a\n  // API nao devolve dados. Preferivel a arriscar o vazamento que estamos matando.\n  return {};\n};\n\nconst d7 = cur;\nconst d1 = pickById(\"HTTP Request Google Ontem (D1)\");\nconst d3 = pickById(\"HTTP Request Google Ontem (D3)\");\nlet d30 = pickById(\"HTTP Request Google (D30)\");\nif (!d30 || !d30.results) d30 = pickById(\"v23 Bloco 1 Core\");\n\n// Função para calcular CPA ou ROAS\nconst calcularValor = (data, tipo) => {\n  const metrics = data.results?.[0]?.metrics || {};\n  const cost = Number(metrics.costMicros || 0) / 1000000;\n  const conv = Number(metrics.conversions || 0);\n  const val = Number(metrics.conversionsValue || 0);\n\n  if (tipo === \"ROAS\") return cost > 0 ? val / cost : 0;\n  return conv > 0 ? cost / conv : 0;\n};\n\n// Item #7: extrai metricas brutas para BigQuery\nconst extractRaw = (data) => {\n  const m = data.results?.[0]?.metrics || {};\n  const costMicros = Number(m.costMicros || m.cost_micros || 0);\n  return {\n    cost: costMicros / 1_000_000,\n    costMicros,\n    clicks: Number(m.clicks || 0),\n    conversions: Number(m.conversions || 0),\n    conversionsValue: Number(m.conversionsValue || m.conversions_value || 0),\n    impressions: Number(m.impressions || 0),\n  };\n};\nconst raw_d1 = extractRaw(d1);\nconst raw_d3 = extractRaw(d3);\nconst raw_d7 = extractRaw(d7);\nconst raw_d30 = extractRaw(d30);\n\n// 2. Configuracoes\nconst config = d7.sop_config || {};\nconst tipo = config.metric_principal || \"CPA\";\n\n// 3. Extrai os valores reais\nconst v_d1 = calcularValor(d1, tipo);\nconst v_3d = calcularValor(d3, tipo);\nconst v_7d = calcularValor(d7, tipo);\nconst v_30d = calcularValor(d30, tipo);\n\n// 4. Funcao magica de formatacao: XX% (YY)\nconst formatarTendencia = (valorAtual, valorBase) => {\n  if (!valorAtual || !valorBase || valorBase === 0) return \"0.00% (R$0.00)\";\n  const diffAbsoluta = valorAtual - valorBase;\n  const diffPercentual = (diffAbsoluta / valorBase) * 100;\n  return `${diffPercentual.toFixed(2)}% (R$ ${diffAbsoluta.toFixed(2)})`;\n};\n\nconst txt_tendencia_3d = formatarTendencia(v_3d, v_7d);\nconst txt_tendencia_1d = formatarTendencia(v_d1, v_7d);\nconst txt_tendencia_30d = formatarTendencia(v_7d, v_30d);\n\n// 5. Optimization Score\nconst optScoreRaw = d7.results?.[0]?.campaign?.optimizationScore || 0;\nconst optScoreFormatted = parseFloat((optScoreRaw * 100).toFixed(2));\n\n// 6. Retorno final\nreturn {\n  json: {\n    ...d7,\n    v_d1: parseFloat(v_d1.toFixed(2)),\n    v_3d: parseFloat(v_3d.toFixed(2)),\n    v_7d: parseFloat(v_7d.toFixed(2)),\n    v_30d: parseFloat(v_30d.toFixed(2)),\n\n    txt_tendencia_3d,\n    txt_tendencia_1d,\n    txt_tendencia_30d,\n\n    val_tendencia_3d: parseFloat(((v_3d - v_7d) / (v_7d || 1) * 100).toFixed(2)),\n\n    opt_score: optScoreFormatted,\n\n    calc_context: {\n      v_d1, v_3d, v_7d, v_30d,\n      txt_tendencia_3d,\n      txt_tendencia_1d,\n      txt_tendencia_30d,\n    },\n\n    raw_cost_d1: parseFloat(raw_d1.cost.toFixed(6)),\n    raw_clicks_d1: raw_d1.clicks,\n    raw_impressions_d1: raw_d1.impressions,\n    raw_cost_3d: parseFloat(raw_d3.cost.toFixed(6)),\n    raw_cost_7d: parseFloat(raw_d7.cost.toFixed(6)),\n    raw_clicks_d30: raw_d30.clicks,\n    raw_conversions_value_d30: parseFloat(raw_d30.conversionsValue.toFixed(6)),\n    raw_conversions_d30: raw_d30.conversions,\n    raw_cost_micros_d30: raw_d30.costMicros,\n    raw_cost_brl_d30: parseFloat(raw_d30.cost.toFixed(6)),\n    raw_impressions_d30: raw_d30.impressions,\n  }\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1728,
+        -912
+      ],
+      "id": "474e49a2-5e85-49d0-861d-660d6f75328f",
+      "name": "Code Unificar Períodos (D1, 3D, 7D)",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Serie diaria (BigQuery): o SQL e montado AQUI, nao dentro do node BigQuery (CLAUDE.md regra 8).\n// Modo runOnceForEachItem: 1 item entra -> 1 item sai. 'Code Tendencia Real' pareia por INDICE.\nconst data = $json;\nconst num = (v) => { const n = Number(v || 0); return Number.isFinite(n) ? n : 0; };\nconst esc = (v) => String(v == null ? '' : v).replace(/'/g, \"''\");\n\n// O id da CAMPANHA vem de 'Code clean propriedades' via pareamento de item.\n// Usar clean_id_google_camp: clean_id_google e o id do ANUNCIO em campanha nao-PMAX\n// (so coincide com o da campanha quando e PMAX).\nlet clean = null;\nlet motivo = 'ok';\ntry {\n  clean = $('Code clean propriedades').item.json;\n} catch (e) {\n  motivo = 'pareamento_indisponivel';\n}\n\nlet campaign_id = '';\nif (clean) {\n  const idG = num(clean.clean_id_google_camp);\n  const idM = num(clean.clean_id_meta_campaign);\n  if (idG > 0) campaign_id = 'GADS-' + idG;\n  else if (idM > 0) campaign_id = 'META-' + idM;\n  else motivo = 'sem_id_campanha';\n}\n\n// Nunca emitir SQL vazio (o node BigQuery quebraria). Sem id -> query valida que retorna 0 linhas.\nconst idSql = esc(campaign_id || 'SEM-ID');\nconst TZ = \"CURRENT_DATE('America/Sao_Paulo')\";\nconst J3 = 'date >= DATE_SUB(' + TZ + ', INTERVAL 3 DAY)';\nconst JP3 = 'date < DATE_SUB(' + TZ + ', INTERVAL 3 DAY) AND date >= DATE_SUB(' + TZ + ', INTERVAL 6 DAY)';\nconst s3 = (col, alias) => 'SUM(IF(' + J3 + ', ' + col + ', 0)) AS ' + alias;\nconst sp3 = (col, alias) => 'SUM(IF(' + JP3 + ', ' + col + ', 0)) AS ' + alias;\n\nconst _bq_sql_serie = [\n  'SELECT COUNT(*) AS n_dias',\n  s3('cost', 'cost_3'),\n  s3('conversions', 'conv_3'),\n  s3('clicks', 'clicks_3'),\n  s3('impressions', 'impr_3'),\n  '0 AS rev_3',\n  sp3('cost', 'cost_prev3'),\n  sp3('conversions', 'conv_prev3'),\n  sp3('clicks', 'clicks_prev3'),\n  sp3('impressions', 'impr_prev3'),\n  '0 AS rev_prev3'\n].join(', ')\n  + ' FROM `project-0e7c58d4-656f-49e8-807.phi_prod.raw_campaign_data`'\n  + \" WHERE campaign_id = '\" + idSql + \"'\"\n  + ' AND date >= DATE_SUB(' + TZ + ', INTERVAL 21 DAY)';\n\nreturn { json: { ...data, bq_campaign_id: campaign_id, _bq_sql_serie, _serie_motivo: motivo } };\n"
+      },
+      "id": "1bc3ece2-33f2-417c-82e7-742c5564d636",
+      "name": "Code Prep Tendência",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2128,
+        -336
+      ]
+    },
+    {
+      "parameters": {
+        "projectId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "project-0e7c58d4-656f-49e8-807",
+          "cachedResultName": "phi-production"
+        },
+        "sqlQuery": "{{ $json._bq_sql_serie }}",
+        "options": {}
+      },
+      "id": "b452fae0-c79a-4f35-bb6f-378523c1d751",
+      "name": "BigQuery Série Diária",
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2.1,
+      "position": [
+        2320,
+        -704
+      ],
+      "retryOnFail": true,
+      "credentials": {
+        "googleBigQueryOAuth2Api": {
+          "id": "UhLRAanVarQeOpQy",
+          "name": "Google BigQuery account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Tendência real do histórico diário (BigQuery): métrica dos últimos 3 dias vs 3 dias anteriores.\n// Pareado por índice com o nó de prep. Suporta ROAS via coluna conversions_value. Fallback < 4 dias.\nconst prep = $('Code Prep Tendência').all();\nconst rows = $input.all();\nconst num = (x) => Number(x || 0);\nconst out = [];\n\nfor (let i = 0; i < prep.length; i++) {\n  const ctx = prep[i].json;\n  const r = (rows[i] && rows[i].json) || {};\n  const tipo = ctx.sop_config?.metric_principal || 'CPA';\n\n  const metricaJanela = (cost, conv, clicks, impr, rev) => {\n    if (tipo === 'ROAS') return cost > 0 ? rev / cost : null;\n    if (tipo === 'CPC') return clicks > 0 ? cost / clicks : null;\n    if (tipo === 'CTR') return impr > 0 ? (clicks / impr) * 100 : null;\n    if (tipo === 'Taxa de Conversão') return clicks > 0 ? (conv / clicks) * 100 : null;\n    return conv > 0 ? cost / conv : null;        // CPA / CPL\n  };\n\n  const nDias = num(r.n_dias);\n  let tendencia_real = null;\n  let metodo = 'sem_historico';\n\n  // [2026-08-08] rotulo honesto: 'sem_historico' era usado para dois casos diferentes.\n  //   nDias < 4                          -> sem_historico (nao ha serie)\n  //   nDias >= 4 mas metrica indefinida  -> sem_metrica_na_janela (ex.: conv_3 = 0 => CPA indefinido)\n  if (nDias >= 4) {\n    const recente = metricaJanela(num(r.cost_3), num(r.conv_3), num(r.clicks_3), num(r.impr_3), num(r.rev_3));\n    const anterior = metricaJanela(num(r.cost_prev3), num(r.conv_prev3), num(r.clicks_prev3), num(r.impr_prev3), num(r.rev_prev3));\n    metodo = 'sem_metrica_na_janela';\n    if (recente != null && anterior != null && anterior > 0) {\n      const MAIOR_MELHOR = ['CTR', 'Taxa de Conversão', 'ROAS'];\n      const bruto = ((recente - anterior) / anterior) * 100; // positivo = subiu\n      // padroniza: positivo = PIOROU\n      tendencia_real = MAIOR_MELHOR.includes(tipo) ? parseFloat((-bruto).toFixed(2)) : parseFloat(bruto.toFixed(2));\n      metodo = 'bigquery_3d_vs_3d';\n    }\n  }\n\n  out.push({ json: { ...ctx, tendencia_real, tendencia_metodo: metodo, tendencia_n_dias: nDias } });\n}\n\nreturn out;"
+      },
+      "id": "2c76d738-796d-469a-beda-6a3952248350",
+      "name": "Code Tendência Real",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2336,
+        -528
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst output = [];\n\n// Divisão segura: nunca retorna NaN nem Infinity.\nconst safeDiv = (a, b) => {\n  const n = Number(a) || 0;\n  const d = Number(b) || 0;\n  if (!d) return 0;\n  const r = n / d;\n  return Number.isFinite(r) ? r : 0;\n};\nconst round2 = (v) => parseFloat((Number(v) || 0).toFixed(2));\n\nfor (const item of items) {\n  const root = item.json;\n  // Agora nivel 'ad': cada ad retorna uma linha em root.data.\n  const data = (root.data && root.data.length > 0) ? root.data[0] : null;\n\n  if (!data) {\n    output.push(item);\n    continue;\n  }\n\n  // --- Extração base ---\n  const cost = Number(data.spend || 0);\n  const impressions = Number(data.impressions || 0);\n  const clicks = Number(data.clicks || 0);\n  const frequencia = Number(data.frequency || 0);\n  const objective = String(data.objective || '');\n\n  // Helper: soma o valor das ações cujo action_type esteja na lista.\n  const sumActions = (arr, types) => {\n    if (!Array.isArray(arr)) return 0;\n    return arr\n      .filter((a) => types.includes(a.action_type))\n      .reduce((acc, a) => acc + (Number(a.value) || 0), 0);\n  };\n\n  // --- B3: extração inteligente por objetivo (determinística, sem IA) ---\n  const CONV_POR_OBJETIVO = {\n    OUTCOME_SALES: ['offsite_conversion.fb_pixel_purchase', 'purchase', 'omni_purchase'],\n    OUTCOME_LEADS: ['lead', 'offsite_conversion.fb_pixel_lead', 'onsite_conversion.lead_grouped'],\n    OUTCOME_ENGAGEMENT: ['onsite_conversion.messaging_conversation_started_7d', 'onsite_conversion.total_messaging_connection'],\n    OUTCOME_TRAFFIC: ['link_click'],\n    OUTCOME_AWARENESS: ['reach'],\n  };\n  const CONV_FALLBACK = ['offsite_conversion.fb_pixel_purchase', 'purchase', 'omni_purchase', 'lead'];\n  const tiposConversao = CONV_POR_OBJETIVO[objective] || CONV_FALLBACK;\n  const conversions = sumActions(data.actions, tiposConversao);\n\n  const message_conversations = sumActions(data.actions, [\n    'onsite_conversion.messaging_conversation_started_7d',\n    'onsite_conversion.total_messaging_connection',\n  ]);\n\n  const revenue = sumActions(data.action_values, [\n    'offsite_conversion.fb_pixel_purchase', 'purchase', 'omni_purchase',\n  ]);\n\n  // --- Vídeo (podem vir vazios em anúncios sem vídeo: tratado como 0) ---\n  const video_started = sumActions(data.video_play_actions, ['video_view']);\n  const video_p50 = sumActions(data.video_p50_watched_actions, ['video_view']);\n  const video_p100 = sumActions(data.video_p100_watched_actions, ['video_view']);\n\n  // --- B2: métricas derivadas (todas com guarda anti NaN/Infinity) ---\n  const ctr = round2(safeDiv(clicks, impressions) * 100);\n  const cpc = round2(safeDiv(cost, clicks));\n  const cpa = round2(safeDiv(cost, conversions));\n  const convRate = round2(safeDiv(conversions, clicks) * 100);\n  const cpm = round2(safeDiv(cost, impressions) * 1000);\n  const roas = round2(safeDiv(revenue, cost));\n  const hook_rate = round2(safeDiv(video_started, impressions) * 100);\n  const hold_rate = round2(safeDiv(video_p100, video_started) * 100);\n\n  output.push({\n    json: {\n      ...root, // Preserva IDs do Notion e contexto\n      calculado: {\n        ad_id: data.ad_id || '',\n        ad_name: data.ad_name || '',\n        adset_id: data.adset_id || '',\n        campaign_id: data.campaign_id || '',\n        objective,\n        custo_real: round2(cost),\n        impressoes: impressions,\n        frequencia,\n        cliques: clicks,\n        conversoes: conversions,\n        todas_conversoes: conversions,\n        message_conversations,\n        receita: round2(revenue),\n        cpa_atual: cpa,\n        cpa_alvo_google: Number(root.meta_valor || 0),\n        taxa_conversao: convRate,\n        ctr,\n        cpc,\n        cpm,\n        roas,\n        hook_rate,\n        hold_rate,\n        video_iniciados: video_started,\n        video_50: video_p50,\n        video_completos: video_p100,\n        quality_ranking: data.quality_ranking || '',\n        engagement_rate_ranking: data.engagement_rate_ranking || '',\n        conversion_rate_ranking: data.conversion_rate_ranking || '',\n        score_otimizacao: \"N/A\",\n        status_aprendizado: data.learning_stage_info?.status || 'N/A'\n      }\n    }\n  });\n}\n\nreturn output;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1456,
+        -304
+      ],
+      "id": "cb8b81b7-f313-442d-b1c8-461885f41ffb",
+      "name": "Code Cálculo Dados Meta",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('Get database anuncios').item.json.id }}",
+          "mode": "id"
+        },
+        "simple": false,
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Cliques|rich_text",
+              "textContent": "={{ Number($('Code classificar status').item.json.clicks_7d) ? ' ' + $('Code classificar status').item.json.clicks_7d + ' ( ' + ($('Code classificar status').item.json.clicks_30d ?? 0) + ')' : '' }}"
+            },
+            {
+              "key": "Conversões|rich_text",
+              "textContent": "={{ Number($('Code classificar status').item.json.metricas_calculadas.d7.conversoes) ? ' ' + $('Code classificar status').item.json.metricas_calculadas.d7.conversoes + ' ( ' + ($('Code classificar status').item.json.metricas_calculadas.d30.conversoes ?? 0) + ')' : '' }}"
+            },
+            {
+              "key": "CPA|rich_text",
+              "textContent": "={{ Number($('Code classificar status').item.json.cpa_7d) ? 'R$ ' + $('Code classificar status').item.json.cpa_7d + ' (R$ ' + ($('Code classificar status').item.json.cpa_30d ?? 0) + ')' : '' }}"
+            },
+            {
+              "key": "CPC|rich_text",
+              "textContent": "={{ Number($('Code classificar status').item.json.cpc_7d) ? 'R$ ' + $('Code classificar status').item.json.cpc_7d + ' (R$ ' + ($('Code classificar status').item.json.cpc_30d ?? 0) + ')' : '' }}"
+            },
+            {
+              "key": "CPM|rich_text",
+              "textContent": "={{ Number($('Code classificar status').item.json.cpm_7d) ? 'R$ ' + $('Code classificar status').item.json.cpm_7d + ' (R$ ' + ($('Code classificar status').item.json.cpm_30d ?? 0) + ')' : '' }}"
+            },
+            {
+              "key": "CTR|rich_text",
+              "textContent": "={{ Number($('Code classificar status').item.json.ctr_7d) ? $('Code classificar status').item.json.ctr_7d + '% (' + ($('Code classificar status').item.json.ctr_30d ?? 0) + '%)' : '' }}"
+            },
+            {
+              "key": "Impressões|rich_text",
+              "textContent": "={{ Number($('Code classificar status').item.json.impressions_7d) ? ' ' + $('Code classificar status').item.json.impressions_7d + ' ( ' + ($('Code classificar status').item.json.impressions_30d ?? 0) + ')' : '' }}"
+            },
+            {
+              "key": "Métrica-Mãe 7D|rich_text",
+              "textContent": "={{ Number($('Code classificar status').item.json.valor_real) ? 'R$ ' + $('Code classificar status').item.json.valor_real + ' (R$ ' + ($('Code classificar status').item.json.cpa_30d ?? 0) + ')' : '' }}\n"
+            },
+            {
+              "key": "Plataforma|rich_text",
+              "textContent": "={{ $('Code Preparar Payload de Observação').item.json.properties['Fonte do Dado'].select.name }}"
+            },
+            {
+              "key": "Receita|number",
+              "numberValue": "={{ $('Code Cálcula Métricas').item.json.metricas_calculadas.d7.receita }}"
+            },
+            {
+              "key": "ROAS|rich_text",
+              "textContent": "={{ Number($('Code classificar status').item.json.metricas_calculadas.d7.roas) ? ' ' + $('Code classificar status').item.json.metricas_calculadas.d7.roas + ' ( ' + ($('Code classificar status').item.json.metricas_calculadas.d30.roas ?? 0) + ')' : '' }}"
+            },
+            {
+              "key": "Taxa de Conversão|rich_text",
+              "textContent": "={{ Number($('Code classificar status').item.json.taxa_conversao_7d) ? $('Code classificar status').item.json.taxa_conversao_7d + '% (' + ($('Code classificar status').item.json.taxa_conversao_30d ?? 0) + '%)' : '' }}"
+            },
+            {
+              "key": "Valor Investido|rich_text",
+              "textContent": "={{ Number($('Code classificar status').item.json.metricas_calculadas.d7.custo) ? 'R$ ' + $('Code classificar status').item.json.metricas_calculadas.d7.custo + ' (R$ ' + ($('Code classificar status').item.json.metricas_calculadas.d30.custo ?? 0) + ')' : '' }}"
+            },
+            {
+              "key": "ad_score_operacional|number",
+              "numberValue": "={{ $('Code Diagnóstico Criativo').item.json.final_score }}"
+            },
+            {
+              "key": "ad_prioridade_otimizacao|select",
+              "selectValue": "={{ $('Code Diagnóstico Criativo').item.json.ad_prioridade_otimizacao }}"
+            },
+            {
+              "key": "ad_diagnostico|rich_text",
+              "textContent": "={{ $('Code Diagnóstico Criativo').item.json.ad_diagnostico }}"
+            },
+            {
+              "key": "ad_status_operacional|select",
+              "selectValue": "={{ $('Code Diagnóstico Criativo').item.json.ad_status_operacional }}"
+            },
+            {
+              "key": "ad_tendencia|select",
+              "selectValue": "={{ $('Code Diagnóstico Criativo').item.json.ad_tendencia }}"
+            },
+            {
+              "key": "ad_ultima_execucao|date",
+              "includeTime": false,
+              "date": "={{ $now.toFormat('yyyy-MM-dd') }}"
+            },
+            {
+              "key": "criativo_angulo|rich_text",
+              "textContent": "={{ $('Loop Over Items').item.json.properties.criativo_angulo?.rich_text?.[0]?.text?.content ?? '' }}"
+            },
+            {
+              "key": "criativo_cta|rich_text",
+              "textContent": "={{ $('Loop Over Items').item.json.properties.criativo_cta?.rich_text?.[0]?.text?.content ?? '' }}"
+            },
+            {
+              "key": "criativo_fadiga_status|select",
+              "selectValue": "={{ $('Code Diagnóstico Criativo').item.json.criativo_fadiga_status }}"
+            },
+            {
+              "key": "criativo_score_operacional|number",
+              "numberValue": "={{ $('Code Diagnóstico Criativo').item.json.criativo_score_operacional }}"
+            },
+            {
+              "key": "Fora da Meta?|checkbox",
+              "checkboxValue": "={{ ($('Code Diagnóstico Criativo').item.json.ad_fora_da_meta === null || $('Code Diagnóstico Criativo').item.json.ad_fora_da_meta === undefined) ? ($('Get database anuncios').item.json.properties?.['Fora da Meta?']?.checkbox ?? false) : $('Code Diagnóstico Criativo').item.json.ad_fora_da_meta }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        2576,
+        32
+      ],
+      "id": "cc3e22a0-b40e-45ad-ae62-eccdf9e3809c",
+      "name": "Update a database page",
+      "retryOnFail": true,
+      "credentials": {
+        "notionApi": {
+          "id": "KpPCTsYPAvGXGfp2",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "value": "297b65e5-c72b-8061-89b3-f31bd41d7e7f",
+          "mode": "list",
+          "cachedResultName": "Anúncios",
+          "cachedResultUrl": "https://app.notion.com/p/297b65e5c72b806189b3f31bd41d7e7f"
+        },
+        "returnAll": true,
+        "simple": false,
+        "filterType": "manual",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "key": "Status do Anúncio|select",
+              "condition": "equals",
+              "selectValue": "Iniciado"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        -176,
+        -416
+      ],
+      "id": "f4a8184a-75f3-490f-952d-8a33e3d39f00",
+      "name": "Get database anuncios",
+      "retryOnFail": true,
+      "credentials": {
+        "notionApi": {
+          "id": "KpPCTsYPAvGXGfp2",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "value": "19fb65e5-c72b-8043-a82d-f47ede397928",
+          "mode": "list",
+          "cachedResultName": "Campanhas",
+          "cachedResultUrl": "https://app.notion.com/p/19fb65e5c72b8043a82df47ede397928"
+        },
+        "returnAll": true,
+        "simple": false,
+        "filterType": "manual",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "key": "Anúncios|relation",
+              "type": "relation",
+              "condition": "={{ 'contains' }}",
+              "relationValue": "={{ $('Loop Over Items').item.json.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        208,
+        -432
+      ],
+      "id": "5bcb9958-7caf-46eb-9d16-aa071baf67b1",
+      "name": "Get database campanhas",
+      "credentials": {
+        "notionApi": {
+          "id": "KpPCTsYPAvGXGfp2",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "value": "19fb65e5-c72b-81e0-a3ad-c8017d4275e5",
+          "mode": "list",
+          "cachedResultName": "Conjuntos de Anúncios",
+          "cachedResultUrl": "https://app.notion.com/p/19fb65e5c72b81e0a3adc8017d4275e5"
+        },
+        "returnAll": true,
+        "simple": false,
+        "filterType": "manual",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "key": "Anúncios|relation",
+              "type": "relation",
+              "condition": "={{ 'contains' }}",
+              "relationValue": "={{ $('Loop Over Items').item.json.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        416,
+        -432
+      ],
+      "id": "c606189c-0908-4ae0-8643-f91e91725206",
+      "name": "Get database conjuntos anuncios",
+      "credentials": {
+        "notionApi": {
+          "id": "KpPCTsYPAvGXGfp2",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const timezone = 'America/Sao_Paulo';\nconst now = new Date();\n\nconst d1 = new Date(now);\nd1.setDate(d1.getDate() - 1);\nd1.setHours(0, 0, 0, 0);\n\nconst d2 = new Date(now);\nd2.setDate(d2.getDate() - 2);\nd2.setHours(0, 0, 0, 0);\n\nconst d3Start = new Date(d1);\nd3Start.setDate(d3Start.getDate() - 2);\n\nconst d7Start = new Date(d1);\nd7Start.setDate(d7Start.getDate() - 6);\n\nconst d30Start = new Date(d1);\nd30Start.setDate(d30Start.getDate() - 29);\n\nfunction formatDate(date) {\n  const year = date.getFullYear();\n  const month = String(date.getMonth() + 1).padStart(2, '0');\n  const day = String(date.getDate()).padStart(2, '0');\n  return `${year}-${month}-${day}`;\n}\n\nconst firstJsonFromNode = (nodeName) => {\n  try {\n    return $(nodeName).item.json;\n  } catch (error) {\n    try {\n      return $(nodeName).first().json;\n    } catch (fallbackError) {\n      return {};\n    }\n  }\n};\n\nconst getProps = (page) => page?.properties || {};\n\nconst extractPlainText = (value) => {\n  if (!value) return '';\n  if (typeof value === 'string') return value;\n  if (typeof value === 'number') return String(value);\n  if (Array.isArray(value)) return value.map(extractPlainText).filter(Boolean).join(', ');\n  if (value.plain_text) return value.plain_text;\n  if (value.name) return value.name;\n  if (value.title) return extractPlainText(value.title);\n  if (value.rich_text) return extractPlainText(value.rich_text);\n  if (value.select) return extractPlainText(value.select);\n  if (value.status) return extractPlainText(value.status);\n  if (value.multi_select) return extractPlainText(value.multi_select);\n  if (value.formula) return extractPlainText(value.formula.string ?? value.formula.number ?? value.formula.boolean ?? value.formula.date);\n  if (value.rollup) return extractPlainText(value.rollup.array ?? value.rollup.string ?? value.rollup.number ?? value.rollup.date);\n  if (value.unique_id) return [value.unique_id.prefix, value.unique_id.number].filter((part) => part !== undefined && part !== null && part !== '').join('-');\n  return '';\n};\n\nconst extractNumber = (value) => {\n  if (!value) return 0;\n  if (typeof value === 'number') return value;\n  if (typeof value === 'string') {\n    const parsed = Number(value.replace(',', '.'));\n    return Number.isFinite(parsed) ? parsed : 0;\n  }\n  const candidate = value.number ?? value.formula?.number ?? value.rollup?.number ?? value.unique_id?.number;\n  if (candidate !== undefined && candidate !== null) return Number(candidate) || 0;\n  const text = extractPlainText(value);\n  const parsed = Number(String(text).replace(',', '.'));\n  return Number.isFinite(parsed) ? parsed : 0;\n};\n\nconst extractBoolean = (value) => Boolean(value?.checkbox ?? value?.formula?.boolean ?? false);\nconst extractDate = (value) => value?.date?.start || value?.formula?.date?.start || value?.rollup?.date?.start || '';\n\nconst ad = firstJsonFromNode('Loop Over Items');\nconst campanha = firstJsonFromNode('Get database campanhas');\nconst conjunto = $input.first()?.json || firstJsonFromNode('Get database conjuntos anuncios');\n\nconst adProps = getProps(ad);\nconst campanhaProps = getProps(campanha);\nconst conjuntoProps = getProps(conjunto);\n\nconst plataforma = extractPlainText(campanhaProps['Fonte']) || extractPlainText(adProps['Plataforma']) || extractPlainText(conjuntoProps['Fonte']);\n\nconst clean = {\n  clean_notion_id_camp: extractPlainText(campanhaProps['notion_id_camp']) || extractPlainText(adProps['notion_id_camp_padrao']),\n  clean_notion_id_adset: extractPlainText(conjuntoProps['notion_id_adset']) || extractPlainText(adProps['id_adset_padrao']),\n  clean_notion_id_ads: extractPlainText(adProps['notion_id_ad']) || ad.id || '',\n  clean_id_google_camp: extractNumber(campanhaProps['id_google_camp']),\n  clean_id_google_adset: extractNumber(conjuntoProps['adset_id_google']) || extractNumber(adProps['id_google_adset']),\n  clean_id_google_ad: extractNumber(adProps['id_google_ad']) || extractNumber(adProps['google_ad_id']),\n  clean_customer_id_google: extractNumber(conjuntoProps['customer_id_google']) || extractNumber(campanhaProps['id_google_account']) || extractNumber(adProps['id_google_account']),\n  clean_id_meta_account: extractNumber(adProps['id_meta_account']) || extractNumber(conjuntoProps['meta_account_id']) || extractNumber(campanhaProps['id_meta_account']),\n  clean_id_meta_campaign: extractNumber(campanhaProps['id_meta_camp']) || extractNumber(adProps['id_meta_campaing']) || extractNumber(adProps['id_meta_campaign']),\n  clean_id_meta_ads: extractNumber(adProps['id_meta_ads']) || extractNumber(adProps['ID Meta Ads']) || extractNumber(adProps['ad_id_meta']),\n  clean_client_slug: extractPlainText(campanhaProps['client_slug']) || extractPlainText(conjuntoProps['sigla_cliente']) || extractPlainText(adProps['Sigla Cliente']),\n  clean_nome_campanha: extractPlainText(campanhaProps['Nome Campanha']) || extractPlainText(campanhaProps['Nome da campanha']),\n  clean_nome_conjunto: extractPlainText(conjuntoProps['adset_name']) || extractPlainText(conjuntoProps['Nome']),\n  clean_nome_anuncio: extractPlainText(adProps['ad_name']) || extractPlainText(adProps['Nome']),\n  clean_plataforma: plataforma,\n  clean_modelo_negocio: extractPlainText(campanhaProps['Modelo de Negócio']),\n  clean_metrica_mae: extractPlainText(campanhaProps['Metrica-Mae']) || extractPlainText(campanhaProps['Métrica-Mãe']) || extractPlainText(adProps['Metrica-Mae']) || extractPlainText(adProps['Métrica-Mãe']),\n  clean_meta_metrica_mae: extractNumber(adProps['Meta Metrica-Mae']) || extractNumber(adProps['Meta Métrica-Mãe']) || extractNumber(campanhaProps['Meta da Metrica-mae']) || extractNumber(campanhaProps['Meta da Métrica-mãe']),\n  clean_cpa_alvo: extractNumber(campanhaProps['CPA Alvo']),\n  clean_periodo_otimizacao_aberto: extractBoolean(adProps['Periodo de Otimizacao?']) || extractBoolean(adProps['Período de Otimização?']) || extractBoolean(campanhaProps['Otimizacao Ativa?']) || extractBoolean(campanhaProps['Otimização Ativa?']),\n  clean_data_inicio: extractDate(conjuntoProps['Inicio']) || extractDate(campanhaProps['Data de Inicio']) || extractDate(adProps['Data de Lancamento']) || extractDate(adProps['Data de Lançamento']),\n  clean_data_conclusao: extractDate(conjuntoProps['Termino']) || extractDate(conjuntoProps['Término']) || extractDate(campanhaProps['Data de conclusao']) || extractDate(campanhaProps['Data de conclusão']),\n  clean_ultima_otimizacao: extractDate(campanhaProps['Ultima Otimizacao']) || extractDate(campanhaProps['Última Otimização']) || extractDate(adProps['ad_ultima_execucao']),\n};\n\nconst isGoogle = /google/i.test(String(clean.clean_plataforma || ''));\nconst namesForDetection = [clean.clean_nome_campanha, clean.clean_nome_anuncio, clean.clean_nome_conjunto].join(' ').toUpperCase();\nconst structuralPmax = clean.clean_id_google_ad > 0 && clean.clean_id_google_ad === clean.clean_id_google_adset;\nconst namingPmax = /\\bP\\s*MAX\\b|PERFORMANCE\\s*MAX/.test(namesForDetection);\nconst isPmax = isGoogle && (structuralPmax || namingPmax);\n\nif (isGoogle) {\n  if (!clean.clean_customer_id_google) {\n    throw new Error('Google Ads customer id ausente em Code clean propriedades');\n  }\n  if (!clean.clean_id_google_camp) {\n    throw new Error('Google Ads campaign id ausente em Code clean propriedades');\n  }\n  if (!isPmax && !clean.clean_id_google_ad) {\n    throw new Error('Google Ads ad id ausente para consulta ad_group_ad em campanha nao-PMax');\n  }\n}\n\nclean.is_pmax = isPmax;\nclean.clean_channel_type = isPmax ? 'PERFORMANCE_MAX' : '';\nclean.pmax_detection_signals = {\n  structural_ad_equals_adset: structuralPmax,\n  name_contains_pmax: namingPmax,\n};\n\nconst googleAdsId = isPmax ? clean.clean_id_google_camp : (clean.clean_id_google_ad || clean.clean_id_google_adset || clean.clean_id_google_camp);\nconst compatibilityAliases = {\n  clean_id_google: googleAdsId,\n  clean_id_customer_google: clean.clean_customer_id_google,\n};\n\nconst operational = {\n  date_d1: formatDate(d1),\n  date_d2: formatDate(d2),\n  date_d3_start: formatDate(d3Start),\n  date_d7_start: formatDate(d7Start),\n  date_d30_start: formatDate(d30Start),\n  timezone,\n  platform: clean.clean_plataforma,\n  google_ads_id: googleAdsId,\n  ...compatibilityAliases,\n};\n\nreturn [{\n  json: {\n    ...clean,\n    ...operational,\n    raw_notion_data: {\n      ...clean,\n      ...compatibilityAliases,\n    },\n  },\n  binary: $input.first()?.binary,\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        656,
+        -432
+      ],
+      "id": "8aebbc89-e7b0-421a-9fc5-d4fad419e4ac",
+      "name": "Code clean propriedades",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// ADR-33 B3: guarda — dropa itens vazios {} (quirk do Merge Meta em cliente sem aquela plataforma).\n// Minima e alinhada a decisao Opcao A: NAO dropa por falta de identidade (campanha configurada\n// sem dado deve virar linha, nao sumir). Separar no_results real de fantasma vem na B2.\nconst items = $input.all().filter((it) => it && it.json && Object.keys(it.json).length > 0);\nconst output = [];\n\nconst num = (value) => {\n  const n = Number(value ?? 0);\n  return Number.isFinite(n) ? n : 0;\n};\n\nconst round = (value, digits = 2) => {\n  const n = num(value);\n  return Number(n.toFixed(digits));\n};\n\nconst div = (numerator, denominator, multiplier = 1, digits = 2) => {\n  const den = num(denominator);\n  if (den <= 0) return 0;\n  return round((num(numerator) / den) * multiplier, digits);\n};\n\nconst emptyRaw = () => ({\n  cost: 0,\n  costMicros: 0,\n  clicks: 0,\n  impressions: 0,\n  conversions: 0,\n  conversionsValue: 0,\n  optScore: 0,\n  budget: 0,\n  status: 'ESTÁVEL'\n});\n\nconst addMetrics = (target, metrics = {}) => {\n  const costMicros = num(metrics.costMicros ?? metrics.cost_micros);\n  target.costMicros += costMicros;\n  target.cost += costMicros / 1000000;\n  target.clicks += num(metrics.clicks);\n  target.impressions += num(metrics.impressions);\n  target.conversions += num(metrics.conversions);\n  target.conversionsValue += num(metrics.conversionsValue ?? metrics.conversions_value);\n};\n\nconst aggregateGoogleResponse = (response, campaignId) => {\n  const raw = emptyRaw();\n  const rows = Array.isArray(response?.results) ? response.results : [];\n  const normalizedCampaignId = campaignId ? String(campaignId) : '';\n\n  for (const row of rows) {\n    const rowCampaignId = row?.campaign?.id ? String(row.campaign.id) : '';\n    if (normalizedCampaignId && rowCampaignId && rowCampaignId !== normalizedCampaignId) continue;\n\n    addMetrics(raw, row.metrics || {});\n\n    if (!raw.optScore && row.campaign?.optimizationScore !== undefined) {\n      raw.optScore = num(row.campaign.optimizationScore) * 100;\n    }\n    if (!raw.budget && row.campaignBudget?.amountMicros !== undefined) {\n      raw.budget = num(row.campaignBudget.amountMicros) / 1000000;\n    }\n    if (row.campaign?.biddingStrategySystemStatus) {\n      raw.status = row.campaign.biddingStrategySystemStatus;\n    }\n  }\n\n  return raw;\n};\n\nconst fillFromFallback = (raw, fallback = {}) => {\n  if (!raw.cost && fallback.cost !== undefined) raw.cost = num(fallback.cost);\n  if (!raw.costMicros && fallback.costMicros !== undefined) raw.costMicros = num(fallback.costMicros);\n  if (!raw.clicks && fallback.clicks !== undefined) raw.clicks = num(fallback.clicks);\n  if (!raw.impressions && fallback.impressions !== undefined) raw.impressions = num(fallback.impressions);\n  if (!raw.conversions && fallback.conversions !== undefined) raw.conversions = num(fallback.conversions);\n  if (!raw.conversionsValue && fallback.conversionsValue !== undefined) raw.conversionsValue = num(fallback.conversionsValue);\n  return raw;\n};\n\n// [2026-08-08] VALOR DE CONVERSAO PLACEHOLDER.\n// Quando conversions_value ~= conversions, cada conversao vale 1 unidade monetaria\n// (default do Google Ads para acao sem valor). Isso NAO e receita: e marcador.\n// Calcular ROAS sobre ele produz um numero sem significado (ex.: barbearia lead-gen\n// exibindo \"ROAS 0,16\"). Mesma familia da regra 8 do BLOCO COMUM:\n// conversions = 0 => CPA/ROAS INDEFINIDOS, nunca zero.\nconst receitaEhPlaceholder = (conversionsValue, conversions) => {\n  const v = num(conversionsValue);\n  const c = num(conversions);\n  if (v <= 0) return true;\n  return c > 0 && Math.abs(v - c) < 0.01;\n};\n\nconst calculatePaidMediaMetrics = (raw7, raw30) => {\n  const ph7 = receitaEhPlaceholder(raw7.conversionsValue, raw7.conversions);\n  const ph30 = receitaEhPlaceholder(raw30.conversionsValue, raw30.conversions);\n  return {\n  cost_7d: round(raw7.cost, 6),\n  cost_30d: round(raw30.cost, 6),\n  investimento_7d: round(raw7.cost, 2),\n  investimento_30d: round(raw30.cost, 2),\n\n  clicks_7d: raw7.clicks,\n  clicks_30d: raw30.clicks,\n  impressions_7d: raw7.impressions,\n  impressions_30d: raw30.impressions,\n  conversions_7d: round(raw7.conversions, 6),\n  conversions_30d: round(raw30.conversions, 6),\n  revenue_7d: ph7 ? null : round(raw7.conversionsValue, 6),\n  revenue_30d: ph30 ? null : round(raw30.conversionsValue, 6),\n\n  cpc_7d: div(raw7.cost, raw7.clicks),\n  cpc_30d: div(raw30.cost, raw30.clicks),\n  cpa_7d: div(raw7.cost, raw7.conversions),\n  cpa_30d: div(raw30.cost, raw30.conversions),\n  cpl_7d: div(raw7.cost, raw7.conversions),\n  cpl_30d: div(raw30.cost, raw30.conversions),\n  ctr_7d: div(raw7.clicks, raw7.impressions, 100),\n  ctr_30d: div(raw30.clicks, raw30.impressions, 100),\n  cpm_7d: div(raw7.cost, raw7.impressions, 1000),\n  cpm_30d: div(raw30.cost, raw30.impressions, 1000),\n  cvr_7d: div(raw7.conversions, raw7.clicks, 100),\n  cvr_30d: div(raw30.conversions, raw30.clicks, 100),\n  taxa_conversao_7d: div(raw7.conversions, raw7.clicks, 100),\n  taxa_conversao_30d: div(raw30.conversions, raw30.clicks, 100),\n  roas_7d: ph7 ? null : div(raw7.conversionsValue, raw7.cost),\n  roas_30d: ph30 ? null : div(raw30.conversionsValue, raw30.cost),\n\n  receita_placeholder_7d: ph7,\n  receita_placeholder_30d: ph30\n  };\n};\n\nconst metricValue = (metrics, metricName) => {\n  const normalized = String(metricName || '').toLowerCase();\n  if (normalized === 'roas') return metrics.roas_7d;\n  if (normalized === 'cpc') return metrics.cpc_7d;\n  if (normalized === 'ctr') return metrics.ctr_7d;\n  if (normalized === 'cpm') return metrics.cpm_7d;\n  if (normalized === 'cpl') return metrics.cpl_7d;\n  if (normalized === 'taxa de conversão' || normalized === 'taxa de conversao' || normalized === 'cvr') return metrics.cvr_7d;\n  if (normalized === 'impressões' || normalized === 'impressoes' || normalized === 'impressions') return metrics.impressions_7d;\n  return metrics.cpa_7d;\n};\n\nconst lowerIsBetter = (metricName) => {\n  const normalized = String(metricName || '').toLowerCase();\n  return ['cpa', 'cpl', 'cpc', 'cpm', 'cac'].includes(normalized);\n};\n\nfor (const item of items) {\n  const data = item.json;\n  const metaValor = num(data.meta_valor ?? data.sop_config?.meta_valor);\n  const tipoMetrica = data.sop_config?.metric_principal || data.metric_principal || data.clean_meta_primaria || 'CPA';\n  // ADR-33 B1: entity_id (carimbado no gatilho) tem prioridade -> ativa o filtro por campanha\n  const campaignId = data.entity_id || data.google_ads_id || data.raw_notion_data?.clean_id_google || data.campaign?.id || data.campaign_id;\n\n  let d7Response = data;\n  let d30Response = {};\n\n  try {\n    d7Response = $('HTTP Request Google Ontem (D7)').item.json;\n  } catch (e) {}\n\n  try {\n    d30Response = $('v23 Bloco 1 Core').item.json;\n  } catch (e) {\n    try {\n      d30Response = $('HTTP Request Google (D30)').item.json;\n    } catch (e2) {}\n  }\n\n  let raw7 = aggregateGoogleResponse(d7Response, campaignId);\n  let raw30 = aggregateGoogleResponse(d30Response, campaignId);\n\n  raw7 = fillFromFallback(raw7, {\n    cost: data.raw_cost_7d ?? data.raw_cost_d7,\n    costMicros: data.raw_cost_micros_7d ?? data.raw_cost_micros_d7,\n    clicks: data.raw_clicks_7d,\n    impressions: data.raw_impressions_7d,\n    conversions: data.raw_conversions_7d,\n    conversionsValue: data.raw_conversions_value_7d\n  });\n\n  raw30 = fillFromFallback(raw30, {\n    cost: data.raw_cost_brl_d30 ?? data.raw_cost_30d,\n    costMicros: data.raw_cost_micros_d30 ?? data.raw_cost_micros_30d,\n    clicks: data.raw_clicks_d30 ?? data.raw_clicks_30d,\n    impressions: data.raw_impressions_d30 ?? data.raw_impressions_30d,\n    conversions: data.raw_conversions_d30 ?? data.raw_conversions_30d,\n    conversionsValue: data.raw_conversions_value_d30 ?? data.raw_conversions_value_30d\n  });\n\n  if (data.calculado && !raw7.cost && !raw7.clicks && !raw7.impressions) {\n    raw7 = fillFromFallback(raw7, {\n      cost: data.calculado.custo_real,\n      clicks: data.calculado.cliques,\n      impressions: data.calculado.impressoes,\n      conversions: data.calculado.conversoes,\n      conversionsValue: data.calculado.valor_conversao\n    });\n  }\n\n  const metrics = calculatePaidMediaMetrics(raw7, raw30);\n  const valorReal = metricValue(metrics, tipoMetrica);\n\n  let statusMeta = 'No Alvo ?';\n  if (valorReal === null) {\n    // Metrica-mae nao avaliavel (ex.: ROAS sem receita rastreada).\n    statusMeta = 'N/D (sem receita rastreada)';\n  } else if (metaValor > 0) {\n    const isLowerBetter = lowerIsBetter(tipoMetrica);\n    if (isLowerBetter) {\n      statusMeta = valorReal <= metaValor ? 'No Alvo ✅' : 'Acima da Meta 🚨';\n    } else {\n      statusMeta = valorReal >= metaValor ? 'No Alvo ✅' : 'Abaixo da Meta 📉';\n    }\n  }\n\n  output.push({\n    json: {\n      ...data,\n      // ADR-33 B1: identidade resolvida carimbada para downstream casar por chave\n      entity_id: campaignId ? String(campaignId) : (data.entity_id || null),\n      entity_name: data.entity_name || null,\n      platform: data.platform || null,\n      valor_real: valorReal === null ? null : round(valorReal, 2),\n      meta_estabelecida: metaValor,\n      status_meta: statusMeta,\n      orcamento_diario: round(raw7.budget, 2),\n      aprendizado: String(raw7.status || 'ESTÁVEL').replace(/_/g, ' '),\n      opt_score: round(raw7.optScore, 2),\n\n      ...metrics,\n\n      raw_cost_7d: metrics.cost_7d,\n      raw_cost_30d: metrics.cost_30d,\n      raw_cost_micros_7d: round(raw7.costMicros, 0),\n      raw_cost_micros_30d: round(raw30.costMicros, 0),\n      raw_clicks_7d: raw7.clicks,\n      raw_clicks_30d: raw30.clicks,\n      raw_impressions_7d: raw7.impressions,\n      raw_impressions_30d: raw30.impressions,\n      raw_conversions_7d: metrics.conversions_7d,\n      raw_conversions_30d: metrics.conversions_30d,\n      raw_conversions_value_7d: metrics.revenue_7d,\n      raw_conversions_value_30d: metrics.revenue_30d,\n\n      metricas_calculadas: {\n        d7: {\n          custo: metrics.cost_7d,\n          cliques: metrics.clicks_7d,\n          impressoes: metrics.impressions_7d,\n          conversoes: metrics.conversions_7d,\n          receita: metrics.revenue_7d,\n          cpc: metrics.cpc_7d,\n          cpa: metrics.cpa_7d,\n          cpl: metrics.cpl_7d,\n          ctr: metrics.ctr_7d,\n          cpm: metrics.cpm_7d,\n          cvr: metrics.cvr_7d,\n          roas: metrics.roas_7d\n        },\n        d30: {\n          custo: metrics.cost_30d,\n          cliques: metrics.clicks_30d,\n          impressoes: metrics.impressions_30d,\n          conversoes: metrics.conversions_30d,\n          receita: metrics.revenue_30d,\n          cpc: metrics.cpc_30d,\n          cpa: metrics.cpa_30d,\n          cpl: metrics.cpl_30d,\n          ctr: metrics.ctr_30d,\n          cpm: metrics.cpm_30d,\n          cvr: metrics.cvr_30d,\n          roas: metrics.roas_30d\n        }\n      }\n    }\n  });\n}\n\nreturn output;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2112,
+        -704
+      ],
+      "id": "cc52bfa5-b461-4fcf-8a03-659a0fd09971",
+      "name": "Code Cálcula Métricas"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Colapsa multiplos itens do trigger em 1 (o fetch de anuncios deve rodar uma vez).\nconst items = $input.all();\nconst ctx = items.find(i => i.json && i.json.source_execution_id) || items[0] || { json: {} };\nreturn [ctx];"
+      },
+      "id": "c3004086-6fd3-47ae-9aca-98b5ea861b0b",
+      "name": "Normalizar Trigger",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -400,
+        -416
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const seen = new Set();\nreturn $input.all().filter(it => {\n  const id = it.json.id;\n  if (!id || seen.has(id)) return false;\n  seen.add(id);\n  return true;\n});"
+      },
+      "id": "9c7fddea-aa9d-447f-aad9-5c7007fc44fe",
+      "name": "Dedup page_id",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -16,
+        -608
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "bq-sql-not-empty",
+              "leftValue": "={{ $json._bq_sql }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a422dd39-57ff-45ff-aeec-70a43f5d88dd",
+      "name": "IF Gate PMAX",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2368,
+        -928
+      ]
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -640,
+        -592
+      ],
+      "id": "5e40ddb9-3757-4833-b2b5-a1d6e7029434",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Deriva os campos de diagnostico do brief secao 11 (#2, #3, #4, #5, #9, #10).\n// Entrada: saida de \"Code classificar status\" (metricas unificadas Meta/Google + gate).\n// Todos os rotulos usam a GRAFIA EXATA das opcoes do DB \"Anuncios\" no Notion (pre-req 11.5.1).\n\n// --- Parametros do brief (11.2 / 11.3) ---\nconst FREQ_ATENCAO = 2.5;\nconst FREQ_SATURADO = 3.5;\nconst QUEDA_HOOK_ATENCAO = 20;   // %\nconst QUEDA_HOOK_SATURADO = 35;  // %\nconst PESO_RANKINGS = 0.50;\nconst PESO_HOOK = 0.25;\nconst PESO_HOLD = 0.25;\n\n// Benchmarks de normalizacao (nao definidos no brief - ajustaveis).\nconst HOOK_BENCHMARK = 25;  // %\nconst HOLD_BENCHMARK = 15;  // %\nconst CTR_BENCHMARK = 1.0;  // %\nconst CTR_CRITICO = 0.5;    // %\nconst TEND_LIMIAR = 10;     // % de variacao 3d vs 7d\n\nconst RANK_PONTOS = {\n  ABOVE_AVERAGE: 100,\n  AVERAGE: 60,\n  BELOW_AVERAGE_35: 40,\n  BELOW_AVERAGE_20: 25,\n  BELOW_AVERAGE_10: 10,\n};\n\n// Mapas para as opcoes REAIS dos selects no Notion.\n// [2026-08-08] \"Dados Insuficientes\" deixou de existir como estado.\n// \"Em aprendizado\" agora so aparece para anuncio realmente novo (<14d), nunca\n// como sinonimo de \"gate fechado\" -- o rotulo antigo mentia sobre anuncios com\n// anos de veiculacao. Rotulos limitados as opcoes existentes dos selects no Notion.\nconst STATUS_NOTION = {\n  'OK': 'Bom',\n  'Atenção': 'Atenção',\n  'Crítico': 'Crítico',\n  'Sem Dados': 'Sem dados',\n  'Em Aprendizado': 'Em aprendizado',\n};\nconst PRIORIDADE_NOTION = {\n  'Crítico': 'Urgente',\n  'Atenção': 'Alta',\n  'OK': 'Baixa',\n  'Sem Dados': 'Baixa',\n  'Em Aprendizado': 'Baixa',\n};\n// Evidencia parcial nunca gera \"Urgente\" (mas continua gerando prioridade real).\nconst REBAIXA_HIPOTESE = { 'Urgente': 'Alta' };\n\nconst num = (v) => { const n = Number(v); return Number.isFinite(n) ? n : 0; };\nconst clamp100 = (v) => Math.max(0, Math.min(100, Number.isFinite(v) ? v : 0));\n\nconst items = $input.all();\nconst output = [];\n\nfor (const item of items) {\n  const data = item.json;\n  const calc = data.calculado || {};\n  const analise = data.analise_desvios || {};\n\n  const finalStatus = String(data.final_status || 'Sem Dados');\n  const sig = data.significancia || {};\n  const suficiente = sig.suficiente === true;\n  const confianca = sig.confianca || 'sem_base';\n  const nivelEvidencia = sig.nivel || 'nenhum';\n  const janelaEvidencia = sig.janela_evidencia || '7d';\n  const semBase = finalStatus === 'Sem Dados' || finalStatus === 'Em Aprendizado';\n\n  const frequencia = num(calc.frequencia);\n  const hook = num(calc.hook_rate);\n  const hold = num(calc.hold_rate);\n  const ctr = num(calc.ctr !== undefined ? calc.ctr : data.ctr_7d);\n\n  // Queda de hook_rate vs 7d exige historico (BigQuery). Sem historico fica null.\n  const quedaHook = (data.hook_rate_queda_7d === undefined || data.hook_rate_queda_7d === null)\n    ? null\n    : num(data.hook_rate_queda_7d);\n\n  // ---------- #10 criativo_score_operacional (0-100) ----------\n  const ranks = [calc.quality_ranking, calc.engagement_rate_ranking, calc.conversion_rate_ranking]\n    .map((r) => RANK_PONTOS[String(r || '').toUpperCase()])\n    .filter((p) => p !== undefined);\n\n  const hookNorm = clamp100((hook / HOOK_BENCHMARK) * 100);\n  const holdNorm = clamp100((hold / HOLD_BENCHMARK) * 100);\n  const temHookHold = hook > 0 || hold > 0;\n\n  let criativo_score = 0;\n  let criativo_score_classe = 'Sem dados';\n\n  if (ranks.length > 0) {\n    const mediaRanks = ranks.reduce((a, b) => a + b, 0) / ranks.length;\n    criativo_score = Math.round(clamp100(mediaRanks * PESO_RANKINGS + hookNorm * PESO_HOOK + holdNorm * PESO_HOLD));\n    criativo_score_classe = 'completo';\n  } else if (temHookHold) {\n    // Rankings vazios (anuncio antigo): 50% hook + 50% hold, marcado como parcial.\n    criativo_score = Math.round(clamp100(hookNorm * 0.5 + holdNorm * 0.5));\n    criativo_score_classe = 'parcial';\n  }\n\n  // ---------- #9 criativo_fadiga_status ----------\n  let criativo_fadiga_status = 'Sem dados';\n  if (suficiente && frequencia > 0) {\n    const quedaAlta = quedaHook !== null && quedaHook > QUEDA_HOOK_SATURADO;\n    const quedaAtencao = quedaHook !== null && quedaHook >= QUEDA_HOOK_ATENCAO;\n    const ctrAbaixoCritico = ctr > 0 && ctr < CTR_CRITICO;\n    const ctrAbaixoBenchmark = ctr > 0 && ctr < CTR_BENCHMARK;\n\n    if (frequencia >= FREQ_SATURADO && (quedaAlta || ctrAbaixoCritico)) {\n      criativo_fadiga_status = 'Saturado';\n    } else if (frequencia >= FREQ_ATENCAO || quedaAtencao || ctrAbaixoBenchmark) {\n      criativo_fadiga_status = 'Atenção';\n    } else {\n      criativo_fadiga_status = 'Saudável';\n    }\n  }\n\n  // ---------- #4 ad_status_operacional ----------\n  const ad_status_operacional = STATUS_NOTION[finalStatus] || 'Sem dados';\n\n  // ---------- #2 ad_prioridade_otimizacao ----------\n  let ad_prioridade_otimizacao = PRIORIDADE_NOTION[finalStatus] || 'Baixa';\n  if (confianca === 'hipotese') {\n    ad_prioridade_otimizacao = REBAIXA_HIPOTESE[ad_prioridade_otimizacao] || ad_prioridade_otimizacao;\n  }\n\n  // ---------- #5 ad_tendencia ----------\n  // Convencao: tendencia POSITIVA = piorou.\n  // [2026-08-08] SOLTA DO GATE: a tendencia vem da serie diaria (BigQuery, 3d vs 3d)\n  // e independe da significancia do desvio. Antes era calculada e descartada.\n  // Exige ao menos evidencia PARCIAL (a barra antiga era PLENO, que travava tudo).\n  const tendVal = analise.tendencia_3d_vs_7d;\n  let ad_tendencia = 'Sem dados';\n  if (tendVal !== undefined && tendVal !== null && nivelEvidencia !== 'nenhum') {\n    const t = num(tendVal);\n    if (t > TEND_LIMIAR) ad_tendencia = 'Piora';\n    else if (t < -TEND_LIMIAR) ad_tendencia = 'Melhora';\n    else ad_tendencia = 'Estável';\n  }\n\n  // ---------- Fora da Meta? (checkbox) ----------\n  // [2026-08-08 fase4] Deriva do MESMO status que ja alimenta ad_status_operacional.\n  //   Crítico/Atenção -> true (__YES__) · OK -> false (__NO__)\n  //   indefinido/Sem Dados/Em Aprendizado -> null: NAO escrever (o Update mantem o valor atual).\n  let ad_fora_da_meta = null;\n  if (finalStatus === 'Crítico' || finalStatus === 'Atenção') ad_fora_da_meta = true;\n  else if (finalStatus === 'OK') ad_fora_da_meta = false;\n\n  // ---------- #3 ad_diagnostico (template por regra) ----------\n  const metrica = data.clean_metrica_mae || analise.tipo_metric || 'Métrica-Mãe';\n  const desvio7 = num(analise.d7?.desvio);\n  const direcao = analise.direcao === 'maior_melhor' ? 'abaixo' : 'acima';\n  const absDesvio = Math.abs(Math.round(desvio7 * 10) / 10);\n\n  const selo = nivelEvidencia === 'parcial' ? ' [evidência parcial: ' + janelaEvidencia + ']' : '';\n  const sufixoCriativo = criativo_fadiga_status !== 'Sem dados' ? '; criativo ' + criativo_fadiga_status : '';\n\n  let ad_diagnostico;\n  if (finalStatus === 'Em Aprendizado') {\n    ad_diagnostico = 'Anúncio recém-lançado (' + (sig.dias_desde_lancamento ?? '?') + 'd); aguardando volume para a primeira leitura.';\n  } else if (sig.roas_sem_receita) {\n    ad_diagnostico = 'ROAS não avaliável: valor de conversão é placeholder (sem receita rastreada). Métrica-mãe deveria ser CPA/CPL.';\n  } else if (semBase) {\n    ad_diagnostico = 'Volume abaixo do mínimo para leitura — 7d: ' + num(sig.clicks_7d) + ' cliques / ' + num(sig.conversions_7d) +\n      ' conv.; 30d: ' + num(sig.clicks_30d) + ' / ' + num(sig.conversions_30d) + ' (mínimo parcial: 30 cliques / 3 conv.).';\n  } else if (desvio7 <= 0) {\n    ad_diagnostico = 'Dentro da meta (' + metrica + ' desvio ' + absDesvio + '% em 7d); tendência ' + ad_tendencia + selo + sufixoCriativo + '.';\n  } else {\n    ad_diagnostico = metrica + ' ' + absDesvio + '% ' + direcao + ' da meta em 7d; tendência ' + ad_tendencia + selo + sufixoCriativo + '.';\n  }\n\n  output.push({\n    json: {\n      ...data,\n      criativo_fadiga_status,\n      criativo_score_operacional: criativo_score,\n      criativo_score_classe,\n      ad_status_operacional,\n      ad_prioridade_otimizacao,\n      ad_tendencia,\n      ad_diagnostico,\n      ad_fora_da_meta,\n      confianca_leitura: confianca,\n      janela_evidencia: janelaEvidencia,\n      diagnostico_sinais: {\n        nivel_evidencia: nivelEvidencia,\n        janela_evidencia: janelaEvidencia,\n        confianca,\n        frequencia,\n        hook_rate: hook,\n        hold_rate: hold,\n        ctr,\n        hook_rate_queda_7d: quedaHook,\n        rankings_encontrados: ranks.length,\n        gate_suficiente: suficiente,\n        final_status: finalStatus,\n        final_score: data.final_score ?? null,\n      },\n    },\n  });\n}\n\nreturn output;"
+      },
+      "id": "42335b6b-3e70-4ab3-8066-2f8c28d70762",
+      "name": "Code Diagnóstico Criativo",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2768,
+        -688
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Pre-requisito 11.5.2: persistir os sinais de criativo TAMBEM no BigQuery.\n// O Modulo 28 le o BigQuery; sem isso o agente Diagnostico nao enxerga hook/hold/rankings/fadiga.\n// Grava em phi_prod.raw_ad_data (mesma chave da ingestao ad-grain).\n\nconst items = $input.all();\nconst output = [];\n\nconst sqlStr = (v) => \"'\" + String(v == null ? '' : v).replace(/'/g, \"''\") + \"'\";\nconst sqlStrOrNull = (v) => (v === undefined || v === null || v === '') ? 'NULL' : sqlStr(v);\nconst sqlNumOrNull = (v) => {\n  if (v === undefined || v === null || v === '') return 'NULL';\n  const n = Number(v);\n  return Number.isFinite(n) ? String(n) : 'NULL';\n};\nconst sqlNum = (v) => {\n  const n = Number(v);\n  return Number.isFinite(n) ? String(n) : '0';\n};\n\nconst firstResult = (nodeName) => {\n  try { return $(nodeName).item.json.results?.[0] || {}; } catch (e) { return {}; }\n};\nconst nodeJson = (nodeName) => {\n  try { return $(nodeName).item.json || {}; } catch (e) { return {}; }\n};\n\n// O contexto do Notion nao sobrevive as chamadas HTTP: ler do produtor original.\nconst cleanProps = nodeJson('Code clean propriedades');\n\nfor (const item of items) {\n  const data = item.json;\n  // calculado pode ter sido substituido no caminho: cair para o produtor Meta quando faltar.\n  const calc = (data.calculado && Object.keys(data.calculado).length)\n    ? data.calculado\n    : (nodeJson('Code Cálculo Dados Meta').calculado || {});\n\n  const plataforma = data.clean_plataforma || cleanProps.clean_plataforma || '';\n  const ehMeta = /meta/i.test(String(plataforma));\n\n  // --- Resolve a chave (mesma semantica da ingestao principal) ---\n  let campaignId = '';\n  let adsetId = '';\n  let adId = '';\n\n  if (ehMeta) {\n    adId = String(calc.ad_id || '');\n    adsetId = String(calc.adset_id || '');\n    campaignId = calc.campaign_id ? 'META-' + calc.campaign_id : '';\n  } else {\n    const rD1 = firstResult('HTTP Request Google Ontem (D1)');\n    const gCamp = rD1.campaign?.id || '';\n    adsetId = String(rD1.adGroup?.id || '');\n    adId = String(rD1.adGroupAd?.ad?.id || '');\n    campaignId = gCamp ? 'GADS-' + gCamp : '';\n  }\n\n  // Sem chave completa nao ha linha ad-grain para enriquecer (ex.: PMAX). Nao emite item.\n  if (!adId || !campaignId || !adsetId) {\n    continue;\n  }\n\n  const clientId = data.clean_client_slug || cleanProps.clean_client_slug || data.client_id || '';\n  const executionId = data.source_execution_id ||\n    ('EXEC-DIAG-' + new Date().toISOString().replace(/[-:TZ.]/g, '').slice(0, 14));\n\n  // Sinais de video/ranking so existem no Meta: no Google gravamos NULL (e nao 0, que enganaria).\n  const frequency = ehMeta ? sqlNumOrNull(calc.frequencia) : 'NULL';\n  const hookRate = ehMeta ? sqlNumOrNull(calc.hook_rate) : 'NULL';\n  const holdRate = ehMeta ? sqlNumOrNull(calc.hold_rate) : 'NULL';\n  const videoIni = ehMeta ? sqlNumOrNull(calc.video_iniciados) : 'NULL';\n  const video50 = ehMeta ? sqlNumOrNull(calc.video_50) : 'NULL';\n  const videoFim = ehMeta ? sqlNumOrNull(calc.video_completos) : 'NULL';\n  const qRank = ehMeta ? sqlStrOrNull(calc.quality_ranking) : 'NULL';\n  const eRank = ehMeta ? sqlStrOrNull(calc.engagement_rate_ranking) : 'NULL';\n  const cRank = ehMeta ? sqlStrOrNull(calc.conversion_rate_ranking) : 'NULL';\n  const msgConv = ehMeta ? sqlNumOrNull(calc.message_conversations) : 'NULL';\n  const cpmVal = ehMeta ? sqlNumOrNull(calc.cpm) : 'NULL';\n  const roasVal = ehMeta ? sqlNumOrNull(calc.roas) : 'NULL';\n\n  // Diagnostico e calculado para os dois caminhos.\n  const fadiga = sqlStr(data.criativo_fadiga_status || 'Sem dados');\n  const criativoScore = sqlNum(data.criativo_score_operacional);\n\n  const sql = 'MERGE phi_prod.raw_ad_data AS target\\n' +\n    'USING (\\n' +\n    '  SELECT\\n' +\n    '    ' + sqlStr(executionId) + ' AS execution_id,\\n' +\n    '    ' + sqlStr(clientId) + ' AS client_id,\\n' +\n    '    ' + sqlStr(campaignId) + ' AS campaign_id,\\n' +\n    '    ' + sqlStr(adsetId) + ' AS adset_id,\\n' +\n    '    ' + sqlStr(adId) + ' AS ad_id,\\n' +\n    \"    DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 1 DAY) AS date,\\n\" +\n    '    ' + frequency + ' AS frequency,\\n' +\n    '    ' + hookRate + ' AS hook_rate,\\n' +\n    '    ' + holdRate + ' AS hold_rate,\\n' +\n    '    ' + videoIni + ' AS video_iniciados,\\n' +\n    '    ' + video50 + ' AS video_50,\\n' +\n    '    ' + videoFim + ' AS video_completos,\\n' +\n    '    ' + qRank + ' AS quality_ranking,\\n' +\n    '    ' + eRank + ' AS engagement_rate_ranking,\\n' +\n    '    ' + cRank + ' AS conversion_rate_ranking,\\n' +\n    '    ' + msgConv + ' AS message_conversations,\\n' +\n    '    ' + cpmVal + ' AS cpm,\\n' +\n    '    ' + roasVal + ' AS roas,\\n' +\n    '    ' + fadiga + ' AS criativo_fadiga_status,\\n' +\n    '    ' + criativoScore + ' AS criativo_score_operacional\\n' +\n    ') AS source\\n' +\n    'ON  target.client_id   = source.client_id\\n' +\n    'AND target.campaign_id = source.campaign_id\\n' +\n    'AND target.adset_id    = source.adset_id\\n' +\n    'AND target.ad_id       = source.ad_id\\n' +\n    'AND target.date        = source.date\\n' +\n    'WHEN MATCHED THEN UPDATE SET\\n' +\n    '  target.frequency = source.frequency,\\n' +\n    '  target.hook_rate = source.hook_rate,\\n' +\n    '  target.hold_rate = source.hold_rate,\\n' +\n    '  target.video_iniciados = source.video_iniciados,\\n' +\n    '  target.video_50 = source.video_50,\\n' +\n    '  target.video_completos = source.video_completos,\\n' +\n    '  target.quality_ranking = source.quality_ranking,\\n' +\n    '  target.engagement_rate_ranking = source.engagement_rate_ranking,\\n' +\n    '  target.conversion_rate_ranking = source.conversion_rate_ranking,\\n' +\n    '  target.message_conversations = source.message_conversations,\\n' +\n    '  target.cpm = source.cpm,\\n' +\n    '  target.roas = source.roas,\\n' +\n    '  target.criativo_fadiga_status = source.criativo_fadiga_status,\\n' +\n    '  target.criativo_score_operacional = source.criativo_score_operacional,\\n' +\n    '  target.ingested_at = CURRENT_TIMESTAMP()\\n' +\n    'WHEN NOT MATCHED THEN INSERT (\\n' +\n    '  execution_id, client_id, campaign_id, adset_id, ad_id, date,\\n' +\n    '  frequency, hook_rate, hold_rate, video_iniciados, video_50, video_completos,\\n' +\n    '  quality_ranking, engagement_rate_ranking, conversion_rate_ranking,\\n' +\n    '  message_conversations, cpm, roas,\\n' +\n    '  criativo_fadiga_status, criativo_score_operacional,\\n' +\n    '  data_source, platform, ingestion_status, ingestion_step, ingested_at\\n' +\n    ') VALUES (\\n' +\n    '  source.execution_id, source.client_id, source.campaign_id, source.adset_id, source.ad_id, source.date,\\n' +\n    '  source.frequency, source.hook_rate, source.hold_rate, source.video_iniciados, source.video_50, source.video_completos,\\n' +\n    '  source.quality_ranking, source.engagement_rate_ranking, source.conversion_rate_ranking,\\n' +\n    '  source.message_conversations, source.cpm, source.roas,\\n' +\n    '  source.criativo_fadiga_status, source.criativo_score_operacional,\\n' +\n    '  ' + sqlStr(ehMeta ? 'meta_ads_api' : 'google_ads_api') + ', ' + sqlStr(ehMeta ? 'meta_ads' : 'google_ads') + \", 'SUCCESS', 'DIAGNOSTICO_CRIATIVO', CURRENT_TIMESTAMP()\\n\" +\n    ');';\n\n  output.push({ json: { ...data, _bq_sql_criativo: sql, _bq_criativo_key: { campaignId, adsetId, adId, ehMeta, plataforma, clientId } } });\n}\n\nreturn output;\n"
+      },
+      "id": "3d61b83e-48c7-4ab1-9d6f-1f60a669a78f",
+      "name": "Code Montar SQL Criativo",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2768,
+        -432
+      ]
+    },
+    {
+      "parameters": {
+        "projectId": {
+          "__rl": true,
+          "value": "project-0e7c58d4-656f-49e8-807",
+          "mode": "list",
+          "cachedResultName": "phi-production"
+        },
+        "sqlQuery": "{{ $json._bq_sql_criativo }}",
+        "options": {}
+      },
+      "id": "e795bd20-cdb4-4beb-93e1-ce2d688a9222",
+      "name": "BigQuery Persistir Sinais Criativo",
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2.1,
+      "position": [
+        3040,
+        -432
+      ],
+      "credentials": {
+        "googleBigQueryOAuth2Api": {
+          "id": "UhLRAanVarQeOpQy",
+          "name": "Google BigQuery account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -656,
+        -256
+      ],
+      "id": "b07b5dd7-3397-4db2-8594-51fb7694d16b",
+      "name": "When Executed by Another Workflow"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Get database campanhas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If D-2 exist1": {
+      "main": [
+        [
+          {
+            "node": "Merge Meta Ads",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "Merge Meta Ads",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Meta Ads": {
+      "main": [
+        [
+          {
+            "node": "Code Cálcula Métricas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Plataforma": {
+      "main": [
+        [
+          {
+            "node": "v23 Bloco 1 Core",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request Meta Ads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a database page Create Observation": {
+      "main": [
+        [
+          {
+            "node": "Update a database page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Valida Dados": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Valida Dados Meta": {
+      "main": [
+        [
+          {
+            "node": "If D-1 Exist Meta Ads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If D-1 Exist Meta Ads": {
+      "main": [
+        [
+          {
+            "node": "Code Cálculo Dados Meta",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request Meta Ads D-2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request Meta Ads": {
+      "main": [
+        [
+          {
+            "node": "Code Valida Dados Meta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Valida Dados D-2 Meta": {
+      "main": [
+        [
+          {
+            "node": "If D-2 exist1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request Meta Ads D-2": {
+      "main": [
+        [
+          {
+            "node": "Code Valida Dados D-2 Meta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code calculo desvio meta": {
+      "main": [
+        [
+          {
+            "node": "Code classificar status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request Google Ontem (D1)": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request Google Ontem (D3)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request Google Ontem (D7)": {
+      "main": [
+        [
+          {
+            "node": "Code Unificar Períodos (D1, 3D, 7D)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request Google Ontem (D3)": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request Google Ontem (D7)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Code Cálcula Métricas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute SQL inserir daily entry": {
+      "main": [
+        []
+      ]
+    },
+    "Code Preparar Payload de Observação": {
+      "main": [
+        [
+          {
+            "node": "Create a database page Create Observation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Unificar Períodos (D1, 3D, 7D)": {
+      "main": [
+        [
+          {
+            "node": "Code Valida Dados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "v23 Bloco 1 Core": {
+      "main": [
+        [
+          {
+            "node": "v23 Bloco 2 Termos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "v23 Bloco 2 Termos": {
+      "main": [
+        [
+          {
+            "node": "v23 Bloco 3 Canais",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "v23 Bloco 3 Canais": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request Google Ontem (D1)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Recupera Metas p Comparação": {
+      "main": [
+        [
+          {
+            "node": "Code Prep Tendência",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Prep Tendência": {
+      "main": [
+        [
+          {
+            "node": "BigQuery Série Diária",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "BigQuery Série Diária": {
+      "main": [
+        [
+          {
+            "node": "Code Tendência Real",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Tendência Real": {
+      "main": [
+        [
+          {
+            "node": "Code calculo desvio meta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Cálculo Dados Meta": {
+      "main": [
+        [
+          {
+            "node": "Merge Meta Ads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update a database page": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get database campanhas": {
+      "main": [
+        [
+          {
+            "node": "Get database conjuntos anuncios",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get database conjuntos anuncios": {
+      "main": [
+        [
+          {
+            "node": "Code clean propriedades",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code clean propriedades": {
+      "main": [
+        [
+          {
+            "node": "If Plataforma",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Cálcula Métricas": {
+      "main": [
+        [
+          {
+            "node": "Code Recupera Metas p Comparação",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code Montar SQL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get database anuncios",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get database anuncios": {
+      "main": [
+        [
+          {
+            "node": "Dedup page_id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dedup page_id": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Montar SQL": {
+      "main": [
+        [
+          {
+            "node": "IF Gate PMAX",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Gate PMAX": {
+      "main": [
+        [
+          {
+            "node": "Execute SQL inserir daily entry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Normalizar Trigger",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code classificar status": {
+      "main": [
+        [
+          {
+            "node": "Code Diagnóstico Criativo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Diagnóstico Criativo": {
+      "main": [
+        [
+          {
+            "node": "Code Preparar Payload de Observação",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code Montar SQL Criativo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Montar SQL Criativo": {
+      "main": [
+        [
+          {
+            "node": "BigQuery Persistir Sinais Criativo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Normalizar Trigger",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": true
+  },
+  "versionId": "ff681a25-4de6-4736-8942-f88d331a27f4",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp",
+    "instanceId": "305397df9a0eb50aabb90fb3f0fff1d7d74e7d343769e5f986243e1588b26e7b"
+  },
+  "nodeGroups": [],
+  "id": "vVAdXAJh6MW2Z5Hp",
+  "tags": []
+}

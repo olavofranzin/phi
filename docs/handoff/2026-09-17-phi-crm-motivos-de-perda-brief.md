@@ -1,0 +1,306 @@
+# Brief — motivos de perda do `phi_crm`
+
+> **Para:** sub-chat do módulo `phi_crm`
+> **De:** chat-mãe
+> **Data:** 2026-09-17
+> **Branch:** `claude/consolidacao-2026-08`
+> **Quando:** **depois** da ativação do PROSP-06O. Não interromper.
+
+---
+
+## 1. Por que isto não é cadastro
+
+O `motivo_perda` da planilha vem do `lost_reason_id` do Odoo e é **a base de aprendizado do "por que
+a gente perde"**. **A lista de motivos é a taxonomia do aprendizado** — se ela estiver errada, o
+pipeline pode funcionar perfeitamente e o dado não ensina nada.
+
+Hoje estão lá os motivos **de fábrica do Odoo**, escritos para um contexto industrial. Não servem
+para uma agência que vende gestão de perfil do Google por R$ 500/mês.
+
+## 2. Procurei o que já existe (R7) — e metade do trabalho está feita
+
+**Não há arquivo de motivos no módulo.** O `crm_lead.py` diz, no comentário da linha 57:
+*"Motivo de perda = `lost_reason_id` nativo (botão Perdido)"*. Nenhum `data/` define registros.
+
+🟢 **Mas o `data/crm_stage_data.xml` já diz, estágio a estágio, o que é perder ali:**
+
+| Estágio | O que o `requirements` já escreve |
+|---|---|
+| Prospecção | *"Perdido: não se aplica nesta etapa."* |
+| Aguardando Aceite | *"NBA-Aceite = Rejeitada + preencher Motivo da Rejeição (MQL)"* |
+| Em Cadência | *"8 ou mais tentativas multi-canal sem resposta → **reciclar** (Status do Lead = Reciclado)"* |
+| Conversa Aceita | *"sem fit, ou sumiu (botão Perdido + motivo)"* |
+| Escopo e Proposta | *"objeção não superada ou recusa (botão Perdido + motivo)"* |
+
+**A taxonomia se deriva daí, não se inventa.** E há uma distinção que o desenho já fez e que **não
+pode ser achatada**: em Cadência, sem resposta é **reciclar**, não perder. Quem juntar as duas coisas
+destrói a análise — o gargalo declarado do projeto é *falar com eles*, então "sem resposta" domina
+tudo se virar motivo de perda no mesmo balde.
+
+## 3. Proposta de lista — **precisa do OK do Olavo antes de construir**
+
+Agrupada pelo estágio onde a perda acontece, porque **onde se perde ensina tanto quanto por quê**.
+
+**Perde em Cadência (nunca conversamos)**
+| Motivo | Quando usar |
+|---|---|
+| `Sem resposta` | cadência completa, nunca respondeu — **só se não for reciclar** |
+| `Contato inválido` | telefone/e-mail não existe ou é de outro negócio |
+| `Pediu para não contatar` | opt-out explícito |
+
+**Perde em Conversa Aceita (conversamos)**
+| Motivo | Quando usar |
+|---|---|
+| `Sem fit` | fora da cidade, setor que não atendemos, negócio fechado ou inativo |
+| `Sumiu depois de aceitar` | topou conversar e não voltou |
+
+**Perde em Escopo e Proposta (chegou na proposta)**
+| Motivo | Quando usar |
+|---|---|
+| `Preço` | achou caro para o que entrega |
+| `Já tem quem faça` | agência, funcionário ou familiar já cuida |
+| `Perdeu para concorrente` | comparou e escolheu outro |
+| `Não é prioridade agora` | quer, adiou — **candidato a retomada** |
+| `Não vê valor no GBP` | não acredita que o perfil traga resultado |
+
+**Os dois últimos pares colam na hora de escolher** (`Preço` × `Não vê valor`, `Já tem quem faça` ×
+`Perdeu para concorrente`) — e é por isso que cada um leva definição. São perguntas diferentes: preço
+se resolve mexendo na oferta; falta de valor se resolve mexendo na prova.
+
+## 4. As quatro regras de construção
+
+### 4.1 🔴 Nome de motivo é chave de análise — escolher uma vez
+
+A planilha guarda o **nome** do motivo, não o id: o `[P6] So os modificados` faz
+`txt(lead.lost_reason_id)`, que devolve `v[1]` do many2one. **Renomear um motivo depois parte a base
+em duas** — metade das linhas com o nome velho, metade com o novo, e nada dizendo que são a mesma
+coisa.
+
+> É o mesmo erro do `id_hubspot` → `id_crm` e do `campaign_id` com prefixo. **O Olavo aprova os nomes
+> antes de existirem.**
+
+### 4.2 Fino é melhor que grosso — e não é simetria
+
+**Dado fino sempre se agrupa na análise. Dado grosso nunca se separa.** Não comece com 4 motivos
+"para simplificar": daqui a seis meses ninguém recupera qual `Preço` era na verdade `Não vê valor`.
+
+É a mesma lógica do **I3** (vazio ≠ zero): **não destrua informação na hora de escrever.**
+
+### 4.3 🔴 Arquivar os nativos, nunca apagar
+
+Já existe **pelo menos um lead perdido apontando para um motivo de fábrica** — o Olavo marcou um em
+17/09. Apagar o registro quebraria a referência ou apagaria o dado.
+
+**Arquivar (`active = False`) tira da lista sem perder a história**, e o lead antigo continua legível.
+É a R5 no nível do dado.
+
+### 4.4 Arquivo de dados versionado, não cadastro na tela
+
+Como o `crm_stage_data.xml`: **os nomes fazem parte da spec, não são preferência editável na tela.**
+
+⚠️ **E leia o comentário no topo daquele arquivo antes de escrever o novo** — ele registra que
+`noupdate="1"` foi tentado em 05/09 e **fez o Odoo pular os registros que já existiam**, que era
+exatamente o que se queria alterar. A mesma armadilha vale aqui.
+
+## 5. O que fica de fora
+
+- **O "Motivo da Rejeição (MQL)"** do estágio Aguardando Aceite é campo próprio e outra pergunta —
+  não vira motivo de perda.
+- **O `lead_status = Reciclado`** continua sendo o caminho de quem não respondeu em Cadência. Este
+  brief **não muda** essa regra; só cuida do que acontece quando de fato se marca Perdido.
+- **A definição de cada motivo não cabe no Odoo** — `crm.lead.lost.reason` só tem `name` e `active`.
+  As definições da §3 vivem em documento, e o arquivo de dados aponta para ele em comentário. **Diga
+  isso em vez de esconder.**
+
+## 6. O que devolver
+
+1. A lista final **aprovada pelo Olavo**, com os nomes exatos.
+2. O arquivo de dados, no padrão do `crm_stage_data.xml`, com o comentário explicando **por que sem
+   `noupdate`** e **por que arquiva em vez de apagar**.
+3. Confirmação de que os nativos foram **arquivados, não apagados**, e de que o lead perdido de 17/09
+   **continua mostrando o motivo antigo**.
+4. Onde ficou escrita a definição de cada motivo.
+
+---
+
+## 7. Apêndice — resposta do Olavo sobre `Sem resposta` (18/09)
+
+> Registrado pelo sub-chat da primeira análise, que levantou a ambiguidade. **Não reescreve as
+> decisões acima; acrescenta a resposta que faltava.**
+
+A §3 condicionava `Sem resposta` a *"só se não for reciclar"*, e a §5 dizia que reciclar continua
+sendo o caminho de quem não respondeu em Cadência. Lidos juntos, não ficava claro quando um vendedor
+usaria `Sem resposta`. **A resposta do Olavo inverte a leitura.**
+
+**`Sem resposta` é o caminho normal ao fim da cadência**, não a exceção. Nas palavras dele:
+
+> *"Sem resposta deve ser usado quando o lead já passou por toda a cadência e em algum momento ele
+> deixou de responder, não deve ir direto para reciclar porque há uma linha tênue entre tentar um
+> contato sadio e ser inconveniente ao insistir e incomodar o lead, ao sermos taxados de
+> inconvenientes podemos criar uma barreira praticamente intransponível para termos acesso ao leads.
+> Ele poderá ser acionado novamente após um período, geralmente com uma campanha específica, por
+> isso, apesar de marcado como perdido ele em algum momento voltará para a esteira comercial."*
+
+**O que isso muda:**
+
+1. **`Sem resposta` é uma pausa, não um fim.** É perda **reversível por desenho** — o lead sai da
+   esteira para **não ser queimado**, e volta depois com uma campanha específica. O motivo não diz
+   "desistimos dele"; diz "parem de insistir agora".
+2. **A definição precisa carregar isso.** Sem essa frase, metade das pessoas vai marcar `Sem resposta`
+   achando que está encerrando o lead, e a outra metade vai evitar marcá-lo para "não perder o lead".
+   As duas leituras poluem a mesma coluna.
+3. **Vai ser o maior balde, de longe.** O gargalo declarado do projeto é *falar com eles*. Na análise,
+   `Sem resposta` responde por **alcance**; os outros motivos respondem por **oferta**. Somar os dois
+   num único "por que perdemos" afoga tudo que ensina sobre preço, valor e concorrência.
+
+### 🔴 7.1 O módulo contradiz esta regra — resolver antes de construir
+
+O `data/crm_stage_data.xml`, linha 68, escreve o oposto para o estágio Em Cadência:
+
+> *"Perdido: 8 ou mais tentativas multi-canal sem resposta -> **reciclar** (Status do Lead =
+> 'Reciclado')."*
+
+O próprio texto já mistura as duas coisas: o rótulo diz **Perdido** e a instrução manda **reciclar**.
+Pela **R6**, o que o Olavo diz agora vence — mas **o XML não pode ficar como está**, senão a próxima
+pessoa lê a regra velha e marca diferente.
+
+**A pergunta que falta, e que decide o desenho:** o `lead_status = Reciclado` continua existindo?
+Duas leituras possíveis, e elas levam a taxonomias diferentes:
+
+| Leitura | Consequência |
+|---|---|
+| **(a)** Reciclado e `Perdido + Sem resposta` são a mesma coisa com dois nomes | um dos dois sai. O `lead_status = Reciclado` deixa de ser usado |
+| **(b)** São momentos distintos: perde-se agora com `Sem resposta`, e **Reciclado** é o estado de quem **voltou** pela campanha | os dois ficam, e o XML muda para descrever a sequência, não a alternativa |
+
+A fala *"não deve ir direto para reciclar"* sugere **(b)** — reciclar seria trazer de volta cedo
+demais. Mas isso é leitura, não fato: **precisa do Olavo.**
+
+### 7.2 O que a volta exige — e o que já existe (R7)
+
+O lead volta *"após um período"*. Procurei o que já existe antes de propor campo novo:
+
+- ✅ **A âncora de tempo já existe.** O `date_closed` do Odoo marca quando o lead foi perdido, e o
+  `[P6] So os modificados` **já o escreve** na planilha como `data_fechamento`. Dá para listar
+  "perdidos há mais de X dias com motivo `Sem resposta`" **sem criar coluna nenhuma**.
+- ⚠️ **A volta é ato humano, não da esteira.** Perder arquiva o lead (`active = false`), e o P5O tem
+  o ramo `[P5] Lead perdido - nao ressuscitar` — decisão D2 do próprio Olavo. Enquanto estiver
+  arquivado, o robô **pula** o lead, de propósito. Quando um humano desarquivar, o P5O volta a
+  atualizá-lo normalmente. **Funciona — mas precisa estar escrito**, senão alguém vai esperar que a
+  automação traga o lead de volta sozinha, e ela nunca vai.
+
+### 7.3 Por que marcar perdido, e como o lead volta (18/09)
+
+**O motivo da perda é operacional, não moral:** *"para que 'saia' da contagem de leads 'rodando' no
+pipeline"*. O lead não é descartado — ele é tirado de vista para o funil dizer a verdade sobre o que
+está em jogo agora.
+
+O Olavo levantou três caminhos. **Procurei antes de opinar (R7), e o segundo já está construído.**
+
+🟢 **O `lead_status` já tem `reciclado`.** `crm_lead.py` linha 59, quatro valores
+(`novo` · `aceito` · `em_cadencia` · `reciclado`), campo `[HUM]`, com este `help`:
+
+> *"Nuance da cadencia, em paralelo ao estagio. O estagio nunca retrocede; **a reciclagem se registra
+> aqui**."*
+
+O campo foi desenhado para marcar **quem voltou**, não quem saiu. Isso encaixa perda e reciclagem sem
+conflito, em eixos diferentes — **e responde a pergunta em aberto da §7.1: é a leitura (b).**
+
+**Recomendação — A e B, cada uma no seu momento, sem construir nada:**
+
+| Momento | O que o humano faz | Onde o dado fica |
+|---|---|---|
+| **Sai** (fim da cadência) | botão Perdido + motivo `Sem resposta` | `lost_reason_id` → `motivo_perda` · `date_closed` → `data_fechamento` — **as duas o P6O já escreve** |
+| **Volta** (campanha) | desarquiva + `lead_status = reciclado` | campo que já existe; o estágio não retrocede |
+
+O monitoramento *"fechado há X tempo"* sai dessas duas colunas, sem coluna nova. E desarquivar devolve
+o histórico inteiro: chatter, tentativas, campos GBP.
+
+#### 🔴 Contra o segundo pipeline — o custo é no PROSP-06O
+
+**Perder arquiva o lead** (`active = false`). Para viver num pipeline "Reciclados" ele teria de ficar
+**ativo** — e aí **não sai da contagem**, só muda de funil. O objetivo declarado só se cumpre se toda
+contagem, de todo mundo, for sempre por funil.
+
+**E o desfecho pararia de voltar.** O `[P6] So os modificados` deriva o desfecho de `won_status`,
+`lost_reason_id` e `active`. Lead ativo em outro funil chega como **aberto**: `status_crm` viraria o
+nome do estágio do funil Reciclados e **o `motivo_perda` nunca seria gravado**. A base de aprendizado
+perderia a categoria mais volumosa — a que mede o gargalo declarado do projeto.
+
+Há ainda o custo comum: dois conjuntos de estágios para manter, e relatórios que precisam somar dois
+funis para responder *"quantos leads temos"*.
+
+#### Pendência menor, registrada e não proposta
+
+O `lead_status` **não volta para a planilha**: o P6O não o mapeia e não há coluna para ele. Não
+atrapalha o monitoramento acima. Se um dia for preciso filtrar "reciclados" direto na planilha, é uma
+coluna nova mais uma linha no mapeamento — **decisão do Olavo, não deste brief.**
+
+---
+
+## 7. ⚠️ CORRIGIDO — não era caso real, era dado de teste (2026-09-19)
+
+> 🔴 **A leitura abaixo está ERRADA e fica registrada como hipótese desmentida (R6).** O Olavo
+> corrigiu, e a correção dele é verificável:
+>
+> **1. Os motivos no CRM são os de fábrica — não são nossos.** Marcar o lead foi **para destravar um
+> teste**; o motivo escolhido foi **arbitrário**. Não houve resposta de lead nenhum.
+>
+> **2. E o dado desmente sozinho: `expected_revenue` do lead era `0`.** *"Como levar a sério um
+> 'muito caro' se a oportunidade nem valor tinha?"* — **eu tinha esse número na tela** (li o lead 116
+> na execução `40460`) e escrevi a análise assim mesmo.
+>
+> 🔴 **Nada aqui autoriza mexer na oferta.** **Até o Olavo avisar que começou "pra valer", TODA perda
+> registrada é teste** — inclusive as duas já gravadas.
+>
+> **O que sobrevive da §7:** só o **argumento de desenho** — a lista de fábrica não tem `Sem fit`, e
+> por isso o motivo verdadeiro foi parar na observação, onde a máquina não lê. **Isso continua sendo
+> a razão deste brief.** O que cai é a *consequência* que eu deduzi de uma amostra que não é amostra.
+
+### 7.0 A lição, e ela é minha
+
+**Dado de teste não vira evidência só porque foi gravado.** A linha existe, é idêntica a uma real, e
+**nada nela diz que foi teste** — é a R12 aplicada a **dado** em vez de configuração.
+
+**O conserto é o mais simples que resolve:** quando o Olavo disser que começou pra valer, **anotar a
+data no contrato**. Tudo antes dela é teste. **Sem coluna nova, sem campo, sem processo** — uma data
+e uma frase.
+
+> **Teste prático, para mim:** antes de tirar conclusão de um dado de produção, perguntar **"isto foi
+> alguém usando o sistema, ou alguém testando o sistema?"** — e, se não souber, **olhar os campos
+> vizinhos**: um `expected_revenue` zerado já contava a história inteira.
+
+---
+
+## 7-original (mantido como registro do erro) — "O caso real que validou este brief"
+
+**No primeiro dia de uso, o defeito apareceu sozinho.** O Olavo marcou um lead como perdido,
+escolheu **"Muito caro"** na lista de fábrica, e escreveu na observação que o lead estava **fora do
+ICP**.
+
+**Os dois não são a mesma coisa — e apontam para consertos opostos:**
+
+| O que ele escolheu | O que ele escreveu | O que cada um manda fazer |
+|---|---|---|
+| **"Muito caro"** | — | mexer na **oferta**: preço, pacote, forma de pagamento |
+| — | **"fora do ICP"** | mexer na **entrada**: não era para termos falado com ele |
+
+🔴 **E a máquina só lê o motivo.** O `[P6] So os modificados` faz `txt(lead.lost_reason_id)`. **A
+observação não atravessa.** Então a base de aprendizado vai registrar **`"Too expensive"`** para uma
+perda que foi, na verdade, **erro de segmentação**.
+
+> **O motivo certo não existia na lista, então ele foi para a observação — onde a máquina não lê.**
+> Isso não é falha do Olavo: é **a lista de fábrica não ter o motivo que a agência precisa**, que é
+> exatamente o que este brief existe para consertar.
+
+**A consequência, se isso virar padrão:** a análise vai concluir *"nosso preço está errado"* quando a
+conclusão certa é *"nosso alvo está errado"*. **Baixar o preço e mudar quem se contata são ações
+opostas** — e uma base mal rotulada escolhe a errada com confiança.
+
+**Este caso é o `Sem fit` da §3** — *"fora da cidade, setor que não atendemos, negócio fechado ou
+inativo"*. A proposta foi validada por um caso real no primeiro dia.
+
+### 7.1 Mitigação barata, para agora
+
+**Anotar qual lead é este**, para que o rótulo possa ser corrigido quando a lista nova existir.
+Enquanto o piloto tem ~2 perdas, o Olavo ainda lembra qual é qual. **Em um mês, não lembra** — e aí o
+dado mal rotulado vira permanente, porque ninguém sabe quais linhas revisar.

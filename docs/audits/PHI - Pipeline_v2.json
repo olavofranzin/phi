@@ -1,0 +1,2405 @@
+{
+  "name": "PHI - Pipeline_v2",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 7
+            }
+          ]
+        }
+      },
+      "id": "02fa9d74-77b7-4258-9c06-d6b03c65390b",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        6288,
+        11360
+      ]
+    },
+    {
+      "parameters": {
+        "projectId": {
+          "__rl": true,
+          "value": "project-0e7c58d4-656f-49e8-807",
+          "mode": "list",
+          "cachedResultName": "phi-production"
+        },
+        "sqlQuery": "SELECT\n  COALESCE(\n    (SELECT execution_id\n     FROM `phi_prod.workflow_execution_log`\n     WHERE DATE(started_at) = CURRENT_DATE()\n       AND status = 'SUCCESS'\n       AND phase = 'INGESTION'\n     ORDER BY started_at DESC\n     LIMIT 1),\n    CONCAT('FALLBACK-', FORMAT_DATE('%Y%m%d', CURRENT_DATE()), '-', GENERATE_UUID())\n  ) AS execution_id",
+        "options": {
+          "useLegacySql": false
+        }
+      },
+      "id": "6651a989-a116-4aea-8b63-01a890ed0402",
+      "name": "Buscar ID de Sucesso Hoje",
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2.1,
+      "position": [
+        6528,
+        11360
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleBigQueryOAuth2Api": {
+          "id": "UhLRAanVarQeOpQy",
+          "name": "Google BigQuery account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "projectId": {
+          "__rl": true,
+          "value": "project-0e7c58d4-656f-49e8-807",
+          "mode": "list",
+          "cachedResultName": "phi-production",
+          "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=project-0e7c58d4-656f-49e8-807"
+        },
+        "sqlQuery": "INSERT INTO `phi_prod.workflow_execution_log`\n(execution_id, execution_date, phase, status, is_reprocessing, records_processed, started_at)\nVALUES\n('{{ $('Buscar ID de Sucesso Hoje').first().json.execution_id }}',\n CURRENT_DATE(), 'INGESTION', 'RUNNING', FALSE, 0, CURRENT_TIMESTAMP());",
+        "options": {
+          "useLegacySql": false
+        }
+      },
+      "id": "ebee8b52-2a71-46ab-b12c-d0c70a0b6298",
+      "name": "Log INGESTION RUNNING",
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2.1,
+      "position": [
+        6528,
+        11584
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleBigQueryOAuth2Api": {
+          "id": "UhLRAanVarQeOpQy",
+          "name": "Google BigQuery account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "projectId": {
+          "__rl": true,
+          "value": "project-0e7c58d4-656f-49e8-807",
+          "mode": "list",
+          "cachedResultName": "phi-production",
+          "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=project-0e7c58d4-656f-49e8-807"
+        },
+        "sqlQuery": "SELECT client_id, model_id, primary_metric_type\nFROM `phi_prod.client_config`\nWHERE is_active = TRUE;",
+        "options": {}
+      },
+      "id": "cd8f12ff-ee3a-4194-8bfc-744cbec6a6ad",
+      "name": "Buscar Clientes Ativos",
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2.1,
+      "position": [
+        6528,
+        11808
+      ],
+      "credentials": {
+        "googleBigQueryOAuth2Api": {
+          "id": "UhLRAanVarQeOpQy",
+          "name": "Google BigQuery account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst execution_id = $('Buscar ID de Sucesso Hoje').first().json.execution_id;\n\nreturn items.map(item => ({\n  json: {\n    ...item.json,\n    execution_id: execution_id\n  }\n}));"
+      },
+      "id": "1026f9d1-0506-437b-b54d-9cde53cf6a61",
+      "name": "Code INSERT execution_id",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        6864,
+        11360
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "4aacf958-a04c-4c62-bc45-2b3579b13a05",
+      "name": "Loop Clientes",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        6864,
+        11584
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "b1pbn8qmzCNTufTp",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/b1pbn8qmzCNTufTp",
+          "cachedResultName": "PHI - Subworkflow Campanhas"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "execution_id": "={{ $json.execution_id }}",
+            "client_id": "={{ $json.client_id }}",
+            "source_execution_id": "={{ $json.source_execution_id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "execution_id",
+              "displayName": "execution_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "client_id",
+              "displayName": "client_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "87806741-1a17-422a-903f-4579bb8788ac",
+      "name": "Call Subworkflow Campanhas",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        7120,
+        11584
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "projectId": {
+          "__rl": true,
+          "value": "project-0e7c58d4-656f-49e8-807",
+          "mode": "list",
+          "cachedResultName": "phi-production",
+          "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=project-0e7c58d4-656f-49e8-807"
+        },
+        "sqlQuery": "MERGE `phi_prod.workflow_execution_log` AS target\nUSING (\n  SELECT\n    '{{ $('Buscar ID de Sucesso Hoje').first().json.execution_id }}' AS execution_id,\n    (SELECT COUNT(*) FROM `project-0e7c58d4-656f-49e8-807.phi_prod.raw_campaign_data`\n     WHERE execution_id = '{{ $('Buscar ID de Sucesso Hoje').first().json.execution_id }}'\n    ) AS total_records\n) AS source\nON target.execution_id = source.execution_id\nWHEN MATCHED THEN\n  UPDATE SET status = 'SUCCESS', finished_at = CURRENT_TIMESTAMP(), records_processed = source.total_records;",
+        "options": {
+          "useLegacySql": false
+        }
+      },
+      "id": "b97bdcaa-ad21-463e-8164-539353ab9287",
+      "name": "Log INGESTION SUCCESS",
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2.1,
+      "position": [
+        7456,
+        11360
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleBigQueryOAuth2Api": {
+          "id": "UhLRAanVarQeOpQy",
+          "name": "Google BigQuery account"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "projectId": {
+          "__rl": true,
+          "value": "project-0e7c58d4-656f-49e8-807",
+          "mode": "list",
+          "cachedResultName": "phi-production",
+          "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=project-0e7c58d4-656f-49e8-807"
+        },
+        "sqlQuery": "MERGE `phi_prod.workflow_execution_log` AS target\nUSING (SELECT '{{ $(\"Buscar ID de Sucesso Hoje\").first().json.execution_id }}' AS execution_id) AS source\nON target.execution_id = source.execution_id AND target.phase = 'INGESTION'\nWHEN MATCHED THEN UPDATE SET status = 'FAILED', finished_at = CURRENT_TIMESTAMP(),\n  error_message = SUBSTR('{{ $json[\"message\"] ?? \"Erro desconhecido na Ingest�o\" }}', 1, 1000);",
+        "options": {}
+      },
+      "id": "91eeafcc-00f9-437f-a5cd-179dc0715a6c",
+      "name": "Log INGESTION FAILED",
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2.1,
+      "position": [
+        7456,
+        11808
+      ],
+      "credentials": {
+        "googleBigQueryOAuth2Api": {
+          "id": "UhLRAanVarQeOpQy",
+          "name": "Google BigQuery account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "projectId": {
+          "__rl": true,
+          "value": "project-0e7c58d4-656f-49e8-807",
+          "mode": "list",
+          "cachedResultName": "phi-production",
+          "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=project-0e7c58d4-656f-49e8-807"
+        },
+        "sqlQuery": "INSERT INTO `phi_prod.workflow_execution_log`\n(execution_id, execution_date, phase, status, is_reprocessing, started_at)\nVALUES\n('{{ $(\"Buscar ID de Sucesso Hoje\").first().json.execution_id }}',\n CURRENT_DATE(), 'CALCULATION', 'RUNNING', FALSE, CURRENT_TIMESTAMP());",
+        "options": {}
+      },
+      "id": "37333d18-6b6e-4998-bbe8-c69897972c36",
+      "name": "Log CALCULATION RUNNING",
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2.1,
+      "position": [
+        7664,
+        11360
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleBigQueryOAuth2Api": {
+          "id": "UhLRAanVarQeOpQy",
+          "name": "Google BigQuery account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "projectId": {
+          "__rl": true,
+          "value": "project-0e7c58d4-656f-49e8-807",
+          "mode": "list",
+          "cachedResultName": "phi-production",
+          "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=project-0e7c58d4-656f-49e8-807"
+        },
+        "sqlQuery": "MERGE `phi_prod.workflow_execution_log` AS target\nUSING (\n  SELECT\n    '{{ $('Buscar ID de Sucesso Hoje').first().json.execution_id }}' AS execution_id,\n    (SELECT COUNT(*) FROM `project-0e7c58d4-656f-49e8-807.phi_prod.phi_score_history`\n     WHERE execution_id = '{{ $('Buscar ID de Sucesso Hoje').first().json.execution_id }}'\n       AND calculation_status = 'SUCCESS') AS total_records\n) AS source\nON  target.execution_id = source.execution_id\nAND target.phase        = 'CALCULATION'\nWHEN MATCHED THEN\n  UPDATE SET\n    status            = 'SUCCESS',\n    finished_at       = CURRENT_TIMESTAMP(),\n    records_processed = source.total_records;",
+        "options": {}
+      },
+      "id": "a6e98c4e-4e68-49e7-a50a-a2d0d366f90d",
+      "name": "Log CALCULATION SUCCESS",
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2.1,
+      "position": [
+        8208,
+        11360
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleBigQueryOAuth2Api": {
+          "id": "UhLRAanVarQeOpQy",
+          "name": "Google BigQuery account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "projectId": {
+          "__rl": true,
+          "value": "project-0e7c58d4-656f-49e8-807",
+          "mode": "list",
+          "cachedResultName": "phi-production",
+          "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=project-0e7c58d4-656f-49e8-807"
+        },
+        "sqlQuery": "MERGE `phi_prod.workflow_execution_log` AS target\nUSING (\n  SELECT '{{ $('Buscar ID de Sucesso Hoje').first().json.execution_id }}' AS execution_id\n) AS source\nON  target.execution_id = source.execution_id\nAND target.phase        = 'CALCULATION'\nWHEN MATCHED THEN\n  UPDATE SET\n    status        = 'FAILED',\n    finished_at   = CURRENT_TIMESTAMP(),\n    error_message = SUBSTR('{{ $json[\"message\"] ?? \"Erro desconhecido na Fase 2\" }}', 1, 1000);",
+        "options": {}
+      },
+      "id": "38f83d10-ca0b-4fbf-bb20-b5422f780323",
+      "name": "Log CALCULATION FAILED",
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2.1,
+      "position": [
+        7936,
+        11584
+      ],
+      "credentials": {
+        "googleBigQueryOAuth2Api": {
+          "id": "UhLRAanVarQeOpQy",
+          "name": "Google BigQuery account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "projectId": {
+          "__rl": true,
+          "value": "project-0e7c58d4-656f-49e8-807",
+          "mode": "list",
+          "cachedResultName": "phi-production",
+          "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=project-0e7c58d4-656f-49e8-807"
+        },
+        "sqlQuery": "INSERT INTO `phi_prod.workflow_execution_log`\n(execution_id, execution_date, phase, status, is_reprocessing, started_at)\nVALUES\n('{{ $(\"Buscar ID de Sucesso Hoje\").first().json.execution_id }}',\n CURRENT_DATE(), 'OPERATIONAL', 'RUNNING', FALSE, CURRENT_TIMESTAMP());",
+        "options": {}
+      },
+      "id": "3a9bc0a9-9d88-4915-9316-d3ca7bf717a9",
+      "name": "Log OPERATIONAL RUNNING",
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2.1,
+      "position": [
+        9920,
+        11248
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleBigQueryOAuth2Api": {
+          "id": "UhLRAanVarQeOpQy",
+          "name": "Google BigQuery account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "value": "19fb65e5-c72b-8043-a82d-f47ede397928",
+          "mode": "list",
+          "cachedResultName": "Campanhas",
+          "cachedResultUrl": "https://www.notion.so/19fb65e5c72b8043a82df47ede397928"
+        },
+        "returnAll": true,
+        "simple": false,
+        "filterType": "manual",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "key": "Status|status",
+              "condition": "equals",
+              "statusValue": "Em execução"
+            },
+            {
+              "key": "Fonte|multi_select",
+              "condition": "is_not_empty"
+            },
+            {
+              "key": "Métrica-Mãe|multi_select",
+              "condition": "is_not_empty"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        8208,
+        11584
+      ],
+      "id": "8efe7490-d14d-4c0e-84d8-39e3f6f4ef2b",
+      "name": "Get many database Campanhas",
+      "alwaysOutputData": true,
+      "credentials": {
+        "notionApi": {
+          "id": "KpPCTsYPAvGXGfp2",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// PHIT v1.3 - Fase 3: Code Clean Campanhas\nconst items = $input.all();\nconst outputItems = [];\nconst extractRichText = (arr) => arr?.length ? arr.map(s => s.plain_text).join('') : '';\nconst extractMultiSelect = (arr) => arr?.length ? arr.map(o => o.name).join(', ') : '';\nfor (const item of items) {\n  const props = item.json.properties;\n  // L� campaign_id diretamente do campo de texto no Notion (inserido pelo SQL)\n  const campaignId = extractRichText(props['campaign_id']?.rich_text);\n  outputItems.push({ json: {\n    clean_notion_page_id: item.json.id,\n    clean_campaing_id: campaignId,\n    clean_notion_id_camp: props['notion_id_camp']?.formula?.string || '',\n    clean_client_id: extractRichText(props['client_id']?.rich_text),\n    clean_client_slug: extractRichText(props['client_slug']?.rich_text),\n    clean_nome_campanha: props['Nome Campanha']?.formula?.string || '',\n    clean_periodo_otimizacao_aberto: props['Otimização Ativa?']?.checkbox ?? false,\n    clean_meta_metrica_mae: props['Meta da Métrica-mãe']?.number ?? 0,\n    clean_metrica_mae: extractMultiSelect(props['Métrica-Mãe']?.multi_select),\n    clean_orcamento_diario: props['Orçamento Diário']?.number ?? 0,\n    clean_plataforma: props['Fonte']?.multi_select?.[0]?.name || '',\n    clean_notion_id_pro: props['Projeto']?.relation?.[0]?.id || ''\n  }});\n}\nreturn outputItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        8208,
+        11808
+      ],
+      "id": "05bfc14e-12b8-463e-bdb6-514830cad1f0",
+      "name": "Code Clean Campanhas F3",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "projectId": {
+          "__rl": true,
+          "value": "project-0e7c58d4-656f-49e8-807",
+          "mode": "list",
+          "cachedResultName": "phi-production",
+          "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=project-0e7c58d4-656f-49e8-807"
+        },
+        "sqlQuery": "-- ============================================================\n-- PHIT v1.3 - Buscar Campanhas Alertas\n-- CORRE��O: business_model vem de model_config, n�o client_config\n-- ============================================================\n\nWITH\n\ndatas_recentes AS (\n  SELECT DISTINCT calculated_date\n  FROM phi_prod.phi_score_history\n  WHERE calculation_status = 'SUCCESS'\n  ORDER BY calculated_date DESC\n  LIMIT 2\n),\n\nalertas_por_dia AS (\n  SELECT\n    h.client_id,\n    h.campaign_id,\n    COUNT(DISTINCT h.calculated_date) AS dias_em_alerta\n  FROM phi_prod.phi_score_history h\n  INNER JOIN datas_recentes d\n    ON h.calculated_date = d.calculated_date\n  WHERE h.phi_classification IN ('CRITICAL', 'WARNING')\n    AND h.calculation_status = 'SUCCESS'\n  GROUP BY h.client_id, h.campaign_id\n),\n\ncampanhas_confirmadas AS (\n  SELECT client_id, campaign_id\n  FROM alertas_por_dia\n  WHERE dias_em_alerta >= 2\n),\n\nscore_atual AS (\n  SELECT\n    s.execution_id,\n    s.client_id,\n    s.campaign_id,\n    s.calculated_date,\n    s.phi_value,\n    s.phi_classification,\n    s.priority_score,\n    s.miv,\n    s.mas,\n    s.tss,\n    s.fis,\n    s.es,\n    s.rs,\n    s.os,\n    s.threshold_used,\n    s.mas_janela\n  FROM phi_prod.phi_score_current s\n  INNER JOIN campanhas_confirmadas c\n    ON s.client_id   = c.client_id\n    AND s.campaign_id = c.campaign_id\n  WHERE s.execution_id = '{{ $('Buscar ID de Sucesso Hoje').first().json.execution_id }}'\n)\n\nSELECT\n  sa.execution_id,\n  sa.client_id,\n  sa.campaign_id,\n  sa.calculated_date,\n  sa.phi_value,\n  sa.phi_classification,\n  sa.priority_score,\n  sa.miv,\n  sa.mas,\n  sa.tss,\n  sa.fis,\n  sa.es,\n  sa.rs,\n  sa.os,\n  sa.threshold_used,\n  sa.mas_janela,\n  cc.client_slug,\n  cc.primary_metric_type,\n  mc.business_model,              -- ? vem de model_config via JOIN\n  CASE\n    WHEN STARTS_WITH(sa.campaign_id, 'GADS-') THEN 'GOOGLE ADS'\n    WHEN STARTS_WITH(sa.campaign_id, 'META-') THEN 'META ADS'\n    ELSE 'GOOGLE ADS'\n  END AS plataforma\nFROM score_atual sa\nINNER JOIN phi_prod.client_config cc\n  ON sa.client_id = cc.client_id\n  AND cc.is_active = TRUE\nINNER JOIN phi_prod.model_config mc    -- ? JOIN adicional\n  ON cc.model_id = mc.model_id\n  AND mc.valid_until IS NULL           -- ? modelo vigente\nORDER BY sa.priority_score DESC;",
+        "options": {}
+      },
+      "id": "35421cad-46df-4377-9ac5-2b8f54bd002e",
+      "name": "Buscar Campanhas Alertas",
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2,
+      "position": [
+        9984,
+        11840
+      ],
+      "credentials": {
+        "googleBigQueryOAuth2Api": {
+          "id": "UhLRAanVarQeOpQy",
+          "name": "Google BigQuery account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "0eea1f15-54fd-4a29-b016-05af184575ac",
+      "name": "Loop Campanhas",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        6288,
+        12272
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// PHI v1.3 - Code Enriquecer Campanha (v2: enriched with Notion data from Code Clean F3)\nconst campaignId = $json.campaign_id;\n\nif (!campaignId) {\n  return [{ json: { ...$json, _aviso: 'campaign_id ausente' } }];\n}\n\n// Look up Notion data for this campaign from Code Clean Campanhas F3\nconst allCleaned = $('Code Clean Campanhas F3').all();\nconst cleanMatch = allCleaned.find(item => item.json.clean_campaing_id === campaignId);\n\nreturn [{\n  json: {\n    execution_id:        $json.execution_id,\n    client_id:           $json.client_id,\n    campaign_id:         $json.campaign_id,\n    phi_value:           $json.phi_value,\n    phi_classification:  $json.phi_classification,\n    priority_score:      $json.priority_score,\n    miv:                 $json.miv,\n    mas:                 $json.mas,\n    tss:                 $json.tss,\n    fis:                 $json.fis,\n    es:                  $json.es,\n    rs:                  $json.rs,\n    os:                  $json.os,\n    threshold_used:      $json.threshold_used,\n    mas_janela:          $json.mas_janela,\n    primary_metric_type: $json.primary_metric_type,\n    business_model:      $json.business_model,\n    plataforma:          $json.plataforma,\n    conversions_7d:      $json.conversions_7d ?? null,\n    // Notion enrichment from Code Clean Campanhas F3\n    notion_page_id:  cleanMatch?.json.clean_notion_page_id  ?? null,\n    notion_id_camp:  cleanMatch?.json.clean_notion_id_camp  ?? null,\n    notion_id_pro:   cleanMatch?.json.clean_notion_id_pro   ?? null,\n    client_slug:     cleanMatch?.json.clean_client_slug     ?? $json.client_slug ?? null,\n    nome_campanha:   cleanMatch?.json.clean_nome_campanha   ?? null,\n    otimizacao_ativa: cleanMatch?.json.clean_periodo_otimizacao_aberto ?? false,\n    meta_metrica_mae: cleanMatch?.json.clean_meta_metrica_mae ?? null,\n    metrica_mae:      cleanMatch?.json.clean_metrica_mae      ?? null,\n    orcamento_diario: cleanMatch?.json.clean_orcamento_diario ?? null,\n    plataforma_notion: cleanMatch?.json.clean_plataforma      ?? null,\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        6288,
+        12496
+      ],
+      "id": "d01f40a9-c469-4a61-b6ca-cc1f924bc8fa",
+      "name": "Code Enriquecer Campanha"
+    },
+    {
+      "parameters": {
+        "projectId": {
+          "__rl": true,
+          "value": "project-0e7c58d4-656f-49e8-807",
+          "mode": "list",
+          "cachedResultName": "phi-production",
+          "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=project-0e7c58d4-656f-49e8-807"
+        },
+        "sqlQuery": "-- ============================================================\n-- PHIT v1.3 - Verificar Escalada\n-- Retorna tarefas abertas que devem ser escaladas:\n-- Campanha em WARNING/CRITICAL por 2+ dias com tarefa OPEN\n-- Condi��o: campanha j� estava em alerta ANTES da abertura da tarefa\n-- ============================================================\n\nWITH datas_recentes AS (\n  SELECT DISTINCT calculated_date\n  FROM phi_prod.phi_score_history\n  WHERE calculation_status = 'SUCCESS'\n  ORDER BY calculated_date DESC\n  LIMIT 2\n),\n\ndias_em_alerta AS (\n  SELECT\n    h.client_id,\n    h.campaign_id,\n    COUNT(DISTINCT h.calculated_date) AS total_dias_alerta\n  FROM phi_prod.phi_score_history h\n  INNER JOIN datas_recentes d ON h.calculated_date = d.calculated_date\n  WHERE h.phi_classification IN ('CRITICAL', 'WARNING')\n    AND h.calculation_status = 'SUCCESS'\n  GROUP BY h.client_id, h.campaign_id\n  HAVING COUNT(DISTINCT h.calculated_date) >= 2\n)\n\nSELECT\n  d.client_id,\n  d.campaign_id\nFROM dias_em_alerta d\nWHERE d.campaign_id = '{{ $json.campaign_id }}'\n  AND d.client_id   = '{{ $json.client_id }}';",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2.1,
+      "position": [
+        6848,
+        12720
+      ],
+      "id": "85c0154a-6354-4b0d-bc2c-0d3304f24d68",
+      "name": "Execute SQL Verificar Escalada (BQ)",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleBigQueryOAuth2Api": {
+          "id": "UhLRAanVarQeOpQy",
+          "name": "Google BigQuery account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "8b6b2edf-16b0-4e76-83c9-d8deee6b4976",
+              "leftValue": "={{ $json.campaign_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        7152,
+        12064
+      ],
+      "id": "174ab1b1-3385-420e-bc0c-62ee3a8eb4d7",
+      "name": "If Deve Escalar?"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "value": "19fb65e5-c72b-812d-a734-de9a4d5b980f",
+          "mode": "list",
+          "cachedResultName": "Tasks",
+          "cachedResultUrl": "https://www.notion.so/19fb65e5c72b812da734de9a4d5b980f"
+        },
+        "returnAll": true,
+        "simple": false,
+        "filterType": "manual",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "key": "campaign_id|rich_text",
+              "condition": "equals",
+              "richTextValue": "={{ $('Code Enriquecer Campanha').item.json.campaign_id }}"
+            },
+            {
+              "key": "Status|status",
+              "condition": "does_not_equal",
+              "statusValue": "Concluído"
+            },
+            {
+              "key": "Criado por Automação|checkbox",
+              "condition": "equals",
+              "checkboxValue": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        7168,
+        12272
+      ],
+      "id": "7aafc86d-7074-4831-a58e-4367d4f0dc50",
+      "name": "Get tasks para Escalada",
+      "alwaysOutputData": true,
+      "credentials": {
+        "notionApi": {
+          "id": "KpPCTsYPAvGXGfp2",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('Get tasks para Escalada').first().json.id }}",
+          "mode": "id"
+        },
+        "simple": false,
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Gravidade Detectada|select",
+              "selectValue": "Crítica"
+            },
+            {
+              "key": "Prioridade|select",
+              "selectValue": "={{ (() => { const ps = $('Code Enriquecer Campanha').item.json.priority_score ?? 0;\n  if (ps >= 80) return 'Crítica';\n  if (ps >= 60) return 'Alta';\n  if (ps >= 40) return 'Média';\n  return 'Baixa';\n})() }}"
+            },
+            {
+              "key": "Data Programada|date",
+              "includeTime": false,
+              "date": "={{$today}}",
+              "timezone": "America/Sao_Paulo"
+            },
+            {
+              "key": "Prazo|date",
+              "includeTime": false,
+              "date": "={{ $today }}",
+              "timezone": "America/Sao_Paulo"
+            },
+            {
+              "key": "Observação|rich_text",
+              "textContent": "=?? Escalada automática PHI - campanha em {{ $('Code Enriquecer Campanha').first().json.phi_classification }} por 2+ dias consecutivos. PHI Score: {{ $('Code Enriquecer Campanha').first().json.phi_value }}. Priority Score: {{ $('Code Enriquecer Campanha').first().json.priority_score }}."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        7168,
+        12720
+      ],
+      "id": "43160a85-3bcb-4bb6-ae21-31d2d86a1579",
+      "name": "Update Escalar Tarefa",
+      "alwaysOutputData": true,
+      "credentials": {
+        "notionApi": {
+          "id": "KpPCTsYPAvGXGfp2",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "condition-tarefa-existe",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "02a0ce8a-4857-429e-8178-442671b26f8a",
+      "name": "Tarefa Existe?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        7664,
+        12336
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "simple": false,
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Status|status",
+              "statusValue": "Em Andamento"
+            },
+            {
+              "key": "Gravidade Detectada|select",
+              "selectValue": "={{ (() => { const ps = $('Code Enriquecer Campanha').first().json.priority_score ?? 0; if (ps >= 80) return 'Crítica'; if (ps >= 60) return 'Alta'; if (ps >= 40) return 'Média'; return 'Baixa'; })() }}"
+            },
+            {
+              "key": "Data Programada|date",
+              "includeTime": false,
+              "date": "={{ $today }}",
+              "timezone": "America/Sao_Paulo"
+            },
+            {
+              "key": "Observação|rich_text",
+              "textContent": "=?? Atualizado automaticamente PHI - PHI Score: {{ $('Code Enriquecer Campanha').item.json.phi_value }} ({{ $('Code Enriquecer Campanha').item.json.phi_classification }}). Priority Score: {{ $('Code Enriquecer Campanha').item.json.priority_score }}."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        7776,
+        12640
+      ],
+      "id": "42cdfb09-9669-48e2-b2c5-5f3f7ab83d07",
+      "name": "Update a database page",
+      "alwaysOutputData": true,
+      "credentials": {
+        "notionApi": {
+          "id": "KpPCTsYPAvGXGfp2",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "databaseId": {
+          "__rl": true,
+          "value": "19fb65e5-c72b-812d-a734-de9a4d5b980f",
+          "mode": "list",
+          "cachedResultName": "Tasks",
+          "cachedResultUrl": "https://www.notion.so/19fb65e5c72b812da734de9a4d5b980f"
+        },
+        "title": "=[{{ $('Code Enriquecer Campanha').item.json.client_slug }}] PHI ALERT - {{ new Date().toLocaleDateString('pt-BR', {timeZone: 'America/Sao_Paulo'}) }}",
+        "simple": false,
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "campaign_id|rich_text",
+              "textContent": "={{ $('Code Enriquecer Campanha').item.json.campaign_id }}"
+            },
+            {
+              "key": "Criado por Automação|checkbox",
+              "checkboxValue": true
+            },
+            {
+              "key": "Data Programada|date",
+              "includeTime": false,
+              "date": "={{ $today }}",
+              "timezone": "America/Sao_Paulo"
+            },
+            {
+              "key": "execution_id|rich_text",
+              "textContent": "={{ $('Code Enriquecer Campanha').item.json.execution_id }}"
+            },
+            {
+              "key": "Métrica Afetada|multi_select",
+              "multiSelectValue": "={{ $('Code Enriquecer Campanha').item.json.primary_metric_type }}"
+            },
+            {
+              "key": "Origem|select",
+              "selectValue": "n8n"
+            },
+            {
+              "key": "Plataforma|multi_select",
+              "multiSelectValue": "={{ $('Code Enriquecer Campanha').item.json.plataforma_notion || $('Code Enriquecer Campanha').item.json.plataforma || '' }}"
+            },
+            {
+              "key": "Prioridade|select",
+              "selectValue": "={{ (() => { const ps = $('Code Enriquecer Campanha').item.json.priority_score ?? 0;\n  if (ps >= 80) return 'Crítica';\n  if (ps >= 60) return 'Alta';\n  if (ps >= 40) return 'Média';\n  return 'Baixa';\n})() }}"
+            },
+            {
+              "key": "Responsável|people",
+              "peopleValue": [
+                "8013001b-0d45-4864-9b33-27d73ebdbf8d"
+              ]
+            },
+            {
+              "key": "Status|status",
+              "statusValue": "A Fazer"
+            },
+            {
+              "key": "Subtipo de Tarefa|select",
+              "selectValue": "Otimização de Campanha"
+            },
+            {
+              "key": "Tipo de Tarefa|select",
+              "selectValue": "Otimização"
+            },
+            {
+              "key": "Gravidade Detectada|select",
+              "selectValue": "Crítica"
+            },
+            {
+              "key": "Projeto|relation",
+              "relationValue": [
+                "={{ $('Code Enriquecer Campanha').item.json.notion_id_pro }}"
+              ]
+            },
+            {
+              "key": "Campanha|relation",
+              "relationValue": [
+                "={{ $('Code Enriquecer Campanha').item.json.notion_id_camp }}"
+              ]
+            },
+            {
+              "key": "Tarefa SOP (n8n)|multi_select",
+              "multiSelectValue": [
+                "Documentação da Decisão",
+                "Correção de Problema",
+                "Identificação de Causa Raiz"
+              ]
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        8080,
+        12096
+      ],
+      "id": "c4127869-0218-4595-b217-b47ab25c606f",
+      "name": "Create a database page",
+      "alwaysOutputData": true,
+      "credentials": {
+        "notionApi": {
+          "id": "KpPCTsYPAvGXGfp2",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================================\n// PHIT v1.3 - Node Code: Montar Lista Checklist SOP\n// v6: all campaign data from Code Enriquecer Campanha (no cross-loop refs)\n//     #7b: learning phase warning when conversions_7d < 50\n// ============================================================\n\nconst campaignItem   = $('Code Enriquecer Campanha').item.json;\nconst classification = campaignItem.phi_classification;\n// task_page_id resolvido em 'Create a database page chklist'\n\n// ?? Componentes PHI ??????????????????????????????????????????\nconst mas    = parseFloat(campaignItem.mas   ?? 0);\nconst tss    = parseFloat(campaignItem.tss   ?? 0);\nconst fis    = parseFloat(campaignItem.fis   ?? 0);\nconst es     = parseFloat(campaignItem.es    ?? 50);\nconst miv    = parseFloat(campaignItem.miv   ?? 0);\nconst metric = campaignItem.primary_metric_type ?? 'CPA';\nconst model  = campaignItem.business_model ?? 'LEAD_GEN';\n\n// ?? Mapear priority_score ? Prioridade ???????????????????????\nconst mapPrioridade = (ps) => {\nconst score = parseFloat(ps ?? 0);\n  if (score >= 80) return 'Crítica';\n  if (score >= 60) return 'Alta';\n  if (score >= 40) return 'M�éia';\n  return 'Baixa';\n};\nconst prioridade = mapPrioridade(campaignItem.priority_score);\n\n// ?? Gerar Hip�tese ????????????????????????????????????????????\nconst gerarHipotese = (mas, tss, fis, es, miv, metric) => {\n  const linhas = [];\n\n  if (mas < 20)       linhas.push(`${metric} muito acima da meta (MAS=${mas.toFixed(0)}). Diagnóstico urgente necessário.`);\n  else if (mas < 40)  linhas.push(`${metric} acima da meta (MAS=${mas.toFixed(0)}). Revisar estrutura e segmentação.`);\n\n  if (tss < 30)       linhas.push(`Tendência instável (TSS=${tss.toFixed(0)}). CPA 3d diverge da média 7d - verificar criativos e lance.`);\n  else if (tss < 50)  linhas.push(`Tendência em deterioração (TSS=${tss.toFixed(0)}). Monitorar nos pr�ximos dias.`);\n\n  if (fis < 30)  linhas.push(`Alto impacto financeiro (FIS=${fis.toFixed(0)}). Campanha representa parcela significativa do investimento - priorizar resolução.`);\n  if (es  < 30)  linhas.push(`Alta variabilidade de eficiência diária (ES=${es.toFixed(0)}). Investigar dias sem conversão e spend spikes.`);\n  if (miv > 0)   linhas.push(`Impacto financeiro estimado: R$ ${miv.toFixed(2)} acima do esperado no período.`);\n\n  const acoes = [];\n  if (mas < 40)  acoes.push('1. Validar eventos de conversão e rastreamento');\n  if (tss < 40)  acoes.push('2. Analisar criativos com queda de CTR ou aumento de frequência');\n  if (mas < 40)  acoes.push('3. Revisar segmentação e qualidade do público');\n  if (fis < 30)  acoes.push('4. Avaliar redistribuição de or�amento entre campanhas');\n  if (es  < 30)  acoes.push('5. Identificar e remover dias anômalos da análise');\n  acoes.push('Registrar hipótese, ação e resultado esperado no Log de Otimizações.');\n\n  return [...linhas, '', 'Sequência SOP recomendada:', ...acoes].join('\\n');\n};\n\n// ?? #7b: Aviso de fase de aprendizado ?????????????????????????\nconst conversions7d = parseFloat(campaignItem.conversions_7d ?? -1);\nconst warningAprendizado = (conversions7d >= 0 && conversions7d < 50)\n  ? `?? Fase de aprendizado: apenas ${conversions7d.toFixed(0)} conversões nos últimos 7 dias. Dados insuficientes para análise estatística robusta. Evitar ajustes agressivos até atingir volume mínimo de 50 conversões.\\n\\n`\n  : '';\n\nconst hipotese = warningAprendizado + gerarHipotese(mas, tss, fis, es, miv, metric);\n\n// ?? Notion IDs - todos dispon�veis em Code Enriquecer Campanha ?\nconst notionIdCamp = campaignItem.notion_page_id ?? null;\nconst notionIdPro  = campaignItem.notion_id_pro  ?? null;\nconst clientSlug   = campaignItem.client_slug    ?? '';\nconst notionIdCliente = '19fb65e5-c72b-81dd-b7a0-f295fe304d60';\n\n// ?? Checklists base ???????????????????????????????????????????\nconst base_3_1 = [\n  'Tipo de campanha validado',\n  'Métrica-mãe comparada com meta',\n  'Volume mínimo de dados disponível',\n  'CTR analisado',\n  'CPM ou CPC analisado',\n  'Conversão da página analisada',\n  'Congruência anúncio ? página validada',\n  'Público segmentado corretamente',\n  'Criativos saturados identificados',\n  'Causa provável documentada',\n];\nconst base_3_2 = [\n  'Ajuste de criativos',\n  'Revisão de copy',\n  'Ajuste de público',\n  'Revisão da página de destino',\n  'Revisão da estratégia de lance',\n  'Revisão da estrutura de campanha',\n  'Ajuste de orçamento (última etapa)',\n  'Registro das alterações',\n];\nconst base_3_3 = [\n  'Alterações realizadas registradas',\n  'Responsável registrado',\n  'Data registrada',\n  'Métrica que motivou a decisão',\n  'Hipótese documentada',\n  'Resultado esperado definido',\n  'Classificação da alteraçãoo (teste, correção, escala)',\n  'Registro no log de otimização',\n];\n\n// ?? Adicionais por plataforma e modelo ???????????????????????\nconst isGoogle = (campaignItem.plataforma ?? '').includes('GOOGLE');\nconst isMeta   = (campaignItem.plataforma ?? '').includes('META');\nconst isEcom   = model.includes('ECOMMERCE') || model.includes('E_COMMERCE') || model.includes('E-COMMERCE');\nconst isLead   = model.includes('LEAD') || model.includes('VAREJO');\nconst isInfo   = model.includes('INFO');\n\nlet itens_3_1 = [...base_3_1];\nif (isGoogle) itens_3_1.push('Termos de busca analisados (Google Ads)', 'índice de qualidade analisado (Google)');\nif (isMeta)   itens_3_1.push('Frequência (Meta Ads) analisada');\nif (isEcom)   itens_3_1.push('Taxa de abandono de carrinho analisada', 'Valor médio de pedido comparado com meta de ROAS');\nif (isLead)   itens_3_1.push('Qualidade dos leads verificada (taxa de convers�o p�s-lead)');\nif (isInfo)   itens_3_1.push('Taxa de conversão da página de vendas analisada', 'Qualidade do tráfego (tempo na página, scroll depth)');\n\nlet itens_3_2 = [...base_3_2];\nif (isGoogle) itens_3_2.push('Negativação de palavras irrelevantes', 'Ajuste de intenção de busca');\nif (isEcom)   itens_3_2.push('Revisão do feed de produtos (título, imagem, preço)', 'Verificação de estoque e disponibilidade');\nif (isLead)   itens_3_2.push('Revisão do formulário de captura', 'Ajuste da oferta de isca digital');\n\n// ?? Montar lista final ????????????????????????????????????????\nconst toItem = (cat) => (nome) => ({ nome, categoria: cat });\nconst itens = [\n  ...itens_3_1.map(toItem('Identificação de Causa Raiz')),\n  ...(classification === 'CRITICAL' ? itens_3_2.map(toItem('Correção de Problema')) : []),\n  ...base_3_3.map(toItem('Documentação da Decisão')),\n];\n\nreturn itens.map(entry => ({\n  json: {\n    task_page_id: $('Create a database page').first().json.id, // resolvido em Create a database page chklist\n    notion_id_camp:    notionIdCamp,\n    notion_id_pro:     notionIdPro,\n    notion_id_cliente: notionIdCliente,\n    client_slug:       clientSlug,\n    nome:              entry.nome,\n    categoria:         entry.categoria,\n    subcategoria:      'Otimização de Campanha',\n    concluido:         false,\n    hipotese:          hipotese,\n    prioridade:        prioridade,\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        8032,
+        12608
+      ],
+      "id": "97e264ed-9464-4ec8-b4d9-612016751af7",
+      "name": "Code Criar Checklist"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        8432,
+        12656
+      ],
+      "id": "c3bfb1de-ed2e-4ec8-a4e8-a0de482a6c5d",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "databaseId": {
+          "__rl": true,
+          "value": "19fb65e5-c72b-81cd-b006-fe0ffa97a35d",
+          "mode": "list",
+          "cachedResultName": "Checklist",
+          "cachedResultUrl": "https://www.notion.so/19fb65e5c72b81cdb006fe0ffa97a35d"
+        },
+        "title": "=[{{ $('Code Criar Checklist').item.json.client_slug }}] {{ $('Code Criar Checklist').item.json.nome }} - {{ new Date().toLocaleDateString('pt-BR', {timeZone: 'America/Sao_Paulo'}) }}",
+        "simple": false,
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Tarefa|relation",
+              "relationValue": [
+                "={{ $('Create a database page').first().json.id }}"
+              ]
+            },
+            {
+              "key": "Categoria|select",
+              "selectValue": "={{ $('Code Criar Checklist').item.json.categoria }}"
+            },
+            {
+              "key": "Concluído?|checkbox",
+              "checkboxValue": "={{ $('Code Criar Checklist').item.json.concluido }}"
+            },
+            {
+              "key": "Subcategoria|select",
+              "selectValue": "={{ $('Code Criar Checklist').item.json.subcategoria }}"
+            },
+            {
+              "key": "Criado por|select",
+              "selectValue": "PHI"
+            },
+            {
+              "key": "Projeto|relation",
+              "relationValue": [
+                "={{ $('Code Criar Checklist').item.json.notion_id_pro }}"
+              ]
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        8704,
+        12656
+      ],
+      "id": "2c5c73f4-a4a5-4b0a-ad32-a9f90dc63d55",
+      "name": "Create a database page chklist",
+      "alwaysOutputData": true,
+      "credentials": {
+        "notionApi": {
+          "id": "KpPCTsYPAvGXGfp2",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "projectId": {
+          "__rl": true,
+          "value": "project-0e7c58d4-656f-49e8-807",
+          "mode": "list",
+          "cachedResultName": "phi-production",
+          "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=project-0e7c58d4-656f-49e8-807"
+        },
+        "sqlQuery": "MERGE `phi_prod.workflow_execution_log` AS target\nUSING (\n  SELECT\n    '{{ $('Buscar ID de Sucesso Hoje').first().json.execution_id }}' AS execution_id,\n    (SELECT COUNT(*) FROM `phi_prod.phi_score_current`\n     WHERE execution_id = '{{ $('Buscar ID de Sucesso Hoje').first().json.execution_id }}'\n       AND phi_classification IN ('CRITICAL', 'WARNING')) AS total_records\n) AS source\nON  target.execution_id = source.execution_id\nAND target.phase        = 'OPERATIONAL'\nWHEN MATCHED THEN\n  UPDATE SET\n    status            = 'SUCCESS',\n    finished_at       = CURRENT_TIMESTAMP(),\n    records_processed = source.total_records;",
+        "options": {}
+      },
+      "id": "e3cbf0f5-1195-4505-9405-6ade7512cf5b",
+      "name": "Log OPERATIONAL SUCCESS",
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2.1,
+      "position": [
+        6832,
+        12064
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleBigQueryOAuth2Api": {
+          "id": "UhLRAanVarQeOpQy",
+          "name": "Google BigQuery account"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "projectId": {
+          "__rl": true,
+          "value": "project-0e7c58d4-656f-49e8-807",
+          "mode": "list",
+          "cachedResultName": "phi-production",
+          "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=project-0e7c58d4-656f-49e8-807"
+        },
+        "sqlQuery": "MERGE `phi_prod.workflow_execution_log` AS target\nUSING (\n  SELECT '{{ $('Buscar ID de Sucesso Hoje').first().json.execution_id }}' AS execution_id\n) AS source\nON  target.execution_id = source.execution_id\nAND target.phase        = 'OPERATIONAL'\nWHEN MATCHED THEN\n  UPDATE SET\n    status        = 'FAILED',\n    finished_at   = CURRENT_TIMESTAMP(),\n    error_message = SUBSTR('{{ $json[\"message\"] ?? \"Erro desconhecido na Fase 3\" }}', 1, 1000);",
+        "options": {}
+      },
+      "id": "20db3b4e-f66c-4458-810f-23a6aea410c9",
+      "name": "Log OPERATIONAL FAILED",
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2.1,
+      "position": [
+        6848,
+        12496
+      ],
+      "credentials": {
+        "googleBigQueryOAuth2Api": {
+          "id": "UhLRAanVarQeOpQy",
+          "name": "Google BigQuery account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "projectId": "project-0e7c58d4-656f-49e8-807",
+        "sqlQuery": "SELECT\n  phi_value,\n  phi_classification,\n  campaign_id,\n  client_id,\n  execution_id,\n  priority_score,\n  miv,\n  mas, tss, fis, es, rs, os,\n  threshold_used,\n  mas_janela\nFROM `phi_prod.phi_score_current`\nWHERE execution_id = '{{ $(\"Buscar ID de Sucesso Hoje\").first().json.execution_id }}'",
+        "options": {}
+      },
+      "id": "a8d8dc2a-79ae-479c-aa27-983c0a46f8eb",
+      "name": "Get All Current Scores (Sync)",
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2,
+      "position": [
+        8576,
+        11264
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleBigQueryOAuth2Api": {
+          "id": "UhLRAanVarQeOpQy",
+          "name": "Google BigQuery account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "49bccbc9-3627-4d27-ba18-0c5f95a475c4",
+      "name": "Loop Sync & Close",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        8768,
+        11264
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Enrich sync data with Notion page info from Code Clean Campanhas F3\nconst campaignId = $json.campaign_id;\nconst allCleaned = $('Code Clean Campanhas F3').all();\nconst match = allCleaned.find(item => item.json.clean_campaing_id === campaignId);\n\nreturn [{\n  json: {\n    ...$json,\n    notion_page_id: match?.json.clean_notion_page_id ?? null,\n    client_slug:    match?.json.clean_client_slug    ?? null,\n  }\n}];\n"
+      },
+      "id": "0e2d6947-f47d-4858-a5cc-9077da0a97e3",
+      "name": "Enrich for Sync",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        8576,
+        11472
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $json.notion_page_id }}",
+          "mode": "id",
+          "__regex": "^([0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12})"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Score Diário (0-100)|number",
+              "numberValue": "={{ parseFloat($json.phi_value) }}"
+            },
+            {
+              "key": "Status Geral da Campanha|select",
+              "selectValue": "={{ $json.phi_classification }}"
+            },
+            {
+              "key": "phi_ultima_execucao|date",
+              "includeTime": false,
+              "date": "={{ $today }}",
+              "timezone": "America/Sao_Paulo"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d55c6149-6d00-4d35-ac9e-2ff8f49f4539",
+      "name": "Sync Scores to Notion",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        8992,
+        11472
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "notionApi": {
+          "id": "KpPCTsYPAvGXGfp2",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "58f17d04-f9d6-4de9-bd59-2d41c926de2d",
+              "leftValue": "={{ $json.phi_classification }}",
+              "rightValue": "GOOD",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "716a8a5e-a2d7-4d0d-bc79-7705065eee51",
+              "leftValue": "={{ $json.otimizacao_ativa }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "5a6d03b3-1f70-433f-9a6f-52a9bc409555",
+      "name": "Check Auto-Close",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        9008,
+        11680
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('Get Task para Fechar').first().json.id }}",
+          "mode": "id"
+        },
+        "simple": false,
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Status|status",
+              "statusValue": "Conclu�do"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "85cce76e-54d5-4e1a-8e38-eaa1d4942b86",
+      "name": "Auto-Close Task (Notion)",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        9536,
+        11360
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "notionApi": {
+          "id": "KpPCTsYPAvGXGfp2",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "83795b48-16df-4461-b074-90e57fbd2cfc",
+              "leftValue": "={{ $json.notion_page_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "46699f31-ccd0-4c90-89d9-c0faead81c5d",
+      "name": "Existe no Notion?",
+      "typeVersion": 2.2,
+      "position": [
+        8784,
+        11472
+      ],
+      "type": "n8n-nodes-base.if"
+    },
+    {
+      "parameters": {
+        "projectId": {
+          "__rl": true,
+          "value": "project-0e7c58d4-656f-49e8-807",
+          "mode": "list",
+          "cachedResultName": "phi-production",
+          "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=project-0e7c58d4-656f-49e8-807"
+        },
+        "sqlQuery": "MERGE `phi_prod.phi_score_history` AS target\nUSING (\n  WITH campanhas_exec AS (\n    SELECT DISTINCT\n      '{{ $(\"Buscar ID de Sucesso Hoje\").first().json.execution_id }}' AS execution_id,\n      '{{ $(\"Buscar ID de Sucesso Hoje\").first().json.source_execution_id }}' AS source_execution_id,\n      r.client_id,\n      r.campaign_id,\n      r.primary_metric_goal,\n      r.date AS reference_date,\n      r.cost_7d,\n      r.cost_3d,\n      r.conversions_7d,\n      r.conversions_3d,\n      CASE\n        WHEN STARTS_WITH(r.campaign_id, 'GADS-') THEN 'GOOGLE ADS'\n        WHEN STARTS_WITH(r.campaign_id, 'META-') THEN 'META ADS'\n        ELSE 'UNKNOWN'\n      END AS plataforma,\n      cc.primary_metric_type,\n      mc.model_id,\n      mc.business_model,\n      mc.model_version,\n      mc.mas AS peso_mas,\n      mc.tss AS peso_tss,\n      mc.fis AS peso_fis,\n      mc.es AS peso_es,\n      mc.rs AS peso_rs,\n      mc.os AS peso_os,\n      mc.threshold AS threshold_used\n    FROM `phi_prod.raw_campaign_data` r\n    INNER JOIN `phi_prod.client_config` cc\n      ON r.client_id = cc.client_id AND cc.is_active = TRUE\n    INNER JOIN `phi_prod.model_config` mc\n      ON cc.model_id = mc.model_id AND mc.valid_until IS NULL\n    WHERE r.execution_id = '{{ $(\"Buscar ID de Sucesso Hoje\").first().json.source_execution_id }}'\n      AND r.ingestion_status = 'SUCCESS'\n      AND r.date = DATE_SUB(CURRENT_DATE('America/Sao_Paulo'), INTERVAL 1 DAY)\n  ),\n  portfolio_cost AS (\n    SELECT client_id, SUM(cost_7d) AS total_cost_7d\n    FROM campanhas_exec GROUP BY client_id\n  ),\n  calc_components AS (\n    SELECT c.*, pc.total_cost_7d,\n      CASE\n        WHEN c.conversions_7d > 0 AND c.primary_metric_goal > 0\n          THEN LEAST(100.0, GREATEST(0.0,\n            (c.primary_metric_goal / (c.cost_7d / c.conversions_7d)) * 100.0))\n        WHEN c.conversions_7d = 0 THEN 0.0\n        ELSE 50.0\n      END AS mas,\n      CASE\n        WHEN c.conversions_7d > 0 AND c.conversions_3d > 0\n          THEN LEAST(100.0, GREATEST(0.0,\n            100.0 - ABS(\n              (c.cost_3d / c.conversions_3d) - (c.cost_7d / c.conversions_7d)\n            ) / (c.cost_7d / c.conversions_7d) * 100.0))\n        ELSE 50.0\n      END AS tss,\n      CASE\n        WHEN pc.total_cost_7d > 0\n          THEN GREATEST(0.0, 100.0 - (c.cost_7d / pc.total_cost_7d * 100.0))\n        ELSE 50.0\n      END AS fis,\n      50.0 AS es,\n      50.0 AS rs,\n      50.0 AS os,\n      CASE\n        WHEN c.conversions_7d > 0 AND c.primary_metric_goal > 0\n          THEN (c.cost_7d / c.conversions_7d - c.primary_metric_goal) * c.conversions_7d\n        ELSE 0.0\n      END AS miv\n    FROM campanhas_exec c\n    INNER JOIN portfolio_cost pc ON c.client_id = pc.client_id\n  ),\n  calc_phi AS (\n    SELECT *,\n      ROUND(\n        (mas * peso_mas) + (tss * peso_tss) + (fis * peso_fis) +\n        (es * peso_es) + (rs * peso_rs) + (os * peso_os), 2\n      ) AS phi_value_raw,\n      CASE\n        WHEN total_cost_7d > 0 AND miv > 0\n          THEN LEAST(100.0, GREATEST(0.0, miv / total_cost_7d * 100.0))\n        ELSE 0.0\n      END AS miv_normalizado\n    FROM calc_components\n  )\n  SELECT\n    execution_id,\n    source_execution_id,\n    client_id,\n    campaign_id,\n    reference_date AS calculated_date,\n    business_model,\n    model_id,\n    model_version,\n    phi_value_raw AS phi_value,\n    ROUND(mas, 2) AS mas,\n    ROUND(tss, 2) AS tss,\n    ROUND(fis, 2) AS fis,\n    ROUND(es, 2) AS es,\n    ROUND(rs, 2) AS rs,\n    ROUND(os, 2) AS os,\n    threshold_used,\n    ROUND(miv, 2) AS miv,\n    ROUND(miv_normalizado, 2) AS miv_normalizado,\n    ROUND((100.0 - phi_value_raw) * 0.60 + miv_normalizado * 0.40, 2) AS priority_score,\n    CASE\n      WHEN phi_value_raw >= 80 THEN 'EXCELLENT'\n      WHEN phi_value_raw >= 60 THEN 'GOOD'\n      WHEN phi_value_raw >= 40 THEN 'WARNING'\n      ELSE 'CRITICAL'\n    END AS phi_classification,\n    'SUCCESS' AS calculation_status,\n    'CORE' AS calculation_last_step,\n    '7d' AS mas_janela,\n    FALSE AS rs_data_insufficient,\n    FALSE AS os_data_unavailable,\n    plataforma,\n    primary_metric_type,\n    conversions_7d,\n    CURRENT_TIMESTAMP() AS snapshot_timestamp,\n    FALSE AS reprocessed,\n    CAST(NULL AS TIMESTAMP) AS reprocessed_at,\n    CAST(NULL AS STRING) AS reprocessed_by\n  FROM calc_phi\n) AS source\nON target.client_id = source.client_id\nAND target.campaign_id = source.campaign_id\nAND target.calculated_date = source.calculated_date\nWHEN MATCHED AND target.reprocessed = FALSE THEN\n  UPDATE SET\n    execution_id = source.execution_id,\n    source_execution_id = source.source_execution_id,\n    business_model = source.business_model,\n    model_id = source.model_id,\n    model_version = source.model_version,\n    phi_value = source.phi_value,\n    mas = source.mas,\n    tss = source.tss,\n    fis = source.fis,\n    es = source.es,\n    rs = source.rs,\n    os = source.os,\n    threshold_used = source.threshold_used,\n    miv = source.miv,\n    miv_normalizado = source.miv_normalizado,\n    priority_score = source.priority_score,\n    phi_classification = source.phi_classification,\n    calculation_status = source.calculation_status,\n    calculation_last_step = source.calculation_last_step,\n    mas_janela = source.mas_janela,\n    rs_data_insufficient = source.rs_data_insufficient,\n    os_data_unavailable = source.os_data_unavailable,\n    snapshot_timestamp = source.snapshot_timestamp\nWHEN NOT MATCHED THEN\n  INSERT (\n    execution_id, source_execution_id, client_id, campaign_id, calculated_date,\n    business_model, model_id, model_version,\n    phi_value, mas, tss, fis, es, rs, os, threshold_used,\n    miv, miv_normalizado, priority_score, phi_classification,\n    calculation_status, calculation_last_step, mas_janela,\n    rs_data_insufficient, os_data_unavailable,\n    snapshot_timestamp, reprocessed, reprocessed_at, reprocessed_by\n  )\n  VALUES (\n    source.execution_id, source.source_execution_id, source.client_id, source.campaign_id, source.calculated_date,\n    source.business_model, source.model_id, source.model_version,\n    source.phi_value, source.mas, source.tss, source.fis,\n    source.es, source.rs, source.os, source.threshold_used,\n    source.miv, source.miv_normalizado, source.priority_score, source.phi_classification,\n    source.calculation_status, source.calculation_last_step, source.mas_janela,\n    source.rs_data_insufficient, source.os_data_unavailable,\n    source.snapshot_timestamp, source.reprocessed, source.reprocessed_at, source.reprocessed_by\n  );",
+        "options": {
+          "useLegacySql": false
+        }
+      },
+      "id": "d3a88c4f-bf38-4db1-bf52-01032b7809ce",
+      "name": "Calcular e Persistir PHI Score",
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2.1,
+      "position": [
+        7664,
+        11584
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleBigQueryOAuth2Api": {
+          "id": "UhLRAanVarQeOpQy",
+          "name": "Google BigQuery account"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "55fa81b8-da1b-402a-a7f0-b83d36bf6685",
+              "leftValue": "={{ $json.error }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "6d9a2cbd-4992-4294-a755-0e04dd5829f7",
+      "name": "If Operacional OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        6832,
+        12272
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "874a1fad-f3b9-4d80-8366-d4673723fc33",
+              "leftValue": "={{ $json.id }}",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        7168,
+        12496
+      ],
+      "id": "963ed2fe-ec8d-4961-af43-53e2d7c97c8d",
+      "name": "Tarefa Escalada Existe?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f57cb112-2f49-48ca-ac4e-79bb1c06c0e5",
+              "leftValue": "={{ $json.campaign_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "e9b958db-dde7-4f9b-abe3-8c33772e843c",
+      "name": "Tem Campanhas em Alerta?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        6288,
+        12064
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "value": "19fb65e5-c72b-812d-a734-de9a4d5b980f",
+          "mode": "list",
+          "cachedResultName": "Tasks",
+          "cachedResultUrl": "https://www.notion.so/19fb65e5c72b812da734de9a4d5b980f"
+        },
+        "returnAll": true,
+        "simple": false,
+        "filterType": "manual",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "key": "campaign_id|rich_text",
+              "condition": "equals",
+              "richTextValue": "={{ $json.campaign_id }}"
+            },
+            {
+              "key": "Status|status",
+              "condition": "does_not_equal",
+              "statusValue": "Conclu�do"
+            },
+            {
+              "key": "Criado por Automação|checkbox",
+              "condition": "equals",
+              "checkboxValue": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f36a4dc9-b4ef-4078-b88f-3ab6c38f1bd3",
+      "name": "Get Task para Fechar",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        9280,
+        11344
+      ],
+      "credentials": {
+        "notionApi": {
+          "id": "KpPCTsYPAvGXGfp2",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "4faae21d-0a9c-45d6-9e5f-1fedd610bcd8",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "88969211-e02b-4a8b-a71f-b0d868c09d8e",
+      "name": "Tarefa para Fechar Existe?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        9296,
+        11600
+      ]
+    },
+    {
+      "parameters": {
+        "projectId": {
+          "__rl": true,
+          "value": "project-0e7c58d4-656f-49e8-807",
+          "mode": "list",
+          "cachedResultName": "phi-production",
+          "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=project-0e7c58d4-656f-49e8-807"
+        },
+        "sqlQuery": "INSERT INTO `phi_prod.workflow_execution_log`\n(execution_id, execution_date, phase, status, started_at, error_message)\nVALUES\n('{{ $('Buscar ID de Sucesso Hoje').first().json.execution_id }}',\n CURRENT_DATE(),\n 'OPERATIONAL',\n 'WARNING',\n CURRENT_TIMESTAMP(),\n SUBSTR(CONCAT('Campanha BQ sem mapeamento Notion: ', '{{ $json.campaign_id }}', ' | client_id: ', '{{ $json.client_id }}'), 1, 1000));",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2.1,
+      "position": [
+        8800,
+        11680
+      ],
+      "id": "65c42c87-5da9-4759-b197-7d3bb412b66c",
+      "name": "Log Notion Mapping Missing",
+      "credentials": {
+        "googleBigQueryOAuth2Api": {
+          "id": "UhLRAanVarQeOpQy",
+          "name": "Google BigQuery account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('Code Enriquecer Campanha').item.json.notion_page_id }}",
+          "mode": "id"
+        },
+        "simple": false,
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Otimização Ativa?|checkbox",
+              "checkboxValue": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        8064,
+        12352
+      ],
+      "id": "9b35fb58-8d36-4595-81d2-16dcf08a7bda",
+      "name": "Update otimização ativa",
+      "alwaysOutputData": true,
+      "credentials": {
+        "notionApi": {
+          "id": "KpPCTsYPAvGXGfp2",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('Create a database page').first().json.id }}",
+          "mode": "id"
+        },
+        "simple": false,
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Hip�tese Sugerida (IA)|rich_text",
+              "textContent": "={{ $('Code Criar Checklist').first().json.hipotese }}"
+            },
+            {
+              "key": "Prioridade|select",
+              "selectValue": "={{ $('Code Criar Checklist').first().json.prioridade }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        8224,
+        12608
+      ],
+      "id": "26f103c0-16db-417c-bedc-e6ee9784e1c4",
+      "name": "Update Hipótese na Tarefa",
+      "alwaysOutputData": true,
+      "credentials": {
+        "notionApi": {
+          "id": "KpPCTsYPAvGXGfp2",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('Enrich for Sync').item.json.notion_page_id }}",
+          "mode": "id"
+        },
+        "simple": false,
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "={\"key\":\"Otimização Ativa?|checkbox\",\"checkboxValue\":false}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f76380d1-3ffa-427d-a291-a69879b38d0d",
+      "name": "Auto-Close: Desativar Otimização",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        9552,
+        11712
+      ],
+      "credentials": {
+        "notionApi": {
+          "id": "KpPCTsYPAvGXGfp2",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "JqPwFD9udCq2hRPw",
+          "cachedResultName": "PHI - Loop Alerta Fase 1"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "52df7311-717c-4a3d-ac84-80f1eefa9fdd",
+      "name": "Chamar Loop Alerta Fase 1",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        6288,
+        12720
+      ],
+      "notes": "Fase 1 loop alerta: gate cognitivo -> idempotencia -> DB Tasks + DB Log + Telegram. DESABILITADO ate smoke aprovado. Habilitar apos criar DataTable phi_alert_state e configurar credenciais Notion/Telegram no subworkflow."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "1d2ea183-e54b-4ac9-9acd-720fb4edcc28",
+              "leftValue": "={{ $('Code Enriquecer Campanha').item.json.otimizacao_ativa }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        7552,
+        12720
+      ],
+      "id": "3b0eaf17-cd67-4fc9-b3c4-de38c976d1a0",
+      "name": "If otimização ativa"
+    },
+    {
+      "parameters": {
+        "jsCode": "const execution_id = $('Buscar ID de Sucesso Hoje').first().json.execution_id;\nreturn [{ json: { execution_id } }];"
+      },
+      "id": "ec51eb20-b5dd-470b-aaf0-0e6fcedea4be",
+      "name": "Code Receber 1 Item Ingestão",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        7120,
+        11360
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "6af1d886-3076-4cd9-9afa-163e80cf93ec",
+              "leftValue": "={{ $json.error }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "32dfff00-e619-451a-888f-73ffdf8640fe",
+      "name": "If Ingestão OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        7456,
+        11584
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "940ed7d0-a045-489a-83bd-fa89e663f074",
+              "leftValue": "={{ $json.error }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "fc8a6dad-bf57-4cd6-89ae-8153135aaa18",
+      "name": "If Cálculo OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        7936,
+        11360
+      ]
+    },
+    {
+      "parameters": {
+        "content": "\n",
+        "height": 704,
+        "width": 496
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        6240,
+        11264
+      ],
+      "id": "779375fb-9c64-46d7-811a-6ccfbd2f2378",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "\n",
+        "height": 704,
+        "width": 576,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        6768,
+        11264
+      ],
+      "id": "d6fd7430-879d-47a9-af9c-7578ffce0853",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 704,
+        "width": 464,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        7376,
+        11264
+      ],
+      "id": "5f196486-16bf-4c28-91fd-be203f6306f7",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 704,
+        "width": 544,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        7872,
+        11264
+      ],
+      "id": "4eb38805-c04c-4ffb-9ae7-a2497dd9f160",
+      "name": "Sticky Note3"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Buscar ID de Sucesso Hoje",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar ID de Sucesso Hoje": {
+      "main": [
+        [
+          {
+            "node": "Log INGESTION RUNNING",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log INGESTION RUNNING": {
+      "main": [
+        [
+          {
+            "node": "Buscar Clientes Ativos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Clientes Ativos": {
+      "main": [
+        [
+          {
+            "node": "Code INSERT execution_id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code INSERT execution_id": {
+      "main": [
+        [
+          {
+            "node": "Loop Clientes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Clientes": {
+      "main": [
+        [
+          {
+            "node": "Code Receber 1 Item Ingestão",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call Subworkflow Campanhas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Subworkflow Campanhas": {
+      "main": [
+        [
+          {
+            "node": "Loop Clientes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log INGESTION SUCCESS": {
+      "main": [
+        [
+          {
+            "node": "If Ingestão OK?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log CALCULATION RUNNING": {
+      "main": [
+        [
+          {
+            "node": "Calcular e Persistir PHI Score",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log CALCULATION SUCCESS": {
+      "main": [
+        [
+          {
+            "node": "Get many database Campanhas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log OPERATIONAL RUNNING": {
+      "main": [
+        [
+          {
+            "node": "Buscar Campanhas Alertas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many database Campanhas": {
+      "main": [
+        [
+          {
+            "node": "Code Clean Campanhas F3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Clean Campanhas F3": {
+      "main": [
+        [
+          {
+            "node": "Get All Current Scores (Sync)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Campanhas Alertas": {
+      "main": [
+        [
+          {
+            "node": "Tem Campanhas em Alerta?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Campanhas": {
+      "main": [
+        [
+          {
+            "node": "Log OPERATIONAL SUCCESS",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code Enriquecer Campanha",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Enriquecer Campanha": {
+      "main": [
+        [
+          {
+            "node": "Execute SQL Verificar Escalada (BQ)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Chamar Loop Alerta Fase 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute SQL Verificar Escalada (BQ)": {
+      "main": [
+        [
+          {
+            "node": "If Deve Escalar?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Deve Escalar?": {
+      "main": [
+        [
+          {
+            "node": "Get tasks para Escalada",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If otimização ativa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get tasks para Escalada": {
+      "main": [
+        [
+          {
+            "node": "Tarefa Escalada Existe?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Escalar Tarefa": {
+      "main": [
+        [
+          {
+            "node": "If otimização ativa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tarefa Existe?": {
+      "main": [
+        [
+          {
+            "node": "Update a database page",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create a database page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update a database page": {
+      "main": [
+        [
+          {
+            "node": "Loop Campanhas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a database page": {
+      "main": [
+        [
+          {
+            "node": "Update otimização ativa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Criar Checklist": {
+      "main": [
+        [
+          {
+            "node": "Update Hipótese na Tarefa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Loop Campanhas",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create a database page chklist",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a database page chklist": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get All Current Scores (Sync)": {
+      "main": [
+        [
+          {
+            "node": "Loop Sync & Close",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Sync & Close": {
+      "main": [
+        [
+          {
+            "node": "Log OPERATIONAL RUNNING",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Enrich for Sync",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enrich for Sync": {
+      "main": [
+        [
+          {
+            "node": "Existe no Notion?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sync Scores to Notion": {
+      "main": [
+        [
+          {
+            "node": "Check Auto-Close",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Auto-Close": {
+      "main": [
+        [
+          {
+            "node": "Get Task para Fechar",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Sync & Close",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auto-Close Task (Notion)": {
+      "main": [
+        [
+          {
+            "node": "Auto-Close: Desativar Otimização",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Existe no Notion?": {
+      "main": [
+        [
+          {
+            "node": "Sync Scores to Notion",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Notion Mapping Missing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calcular e Persistir PHI Score": {
+      "main": [
+        [
+          {
+            "node": "If Cálculo OK?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log OPERATIONAL SUCCESS": {
+      "main": [
+        [
+          {
+            "node": "If Operacional OK?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Operacional OK?": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Log OPERATIONAL FAILED",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tarefa Escalada Existe?": {
+      "main": [
+        [
+          {
+            "node": "Update Escalar Tarefa",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If otimização ativa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tem Campanhas em Alerta?": {
+      "main": [
+        [
+          {
+            "node": "Loop Campanhas",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log OPERATIONAL SUCCESS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Task para Fechar": {
+      "main": [
+        [
+          {
+            "node": "Tarefa para Fechar Existe?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tarefa para Fechar Existe?": {
+      "main": [
+        [
+          {
+            "node": "Auto-Close Task (Notion)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Auto-Close: Desativar Otimização",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Notion Mapping Missing": {
+      "main": [
+        [
+          {
+            "node": "Loop Sync & Close",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update otimização ativa": {
+      "main": [
+        [
+          {
+            "node": "Code Criar Checklist",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Hipótese na Tarefa": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auto-Close: Desativar Otimização": {
+      "main": [
+        [
+          {
+            "node": "Loop Sync & Close",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If otimização ativa": {
+      "main": [
+        [
+          {
+            "node": "Tarefa Existe?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Campanhas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Receber 1 Item Ingestão": {
+      "main": [
+        [
+          {
+            "node": "Log INGESTION SUCCESS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Ingestão OK?": {
+      "main": [
+        [
+          {
+            "node": "Log CALCULATION RUNNING",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log INGESTION FAILED",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Cálculo OK?": {
+      "main": [
+        [
+          {
+            "node": "Log CALCULATION SUCCESS",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log CALCULATION FAILED",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": true
+  },
+  "versionId": "4b723285-dacb-4c96-9728-dcdf6a804421",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp",
+    "instanceId": "305397df9a0eb50aabb90fb3f0fff1d7d74e7d343769e5f986243e1588b26e7b"
+  },
+  "nodeGroups": [],
+  "id": "ITWG3Ge0asXtUM8U",
+  "tags": []
+}

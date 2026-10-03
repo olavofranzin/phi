@@ -1,0 +1,668 @@
+{
+  "updatedAt": "2026-06-01T17:49:33.180Z",
+  "createdAt": "2026-05-28T00:09:20.194Z",
+  "id": "7lQ3AuNMtt4NXYZZ",
+  "name": "Onb - Cobrar Form D+1",
+  "description": "Sandbox workflow A2.2: daily D+1 briefing follow-up notification to AM and Notion etapa status update.",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "id": "8a9059b6-4cf3-406b-af14-7a3f32056d9c",
+      "name": "[Onb A2.2] Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "daysInterval": 1,
+              "triggerAtHour": 9,
+              "triggerAtMinute": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "6a0751f6-0e8c-4288-9a38-c554cd2845b0",
+      "name": "[Onb A2.2] Buscar Etapas Cobranca",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        224,
+        0
+      ],
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "6eb4565b4f1d498c8b2978e0c80880fd"
+        },
+        "returnAll": true,
+        "simple": false,
+        "filterType": "none"
+      },
+      "credentials": {
+        "notionApi": {
+          "id": "<credential_id_redacted>",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "id": "f87a34a2-9fbf-4d57-b83e-a0b8c6bc5b0b",
+      "name": "[Onb A2.2] Filtrar Etapas Elegiveis",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const TARGET_TITLE = 'Cobrar briefing não respondido';\nconst today = new Date().toISOString().slice(0, 10);\nconst pickTitle = (page) => {\n  for (const prop of Object.values(page.properties || {})) {\n    if (prop?.type === 'title') return (prop.title || []).map((item) => item.plain_text || '').join('').trim();\n  }\n  return '';\n};\nconst pickSelect = (prop) => prop?.select?.name || '';\nconst out = [];\nfor (const item of $input.all()) {\n  const page = item.json || {};\n  const props = page.properties || {};\n  const title = pickTitle(page);\n  const status = pickSelect(props.Status);\n  const due = props['Data prevista']?.date?.start ? String(props['Data prevista'].date.start).slice(0, 10) : '';\n  const clienteRelation = props.Cliente?.relation || [];\n  if (title === TARGET_TITLE && status === 'Pendente' && due && due <= today && clienteRelation.length > 0 && !page.archived) {\n    out.push({ json: { etapa_page_id: page.id, etapa_nome: title, etapa_status: status, data_prevista: due, cliente_page_id: clienteRelation[0].id, cliente_relation_count: clienteRelation.length } });\n  }\n}\nreturn out;"
+      }
+    },
+    {
+      "id": "c41112e3-aa80-4726-8021-3ac462d615e8",
+      "name": "[Onb A2.2] Obter Cliente da Etapa",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        672,
+        0
+      ],
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "get",
+        "pageId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $json.cliente_page_id }}"
+        },
+        "simple": false
+      },
+      "credentials": {
+        "notionApi": {
+          "id": "<credential_id_redacted>",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "id": "8343f7f9-4e63-4196-8eb8-feb98cdbbe62",
+      "name": "[Onb A2.2] Montar Mensagem",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const activeStatuses = new Set(['Em andamento', 'Não iniciado', 'Bloqueado']);\nconst etapas = $('[Onb A2.2] Filtrar Etapas Elegiveis').all().map((item) => item.json);\nconst pickTitle = (page) => {\n  for (const prop of Object.values(page.properties || {})) {\n    if (prop?.type === 'title') return (prop.title || []).map((item) => item.plain_text || '').join('').trim();\n  }\n  return '';\n};\nconst pickSelect = (prop) => prop?.select?.name || '';\nconst out = [];\nfor (const [index, item] of $input.all().entries()) {\n  const cliente = item.json || {};\n  const etapa = etapas[index];\n  if (!etapa) continue;\n  const clienteNome = pickTitle(cliente);\n  const clienteStatus = pickSelect(cliente.properties?.Status);\n  if (!activeStatuses.has(clienteStatus)) continue;\n  out.push({ json: { ...etapa, cliente_nome: clienteNome, cliente_status: clienteStatus, number: '<OLAVO_PHONE_redacted>', text: `[Onb A2.2] D+1 sem resposta no briefing\\ncliente=${clienteNome}\\nstatus_cliente=${clienteStatus}\\nID da etapa=${etapa.etapa_page_id}\\nID do cliente=${etapa.cliente_page_id}\\nAção: acionar o cliente off-platform.` } });\n}\nreturn out;"
+      }
+    },
+    {
+      "id": "742fd55c-92db-4c58-9210-804c5465ad00",
+      "name": "[Onb A2.2] Enviar Telegram Olavo",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1120,
+        0
+      ],
+      "parameters": {
+        "chatId": "<TELEGRAM_CHAT_ID_redacted>",
+        "text": "={{ String($json.text || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "<TELEGRAM_CREDENTIAL_ID_redacted>",
+          "name": "Telegram account"
+        }
+      },
+      "continueOnFail": true,
+      "webhookId": "5db1ce6b-864a-45a2-a55b-5b5eef0f6219"
+    },
+    {
+      "id": "d1ebf798-ca68-4a90-8463-8717adc39f58",
+      "name": "[Onb A2.2] Preparar Update Etapa",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1344,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const mensagens = $('[Onb A2.2] Montar Mensagem').all().map((item) => item.json);\nconst responses = $input.all();\nconst now = new Date();\nconst brTimestamp = now.toLocaleString('sv-SE', { timeZone: 'America/Sao_Paulo' }).replace(' ', 'T') + '-03:00';\nconst out = [];\nfor (const [index, responseItem] of responses.entries()) {\n  const msg = mensagens[index];\n  if (!msg) continue;\n  const payload = responseItem.json || {};\n  const statusCode = Number(payload.statusCode || payload.response?.statusCode || 0);\n  const failed = Boolean(payload.error || payload.message || (statusCode && (statusCode < 200 || statusCode >= 300)));\n  const evolutionStatus = failed ? 'falhou' : 'ok';\n  const detail = statusCode ? ` HTTP ${statusCode}` : (failed ? ' erro sem status HTTP' : '');\n  out.push({ json: { ...msg, evolution_status: evolutionStatus, evolution_detail: detail.trim(), observacoes: `Cobrança A2.2 disparada em ${brTimestamp}. Status Evolution: ${evolutionStatus}${detail ? ` (${detail.trim()})` : ''}.` } });\n}\nreturn out;"
+      }
+    },
+    {
+      "id": "1cd4700b-720a-49ef-88e5-7040f04c16c7",
+      "name": "[Onb A2.2] Atualizar Status Etapa",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1568,
+        0
+      ],
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $json.etapa_page_id }}"
+        },
+        "simple": false,
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Status|select",
+              "selectValue": "Em andamento"
+            },
+            {
+              "key": "Observações|rich_text",
+              "textContent": "={{ $json.observacoes }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "credentials": {
+        "notionApi": {
+          "id": "<credential_id_redacted>",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "id": "0e176969-be6b-4e70-9556-33a709350bb6",
+      "name": "[Onb A2.2] Consolidar Resultado",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1792,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const updates = $('[Onb A2.2] Preparar Update Etapa').all().map((item) => item.json);\nreturn [{ json: { workflow: 'Onb - Cobrar Form D+1', etapas_processadas: updates.length, evolution_sucesso: updates.filter((item) => item.evolution_status === 'ok').length, evolution_falha: updates.filter((item) => item.evolution_status === 'falhou').length, etapa_ids: updates.map((item) => item.etapa_page_id) } }];"
+      }
+    }
+  ],
+  "connections": {
+    "[Onb A2.2] Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.2] Buscar Etapas Cobranca",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.2] Buscar Etapas Cobranca": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.2] Filtrar Etapas Elegiveis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.2] Filtrar Etapas Elegiveis": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.2] Obter Cliente da Etapa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.2] Obter Cliente da Etapa": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.2] Montar Mensagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.2] Montar Mensagem": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.2] Enviar Telegram Olavo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.2] Preparar Update Etapa": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.2] Atualizar Status Etapa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.2] Atualizar Status Etapa": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.2] Consolidar Resultado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[Onb A2.2] Enviar Telegram Olavo": {
+      "main": [
+        [
+          {
+            "node": "[Onb A2.2] Preparar Update Etapa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true,
+    "timezone": "America/Sao_Paulo"
+  },
+  "staticData": {
+    "node:[Onb A2.2] Schedule Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "pinData": null,
+  "versionId": "c4420f74-451d-477d-8aca-57d872a3f34d",
+  "activeVersionId": "c4420f74-451d-477d-8aca-57d872a3f34d",
+  "versionCounter": 18,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-05-28T00:09:20.194Z",
+      "createdAt": "2026-05-28T00:09:20.194Z",
+      "role": "workflow:owner",
+      "workflowId": "7lQ3AuNMtt4NXYZZ",
+      "projectId": "QAumYwlPGm37G3p1",
+      "project": {
+        "updatedAt": "2025-11-29T00:11:17.205Z",
+        "createdAt": "2025-11-29T00:04:49.350Z",
+        "id": "QAumYwlPGm37G3p1",
+        "name": "Olavo Franzin <olavofranzin@franzcomunicacao.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "2f681992-45e6-4ec9-afe2-d79763e3d45b"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-06-01T17:49:33.181Z",
+    "createdAt": "2026-06-01T17:49:33.181Z",
+    "versionId": "c4420f74-451d-477d-8aca-57d872a3f34d",
+    "workflowId": "7lQ3AuNMtt4NXYZZ",
+    "nodes": [
+      {
+        "id": "8a9059b6-4cf3-406b-af14-7a3f32056d9c",
+        "name": "[Onb A2.2] Schedule Trigger",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          0,
+          0
+        ],
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "days",
+                "daysInterval": 1,
+                "triggerAtHour": 9,
+                "triggerAtMinute": 0
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "6a0751f6-0e8c-4288-9a38-c554cd2845b0",
+        "name": "[Onb A2.2] Buscar Etapas Cobranca",
+        "type": "n8n-nodes-base.notion",
+        "typeVersion": 2.2,
+        "position": [
+          224,
+          0
+        ],
+        "parameters": {
+          "resource": "databasePage",
+          "operation": "getAll",
+          "databaseId": {
+            "__rl": true,
+            "mode": "list",
+            "value": "6eb4565b4f1d498c8b2978e0c80880fd"
+          },
+          "returnAll": true,
+          "simple": false,
+          "filterType": "none"
+        },
+        "credentials": {
+          "notionApi": {
+            "id": "<credential_id_redacted>",
+            "name": "Notion account"
+          }
+        }
+      },
+      {
+        "id": "f87a34a2-9fbf-4d57-b83e-a0b8c6bc5b0b",
+        "name": "[Onb A2.2] Filtrar Etapas Elegiveis",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          448,
+          0
+        ],
+        "parameters": {
+          "mode": "runOnceForAllItems",
+          "jsCode": "const TARGET_TITLE = 'Cobrar briefing não respondido';\nconst today = new Date().toISOString().slice(0, 10);\nconst pickTitle = (page) => {\n  for (const prop of Object.values(page.properties || {})) {\n    if (prop?.type === 'title') return (prop.title || []).map((item) => item.plain_text || '').join('').trim();\n  }\n  return '';\n};\nconst pickSelect = (prop) => prop?.select?.name || '';\nconst out = [];\nfor (const item of $input.all()) {\n  const page = item.json || {};\n  const props = page.properties || {};\n  const title = pickTitle(page);\n  const status = pickSelect(props.Status);\n  const due = props['Data prevista']?.date?.start ? String(props['Data prevista'].date.start).slice(0, 10) : '';\n  const clienteRelation = props.Cliente?.relation || [];\n  if (title === TARGET_TITLE && status === 'Pendente' && due && due <= today && clienteRelation.length > 0 && !page.archived) {\n    out.push({ json: { etapa_page_id: page.id, etapa_nome: title, etapa_status: status, data_prevista: due, cliente_page_id: clienteRelation[0].id, cliente_relation_count: clienteRelation.length } });\n  }\n}\nreturn out;"
+        }
+      },
+      {
+        "id": "c41112e3-aa80-4726-8021-3ac462d615e8",
+        "name": "[Onb A2.2] Obter Cliente da Etapa",
+        "type": "n8n-nodes-base.notion",
+        "typeVersion": 2.2,
+        "position": [
+          672,
+          0
+        ],
+        "parameters": {
+          "resource": "databasePage",
+          "operation": "get",
+          "pageId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "={{ $json.cliente_page_id }}"
+          },
+          "simple": false
+        },
+        "credentials": {
+          "notionApi": {
+            "id": "<credential_id_redacted>",
+            "name": "Notion account"
+          }
+        }
+      },
+      {
+        "id": "8343f7f9-4e63-4196-8eb8-feb98cdbbe62",
+        "name": "[Onb A2.2] Montar Mensagem",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          896,
+          0
+        ],
+        "parameters": {
+          "mode": "runOnceForAllItems",
+          "jsCode": "const activeStatuses = new Set(['Em andamento', 'Não iniciado', 'Bloqueado']);\nconst etapas = $('[Onb A2.2] Filtrar Etapas Elegiveis').all().map((item) => item.json);\nconst pickTitle = (page) => {\n  for (const prop of Object.values(page.properties || {})) {\n    if (prop?.type === 'title') return (prop.title || []).map((item) => item.plain_text || '').join('').trim();\n  }\n  return '';\n};\nconst pickSelect = (prop) => prop?.select?.name || '';\nconst out = [];\nfor (const [index, item] of $input.all().entries()) {\n  const cliente = item.json || {};\n  const etapa = etapas[index];\n  if (!etapa) continue;\n  const clienteNome = pickTitle(cliente);\n  const clienteStatus = pickSelect(cliente.properties?.Status);\n  if (!activeStatuses.has(clienteStatus)) continue;\n  out.push({ json: { ...etapa, cliente_nome: clienteNome, cliente_status: clienteStatus, number: '<OLAVO_PHONE_redacted>', text: `[Onb A2.2] D+1 sem resposta no briefing\\ncliente=${clienteNome}\\nstatus_cliente=${clienteStatus}\\nID da etapa=${etapa.etapa_page_id}\\nID do cliente=${etapa.cliente_page_id}\\nAção: acionar o cliente off-platform.` } });\n}\nreturn out;"
+        }
+      },
+      {
+        "id": "742fd55c-92db-4c58-9210-804c5465ad00",
+        "name": "[Onb A2.2] Enviar Telegram Olavo",
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          1120,
+          0
+        ],
+        "parameters": {
+          "chatId": "<TELEGRAM_CHAT_ID_redacted>",
+          "text": "={{ String($json.text || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }}",
+          "additionalFields": {
+            "parse_mode": "HTML"
+          }
+        },
+        "credentials": {
+          "telegramApi": {
+            "id": "<TELEGRAM_CREDENTIAL_ID_redacted>",
+            "name": "Telegram account"
+          }
+        },
+        "continueOnFail": true,
+        "webhookId": "5db1ce6b-864a-45a2-a55b-5b5eef0f6219"
+      },
+      {
+        "id": "d1ebf798-ca68-4a90-8463-8717adc39f58",
+        "name": "[Onb A2.2] Preparar Update Etapa",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1344,
+          0
+        ],
+        "parameters": {
+          "mode": "runOnceForAllItems",
+          "jsCode": "const mensagens = $('[Onb A2.2] Montar Mensagem').all().map((item) => item.json);\nconst responses = $input.all();\nconst now = new Date();\nconst brTimestamp = now.toLocaleString('sv-SE', { timeZone: 'America/Sao_Paulo' }).replace(' ', 'T') + '-03:00';\nconst out = [];\nfor (const [index, responseItem] of responses.entries()) {\n  const msg = mensagens[index];\n  if (!msg) continue;\n  const payload = responseItem.json || {};\n  const statusCode = Number(payload.statusCode || payload.response?.statusCode || 0);\n  const failed = Boolean(payload.error || payload.message || (statusCode && (statusCode < 200 || statusCode >= 300)));\n  const evolutionStatus = failed ? 'falhou' : 'ok';\n  const detail = statusCode ? ` HTTP ${statusCode}` : (failed ? ' erro sem status HTTP' : '');\n  out.push({ json: { ...msg, evolution_status: evolutionStatus, evolution_detail: detail.trim(), observacoes: `Cobrança A2.2 disparada em ${brTimestamp}. Status Evolution: ${evolutionStatus}${detail ? ` (${detail.trim()})` : ''}.` } });\n}\nreturn out;"
+        }
+      },
+      {
+        "id": "1cd4700b-720a-49ef-88e5-7040f04c16c7",
+        "name": "[Onb A2.2] Atualizar Status Etapa",
+        "type": "n8n-nodes-base.notion",
+        "typeVersion": 2.2,
+        "position": [
+          1568,
+          0
+        ],
+        "parameters": {
+          "resource": "databasePage",
+          "operation": "update",
+          "pageId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "={{ $json.etapa_page_id }}"
+          },
+          "simple": false,
+          "propertiesUi": {
+            "propertyValues": [
+              {
+                "key": "Status|select",
+                "selectValue": "Em andamento"
+              },
+              {
+                "key": "Observações|rich_text",
+                "textContent": "={{ $json.observacoes }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "credentials": {
+          "notionApi": {
+            "id": "<credential_id_redacted>",
+            "name": "Notion account"
+          }
+        }
+      },
+      {
+        "id": "0e176969-be6b-4e70-9556-33a709350bb6",
+        "name": "[Onb A2.2] Consolidar Resultado",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1792,
+          0
+        ],
+        "parameters": {
+          "mode": "runOnceForAllItems",
+          "jsCode": "const updates = $('[Onb A2.2] Preparar Update Etapa').all().map((item) => item.json);\nreturn [{ json: { workflow: 'Onb - Cobrar Form D+1', etapas_processadas: updates.length, evolution_sucesso: updates.filter((item) => item.evolution_status === 'ok').length, evolution_falha: updates.filter((item) => item.evolution_status === 'falhou').length, etapa_ids: updates.map((item) => item.etapa_page_id) } }];"
+        }
+      }
+    ],
+    "connections": {
+      "[Onb A2.2] Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "[Onb A2.2] Buscar Etapas Cobranca",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[Onb A2.2] Buscar Etapas Cobranca": {
+        "main": [
+          [
+            {
+              "node": "[Onb A2.2] Filtrar Etapas Elegiveis",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[Onb A2.2] Filtrar Etapas Elegiveis": {
+        "main": [
+          [
+            {
+              "node": "[Onb A2.2] Obter Cliente da Etapa",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[Onb A2.2] Obter Cliente da Etapa": {
+        "main": [
+          [
+            {
+              "node": "[Onb A2.2] Montar Mensagem",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[Onb A2.2] Montar Mensagem": {
+        "main": [
+          [
+            {
+              "node": "[Onb A2.2] Enviar Telegram Olavo",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[Onb A2.2] Preparar Update Etapa": {
+        "main": [
+          [
+            {
+              "node": "[Onb A2.2] Atualizar Status Etapa",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[Onb A2.2] Atualizar Status Etapa": {
+        "main": [
+          [
+            {
+              "node": "[Onb A2.2] Consolidar Resultado",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "[Onb A2.2] Enviar Telegram Olavo": {
+        "main": [
+          [
+            {
+              "node": "[Onb A2.2] Preparar Update Etapa",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Olavo Franzin",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-06-01T17:49:33.216Z",
+        "id": 612,
+        "workflowId": "7lQ3AuNMtt4NXYZZ",
+        "versionId": "c4420f74-451d-477d-8aca-57d872a3f34d",
+        "event": "deactivated",
+        "userId": "2f681992-45e6-4ec9-afe2-d79763e3d45b"
+      },
+      {
+        "createdAt": "2026-06-01T17:49:33.234Z",
+        "id": 613,
+        "workflowId": "7lQ3AuNMtt4NXYZZ",
+        "versionId": "c4420f74-451d-477d-8aca-57d872a3f34d",
+        "event": "activated",
+        "userId": "2f681992-45e6-4ec9-afe2-d79763e3d45b"
+      },
+      {
+        "createdAt": "2026-06-01T17:49:33.325Z",
+        "id": 614,
+        "workflowId": "7lQ3AuNMtt4NXYZZ",
+        "versionId": "c4420f74-451d-477d-8aca-57d872a3f34d",
+        "event": "deactivated",
+        "userId": "2f681992-45e6-4ec9-afe2-d79763e3d45b"
+      },
+      {
+        "createdAt": "2026-06-01T17:49:33.341Z",
+        "id": 615,
+        "workflowId": "7lQ3AuNMtt4NXYZZ",
+        "versionId": "c4420f74-451d-477d-8aca-57d872a3f34d",
+        "event": "activated",
+        "userId": "2f681992-45e6-4ec9-afe2-d79763e3d45b"
+      }
+    ]
+  }
+}
